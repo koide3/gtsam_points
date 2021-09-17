@@ -9,6 +9,7 @@
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
+#include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/primitives/primitives.hpp>
@@ -104,7 +105,7 @@ int main(int argc, char** argv) {
     const auto& submap = globalmap.submaps[i];
     const auto& submap_pose = globalmap.submap_poses[i];
 
-    gtsam_ext::VoxelizedFrameGPU::Ptr frame(new gtsam_ext::VoxelizedFrameGPU(1.0, submap->points, submap->covs));
+    gtsam_ext::VoxelizedFrameGPU::Ptr frame(new gtsam_ext::VoxelizedFrameGPU(2.0, submap->points, submap->covs));
     frames.push_back(frame);
 
     viewer->update_drawable("submap_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(submap->points), guik::Rainbow(submap_pose.cast<float>()));
@@ -121,6 +122,7 @@ int main(int argc, char** argv) {
 
     int target = (i + 1) % globalmap.submaps.size();
     gtsam_ext::IntegratedGICPFactor::shared_ptr factor(new gtsam_ext::IntegratedGICPFactor(target, i, frames[target], frames[i]));
+    factor->set_num_threads(16);
     factor->set_max_corresponding_distance(2.0);
     graph.add(factor);
   }

@@ -1,38 +1,14 @@
-#include <gtsam_ext/factors/integrated_gicp_factor.hpp>
+#include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
 
-#include <nanoflann.hpp>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/HessianFactor.h>
+#include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 
 namespace gtsam_ext {
 
-struct IntegratedGICPFactor::KdTree {
-public:
-  using Index = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, KdTree>, KdTree, 3>;
-
-  KdTree(int num_points, const Eigen::Vector4d* points) : num_points(num_points), points(points), index(3, *this, nanoflann::KDTreeSingleIndexAdaptorParams(10)) {
-    index.buildIndex();
-  }
-
-  inline size_t kdtree_get_point_count() const { return num_points; }
-  inline double kdtree_get_pt(const size_t idx, const size_t dim) const { return points[idx][dim]; }
-
-  template <class BBox>
-  bool kdtree_get_bbox(BBox&) const {
-    return false;
-  }
-
-public:
-  const int num_points;
-  const Eigen::Vector4d* points;
-
-  Index index;
-};
-
-IntegratedGICPFactor::IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+IntegratedVGICPFactor::IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
-  max_correspondence_distance_sq(1.0),
   target(target),
   source(source) {
   //
@@ -41,30 +17,31 @@ IntegratedGICPFactor::IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key sou
     abort();
   }
 
-  target_tree.reset(new KdTree(target->num_points, target->points));
+  if (!target->voxels) {
+    std::cerr << "error: target voxelmap has not been created!!" << std::endl;
+    abort();
+  }
 }
 
-IntegratedGICPFactor::~IntegratedGICPFactor() {}
+IntegratedVGICPFactor::~IntegratedVGICPFactor() {}
 
-void IntegratedGICPFactor::update_correspondences(const Eigen::Isometry3d& delta) const {
+void IntegratedVGICPFactor::update_correspondences(const Eigen::Isometry3d& delta) const {
   correspondences.resize(source->size());
   mahalanobis.resize(source->size());
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
     Eigen::Vector4d pt = delta * source->points[i];
+    Eigen::Vector3i coord = target->voxels->voxel_coord(pt);
+    auto voxel = target->voxels->lookup_voxel(coord);
 
-    size_t k_index = -1;
-    double k_sq_dist = -1;
-    target_tree->index.knnSearch(pt.data(), 1, &k_index, &k_sq_dist);
-
-    if (k_sq_dist > max_correspondence_distance_sq) {
-      correspondences[i] = -1;
+    if (voxel == nullptr) {
+      correspondences[i] = nullptr;
       mahalanobis[i].setIdentity();
     } else {
-      correspondences[i] = k_index;
+      correspondences[i] = voxel;
 
-      Eigen::Matrix4d RCR = (target->covs[k_index] + delta.matrix() * source->covs[i] * delta.matrix().transpose());
+      Eigen::Matrix4d RCR = (voxel->cov + delta.matrix() * source->covs[i] * delta.matrix().transpose());
       RCR(3, 3) = 1.0;
       mahalanobis[i] = RCR.inverse();
       mahalanobis[i](3, 3) = 0.0;
@@ -72,18 +49,13 @@ void IntegratedGICPFactor::update_correspondences(const Eigen::Isometry3d& delta
   }
 }
 
-double IntegratedGICPFactor::evaluate(
+double IntegratedVGICPFactor::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
   Eigen::Matrix<double, 6, 6>* H_source,
   Eigen::Matrix<double, 6, 6>* H_target_source,
   Eigen::Matrix<double, 6, 1>* b_target,
   Eigen::Matrix<double, 6, 1>* b_source) const {
-  //
-  if (correspondences.size() != source->size()) {
-    update_correspondences(delta);
-  }
-
   //
   double sum_errors = 0.0;
 
@@ -103,16 +75,16 @@ double IntegratedGICPFactor::evaluate(
 
 #pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
-    int target_index = correspondences[i];
-    if (target_index < 0) {
+    const auto& target_voxel = correspondences[i];
+    if (target_voxel == nullptr) {
       continue;
     }
 
     const auto& mean_A = source->points[i];
     const auto& cov_A = source->covs[i];
 
-    const auto& mean_B = target->points[target_index];
-    const auto& cov_B = target->covs[target_index];
+    const auto& mean_B = target_voxel->mean;
+    const auto& cov_B = target_voxel->cov;
 
     Eigen::Vector4d transed_mean_A = delta * mean_A;
     Eigen::Vector4d error = mean_B - transed_mean_A;
