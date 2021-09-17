@@ -34,11 +34,12 @@ catkin_package(
 
 add_library(gtsam_ext SHARED
   # types
-  src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
   src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/voxelized_frame.cpp
   src/gtsam_ext/types/voxelized_frame_cpu.cpp
-
+  src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
+  # factors
+  src/gtsam_ext/factors/integrated_gicp_factor.cpp
   # optimizers
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
@@ -46,6 +47,7 @@ add_library(gtsam_ext SHARED
 target_include_directories(gtsam_ext PRIVATE
   include
   thirdparty/Eigen
+  thirdparty/nanoflann/include
   ${Boost_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIRS}
 )
@@ -80,8 +82,8 @@ if(BUILD_GTSAM_EXT_GPU)
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     # types
     src/gtsam_ext/types/frame.cu
-    src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
     src/gtsam_ext/types/voxelized_frame_gpu.cu
+    src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
   )
   target_include_directories(gtsam_ext_cuda PUBLIC
     include

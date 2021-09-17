@@ -19,6 +19,8 @@ public:
 
   size_t size() const { return num_points; }
 
+  // calculate the fraction of points fell in the target's voxel
+  // (check if delta * this->points fall in target->voxels)
   double overlap(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
   double overlap(const std::vector<std::shared_ptr<VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
 

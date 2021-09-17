@@ -2,11 +2,14 @@
 #include <iostream>
 #include <boost/format.hpp>
 
+#include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
+#include <gtsam_ext/factors/integrated_gicp_factor.hpp>
+#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/primitives/primitives.hpp>
 #include <glk/thin_lines.hpp>
@@ -94,12 +97,49 @@ public:
 int main(int argc, char** argv) {
   GlobalMap globalmap("/home/koide/datasets/gvlo_kitti_07");
 
+  auto viewer = guik::LightViewer::instance();
+
   std::vector<gtsam_ext::VoxelizedFrameGPU::Ptr> frames;
   for (int i = 0; i < globalmap.submaps.size(); i++) {
     const auto& submap = globalmap.submaps[i];
+    const auto& submap_pose = globalmap.submap_poses[i];
+
     gtsam_ext::VoxelizedFrameGPU::Ptr frame(new gtsam_ext::VoxelizedFrameGPU(1.0, submap->points, submap->covs));
     frames.push_back(frame);
+
+    viewer->update_drawable("submap_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(submap->points), guik::Rainbow(submap_pose.cast<float>()));
   }
+
+  gtsam::Values values;
+  gtsam::NonlinearFactorGraph graph;
+
+  graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
+
+  for (int i = 0; i < globalmap.submaps.size(); i++) {
+    gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * 0.1);
+    values.insert(i, gtsam::Pose3(globalmap.submap_poses[i].matrix()) * noise);
+
+    int target = (i + 1) % globalmap.submaps.size();
+    gtsam_ext::IntegratedGICPFactor::shared_ptr factor(new gtsam_ext::IntegratedGICPFactor(target, i, frames[target], frames[i]));
+    factor->set_max_corresponding_distance(2.0);
+    graph.add(factor);
+  }
+
+  gtsam_ext::LevenbergMarquardtExtParams lm_params;
+  lm_params.setDiagonalDamping(true);
+  lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+    viewer->append_text(status.to_string());
+    for (int i = 0; i < globalmap.submaps.size(); i++) {
+      auto drawable = viewer->find_drawable("submap_" + std::to_string(i));
+      drawable.first->add("model_matrix", values.at<gtsam::Pose3>(i).matrix().cast<float>().eval());
+    }
+    viewer->spin_once();
+  };
+
+  gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+  values = optimizer.optimize();
+
+  viewer->spin();
 
   return 0;
 }
