@@ -11,7 +11,9 @@
 #include <gtsam_ext/factors/integrated_icp_factor.hpp>
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
+#include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
 
 #include <glk/primitives/primitives.hpp>
 #include <glk/thin_lines.hpp>
@@ -97,10 +99,12 @@ public:
 };
 
 int main(int argc, char** argv) {
-  GlobalMap globalmap("/home/koide/datasets/gvlo_kitti_07");
+  std::cout << "step1" << std::endl;
+  GlobalMap globalmap("/home/koide/datasets/gvlo/dump/07");
 
   auto viewer = guik::LightViewer::instance();
 
+  std::cout << "step2" << std::endl;
   std::vector<gtsam_ext::VoxelizedFrameGPU::Ptr> frames;
   for (int i = 0; i < globalmap.submaps.size(); i++) {
     const auto& submap = globalmap.submaps[i];
@@ -112,20 +116,30 @@ int main(int argc, char** argv) {
     viewer->update_drawable("submap_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(submap->points), guik::Rainbow(submap_pose.cast<float>()));
   }
 
+  std::cout << "step3" << std::endl;
   gtsam::Values values;
   gtsam::NonlinearFactorGraph graph;
 
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
 
+  std::unique_ptr<gtsam_ext::StreamTempBufferRoundRobin> stream_buffer_round_robin(new gtsam_ext::StreamTempBufferRoundRobin());
   for (int i = 0; i < globalmap.submaps.size(); i++) {
-    gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * 0.1);
+    gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * 0.05);
     values.insert(i, gtsam::Pose3(globalmap.submap_poses[i].matrix()) * noise);
 
     int target = (i + 1) % globalmap.submaps.size();
-    gtsam_ext::IntegratedICPFactor::shared_ptr factor(new gtsam_ext::IntegratedICPFactor(target, i, frames[target], frames[i]));
-    factor->set_num_threads(16);
+
+    auto stream_buffer = stream_buffer_round_robin->get_stream_buffer();
+    const auto& stream = stream_buffer.first;
+    const auto& buffer = stream_buffer.second;
+
+    gtsam_ext::IntegratedVGICPFactor::shared_ptr factor(new gtsam_ext::IntegratedVGICPFactor(target, i, frames[target], frames[i]));
+    factor->set_num_threads(12);
+    // gtsam_ext::IntegratedVGICPFactorGPU::shared_ptr factor(new gtsam_ext::IntegratedVGICPFactorGPU(target, i, frames[target], frames[i], stream, buffer));
     graph.add(factor);
   }
+
+  std::cout << "step4" << std::endl;
 
   gtsam_ext::LevenbergMarquardtExtParams lm_params;
   lm_params.setDiagonalDamping(true);
@@ -138,8 +152,7 @@ int main(int argc, char** argv) {
     viewer->spin_once();
   };
 
-  gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
-  values = optimizer.optimize();
+  values = gtsam_ext::LevenbergMarquardtOptimizerExt(graph, values, lm_params).optimize();
 
   viewer->spin();
 

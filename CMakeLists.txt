@@ -2,9 +2,15 @@ cmake_minimum_required(VERSION 3.0.2)
 project(gtsam_ext)
 
 option(BUILD_GTSAM_EXT_GPU "Build with GPU support" ON)
+option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
+
+if(BUILD_WITH_MARCH_NATIVE)
+  add_definitions(-march=native)
+  set(CMAKE_C_FLAGS "-march=native ${CMAKE_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "-march=native ${CMAKE_CXX_FLAGS}")
+endif()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
-
 add_compile_options(-std=c++17)
 
 find_package(Boost REQUIRED timer)
@@ -26,7 +32,6 @@ if(BUILD_GTSAM_EXT_GPU)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++17 --expt-relaxed-constexpr")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_75")
-  # set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_60,code=sm_60")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
 endif()
 
@@ -102,6 +107,7 @@ if(BUILD_GTSAM_EXT_GPU)
     src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
     # factors
     src/gtsam_ext/factors/integrated_vgicp_derivatives.cu
+    src/gtsam_ext/factors/integrated_vgicp_factor_gpu.cu
   )
   target_include_directories(gtsam_ext_cuda PUBLIC
     include

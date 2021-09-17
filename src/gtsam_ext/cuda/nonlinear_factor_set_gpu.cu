@@ -175,4 +175,4 @@ std::vector<gtsam::GaussianFactor::shared_ptr> NonlinearFactorSetGPU::calc_linea
 
   return linear_factors;
 }
-}
+}  // namespace gtsam_ext

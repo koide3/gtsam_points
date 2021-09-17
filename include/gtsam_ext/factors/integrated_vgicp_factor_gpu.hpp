@@ -21,8 +21,8 @@ public:
   IntegratedVGICPFactorGPU(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const VoxelizedFrame::ConstPtr& target,
+    const Frame::ConstPtr& source,
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
 
