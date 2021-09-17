@@ -1,10 +1,13 @@
 #pragma once
 
 #include <memory>
+#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
 namespace gtsam_ext {
+
+struct VoxelizedFrame;
 
 struct Frame {
 public:
@@ -15,6 +18,13 @@ public:
   virtual ~Frame() {}
 
   size_t size() const { return num_points; }
+
+  double overlap(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
+  double overlap(const std::vector<std::shared_ptr<VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
+
+  double overlap_gpu(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3f* delta_gpu) const;
+  double overlap_gpu(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
+  double overlap_gpu(const std::vector<std::shared_ptr<VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
 
 public:
   size_t num_points;

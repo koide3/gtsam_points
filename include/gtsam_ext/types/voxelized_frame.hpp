@@ -9,6 +9,9 @@ class GaussianVoxelMapGPU;
 
 struct VoxelizedFrame : public Frame {
 public:
+  using Ptr = std::shared_ptr<VoxelizedFrame>;
+  using ConstPtr = std::shared_ptr<const VoxelizedFrame>;
+
   VoxelizedFrame() : voxels(nullptr), voxels_gpu(nullptr) {}
   virtual ~VoxelizedFrame() {}
 

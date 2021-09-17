@@ -16,7 +16,7 @@ if (OPENMP_FOUND)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
-find_package(catkin REQUIRED)
+find_package(catkin REQUIRED COMPONENTS iridescence)
 
 ###################################
 ## catkin specific configuration ##
@@ -35,6 +35,8 @@ catkin_package(
 add_library(gtsam_ext SHARED
   # types
   src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
+  src/gtsam_ext/types/frame.cpp
+  src/gtsam_ext/types/voxelized_frame.cpp
   src/gtsam_ext/types/voxelized_frame_cpu.cpp
 
   # optimizers
@@ -59,10 +61,12 @@ target_include_directories(test_cpu PRIVATE
   thirdparty/Eigen
   ${Boost_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
 )
 target_link_libraries(test_cpu
   gtsam_ext
   gtsam_ext_cuda
+  ${catkin_LIBRARIES}
 )
 
 
@@ -75,6 +79,7 @@ if(BUILD_GTSAM_EXT_GPU)
     # cuda-related
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     # types
+    src/gtsam_ext/types/frame.cu
     src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
     src/gtsam_ext/types/voxelized_frame_gpu.cu
   )

@@ -159,6 +159,8 @@ GaussianVoxelMapGPU::GaussianVoxelMapGPU(float resolution, int init_num_buckets,
   voxelmap_info_ptr[0] = voxelmap_info;
 }
 
+GaussianVoxelMapGPU::~GaussianVoxelMapGPU() {}
+
 void GaussianVoxelMapGPU::create_voxelmap(const Frame& frame) {
   if (!frame.points_gpu || !frame.covs_gpu) {
     std::cerr << "error: GPU points/covs not allocated!!" << std::endl;

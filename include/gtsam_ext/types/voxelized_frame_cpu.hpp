@@ -6,6 +6,9 @@ namespace gtsam_ext {
 
 struct VoxelizedFrameCPU : public VoxelizedFrame {
 public:
+  using Ptr = std::shared_ptr<VoxelizedFrameCPU>;
+  using ConstPtr = std::shared_ptr<const VoxelizedFrameCPU>;
+
   VoxelizedFrameCPU(
     double voxel_resolution,
     const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,

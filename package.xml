@@ -8,6 +8,7 @@
 
   <license>BSD</license>
 
+  <depend>iridescence</depend>
   <buildtool_depend>catkin</buildtool_depend>
 
   <export>
