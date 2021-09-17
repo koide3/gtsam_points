@@ -9,11 +9,25 @@ add_compile_options(-std=c++17)
 
 find_package(Boost REQUIRED timer)
 find_package(GTSAM REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
+
+# GPU-related
+if(BUILD_GTSAM_EXT_GPU)
+  find_package(CUDA REQUIRED)
+  add_definitions(-DBUILD_GTSAM_EXT_GPU)
+
+  # set(CUDA_HOST_COMPILER clang++)
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++17 --expt-relaxed-constexpr")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_75")
+  # set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_60,code=sm_60")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
 endif()
 
 find_package(catkin REQUIRED COMPONENTS iridescence)
@@ -49,8 +63,8 @@ add_library(gtsam_ext SHARED
 )
 target_include_directories(gtsam_ext PRIVATE
   include
-  thirdparty/Eigen
   thirdparty/nanoflann/include
+  ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIRS}
 )
@@ -63,7 +77,7 @@ add_executable(test_cpu
 )
 target_include_directories(test_cpu PRIVATE
   include
-  thirdparty/Eigen
+  ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
@@ -77,16 +91,17 @@ target_link_libraries(test_cpu
 
 # GPU-related
 if(BUILD_GTSAM_EXT_GPU)
-  find_package(CUDA REQUIRED)
-  add_definitions(-DBUILD_GTSAM_EXT_GPU)
-
   cuda_add_library(gtsam_ext_cuda SHARED
     # cuda-related
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
+    src/gtsam_ext/cuda/stream_roundrobin.cu
+    src/gtsam_ext/cuda/stream_temp_buffer_roundrobin.cu
     # types
     src/gtsam_ext/types/frame.cu
     src/gtsam_ext/types/voxelized_frame_gpu.cu
     src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
+    # factors
+    src/gtsam_ext/factors/integrated_vgicp_derivatives.cu
   )
   target_include_directories(gtsam_ext_cuda PUBLIC
     include
@@ -98,7 +113,7 @@ if(BUILD_GTSAM_EXT_GPU)
   target_link_directories(gtsam_ext_cuda PUBLIC
     ${CUDA_LIBRARY_DIRS}
   )
-  # target_link_libraries(gtsam_ext
-  #   gtsam_ext_cuda
-  # )
+  target_link_libraries(gtsam_ext
+    gtsam_ext_cuda
+  )
 endif()

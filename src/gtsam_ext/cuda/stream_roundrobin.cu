@@ -1,4 +1,4 @@
-#include <glim/cuda/util/stream_roundrobin.hpp>
+#include <gtsam_ext/cuda/stream_roundrobin.hpp>
 
 #include <cuda_runtime_api.h>
 
