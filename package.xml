@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>gtsam_ext</name>
+  <version>0.0.0</version>
+  <description>An extension library for GTSAM</description>
+
+  <maintainer email="k.koide@aist.go.jp">k.koide</maintainer>
+
+  <license>BSD</license>
+
+  <buildtool_depend>catkin</buildtool_depend>
+
+  <export>
+  </export>
+</package>
