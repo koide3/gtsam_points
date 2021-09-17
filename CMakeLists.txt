@@ -40,6 +40,7 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
   # factors
   src/gtsam_ext/factors/integrated_matching_cost_factor.cpp
+  src/gtsam_ext/factors/integrated_icp_factor.cpp
   src/gtsam_ext/factors/integrated_gicp_factor.cpp
   src/gtsam_ext/factors/integrated_vgicp_factor.cpp
   # optimizers

@@ -8,6 +8,7 @@
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
+#include <gtsam_ext/factors/integrated_icp_factor.hpp>
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
@@ -121,9 +122,8 @@ int main(int argc, char** argv) {
     values.insert(i, gtsam::Pose3(globalmap.submap_poses[i].matrix()) * noise);
 
     int target = (i + 1) % globalmap.submaps.size();
-    gtsam_ext::IntegratedGICPFactor::shared_ptr factor(new gtsam_ext::IntegratedGICPFactor(target, i, frames[target], frames[i]));
+    gtsam_ext::IntegratedICPFactor::shared_ptr factor(new gtsam_ext::IntegratedICPFactor(target, i, frames[target], frames[i]));
     factor->set_num_threads(16);
-    factor->set_max_corresponding_distance(2.0);
     graph.add(factor);
   }
 
