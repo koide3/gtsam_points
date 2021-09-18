@@ -20,7 +20,7 @@ inline __host__ __device__ Eigen::Matrix3f skew_symmetric(const Eigen::Vector3f&
 
 inline __host__ bool large_displacement(const Eigen::Isometry3f& x_p, const Eigen::Isometry3f& x, double angle_eps, double trans_eps) {
   Eigen::Isometry3f delta = x_p.inverse() * x;
-  return Eigen::AngleAxisf(delta.linear()).angle() > angle_eps || delta.translation().norm() > trans_eps;
+  return std::abs(Eigen::AngleAxisf(delta.linear()).angle()) > angle_eps || delta.translation().norm() > trans_eps;
 }
 
 }  // namespace gtsam_ext

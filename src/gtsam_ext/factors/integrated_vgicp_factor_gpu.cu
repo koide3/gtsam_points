@@ -26,7 +26,13 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   source(source),
   derivatives(new IntegratedVGICPDerivatives(target, source, stream, temp_buffer)),
   linearized(false),
-  linearization_point(Eigen::Isometry3f::Identity()) {}
+  linearization_point(Eigen::Isometry3f::Identity()) {
+  //
+  if (!target->voxels_gpu || !source->points_gpu || !source->covs_gpu) {
+    std::cerr << "error: GPU resources have not been allocated!!" << std::endl;
+    abort();
+  }
+}
 
 IntegratedVGICPFactorGPU::~IntegratedVGICPFactorGPU() {}
 

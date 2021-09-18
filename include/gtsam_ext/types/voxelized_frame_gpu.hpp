@@ -43,9 +43,9 @@ public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
 
+  std::unique_ptr<GaussianVoxelMapGPU> voxels_gpu_storage;
   thrust::device_vector<Eigen::Vector3f> points_gpu_storage;
   thrust::device_vector<Eigen::Matrix3f> covs_gpu_storage;
-  std::unique_ptr<GaussianVoxelMapGPU> voxels_gpu_storage;
 };
 
 }  // namespace gtsam_ext

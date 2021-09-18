@@ -19,6 +19,7 @@
 #include <glk/thin_lines.hpp>
 #include <glk/pointcloud_buffer.hpp>
 #include <glk/normal_distributions.hpp>
+#include <glk/effects/naive_screen_space_ambient_occlusion.hpp>
 #include <guik/viewer/light_viewer.hpp>
 
 struct Submap {
@@ -107,6 +108,7 @@ int main(int argc, char** argv) {
   viewer->show_info_window();
   viewer->use_topdown_camera_control(600.0);
   viewer->lookat(Eigen::Vector3f(30.0f, 180.0f, 0.0f));
+  viewer->set_screen_effect(std::make_shared<glk::NaiveScreenSpaceAmbientOcclusion>());
 
   std::cout << "step2" << std::endl;
   std::vector<gtsam_ext::VoxelizedFrameGPU::Ptr> frames;
@@ -125,22 +127,29 @@ int main(int argc, char** argv) {
   gtsam::NonlinearFactorGraph graph;
 
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
+  std::vector<std::pair<int, int>> matching_cost_factors;
 
   std::unique_ptr<gtsam_ext::StreamTempBufferRoundRobin> stream_buffer_round_robin(new gtsam_ext::StreamTempBufferRoundRobin());
   for (int i = 0; i < globalmap.submaps.size(); i++) {
     gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * 0.1);
     values.insert(i, gtsam::Pose3(globalmap.submap_poses[i].matrix()) * noise);
+  }
 
+  for (int i = 0; i < globalmap.submaps.size(); i++) {
     int target = (i + 1) % globalmap.submaps.size();
 
     auto stream_buffer = stream_buffer_round_robin->get_stream_buffer();
     const auto& stream = stream_buffer.first;
     const auto& buffer = stream_buffer.second;
 
+    // gtsam_ext::IntegratedGICPFactor::shared_ptr factor(new gtsam_ext::IntegratedGICPFactor(target, i, frames[target], frames[i]));
     // gtsam_ext::IntegratedVGICPFactor::shared_ptr factor(new gtsam_ext::IntegratedVGICPFactor(target, i, frames[target], frames[i]));
     // factor->set_num_threads(12);
+
     // gtsam_ext::IntegratedVGICPFactorGPU::shared_ptr factor(new gtsam_ext::IntegratedVGICPFactorGPU(target, i, frames[target], frames[i], stream, buffer));
+
     // graph.add(factor);
+    // matching_cost_factors.push_back(std::make_pair(target, i));
   }
 
   for (const auto& factor : globalmap.factors) {
@@ -153,7 +162,9 @@ int main(int argc, char** argv) {
 
     gtsam_ext::IntegratedVGICPFactorGPU::shared_ptr f(
       new gtsam_ext::IntegratedVGICPFactorGPU(factor.first, factor.second, frames[factor.first], frames[factor.second], stream, buffer));
+
     graph.add(f);
+    matching_cost_factors.push_back(factor);
   }
 
   std::cout << "step4" << std::endl;
@@ -163,9 +174,23 @@ int main(int argc, char** argv) {
   lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
     viewer->append_text(status.to_string());
     for (int i = 0; i < globalmap.submaps.size(); i++) {
+      Eigen::Isometry3f matrix(values.at<gtsam::Pose3>(i).matrix().cast<float>());
+
       auto drawable = viewer->find_drawable("submap_" + std::to_string(i));
-      drawable.first->add("model_matrix", values.at<gtsam::Pose3>(i).matrix().cast<float>().eval());
+      drawable.first->add("model_matrix", matrix);
+      viewer->update_drawable(
+        "coord_" + std::to_string(i),
+        glk::Primitives::coordinate_system(),
+        guik::VertexColor(matrix * Eigen::UniformScaling<float>(15.0f)).make_transparent());
     }
+
+    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> lines;
+    for (const auto& factor : matching_cost_factors) {
+      lines.push_back(values.at<gtsam::Pose3>(factor.first).translation().cast<float>());
+      lines.push_back(values.at<gtsam::Pose3>(factor.second).translation().cast<float>());
+    }
+    viewer->update_drawable("factors", std::make_shared<glk::ThinLines>(lines), guik::FlatColor(0.0f, 1.0f, 0.0f, 1.0f).make_transparent());
+
     viewer->spin_once();
   };
 

@@ -19,6 +19,8 @@ public:
   IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
   virtual ~IntegratedVGICPFactor() override;
 
+  // note: If you build GTSAM with TBB, linearization is already multi-threaded
+  //     : and setting n>1 can rather affect the processing speed
   void set_num_threads(int n) { num_threads = n; }
 
 private:
