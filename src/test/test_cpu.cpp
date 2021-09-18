@@ -103,6 +103,10 @@ int main(int argc, char** argv) {
   GlobalMap globalmap("/home/koide/datasets/gvlo/dump/07");
 
   auto viewer = guik::LightViewer::instance();
+  viewer->enable_vsync();
+  viewer->show_info_window();
+  viewer->use_topdown_camera_control(600.0);
+  viewer->lookat(Eigen::Vector3f(30.0f, 180.0f, 0.0f));
 
   std::cout << "step2" << std::endl;
   std::vector<gtsam_ext::VoxelizedFrameGPU::Ptr> frames;
@@ -124,7 +128,7 @@ int main(int argc, char** argv) {
 
   std::unique_ptr<gtsam_ext::StreamTempBufferRoundRobin> stream_buffer_round_robin(new gtsam_ext::StreamTempBufferRoundRobin());
   for (int i = 0; i < globalmap.submaps.size(); i++) {
-    gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * 0.05);
+    gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * 0.1);
     values.insert(i, gtsam::Pose3(globalmap.submap_poses[i].matrix()) * noise);
 
     int target = (i + 1) % globalmap.submaps.size();
@@ -133,10 +137,23 @@ int main(int argc, char** argv) {
     const auto& stream = stream_buffer.first;
     const auto& buffer = stream_buffer.second;
 
-    gtsam_ext::IntegratedVGICPFactor::shared_ptr factor(new gtsam_ext::IntegratedVGICPFactor(target, i, frames[target], frames[i]));
-    factor->set_num_threads(12);
+    // gtsam_ext::IntegratedVGICPFactor::shared_ptr factor(new gtsam_ext::IntegratedVGICPFactor(target, i, frames[target], frames[i]));
+    // factor->set_num_threads(12);
     // gtsam_ext::IntegratedVGICPFactorGPU::shared_ptr factor(new gtsam_ext::IntegratedVGICPFactorGPU(target, i, frames[target], frames[i], stream, buffer));
-    graph.add(factor);
+    // graph.add(factor);
+  }
+
+  for (const auto& factor : globalmap.factors) {
+    auto stream_buffer = stream_buffer_round_robin->get_stream_buffer();
+    const auto& stream = stream_buffer.first;
+    const auto& buffer = stream_buffer.second;
+
+    // gtsam_ext::IntegratedVGICPFactor::shared_ptr f(new gtsam_ext::IntegratedVGICPFactor(factor.first, factor.second, frames[factor.first], frames[factor.second]));
+    // f->set_num_threads(12);
+
+    gtsam_ext::IntegratedVGICPFactorGPU::shared_ptr f(
+      new gtsam_ext::IntegratedVGICPFactorGPU(factor.first, factor.second, frames[factor.first], frames[factor.second], stream, buffer));
+    graph.add(f);
   }
 
   std::cout << "step4" << std::endl;
