@@ -14,11 +14,10 @@
 
 #include <gtsam_ext/util/covariance_estimation.hpp>
 #include <gtsam_ext/types/voxelized_frame_cpu.hpp>
+#include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 #include <gtsam_ext/factors/integrated_icp_factor.hpp>
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
-
-#include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
 
 #include <gtsam_ext/optimizers/isam2_ext.hpp>

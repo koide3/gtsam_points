@@ -17,8 +17,8 @@ struct lookup_voxels_kernel {
 
   lookup_voxels_kernel(const GaussianVoxelMapGPU& voxelmap, const thrust::device_ptr<const Eigen::Vector3f>& points, const thrust::device_ptr<const Eigen::Isometry3f>& x_ptr)
   : x_ptr(x_ptr),
-    voxelmap_info_ptr(voxelmap.voxelmap_info_ptr.data()),
-    buckets_ptr(voxelmap.buckets.data()),
+    voxelmap_info_ptr(voxelmap.voxelmap_info_ptr->data()),
+    buckets_ptr(voxelmap.buckets->data()),
     points_ptr(points) {}
 
   __host__ __device__ thrust::pair<int, int> operator()(int point_idx) const {

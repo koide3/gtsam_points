@@ -16,9 +16,9 @@ struct vgicp_derivatives_kernel {
     const thrust::device_ptr<const Eigen::Vector3f>& source_means,
     const thrust::device_ptr<const Eigen::Matrix3f>& source_covs)
   : linearization_point_ptr(linearization_point_ptr),
-    voxel_num_points_ptr(voxelmap.num_points.data()),
-    voxel_means_ptr(voxelmap.voxel_means.data()),
-    voxel_covs_ptr(voxelmap.voxel_covs.data()),
+    voxel_num_points_ptr(voxelmap.num_points->data()),
+    voxel_means_ptr(voxelmap.voxel_means->data()),
+    voxel_covs_ptr(voxelmap.voxel_covs->data()),
     source_means_ptr(source_means),
     source_covs_ptr(source_covs) {}
 
@@ -84,9 +84,9 @@ struct vgicp_error_kernel {
     const thrust::device_ptr<const Eigen::Matrix3f>& source_covs)
   : linearization_point_ptr(linearization_point_ptr),
     evaluation_point_ptr(evaluation_point_ptr),
-    voxel_num_points_ptr(voxelmap.num_points.data()),
-    voxel_means_ptr(voxelmap.voxel_means.data()),
-    voxel_covs_ptr(voxelmap.voxel_covs.data()),
+    voxel_num_points_ptr(voxelmap.num_points->data()),
+    voxel_means_ptr(voxelmap.voxel_means->data()),
+    voxel_covs_ptr(voxelmap.voxel_covs->data()),
     source_means_ptr(source_means),
     source_covs_ptr(source_covs) {}
 

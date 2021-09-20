@@ -2,6 +2,17 @@
 
 #include <gtsam_ext/types/voxelized_frame.hpp>
 
+// forward declaration
+namespace thrust {
+
+template <typename T>
+class device_allocator;
+
+template <typename T, typename Alloc>
+class device_vector;
+
+}  // namespace thrust
+
 namespace gtsam_ext {
 
 struct VoxelizedFrameGPU : public VoxelizedFrame {
@@ -37,13 +48,16 @@ private:
   void init(double voxel_resolution);
 
 public:
+  using PointsGPU = thrust::device_vector<Eigen::Vector3f, thrust::device_allocator<Eigen::Vector3f>>;
+  using MatricesGPU = thrust::device_vector<Eigen::Matrix3f, thrust::device_allocator<Eigen::Matrix3f>>;
+
   std::unique_ptr<GaussianVoxelMapCPU> voxels_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
 
   std::unique_ptr<GaussianVoxelMapGPU> voxels_gpu_storage;
-  thrust::device_vector_<Eigen::Vector3f> points_gpu_storage;
-  thrust::device_vector_<Eigen::Matrix3f> covs_gpu_storage;
+  std::unique_ptr<PointsGPU> points_gpu_storage;
+  std::unique_ptr<MatricesGPU> covs_gpu_storage;
 };
 
 }  // namespace gtsam_ext

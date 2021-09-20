@@ -1,6 +1,8 @@
 #include <gtsam_ext/types/frame.hpp>
 
+#include <thrust/pair.h>
 #include <thrust/device_ptr.h>
+#include <thrust/device_vector.h>
 #include <thrust/async/reduce.h>
 #include <thrust/async/transform.h>
 
@@ -15,8 +17,8 @@ namespace gtsam_ext {
 struct overlap_count_kernel {
 public:
   overlap_count_kernel(const GaussianVoxelMapGPU& voxelmap, const thrust::device_ptr<const Eigen::Isometry3f>& delta_ptr)
-  : voxelmap_info_ptr(voxelmap.voxelmap_info_ptr.data()),
-    buckets_ptr(voxelmap.buckets.data()),
+  : voxelmap_info_ptr(voxelmap.voxelmap_info_ptr->data()),
+    buckets_ptr(voxelmap.buckets->data()),
     delta_ptr(delta_ptr) {}
 
   __host__ __device__ bool operator()(const Eigen::Vector3f& x) const {

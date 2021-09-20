@@ -1,5 +1,6 @@
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 
+#include <thrust/device_vector.h>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 
@@ -22,13 +23,16 @@ void VoxelizedFrameGPU::init(double voxel_resolution) {
   std::transform(points_storage.begin(), points_storage.end(), host_points.begin(), [](const Eigen::Vector4d& pt) { return pt.head<3>().cast<float>(); });
   std::transform(covs_storage.begin(), covs_storage.end(), host_covs.begin(), [](const Eigen::Matrix4d& cov) { return cov.block<3, 3>(0, 0).cast<float>(); });
 
-  points_gpu_storage.resize(num_points);
-  covs_gpu_storage.resize(num_points);
-  cudaMemcpy(thrust::raw_pointer_cast(points_gpu_storage.data()), host_points.data(), sizeof(Eigen::Vector3f) * num_points, cudaMemcpyHostToDevice);
-  cudaMemcpy(thrust::raw_pointer_cast(covs_gpu_storage.data()), host_covs.data(), sizeof(Eigen::Matrix3f) * num_points, cudaMemcpyHostToDevice);
+  points_gpu_storage.reset(new PointsGPU);
+  covs_gpu_storage.reset(new MatricesGPU);
 
-  points_gpu = thrust::raw_pointer_cast(points_gpu_storage.data());
-  covs_gpu = thrust::raw_pointer_cast(covs_gpu_storage.data());
+  points_gpu_storage->resize(num_points);
+  covs_gpu_storage->resize(num_points);
+  cudaMemcpy(thrust::raw_pointer_cast(points_gpu_storage->data()), host_points.data(), sizeof(Eigen::Vector3f) * num_points, cudaMemcpyHostToDevice);
+  cudaMemcpy(thrust::raw_pointer_cast(covs_gpu_storage->data()), host_covs.data(), sizeof(Eigen::Matrix3f) * num_points, cudaMemcpyHostToDevice);
+
+  points_gpu = thrust::raw_pointer_cast(points_gpu_storage->data());
+  covs_gpu = thrust::raw_pointer_cast(covs_gpu_storage->data());
 
   voxels_gpu_storage.reset(new GaussianVoxelMapGPU(voxel_resolution));
   voxels_gpu_storage->create_voxelmap(*this);
@@ -81,26 +85,26 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(
 VoxelizedFrameGPU::~VoxelizedFrameGPU() {}
 
 std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> VoxelizedFrameGPU::get_points_gpu() const {
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> buffer(points_gpu_storage.size());
-  cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(points_gpu_storage.data()), sizeof(Eigen::Vector3f) * points_gpu_storage.size(), cudaMemcpyDeviceToHost);
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> buffer(points_gpu_storage->size());
+  cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(points_gpu_storage->data()), sizeof(Eigen::Vector3f) * points_gpu_storage->size(), cudaMemcpyDeviceToHost);
   return buffer;
 }
 
 std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> VoxelizedFrameGPU::get_covs_gpu() const {
-  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> buffer(covs_gpu_storage.size());
-  cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(covs_gpu_storage.data()), sizeof(Eigen::Matrix3f) * covs_gpu_storage.size(), cudaMemcpyDeviceToHost);
+  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> buffer(covs_gpu_storage->size());
+  cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(covs_gpu_storage->data()), sizeof(Eigen::Matrix3f) * covs_gpu_storage->size(), cudaMemcpyDeviceToHost);
   return buffer;
 }
 
 std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> VoxelizedFrameGPU::get_voxel_means_gpu() const {
-  const auto& means_storage = voxels_gpu->voxel_means;
+  const auto& means_storage = *(voxels_gpu->voxel_means);
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> buffer(means_storage.size());
   cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(means_storage.data()), sizeof(Eigen::Vector3f) * means_storage.size(), cudaMemcpyDeviceToHost);
   return buffer;
 }
 
 std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> VoxelizedFrameGPU::get_voxel_covs_gpu() const {
-  const auto& covs_storage = voxels_gpu->voxel_covs;
+  const auto& covs_storage = *(voxels_gpu->voxel_covs);
   std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> buffer(covs_storage.size());
   cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(covs_storage.data()), sizeof(Eigen::Matrix3f) * covs_storage.size(), cudaMemcpyDeviceToHost);
   return buffer;

@@ -1,25 +1,22 @@
 #pragma once
 
+#include <memory>
 #include <Eigen/Core>
+
 #include <gtsam_ext/types/gaussian_voxelmap.hpp>
 
+// forward declaration
 struct CUstream_st;
 
 namespace thrust {
-
 template <typename T1, typename T2>
-struct pair;
+class pair;
 
 template <typename T>
 class device_allocator;
 
 template <typename T, typename Alloc>
 class device_vector;
-
-template <typename T>
-struct device_vector_ {
-  using type = device_vector<T, device_allocator<T>>;
-};
 
 }  // namespace thrust
 
@@ -44,16 +41,22 @@ private:
   void create_bucket_table(CUstream_st* stream, const Frame& frame);
 
 public:
+  using Indices = thrust::device_vector<int, thrust::device_allocator<int>>;
+  using Points = thrust::device_vector<Eigen::Vector3f, thrust::device_allocator<Eigen::Vector3f>>;
+  using Matrices = thrust::device_vector<Eigen::Matrix3f, thrust::device_allocator<Eigen::Matrix3f>>;
+  using Buckets = thrust::device_vector<thrust::pair<Eigen::Vector3i, int>, thrust::device_allocator<thrust::pair<Eigen::Vector3i, int>>>;
+  using VoxelMapInfoVec = thrust::device_vector<VoxelMapInfo, thrust::device_allocator<VoxelMapInfo>>;
+
   const int init_num_buckets;
   VoxelMapInfo voxelmap_info;
-  thrust::device_vector_<VoxelMapInfo> voxelmap_info_ptr;
+  std::unique_ptr<VoxelMapInfoVec> voxelmap_info_ptr;
 
-  thrust::device_vector_<thrust::pair<Eigen::Vector3i, int>> buckets;
+  std::unique_ptr<Buckets> buckets;
 
   // voxel data
-  thrust::device_vector_<int> num_points;
-  thrust::device_vector_<Eigen::Vector3f> voxel_means;
-  thrust::device_vector_<Eigen::Matrix3f> voxel_covs;
+  std::unique_ptr<Indices> num_points;
+  std::unique_ptr<Points> voxel_means;
+  std::unique_ptr<Matrices> voxel_covs;
 };
 
-}  // namespace gtsam_ext
+}
