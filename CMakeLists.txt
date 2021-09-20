@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(gtsam_ext)
 
-option(BUILD_GTSAM_EXT_GPU "Build with GPU support" ON)
+option(BUILD_TEST "Build test" ON)
+option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 
 if(BUILD_WITH_MARCH_NATIVE)
@@ -24,7 +25,7 @@ if (OPENMP_FOUND)
 endif()
 
 # GPU-related
-if(BUILD_GTSAM_EXT_GPU)
+if(BUILD_WITH_CUDA)
   find_package(CUDA REQUIRED)
   add_definitions(-DBUILD_GTSAM_EXT_GPU)
 
@@ -52,6 +53,8 @@ catkin_package(
 ###########
 
 add_library(gtsam_ext SHARED
+  # util
+  src/gtsam_ext/util/covariance_estimation.cpp
   # types
   src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/voxelized_frame.cpp
@@ -65,11 +68,14 @@ add_library(gtsam_ext SHARED
   # optimizers
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
+  src/gtsam_ext/optimizers/isam2_ext.cpp
+  src/gtsam_ext/optimizers/isam2_ext_impl.cpp
+  src/gtsam_ext/optimizers/incremental_fixed_lag_smoother_ext.cpp
 )
 target_include_directories(gtsam_ext PRIVATE
   include
+  thirdparty/Eigen
   thirdparty/nanoflann/include
-  ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIRS}
 )
@@ -77,25 +83,25 @@ target_link_libraries(gtsam_ext
   ${GTSAM_LIBRARIES}
 )
 
-add_executable(test_cpu
-  src/test/test_cpu.cpp
-)
-target_include_directories(test_cpu PRIVATE
-  include
-  ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS}
-  ${GTSAM_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}
-)
-target_link_libraries(test_cpu
-  gtsam_ext
-  gtsam_ext_cuda
-  ${catkin_LIBRARIES}
-)
+# add_executable(test_cpu
+#   src/test/test_cpu.cpp
+# )
+# target_include_directories(test_cpu PRIVATE
+#   include
+#   ${EIGEN3_INCLUDE_DIR}
+#   ${Boost_INCLUDE_DIRS}
+#   ${GTSAM_INCLUDE_DIRS}
+#   ${catkin_INCLUDE_DIRS}
+# )
+# target_link_libraries(test_cpu
+#   gtsam_ext
+#   gtsam_ext_cuda
+#   ${catkin_LIBRARIES}
+# )
 
 
 # GPU-related
-if(BUILD_GTSAM_EXT_GPU)
+if(BUILD_WITH_CUDA)
   cuda_add_library(gtsam_ext_cuda SHARED
     # cuda-related
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
@@ -122,4 +128,28 @@ if(BUILD_GTSAM_EXT_GPU)
   target_link_libraries(gtsam_ext
     gtsam_ext_cuda
   )
+endif()
+
+# test
+if(BUILD_TEST)
+  enable_testing()
+  find_package(GTest REQUIRED)
+
+  add_executable(gtsam_ext_test src/test/gtsam_ext_test.cpp)
+  target_include_directories(gtsam_ext_test PUBLIC
+    include
+    ${EIGEN3_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${GTSAM_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+  )
+  add_dependencies(gtsam_ext_test gtsam_ext)
+  target_link_libraries(gtsam_ext_test
+    gtsam_ext
+    ${GTEST_LIBRARIES}
+    ${catkin_LIBRARIES}
+  )
+
+  include(GoogleTest)
+  gtest_discover_tests(gtsam_ext_test WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}" EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data")
 endif()

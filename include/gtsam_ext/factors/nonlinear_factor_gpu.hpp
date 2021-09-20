@@ -1,10 +1,14 @@
 #pragma once
 
-#include <thrust/device_ptr.h>
-
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/utility/typed_in_place_factory.hpp>
 #include <gtsam/nonlinear/NonlinearFactor.h>
+
+namespace thrust {
+
+template <typename T>
+class device_ptr;
+}
 
 namespace gtsam_ext {
 

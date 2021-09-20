@@ -36,6 +36,10 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
 
 IntegratedVGICPFactorGPU::~IntegratedVGICPFactorGPU() {}
 
+void IntegratedVGICPFactorGPU::set_inlier_update_thresh(double trans, double angle) {
+  derivatives->set_inlier_update_thresh(trans, angle);
+}
+
 size_t IntegratedVGICPFactorGPU::linearization_input_size() const {
   return sizeof(Eigen::Isometry3f);
 }

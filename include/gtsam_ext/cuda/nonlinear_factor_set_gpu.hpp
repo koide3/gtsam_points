@@ -71,11 +71,11 @@ public:
   int size() const { return 0; }
   void clear() {}
 
-  void clear_counts();
+  void clear_counts() {}
   int linearization_count() const { return 0; }
   int evaluation_count() const { return 0; }
 
-  bool add(boost::shared_ptr<gtsam::NonlinearFactor> factor) {}
+  bool add(boost::shared_ptr<gtsam::NonlinearFactor> factor) { return false; }
   void add(const gtsam::NonlinearFactorGraph& factors) {}
   void add(boost::shared_ptr<NonlinearFactorGPU> factor) {}
 

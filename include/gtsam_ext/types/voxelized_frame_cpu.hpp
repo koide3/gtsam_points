@@ -1,6 +1,8 @@
 #pragma once
 
 #include <gtsam_ext/types/voxelized_frame.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 
 namespace gtsam_ext {
 

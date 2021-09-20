@@ -28,6 +28,8 @@ public:
 
   virtual ~IntegratedVGICPFactorGPU() override;
 
+  void set_inlier_update_thresh(double trans, double angle);
+
   // forbid copy
   IntegratedVGICPFactorGPU(const IntegratedVGICPFactorGPU&) = delete;
   IntegratedVGICPFactorGPU& operator=(const IntegratedVGICPFactorGPU&) = delete;

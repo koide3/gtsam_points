@@ -24,6 +24,11 @@ public:
   IntegratedVGICPDerivatives(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, CUstream_st* ext_stream, std::shared_ptr<TempBufferManager> temp_buffer);
   ~IntegratedVGICPDerivatives();
 
+  void set_inlier_update_thresh(double trans, double angle) {
+    inlier_update_thresh_trans = trans;
+    inlier_update_thresh_angle = angle;
+  }
+
   // synchronized interface
   LinearizedSystem6 linearize(const Eigen::Isometry3f& x);
   double compute_error(const Eigen::Isometry3f& xl, const Eigen::Isometry3f& xe);
@@ -35,6 +40,9 @@ public:
   void issue_compute_error(const thrust::device_ptr<const Eigen::Isometry3f>& xl, const thrust::device_ptr<const Eigen::Isometry3f>& xe, const thrust::device_ptr<float>& output);
 
 private:
+  double inlier_update_thresh_trans;
+  double inlier_update_thresh_angle;
+
   bool external_stream;
   cudaStream_t stream;
   std::shared_ptr<TempBufferManager> temp_buffer;

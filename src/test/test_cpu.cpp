@@ -5,6 +5,7 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include <gtsam_ext/util/covariance_estimation.hpp>
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
@@ -13,6 +14,7 @@
 #include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_ext/optimizers/isam2_ext.hpp>
 #include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
 
 #include <glk/primitives/primitives.hpp>
@@ -28,33 +30,28 @@ public:
 
   Submap(const std::string& submap_path) {
     std::ifstream points_ifs(submap_path + "/points.bin", std::ios::binary | std::ios::ate);
-    std::ifstream covs_ifs(submap_path + "/covs.bin", std::ios::binary | std::ios::ate);
-    if (!points_ifs || !covs_ifs) {
+    if (!points_ifs) {
       std::cerr << "error: failed to open " << submap_path + "/(points|covs).bin" << std::endl;
       abort();
     }
 
     std::streamsize points_bytes = points_ifs.tellg();
-    std::streamsize covs_bytes = covs_ifs.tellg();
     size_t num_points = points_bytes / (sizeof(Eigen::Vector3f));
-    size_t num_covs = covs_bytes / (sizeof(Eigen::Matrix3f));
-    if (num_points != num_covs) {
-      std::cerr << "error: mismatch of num of points/covs is found!!" << std::endl;
-      abort();
-    }
 
     points_ifs.seekg(0, std::ios::beg);
-    covs_ifs.seekg(0, std::ios::beg);
+
+    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_f;
+    points_f.resize(num_points);
+    points_ifs.read(reinterpret_cast<char*>(points_f.data()), sizeof(Eigen::Vector3f) * num_points);
 
     points.resize(num_points);
-    covs.resize(num_points);
-    points_ifs.read(reinterpret_cast<char*>(points.data()), sizeof(Eigen::Vector3f) * num_points);
-    covs_ifs.read(reinterpret_cast<char*>(covs.data()), sizeof(Eigen::Matrix3f) * num_points);
+    std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p[0], p[1], p[2], 1.0); });
+    covs = gtsam_ext::estimate_covariances(points, 10);
   }
 
 public:
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points;
-  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs;
+  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points;
+  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs;
 };
 
 struct GlobalMap {
@@ -100,8 +97,7 @@ public:
 };
 
 int main(int argc, char** argv) {
-  std::cout << "step1" << std::endl;
-  GlobalMap globalmap("/home/koide/datasets/gvlo/dump/07");
+  GlobalMap globalmap("/home/koide/datasets/kitti_07_dump");
 
   auto viewer = guik::LightViewer::instance();
   viewer->enable_vsync();
@@ -110,7 +106,6 @@ int main(int argc, char** argv) {
   viewer->lookat(Eigen::Vector3f(30.0f, 180.0f, 0.0f));
   viewer->set_screen_effect(std::make_shared<glk::NaiveScreenSpaceAmbientOcclusion>());
 
-  std::cout << "step2" << std::endl;
   std::vector<gtsam_ext::VoxelizedFrameGPU::Ptr> frames;
   for (int i = 0; i < globalmap.submaps.size(); i++) {
     const auto& submap = globalmap.submaps[i];
@@ -122,7 +117,6 @@ int main(int argc, char** argv) {
     viewer->update_drawable("submap_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(submap->points), guik::Rainbow(submap_pose.cast<float>()));
   }
 
-  std::cout << "step3" << std::endl;
   gtsam::Values values;
   gtsam::NonlinearFactorGraph graph;
 
@@ -169,6 +163,14 @@ int main(int argc, char** argv) {
 
   std::cout << "step4" << std::endl;
 
+  /*
+  gtsam_ext::ISAM2Ext isam2;
+  auto result = isam2.update(graph, values);
+  values = isam2.calculateEstimate();
+  viewer->append_text(result.to_string());
+  */
+
+  //*
   gtsam_ext::LevenbergMarquardtExtParams lm_params;
   lm_params.setDiagonalDamping(true);
   lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
@@ -193,8 +195,8 @@ int main(int argc, char** argv) {
 
     viewer->spin_once();
   };
-
   values = gtsam_ext::LevenbergMarquardtOptimizerExt(graph, values, lm_params).optimize();
+  //*/
 
   viewer->spin();
 

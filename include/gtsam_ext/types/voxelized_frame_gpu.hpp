@@ -2,8 +2,6 @@
 
 #include <gtsam_ext/types/voxelized_frame.hpp>
 
-#include <thrust/device_vector.h>
-
 namespace gtsam_ext {
 
 struct VoxelizedFrameGPU : public VoxelizedFrame {
@@ -44,8 +42,8 @@ public:
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
 
   std::unique_ptr<GaussianVoxelMapGPU> voxels_gpu_storage;
-  thrust::device_vector<Eigen::Vector3f> points_gpu_storage;
-  thrust::device_vector<Eigen::Matrix3f> covs_gpu_storage;
+  thrust::device_vector_<Eigen::Vector3f> points_gpu_storage;
+  thrust::device_vector_<Eigen::Matrix3f> covs_gpu_storage;
 };
 
 }  // namespace gtsam_ext

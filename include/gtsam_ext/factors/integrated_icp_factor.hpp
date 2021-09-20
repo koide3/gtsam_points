@@ -16,8 +16,9 @@ public:
   IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
   virtual ~IntegratedICPFactor() override;
 
-  // note: If you build GTSAM with TBB, linearization is already multi-threaded
+  // note: If your GTSAM is built with TBB, linearization is already multi-threaded
   //     : and setting n>1 can rather affect the processing speed  void set_num_threads(int n) { num_threads = n; }
+  void set_num_threads(int n) { num_threads = n; }
   void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
 
 private:

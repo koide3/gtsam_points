@@ -26,7 +26,9 @@ IntegratedVGICPDerivatives::IntegratedVGICPDerivatives(
   const Frame::ConstPtr& source,
   CUstream_st* ext_stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
-: target(target),
+: inlier_update_thresh_trans(1e-3),
+  inlier_update_thresh_angle(1e-2),
+  target(target),
   source(source),
   external_stream(true),
   stream(ext_stream),
@@ -92,7 +94,7 @@ double IntegratedVGICPDerivatives::compute_error(const Eigen::Isometry3f& xl, co
 }
 
 void IntegratedVGICPDerivatives::update_inliers(const Eigen::Isometry3f& x, const thrust::device_ptr<const Eigen::Isometry3f>& x_ptr, bool force_update) {
-  if (force_update || source_inliears.empty() || large_displacement(inlier_evaluation_point, x, 1e-3, 1e-2)) {
+  if (force_update || source_inliears.empty() || large_displacement(inlier_evaluation_point, x, inlier_update_thresh_trans, inlier_update_thresh_angle)) {
     inlier_evaluation_point = x;
 
     source_inliears.resize(source->size());
