@@ -23,9 +23,6 @@
 #include <gtsam_ext/optimizers/isam2_ext.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
-#include <glk/pointcloud_buffer.hpp>
-#include <guik/viewer/light_viewer.hpp>
-
 struct ExtTestBase : public testing::Test {
   virtual void SetUp() {
     std::string dump_path = "./data/kitti_07_dump";

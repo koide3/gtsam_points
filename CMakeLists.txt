@@ -36,18 +36,6 @@ if(BUILD_WITH_CUDA)
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
 endif()
 
-find_package(catkin REQUIRED COMPONENTS iridescence)
-
-###################################
-## catkin specific configuration ##
-###################################
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES gtsam_ext
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
-)
-
 ###########
 ## Build ##
 ###########
@@ -82,23 +70,6 @@ target_include_directories(gtsam_ext PRIVATE
 target_link_libraries(gtsam_ext
   ${GTSAM_LIBRARIES}
 )
-
-# add_executable(test_cpu
-#   src/test/test_cpu.cpp
-# )
-# target_include_directories(test_cpu PRIVATE
-#   include
-#   ${EIGEN3_INCLUDE_DIR}
-#   ${Boost_INCLUDE_DIRS}
-#   ${GTSAM_INCLUDE_DIRS}
-#   ${catkin_INCLUDE_DIRS}
-# )
-# target_link_libraries(test_cpu
-#   gtsam_ext
-#   gtsam_ext_cuda
-#   ${catkin_LIBRARIES}
-# )
-
 
 # GPU-related
 if(BUILD_WITH_CUDA)
@@ -141,13 +112,12 @@ if(BUILD_TEST)
     ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${GTSAM_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}
+  ${4_INCLUDE_DIRS}
   )
   add_dependencies(gtsam_ext_test gtsam_ext)
   target_link_libraries(gtsam_ext_test
     gtsam_ext
     ${GTEST_LIBRARIES}
-    ${catkin_LIBRARIES}
   )
 
   include(GoogleTest)
