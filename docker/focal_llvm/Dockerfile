@@ -11,25 +11,23 @@ RUN apt-get update \
   && add-apt-repository ppa:borglab/gtsam-develop \
   # install dependencies
   && apt-get install --no-install-recommends -y \
-    wget nano build-essential \
+    wget nano build-essential clang lld \
     git cmake libeigen3-dev ca-certificates \
     libtbb-dev libboost-all-dev libgtest-dev libmetis-dev \
-    libgtsam-dev libgtsam-unstable-dev \
+    libpthread-stubs0-dev libgtsam-dev libgtsam-unstable-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update \
-  && apt-get install --no-install-recommends -y \
-    libomp-dev \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
+RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 50
 
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build
-RUN cmake .. \
+RUN CC=clang CXX=clang++ \
+  cmake .. \
   -DBUILD_TEST=ON \
   -DBUILD_WITH_CUDA=OFF \
-  -DCMAKE_BUILD_TYPE=Release
+  -DCMAKE_BUILD_TYPE=Release \
+  -DBUILD_WITH_SYSTEM_EIGEN=OFF
 RUN make -j$(nproc)
 
 WORKDIR /root/gtsam_ext

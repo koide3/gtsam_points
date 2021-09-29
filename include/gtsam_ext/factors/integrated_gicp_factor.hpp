@@ -17,7 +17,7 @@ public:
   virtual ~IntegratedGICPFactor() override;
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
-  //     : and setting n>1 can rather affect the processing speed  void set_num_threads(int n) { num_threads = n; }
+  //     : and setting n>1 can rather affect the processing speed
   void set_num_threads(int n) { num_threads = n; }
   void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
 

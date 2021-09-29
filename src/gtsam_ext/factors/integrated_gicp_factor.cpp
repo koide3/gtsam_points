@@ -131,7 +131,7 @@ double IntegratedGICPFactor::evaluate(
     J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.head<3>());
     J_source.block<3, 3>(0, 3) = -delta.linear();
 
-    int thread_num = 1;
+    int thread_num = 0;
 #ifdef _OPENMP
     thread_num = omp_get_thread_num();
 #endif

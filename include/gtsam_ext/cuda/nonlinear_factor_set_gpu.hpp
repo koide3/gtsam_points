@@ -82,7 +82,7 @@ public:
   void linearize(const gtsam::Values& linearization_point) {}
   void error(const gtsam::Values& values) {}
 
-  std::vector<gtsam::GaussianFactor::shared_ptr> calc_linear_factors(const gtsam::Values& linearization_point) {}
+  std::vector<gtsam::GaussianFactor::shared_ptr> calc_linear_factors(const gtsam::Values& linearization_point) { return std::vector<gtsam::GaussianFactor::shared_ptr>(); }
 };
 
 }  // namespace gtsam_ext

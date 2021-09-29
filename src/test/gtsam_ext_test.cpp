@@ -29,8 +29,10 @@ struct ExtTestBase : public testing::Test {
     std::ifstream ifs(dump_path + "/graph.txt");
     EXPECT_EQ(ifs.is_open(), true) << "Failed to open " << dump_path;
 
+    // It seems generated random numbers change depending on the compiler
+    // Should we use pregenerated randoms saved in a file for reproductivity?
     const double pose_noise_scale = 0.1;
-    std::mt19937 mt;
+    std::mt19937 mt(8192 - 1);
     std::uniform_real_distribution<> udist(-pose_noise_scale, pose_noise_scale);
 
     // load submap poses
@@ -155,12 +157,12 @@ TEST_P(FactorTest, test) {
     graph.add(create_factor(i, i + 1, frames[i], frames[i + 1]));
     graph.add(gtsam::PriorFactor<gtsam::Pose3>(i, poses.at<gtsam::Pose3>(i), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
 
-    test_graph(graph, values, "FORWARD_TEST");
+    test_graph(graph, values, "FORWARD_TEST_" + std::to_string(i));
 
     graph.erase(graph.begin() + static_cast<int>(graph.size()) - 1);
     graph.add(gtsam::PriorFactor<gtsam::Pose3>(i + 1, poses.at<gtsam::Pose3>(i + 1), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
 
-    test_graph(graph, values, "BACKWARD_TEST");
+    test_graph(graph, values, "BACKWARD_TEST_" + std::to_string(i));
   }
 
   gtsam::Values values;

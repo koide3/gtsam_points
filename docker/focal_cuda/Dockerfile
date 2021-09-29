@@ -1,7 +1,6 @@
-FROM ubuntu:focal
+FROM nvidia/cuda:11.1-devel-ubuntu20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 RUN apt-get update \
   && apt-get upgrade -y \
@@ -18,21 +17,15 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update \
-  && apt-get install --no-install-recommends -y \
-    libomp-dev \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
-
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build
 RUN cmake .. \
   -DBUILD_TEST=ON \
-  -DBUILD_WITH_CUDA=OFF \
+  -DBUILD_WITH_CUDA=ON \
   -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
 
-WORKDIR /root/gtsam_ext
-RUN ./build/gtsam_ext_test
+# WORKDIR /root/gtsam_ext
+# RUN ./build/gtsam_ext_test
 
 CMD ["bash"]

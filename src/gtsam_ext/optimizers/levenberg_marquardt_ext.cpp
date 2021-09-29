@@ -187,7 +187,6 @@ gtsam::GaussianFactorGraph::shared_ptr LevenbergMarquardtOptimizerExt::iterate()
   }
 
   // graph_ext_->post_optimization(state_->values);
-
   return linear;
 }
 

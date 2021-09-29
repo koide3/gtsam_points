@@ -4,6 +4,7 @@ project(gtsam_ext)
 option(BUILD_TEST "Build test" ON)
 option(BUILD_WITH_CUDA "Build with GPU support" ON)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
+option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" ON)
 
 if(BUILD_WITH_MARCH_NATIVE)
   add_definitions(-march=native)
@@ -16,7 +17,12 @@ add_compile_options(-std=c++17)
 
 find_package(Boost REQUIRED timer)
 find_package(GTSAM REQUIRED)
-find_package(Eigen3 REQUIRED)
+
+if(BUILD_WITH_SYSTEM_EIGEN)
+  find_package(Eigen3 REQUIRED)
+else()
+  set(EIGEN3_INCLUDE_DIR "thirdparty/Eigen")
+endif()
 
 find_package(OpenMP)
 if (OPENMP_FOUND)
@@ -62,12 +68,13 @@ add_library(gtsam_ext SHARED
 )
 target_include_directories(gtsam_ext PRIVATE
   include
-  thirdparty/Eigen
+  ${EIGEN3_INCLUDE_DIR}
   thirdparty/nanoflann/include
   ${Boost_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIRS}
 )
 target_link_libraries(gtsam_ext
+  pthread
   ${GTSAM_LIBRARIES}
 )
 
@@ -88,7 +95,7 @@ if(BUILD_WITH_CUDA)
   )
   target_include_directories(gtsam_ext_cuda PUBLIC
     include
-    thirdparty/Eigen
+    ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${GTSAM_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
