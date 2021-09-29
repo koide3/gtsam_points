@@ -22,12 +22,10 @@ RUN apt-get update \
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build
 RUN cmake .. \
-  -DBUILD_TEST=ON \
+  -DBUILD_TESTS=ON \
   -DBUILD_WITH_CUDA=OFF \
   -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
-
-WORKDIR /root/gtsam_ext
-RUN ./build/gtsam_ext_test
+RUN make test
 
 CMD ["bash"]

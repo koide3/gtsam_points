@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(gtsam_ext)
 
-option(BUILD_TEST "Build test" OFF)
+option(BUILD_TESTS "Build test" OFF)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" OFF)
@@ -109,24 +109,26 @@ if(BUILD_WITH_CUDA)
 endif()
 
 # test
-if(BUILD_TEST)
+if(BUILD_TESTS)
   enable_testing()
   find_package(GTest REQUIRED)
 
-  add_executable(gtsam_ext_test src/test/gtsam_ext_test.cpp)
-  target_include_directories(gtsam_ext_test PUBLIC
+  add_executable(test_matching_cost_factors src/test/test_matching_cost_factors.cpp)
+  target_include_directories(test_matching_cost_factors PUBLIC
     include
     ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${GTSAM_INCLUDE_DIRS}
   ${4_INCLUDE_DIRS}
   )
-  add_dependencies(gtsam_ext_test gtsam_ext)
-  target_link_libraries(gtsam_ext_test
+  target_link_libraries(test_matching_cost_factors
     gtsam_ext
     ${GTEST_LIBRARIES}
   )
 
   include(GoogleTest)
-  gtest_discover_tests(gtsam_ext_test WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}" EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data")
+  gtest_discover_tests(test_matching_cost_factors
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
+  )
 endif()
