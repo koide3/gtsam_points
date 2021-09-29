@@ -18,11 +18,6 @@ RUN apt-get update \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 
-RUN apt-get update \
-  && apt-get install --no-install-recommends -y \
-    libomp-dev \
-  && apt-get clean \
-  && rm -rf /var/lib/apt/lists/*
 
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build

@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(gtsam_ext)
 
-option(BUILD_TEST "Build test" ON)
-option(BUILD_WITH_CUDA "Build with GPU support" ON)
+option(BUILD_TEST "Build test" OFF)
+option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
-option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" ON)
+option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" OFF)
 
 if(BUILD_WITH_MARCH_NATIVE)
   add_definitions(-march=native)
