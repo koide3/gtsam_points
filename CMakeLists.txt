@@ -112,38 +112,22 @@ if(BUILD_WITH_CUDA)
   )
 endif()
 
-# test_loam
-add_executable(test_loam
-  src/test/test_loam.cpp
-)
-target_include_directories(test_loam PUBLIC
-  include
-  ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS}
-  ${GTSAM_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}
-)
-target_link_libraries(test_loam
-  gtsam_ext
-  ${catkin_LIBRARIES}
-)
-
 # test
 if(BUILD_TESTS)
   enable_testing()
   find_package(GTest REQUIRED)
 
-  # add_executable(test_matching_cost_factors src/test/test_matching_cost_factors.cpp)
-  # target_include_directories(test_matching_cost_factors PUBLIC
-  #   include
-  #   ${EIGEN3_INCLUDE_DIR}
-  #   ${Boost_INCLUDE_DIRS}
-  #   ${GTSAM_INCLUDE_DIRS}
-  # )
-  # target_link_libraries(test_matching_cost_factors
-  #   gtsam_ext
-  #   ${GTEST_LIBRARIES}
-  # )
+  add_executable(test_matching_cost_factors src/test/test_matching_cost_factors.cpp)
+  target_include_directories(test_matching_cost_factors PUBLIC
+    include
+    ${EIGEN3_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${GTSAM_INCLUDE_DIRS}
+  )
+  target_link_libraries(test_matching_cost_factors
+    gtsam_ext
+    ${GTEST_LIBRARIES}
+  )
 
   add_executable(test_loam_factors src/test/test_loam_factors.cpp)
   target_include_directories(test_loam_factors PUBLIC
