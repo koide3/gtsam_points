@@ -123,9 +123,6 @@ target_include_directories(test_loam PUBLIC
   ${GTSAM_INCLUDE_DIRS}
   ${catkin_INCLUDE_DIRS}
 )
-target_link_directories(test_loam PUBLIC
-  /home/koide/catkin_ws/devel/lib
-)
 target_link_libraries(test_loam
   gtsam_ext
   ${catkin_LIBRARIES}
@@ -136,20 +133,32 @@ if(BUILD_TESTS)
   enable_testing()
   find_package(GTest REQUIRED)
 
-  add_executable(test_matching_cost_factors src/test/test_matching_cost_factors.cpp)
-  target_include_directories(test_matching_cost_factors PUBLIC
+  # add_executable(test_matching_cost_factors src/test/test_matching_cost_factors.cpp)
+  # target_include_directories(test_matching_cost_factors PUBLIC
+  #   include
+  #   ${EIGEN3_INCLUDE_DIR}
+  #   ${Boost_INCLUDE_DIRS}
+  #   ${GTSAM_INCLUDE_DIRS}
+  # )
+  # target_link_libraries(test_matching_cost_factors
+  #   gtsam_ext
+  #   ${GTEST_LIBRARIES}
+  # )
+
+  add_executable(test_loam_factors src/test/test_loam_factors.cpp)
+  target_include_directories(test_loam_factors PUBLIC
     include
     ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${GTSAM_INCLUDE_DIRS}
   )
-  target_link_libraries(test_matching_cost_factors
+  target_link_libraries(test_loam_factors
     gtsam_ext
     ${GTEST_LIBRARIES}
   )
 
   include(GoogleTest)
-  gtest_discover_tests(test_matching_cost_factors
+  gtest_discover_tests(test_loam_factors
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )

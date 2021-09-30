@@ -7,6 +7,9 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Abstraction of LSQ-based scan matching constraints between point clouds
+ */
 class IntegratedMatchingCostFactor : public gtsam::NonlinearFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

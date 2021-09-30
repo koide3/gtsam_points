@@ -50,6 +50,7 @@ int main(int argc, char** argv) {
 
   graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
   gtsam_ext::IntegratedLOAMFactor::shared_ptr factor(new gtsam_ext::IntegratedLOAMFactor(0, 1, edge1, plane1, edge2, plane2));
+  factor->set_max_corresponding_distance(2.0, 0.0);
   factor->set_enable_correspondence_validation(true);
   graph.add(factor);
 

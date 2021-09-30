@@ -11,7 +11,8 @@ namespace gtsam_ext {
 struct KdTree;
 
 /**
- * @brief Naive ICP matching cost factor
+ * @brief Naive point-to-point ICP matching cost factor
+ * @ref Zhang, "Iterative Point Matching for Registration of Free-Form Curve", IJCV1994
  */
 class IntegratedICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
