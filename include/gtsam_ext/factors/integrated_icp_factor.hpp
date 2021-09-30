@@ -8,6 +8,11 @@
 
 namespace gtsam_ext {
 
+struct KdTree;
+
+/**
+ * @brief Naive ICP matching cost factor
+ */
 class IntegratedICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -36,7 +41,6 @@ private:
   int num_threads;
   double max_correspondence_distance_sq;
 
-  struct KdTree;
   std::unique_ptr<KdTree> target_tree;
 
   // I'm unhappy to have mutable members...

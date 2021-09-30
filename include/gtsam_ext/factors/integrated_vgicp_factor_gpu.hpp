@@ -11,6 +11,11 @@ class LinearizedSystem6;
 class IntegratedVGICPDerivatives;
 class TempBufferManager;
 
+/**
+ * @brief GPU-accelerated Voxelized GICP matching cost factor
+ * @ref Koide et al., "Voxelized GICP for Fast and Accurate 3D Point Cloud Registration", ICRA2021
+ * @ref Koide et al., "Globally Consistent 3D LiDAR Mapping with GPU-accelerated GICP Matching Cost Factors", RA-L2021
+ */
 class IntegratedVGICPFactorGPU : public gtsam_ext::NonlinearFactorGPU {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -42,15 +42,18 @@ if(BUILD_WITH_CUDA)
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
 endif()
 
+find_package(catkin REQUIRED COMPONENTS iridescence)
+
 ###########
 ## Build ##
 ###########
 
-add_library(gtsam_ext SHARED
+add_library(gtsam_ext STATIC
   # util
   src/gtsam_ext/util/covariance_estimation.cpp
   # types
   src/gtsam_ext/types/frame.cpp
+  src/gtsam_ext/types/frame_cpu.cpp
   src/gtsam_ext/types/voxelized_frame.cpp
   src/gtsam_ext/types/voxelized_frame_cpu.cpp
   src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
@@ -59,6 +62,7 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/factors/integrated_icp_factor.cpp
   src/gtsam_ext/factors/integrated_gicp_factor.cpp
   src/gtsam_ext/factors/integrated_vgicp_factor.cpp
+  src/gtsam_ext/factors/integrated_loam_factor.cpp
   # optimizers
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
@@ -80,7 +84,7 @@ target_link_libraries(gtsam_ext
 
 # GPU-related
 if(BUILD_WITH_CUDA)
-  cuda_add_library(gtsam_ext_cuda SHARED
+  cuda_add_library(gtsam_ext_cuda STATIC
     # cuda-related
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu
@@ -108,6 +112,25 @@ if(BUILD_WITH_CUDA)
   )
 endif()
 
+# test_loam
+add_executable(test_loam
+  src/test/test_loam.cpp
+)
+target_include_directories(test_loam PUBLIC
+  include
+  ${EIGEN3_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
+  ${GTSAM_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+)
+target_link_directories(test_loam PUBLIC
+  /home/koide/catkin_ws/devel/lib
+)
+target_link_libraries(test_loam
+  gtsam_ext
+  ${catkin_LIBRARIES}
+)
+
 # test
 if(BUILD_TESTS)
   enable_testing()
@@ -119,7 +142,6 @@ if(BUILD_TESTS)
     ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${GTSAM_INCLUDE_DIRS}
-  ${4_INCLUDE_DIRS}
   )
   target_link_libraries(test_matching_cost_factors
     gtsam_ext
