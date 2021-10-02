@@ -63,6 +63,7 @@ add_library(gtsam_ext STATIC
   src/gtsam_ext/factors/integrated_gicp_factor.cpp
   src/gtsam_ext/factors/integrated_vgicp_factor.cpp
   src/gtsam_ext/factors/integrated_loam_factor.cpp
+  src/gtsam_ext/factors/expression_icp_factor.cpp
   # optimizers
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
@@ -142,6 +143,10 @@ if(BUILD_TESTS)
   )
 
   include(GoogleTest)
+  gtest_discover_tests(test_matching_cost_factors
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
+  )
   gtest_discover_tests(test_loam_factors
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
