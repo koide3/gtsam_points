@@ -14,7 +14,7 @@ public:
   using Ptr = std::shared_ptr<Frame>;
   using ConstPtr = std::shared_ptr<const Frame>;
 
-  Frame() : num_points(0), points(nullptr), covs(nullptr), points_gpu(nullptr), covs_gpu(nullptr) {}
+  Frame() : num_points(0), times(nullptr), points(nullptr), normals(nullptr), covs(nullptr), times_gpu(nullptr), points_gpu(nullptr), normals_gpu(nullptr), covs_gpu(nullptr) {}
   virtual ~Frame() {}
 
   size_t size() const { return num_points; }
@@ -31,10 +31,14 @@ public:
 public:
   size_t num_points;
 
-  Eigen::Vector4d* points;
-  Eigen::Matrix4d* covs;
+  double* times;             // time w.r.t. the first point (sorted)
+  Eigen::Vector4d* points;   // point coordinates (x, y, z, 1)
+  Eigen::Vector4d* normals;  // point normals (nx, ny, nz, 0)
+  Eigen::Matrix4d* covs;     // point covariances cov(3, 3) = 0
 
+  float* times_gpu;
   Eigen::Vector3f* points_gpu;
+  Eigen::Vector3f* normals_gpu;
   Eigen::Matrix3f* covs_gpu;
 };
 

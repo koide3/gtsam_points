@@ -92,6 +92,7 @@ if(BUILD_WITH_CUDA)
     src/gtsam_ext/cuda/stream_temp_buffer_roundrobin.cu
     # types
     src/gtsam_ext/types/frame.cu
+    src/gtsam_ext/types/frame_gpu.cu
     src/gtsam_ext/types/voxelized_frame_gpu.cu
     src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
     # factors
