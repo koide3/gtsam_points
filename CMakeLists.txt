@@ -51,6 +51,7 @@ find_package(catkin REQUIRED COMPONENTS iridescence)
 add_library(gtsam_ext STATIC
   # util
   src/gtsam_ext/util/covariance_estimation.cpp
+  src/gtsam_ext/util/normal_estimation.cpp
   # types
   src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/frame_cpu.cpp
