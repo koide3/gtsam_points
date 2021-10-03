@@ -161,10 +161,6 @@ void IntegratedVGICPFactorGPU::issue_compute_error(
 
   auto error_gpu = thrust::reinterpret_pointer_cast<thrust::device_ptr<float>>(eval_output_gpu);
 
-  Eigen::Isometry3f l, e;
-  cudaMemcpy(l.data(), thrust::raw_pointer_cast(linearization_point_gpu), sizeof(Eigen::Isometry3f), cudaMemcpyDeviceToHost);
-  cudaMemcpy(e.data(), thrust::raw_pointer_cast(evaluation_point_gpu), sizeof(Eigen::Isometry3f), cudaMemcpyDeviceToHost);
-
   derivatives->issue_compute_error(linearization_point_gpu, evaluation_point_gpu, error_gpu);
 }
 
