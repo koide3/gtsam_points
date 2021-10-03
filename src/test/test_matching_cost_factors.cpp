@@ -19,6 +19,7 @@
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
+#include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
 
 #include <gtsam_ext/optimizers/isam2_ext.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
@@ -76,11 +77,19 @@ struct ExtTestBase : public testing::Test {
       frames.push_back(gtsam_ext::VoxelizedFrame::Ptr(new gtsam_ext::VoxelizedFrameGPU(1.0, points, covs)));
 #endif
     }
+
+#ifdef BUILD_GTSAM_EXT_GPU
+    stream_buffer_roundrobin.reset(new gtsam_ext::StreamTempBufferRoundRobin(32));
+#endif
   }
 
   std::vector<gtsam_ext::VoxelizedFrame::Ptr> frames;
   gtsam::Values poses;
   gtsam::Values poses_gt;
+
+#ifdef BUILD_GTSAM_EXT_GPU
+  std::unique_ptr<gtsam_ext::StreamTempBufferRoundRobin> stream_buffer_roundrobin;
+#endif
 };
 
 TEST_F(ExtTestBase, LoadCheck) {
@@ -103,7 +112,10 @@ public:
       factor.reset(new gtsam_ext::IntegratedVGICPFactor(target_key, source_key, target, source));
     } else if (method == "VGICP_CUDA") {
 #ifdef BUILD_GTSAM_EXT_GPU
-      factor.reset(new gtsam_ext::IntegratedVGICPFactor(target_key, source_key, target, source));
+      auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
+      const auto& stream = stream_buffer.first;
+      const auto& buffer = stream_buffer.second;
+      factor.reset(new gtsam_ext::IntegratedVGICPFactorGPU(target_key, source_key, target, source, stream, buffer));
 #endif
     }
 

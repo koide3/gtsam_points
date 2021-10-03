@@ -1,5 +1,7 @@
 #include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
 
+#include <thrust/device_vector.h>
+
 namespace gtsam_ext {
 
 TempBufferManager::TempBufferManager(size_t init_buffer_size) {

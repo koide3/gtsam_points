@@ -3,9 +3,19 @@
 #include <deque>
 #include <memory>
 #include <unordered_map>
-#include <thrust/device_vector.h>
 
 #include <gtsam_ext/cuda/stream_roundrobin.hpp>
+
+// forward declaration
+namespace thrust {
+
+template <typename T>
+class device_allocator;
+
+template <typename T, typename Alloc>
+class device_vector;
+
+}  // namespace thrust
 
 namespace gtsam_ext {
 
@@ -22,7 +32,7 @@ public:
   void clear_all();
 
 private:
-  std::vector<std::shared_ptr<thrust::device_vector<char>>> buffers;
+  std::vector<std::shared_ptr<thrust::device_vector<char, thrust::device_allocator<char>>>> buffers;
 };
 
 class StreamTempBufferRoundRobin {
