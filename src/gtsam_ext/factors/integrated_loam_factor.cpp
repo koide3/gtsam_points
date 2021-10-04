@@ -344,6 +344,7 @@ void IntegratedLOAMFactor::validate_correspondences() const {
     return;
   }
 
+  // Validate edge correspondences
   for (auto& corr : edge_factor->correspondences) {
     if(std::get<0>(corr) < 0) {
       continue;
@@ -356,9 +357,30 @@ void IntegratedLOAMFactor::validate_correspondences() const {
     const double v_theta2 = std::atan2(pt2.z(), pt2.head<2>().norm());
 
     // Reject pairs in a same scan line
-    if(std::abs(v_theta1 - v_theta2) < 0.1 * M_PI / 180.0) {
-      corr = std::make_pair(-1, -1);
+    if (std::abs(v_theta1 - v_theta2) < 0.1 * M_PI / 180.0) {
+      corr = std::make_tuple(-1, -1);
+    }
+  }
+
+  // Validate plane correspondences
+  for (auto& corr : plane_factor->correspondences) {
+    if (std::get<0>(corr) < 0) {
+      continue;
+    }
+
+    const auto& pt1 = plane_factor->target->points[std::get<0>(corr)];
+    const auto& pt2 = plane_factor->target->points[std::get<1>(corr)];
+    const auto& pt3 = plane_factor->target->points[std::get<2>(corr)];
+
+    const double v_theta1 = std::atan2(pt1.z(), pt1.head<2>().norm());
+    const double v_theta2 = std::atan2(pt2.z(), pt2.head<2>().norm());
+    const double v_theta3 = std::atan2(pt3.z(), pt3.head<2>().norm());
+
+    // Reject pairs in a same scan line
+    if (std::abs(v_theta1 - v_theta2) < 0.1 * M_PI / 180.0 && std::abs(v_theta1 - v_theta3) < 0.1 * M_PI * 180.0) {
+      corr = std::make_tuple(-1, -1, -1);
     }
   }
 }
+
 }
