@@ -155,20 +155,3 @@ if(BUILD_TESTS)
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )
 endif()
-
-
-add_executable(test_cticp
-  src/test/experimental/test_cticp.cpp
-)
-target_include_directories(test_cticp PUBLIC
-  include
-  ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS}
-  ${GTSAM_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}
-)
-target_link_libraries(test_cticp
-  gtsam_ext
-  ${GTEST_LIBRARIES}
-  ${catkin_LIBRARIES}
-)

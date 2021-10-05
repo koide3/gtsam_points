@@ -6,32 +6,19 @@
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/types/frame_cpu.hpp>
 #include <gtsam_ext/factors/expression_icp_factor.hpp>
 #include <gtsam_ext/factors/integrated_icp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
-gtsam_ext::Frame::Ptr load_points(const std::string& points_path) {
-  std::ifstream points_ifs(points_path, std::ios::binary | std::ios::ate);
-  if (!points_ifs) {
-    std::cerr << "failed to open " << points_path << std::endl;
-    abort();
-  }
-
-  std::streamsize points_bytes = points_ifs.tellg();
-  size_t num_points = points_bytes / (sizeof(Eigen::Vector3f));
-
-  points_ifs.seekg(0, std::ios::beg);
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_f;
-  points_f.resize(num_points);
-  points_ifs.read(reinterpret_cast<char*>(points_f.data()), sizeof(Eigen::Vector3f) * num_points);
-
-  return gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(points_f));
-}
 
 int main(int argc, char** argv) {
-  auto frame1 = load_points("data/kitti_07_dump/000000/points.bin");
-  auto frame2 = load_points("data/kitti_07_dump/000001/points.bin");
+  auto points1 = gtsam_ext::read_points("data/kitti_07_dump/000000/points.bin");
+  auto points2 = gtsam_ext::read_points("data/kitti_07_dump/000001/points.bin");
+
+  gtsam_ext::Frame::Ptr frame1(new gtsam_ext::FrameCPU(points1));
+  gtsam_ext::Frame::Ptr frame2(new gtsam_ext::FrameCPU(points2));
 
   gtsam::Values values;
   values.insert(0, gtsam::Pose3::identity());
