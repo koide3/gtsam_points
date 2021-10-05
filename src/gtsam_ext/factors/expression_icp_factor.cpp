@@ -32,7 +32,7 @@ ICPFactorExpr::ICPFactorExpr(
 ICPFactorExpr::~ICPFactorExpr() {}
 
 gtsam::Vector ICPFactorExpr::unwhitenedError(const gtsam::Values& values, boost::optional<std::vector<gtsam::Matrix>&> H) const {
-  // Update corresponding point at the first call and for every linearization
+  // Update corresponding point at the first call and every linearization call
   if (target_index < 0 || H) {
     update_correspondence(values);
     error_expr = calc_error();

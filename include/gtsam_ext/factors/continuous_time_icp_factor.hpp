@@ -18,8 +18,8 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   CTICPFactorExpr(
-    gtsam::Key source_t0_key,
-    gtsam::Key source_t1_key,
+    gtsam::Key source_t0_key,   // source pose at the scan beginning
+    gtsam::Key source_t1_key,   // source pose at the scan ending
     const std::shared_ptr<const Frame>& target,
     const std::shared_ptr<const KdTree>& target_tree,
     const double source_t0,     // time of the very first point in source
@@ -49,6 +49,9 @@ private:
   mutable gtsam::Double_ error_expr;
 };
 
+/**
+ * This class holds a set of CT-ICP factors and acts as if it's a single nonlinear factor
+ */
 class IntegratedCTICPFactorExpr : public gtsam::NonlinearFactor {
 public:
   using shared_ptr = boost::shared_ptr<IntegratedCTICPFactorExpr>;
@@ -63,6 +66,7 @@ public:
 
   std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> deskewed_source_points(const gtsam::Values& values) const;
 
+private:
   gtsam::NonlinearFactorGraph::shared_ptr graph;
 };
 

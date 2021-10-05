@@ -42,7 +42,7 @@ if(BUILD_WITH_CUDA)
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
 endif()
 
-find_package(catkin REQUIRED COMPONENTS iridescence)
+# find_package(catkin REQUIRED COMPONENTS iridescence)
 
 ###########
 ## Build ##
