@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(gtsam_ext)
 
+add_compile_options(-std=c++17)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 option(BUILD_TESTS "Build test" OFF)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
@@ -11,9 +14,6 @@ if(BUILD_WITH_MARCH_NATIVE)
   set(CMAKE_C_FLAGS "-march=native ${CMAKE_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "-march=native ${CMAKE_CXX_FLAGS}")
 endif()
-
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
-add_compile_options(-std=c++17)
 
 find_package(Boost REQUIRED timer)
 find_package(GTSAM REQUIRED)
@@ -65,6 +65,7 @@ add_library(gtsam_ext STATIC
   src/gtsam_ext/factors/integrated_vgicp_factor.cpp
   src/gtsam_ext/factors/integrated_loam_factor.cpp
   src/gtsam_ext/factors/expression_icp_factor.cpp
+  src/gtsam_ext/factors/continuous_time_icp_factor.cpp
   # optimizers
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
@@ -154,3 +155,20 @@ if(BUILD_TESTS)
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )
 endif()
+
+
+add_executable(test_cticp
+  src/test/experimental/test_cticp.cpp
+)
+target_include_directories(test_cticp PUBLIC
+  include
+  ${EIGEN3_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
+  ${GTSAM_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
+)
+target_link_libraries(test_cticp
+  gtsam_ext
+  ${GTEST_LIBRARIES}
+  ${catkin_LIBRARIES}
+)

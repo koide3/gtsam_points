@@ -15,6 +15,7 @@
 #include <gtsam_ext/types/frame_cpu.hpp>
 #include <gtsam_ext/factors/integrated_loam_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_ext/util/read_points.hpp>
 
 struct LOAMTestBase : public testing::Test {
   virtual void SetUp() {
@@ -40,24 +41,15 @@ struct LOAMTestBase : public testing::Test {
       const std::string edge_path = (boost::format("%s/edges_%06d.bin") % data_path % (i * 10)).str();
       const std::string plane_path = (boost::format("%s/planes_%06d.bin") % data_path % (i * 10)).str();
 
-      edge_frames.push_back(read_points(edge_path));
-      plane_frames.push_back(read_points(plane_path));
+      auto edge_points = gtsam_ext::read_points(edge_path);
+      auto plane_points = gtsam_ext::read_points(plane_path);
+
+      EXPECT_NE(edge_points.size(), true) << "Faile to read edge points";
+      EXPECT_NE(plane_points.size(), true) << "Faile to read plane points";
+
+      edge_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(edge_points)));
+      plane_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(plane_points)));
     }
-  }
-
-  gtsam_ext::Frame::Ptr read_points(const std::string& path) {
-    std::ifstream ifs(path, std::ios::binary | std::ios::ate);
-    EXPECT_EQ(ifs.is_open(), true) << "Failed to open " << path;
-
-    std::streamsize points_bytes = ifs.tellg();
-    size_t num_points = points_bytes / (sizeof(Eigen::Vector3f));
-
-    ifs.seekg(0, std::ios::beg);
-    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points;
-    points.resize(num_points);
-    ifs.read(reinterpret_cast<char*>(points.data()), sizeof(Eigen::Vector3f) * num_points);
-
-    return gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(points));
   }
 
   std::vector<gtsam_ext::Frame::Ptr> edge_frames;

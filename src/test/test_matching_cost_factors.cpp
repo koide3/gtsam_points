@@ -12,6 +12,7 @@
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>
 #include <gtsam_ext/types/voxelized_frame_cpu.hpp>
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
@@ -56,18 +57,10 @@ struct ExtTestBase : public testing::Test {
     // load submap points
     for (int i = 0; i < 5; i++) {
       const std::string points_path = (boost::format("%s/%06d/points.bin") % dump_path % i).str();
-      std::ifstream points_ifs(points_path, std::ios::binary | std::ios::ate);
-      EXPECT_EQ(points_ifs.is_open(), true) << "Failed to open " << points_path;
+      auto points_f = gtsam_ext::read_points(points_path);
+      EXPECT_NE(points_f.empty(), true) << "Failed to read points";
 
-      std::streamsize points_bytes = points_ifs.tellg();
-      size_t num_points = points_bytes / (sizeof(Eigen::Vector3f));
-
-      points_ifs.seekg(0, std::ios::beg);
-      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_f;
-      points_f.resize(num_points);
-      points_ifs.read(reinterpret_cast<char*>(points_f.data()), sizeof(Eigen::Vector3f) * num_points);
-
-      std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points(num_points);
+      std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points(points_path.size());
       std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p[0], p[1], p[2], 1.0); });
       std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs = gtsam_ext::estimate_covariances(points);
 
