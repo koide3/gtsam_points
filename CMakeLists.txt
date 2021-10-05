@@ -155,3 +155,14 @@ if(BUILD_TESTS)
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )
 endif()
+
+add_executable(test_balm src/test/experimental/test_balm.cpp)
+target_include_directories(test_balm PUBLIC
+  include
+  ${EIGEN3_INCLUDE_DIR}
+  ${Boost_INCLUDE_DIRS}
+  ${GTSAM_INCLUDE_DIRS}
+)
+target_link_libraries(test_balm
+  gtsam_ext
+)
