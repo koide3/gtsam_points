@@ -14,10 +14,72 @@
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
 #include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/factors/balm_feature.hpp>
 #include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_ext/util/read_points.hpp>
+#include <gtsam_ext/util/numerical.hpp>
 
+TEST(BATest, DerivativeTest) {
+  std::mt19937 mt(4096 - 1);
+  std::normal_distribution<> ndist;
+
+  for (int num_points = 6; num_points <= 32; num_points *= 2) {
+    std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points;
+    for (int i = 0; i < num_points; i++) {
+      points.push_back(Eigen::Vector3d(ndist(mt) * 0.1, ndist(mt) * 0.4, ndist(mt)));
+    }
+
+    gtsam_ext::BALMFeature feature(points);
+
+    Eigen::VectorXd Ja0(3 * num_points);
+    Eigen::VectorXd Ja1(3 * num_points);
+    Eigen::VectorXd Ja2(3 * num_points);
+    Eigen::MatrixXd Ha0(3 * num_points, 3 * num_points);
+    Eigen::MatrixXd Ha1(3 * num_points, 3 * num_points);
+    Eigen::MatrixXd Ha2(3 * num_points, 3 * num_points);
+    for (int i = 0; i < num_points; i++) {
+      Ja0.block<3, 1>(i * 3, 0) = feature.Ji<0>(points[i]);
+      Ja1.block<3, 1>(i * 3, 0) = feature.Ji<1>(points[i]);
+      Ja2.block<3, 1>(i * 3, 0) = feature.Ji<2>(points[i]);
+      for (int j = 0; j < num_points; j++) {
+        Ha0.block<3, 3>(i * 3, j * 3) = feature.Hij<0>(points[i], points[j], i == j);
+        Ha1.block<3, 3>(i * 3, j * 3) = feature.Hij<1>(points[i], points[j], i == j);
+        Ha2.block<3, 3>(i * 3, j * 3) = feature.Hij<2>(points[i], points[j], i == j);
+      }
+    }
+
+    const auto calc_eigenvalue = [](int k, const Eigen::VectorXd& x) {
+      std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points(x.size() / 3);
+      for (int i = 0; i < points.size(); i++) {
+        points[i] = x.block<3, 1>(i * 3, 0);
+      }
+      return gtsam_ext::BALMFeature(points).eigenvalues[k];
+    };
+
+    Eigen::VectorXd x0 = Eigen::Map<Eigen::VectorXd>(points[0].data(), 3 * num_points);
+    Eigen::VectorXd Jn0 = gtsam_ext::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(0, x); }, x0);
+    Eigen::MatrixXd Hn0 = gtsam_ext::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(0, x); }, x0);
+    Eigen::VectorXd Jn1 = gtsam_ext::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(1, x); }, x0);
+    Eigen::MatrixXd Hn1 = gtsam_ext::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(1, x); }, x0);
+    Eigen::VectorXd Jn2 = gtsam_ext::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(2, x); }, x0);
+    Eigen::MatrixXd Hn2 = gtsam_ext::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(2, x); }, x0);
+
+    const double err_J0 = (Jn0 - Ja0).array().abs().maxCoeff();
+    const double err_H0 = (Hn0 - Ha0).array().abs().maxCoeff();
+    const double err_J1 = (Jn1 - Ja1).array().abs().maxCoeff();
+    const double err_H1 = (Hn1 - Ha1).array().abs().maxCoeff();
+    const double err_J2 = (Jn2 - Ja2).array().abs().maxCoeff();
+    const double err_H2 = (Hn2 - Ha2).array().abs().maxCoeff();
+
+    EXPECT_LT(err_J0, 1e-5) << "Too large Jacobian error for lambda_0 " << num_points << "[pts]";
+    EXPECT_LT(err_H0, 1e-3) << "Too large Hessian error for lambda_0 " << num_points << "[pts]";
+    EXPECT_LT(err_J1, 1e-5) << "Too large Jacobian error for lambda_1 " << num_points << "[pts]";
+    EXPECT_LT(err_H1, 1e-3) << "Too large Hessian error for lambda_1 " << num_points << "[pts]";
+    EXPECT_LT(err_J2, 1e-5) << "Too large Jacobian error for lambda_2 " << num_points << "[pts]";
+    EXPECT_LT(err_H2, 2e-3) << "Too large Hessian error for lambda_2 " << num_points << "[pts]";
+  }
+}
 
 struct BATestBase : public testing::Test {
   virtual void SetUp() {
