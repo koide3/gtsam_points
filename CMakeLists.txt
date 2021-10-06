@@ -42,7 +42,7 @@ if(BUILD_WITH_CUDA)
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
 endif()
 
-# find_package(catkin REQUIRED COMPONENTS iridescence)
+find_package(catkin REQUIRED COMPONENTS iridescence)
 
 ###########
 ## Build ##
@@ -66,6 +66,7 @@ add_library(gtsam_ext STATIC
   src/gtsam_ext/factors/integrated_loam_factor.cpp
   src/gtsam_ext/factors/expression_icp_factor.cpp
   src/gtsam_ext/factors/continuous_time_icp_factor.cpp
+  src/gtsam_ext/factors/bundle_adjustment_factor_evm.cpp
   # optimizers
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
@@ -162,7 +163,9 @@ target_include_directories(test_balm PUBLIC
   ${EIGEN3_INCLUDE_DIR}
   ${Boost_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIRS}
+  ${catkin_INCLUDE_DIRS}
 )
 target_link_libraries(test_balm
   gtsam_ext
+  ${catkin_LIBRARIES}
 )

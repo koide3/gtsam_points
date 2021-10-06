@@ -1,88 +1,25 @@
 #include <vector>
 #include <iostream>
+#include <boost/format.hpp>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <Eigen/Eigen>
 
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/slam/PriorFactor.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-struct BALMFeature {
-public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+#include <gtsam_ext/util/read_points.hpp>
+#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
+#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
-  BALMFeature(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& points) {
-    Eigen::Vector3d sum_pts = Eigen::Vector3d::Zero();
-    Eigen::Matrix3d sum_cross = Eigen::Matrix3d::Zero();
-    for(const auto& pt: points) {
-      sum_pts += pt;
-      sum_cross += pt * pt.transpose();
-    }
+#include <glk/colormap.hpp>
+#include <glk/pointcloud_buffer.hpp>
+#include <glk/primitives/primitives.hpp>
+#include <guik/viewer/light_viewer.hpp>
 
-    num_points = points.size();
-    mean = sum_pts / points.size();
-    cov = (sum_cross - mean * sum_pts.transpose()) / points.size();
-
-    Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig(cov);
-    eigenvalues = eig.eigenvalues();
-    eigenvectors = eig.eigenvectors();
-  }
-
-  template<int k>
-  Eigen::Matrix<double, 1, 3> Ji(const Eigen::Vector3d& p_i) const {
-    Eigen::Vector3d u = eigenvectors.col(k);
-    return 2.0 / num_points * (p_i - mean).transpose() * u * u.transpose();
-  }
-
-  template<int k>
-  Eigen::Matrix3d Hij(const Eigen::Vector3d& p_i, const Eigen::Vector3d& p_j, bool i_equals_j) const {
-    const int N = num_points;
-    Eigen::Matrix3d F_k;
-    F_k.row(0) = Fmn<0, k>(p_j);
-    F_k.row(1) = Fmn<1, k>(p_j);
-    F_k.row(2) = Fmn<2, k>(p_j);
-
-    const auto& u_k = eigenvectors.col(k);
-    const auto& U = eigenvectors;
-
-    if (i_equals_j) {
-      const auto t1 = (N - 1) / static_cast<double>(N) * u_k * u_k.transpose();
-      const auto t2 = u_k * (p_i - mean).transpose() * U * F_k;
-      const auto t3 = U * F_k * (u_k.transpose() * (p_i - mean));
-      Eigen::Matrix3d H = 2.0 / N * (t1 + t2 + t3);
-      return H;
-    } else {
-      const auto t1 = -1.0 / N * u_k * u_k.transpose();
-      const auto t2 = u_k * (p_i - mean).transpose() * U * F_k;
-      const auto t3 = U * F_k * (u_k.transpose() * (p_i - mean));
-      Eigen::Matrix3d H = 2.0 / N * (t1 + t2 + t3);
-
-      return H;
-    }
-  }
-
-  template<int m, int n>
-  Eigen::Matrix<double, 1, 3> Fmn(const Eigen::Vector3d& pt) const {
-    if constexpr (m == n) {
-      return Eigen::Matrix<double, 1, 3>::Zero();
-    } else {
-      const double l_m = eigenvalues[m];
-      const double l_n = eigenvalues[n];
-      const auto& u_m = eigenvectors.col(m);
-      const auto& u_n = eigenvectors.col(n);
-
-      const auto lhs = (pt - mean).transpose() / (num_points * (l_n - l_m));
-      const auto rhs = u_m * u_n.transpose() + u_n * u_m.transpose();
-      return lhs * rhs;
-    }
-  }
-
-  int num_points;
-  Eigen::Vector3d mean;
-  Eigen::Matrix3d cov;
-
-  Eigen::Vector3d eigenvalues;
-  Eigen::Matrix3d eigenvectors;
-};
-
+/*
 template <typename Func>
 Eigen::MatrixXd numerical_hessian(const Func& f, const Eigen::VectorXd& x, double eps = 1e-6) {
   const int N = x.size();
@@ -90,7 +27,6 @@ Eigen::MatrixXd numerical_hessian(const Func& f, const Eigen::VectorXd& x, doubl
 
   for (int i = 0; i < N; i++) {
     for (int j = 0; j < N; j++) {
-      Eigen::VectorXd dx = Eigen::VectorXd::Zero(N);
       dx[i] = eps;
 
       auto first = [&](const Eigen::VectorXd& dy) {
@@ -111,38 +47,90 @@ Eigen::MatrixXd numerical_hessian(const Func& f, const Eigen::VectorXd& x, doubl
 
   return h;
 }
+*/
 
 int main(int argc, char** argv) {
-  int num_points = 6;
+  auto viewer = guik::LightViewer::instance();
 
-  Eigen::VectorXd x0 = Eigen::VectorXd::Zero(3 * num_points);
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points(num_points);
-  for (int i = 0; i < num_points; i++) {
-    points[i] = Eigen::Vector3d::Random();
-    x0.block<3, 1>(3 * i, 0) = points[i];
+  gtsam::Values values;
+  std::vector<gtsam_ext::FrameCPU::Ptr> frames;
+
+  std::ifstream ifs("data/newer_01/graph.txt");
+  for (int i = 0; i < 5; i++) {
+    auto points_path = (boost::format("data/newer_01/planes_%06d.bin") % (i * 10)).str();
+    auto points = gtsam_ext::read_points(points_path);
+    frames.push_back(gtsam_ext::FrameCPU::Ptr(new gtsam_ext::FrameCPU(points)));
+
+    std::string token;
+    Eigen::Vector3d trans;
+    Eigen::Quaterniond quat;
+    ifs >> token >> trans.x() >> trans.y() >> trans.z() >> quat.x() >> quat.y() >> quat.z() >> quat.w();
+    Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+    pose.linear() = quat.toRotationMatrix();
+    pose.translation() = trans;
+
+    gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * 0.02);
+
+    values.insert(i, gtsam::Pose3(pose.matrix()) * noise);
+
+    viewer->update_drawable("frame_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(points), guik::Rainbow(values.at<gtsam::Pose3>(i).matrix().cast<float>()));
   }
 
-  auto calc_lambda = [](const Eigen::VectorXd& x) {
-    std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points(x.size() / 3);
-    for (int i = 0; i < x.size() / 3; i++) {
-      points[i] = x.block<3, 1>(3 * i, 0);
-    }
-
-    BALMFeature feature(points);
-    return feature.eigenvalues[0];
-  };
-
-  Eigen::MatrixXd H = numerical_hessian(calc_lambda, x0);
-  std::cout << "--- Hn ---" << std::endl << H << std::endl;
-
-  BALMFeature feature(points);
-  Eigen::MatrixXd Ha(num_points * 3, num_points * 3);
-  for (int i = 0; i < num_points; i++) {
-    for (int j = 0; j < num_points; j++) {
-      Ha.block<3, 3>(3 * i, 3 * j) = feature.Hij<0>(points[i], points[j], i == j);
-    }
+  gtsam::NonlinearFactorGraph graph;
+  for (int i = 0; i < frames.size(); i++) {
+    graph.add(gtsam::PriorFactor<gtsam::Pose3>(i, values.at<gtsam::Pose3>(i), gtsam::noiseModel::Isotropic::Precision(6, 0.1)));
   }
-  std::cout << "--- Ha ---" << std::endl << Ha << std::endl;
+
+  Eigen::Vector3f center(0.0f, 0.0f, 0.0f);
+  viewer->register_ui_callback("callback", [&] {
+    if(ImGui::IsMouseClicked(1)) {
+      auto mouse_pos = ImGui::GetMousePos();
+      float depth = viewer->pick_depth(Eigen::Vector2i(mouse_pos.x, mouse_pos.y));
+      if(depth > 0.0f) {
+        center = viewer->unproject(Eigen::Vector2i(mouse_pos.x, mouse_pos.y), depth);
+        viewer->update_drawable("center", glk::Primitives::sphere(), guik::FlatColor(1.0, 0.0, 0.0, 0.4, Eigen::Translation3f(center)).make_transparent());
+      }
+    }
+
+    if(ImGui::Button("add factor")) {
+      gtsam_ext::PlaneEVMFactor::shared_ptr plane_factor(new gtsam_ext::PlaneEVMFactor);
+
+      for(int i=0; i<frames.size(); i++) {
+        for(int j=0; j<frames[i]->size(); j++) {
+          const Eigen::Vector3d pt = frames[i]->points[j].head<3>();
+          const Eigen::Vector3d transed_pt = values.at<gtsam::Pose3>(i) * pt;
+          const double dist = (transed_pt - center.cast<double>()).norm();
+          if (dist > 1.0) {
+            continue;
+          }
+
+          std::cout << i << ":" << transed_pt.transpose() << std::endl;
+          plane_factor->add(pt, i);
+        }
+      }
+
+      if(plane_factor->num_points() > 6) {
+        graph.add(plane_factor);
+      }
+    }
+
+    if(ImGui::Button("optimize")) {
+      gtsam_ext::LevenbergMarquardtExtParams lm_params;
+      lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+        viewer->append_text(status.to_string());
+        for (int i = 0; i < frames.size(); i++) {
+          auto drawable = viewer->find_drawable("frame_" + std::to_string(i));
+          drawable.first->add("model_matrix", values.at<gtsam::Pose3>(i).matrix().cast<float>().eval());
+        }
+      };
+
+      gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+      values = optimizer.optimize();
+    }
+
+  });
+
+  viewer->spin();
 
   return 0;
 }
