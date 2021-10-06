@@ -12,6 +12,10 @@ struct BALMFeature;
 /**
  * @brief Bundle adjustment factor based on Eigenvalue minimization
  *        One EVMFactor represents one feature (plane / edge)
+ *
+ * @note  The computation cost grows as the number of points increases
+ *        Consider averaging points in a same scan in advance (see [Liu 2021])
+ * 
  * @ref   Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021
  */
 class EVMFactorBase : public gtsam::NonlinearFactor {
@@ -20,7 +24,6 @@ public:
 
   EVMFactorBase();
   virtual ~EVMFactorBase() override;
-
   virtual size_t dim() const override { return 6; }
 
   // Assign a point to this factor

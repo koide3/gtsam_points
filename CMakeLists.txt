@@ -42,7 +42,7 @@ if(BUILD_WITH_CUDA)
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
 endif()
 
-find_package(catkin REQUIRED COMPONENTS iridescence)
+# find_package(catkin REQUIRED COMPONENTS iridescence)
 
 ###########
 ## Build ##
@@ -121,6 +121,7 @@ endif()
 if(BUILD_TESTS)
   enable_testing()
   find_package(GTest REQUIRED)
+  include(GoogleTest)
 
   add_executable(test_matching_cost_factors src/test/test_matching_cost_factors.cpp)
   target_include_directories(test_matching_cost_factors PUBLIC
@@ -132,6 +133,10 @@ if(BUILD_TESTS)
   target_link_libraries(test_matching_cost_factors
     gtsam_ext
     ${GTEST_LIBRARIES}
+  )
+  gtest_discover_tests(test_matching_cost_factors
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )
 
   add_executable(test_loam_factors src/test/test_loam_factors.cpp)
@@ -145,27 +150,24 @@ if(BUILD_TESTS)
     gtsam_ext
     ${GTEST_LIBRARIES}
   )
-
-  include(GoogleTest)
-  gtest_discover_tests(test_matching_cost_factors
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
-  )
   gtest_discover_tests(test_loam_factors
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )
-endif()
 
-add_executable(test_balm src/test/experimental/test_balm.cpp)
-target_include_directories(test_balm PUBLIC
-  include
-  ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS}
-  ${GTSAM_INCLUDE_DIRS}
-  ${catkin_INCLUDE_DIRS}
-)
-target_link_libraries(test_balm
-  gtsam_ext
-  ${catkin_LIBRARIES}
-)
+  add_executable(test_bundle_adjustment src/test/test_bundle_adjustment.cpp)
+  target_include_directories(test_bundle_adjustment PUBLIC
+    include
+    ${EIGEN3_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${GTSAM_INCLUDE_DIRS}
+  )
+  target_link_libraries(test_bundle_adjustment
+    gtsam_ext
+    ${GTEST_LIBRARIES}
+  )
+  gtest_discover_tests(test_bundle_adjustment
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
+  )
+endif()

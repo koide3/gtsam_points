@@ -1,0 +1,175 @@
+#include <random>
+#include <string>
+#include <fstream>
+#include <iostream>
+#include <Eigen/Core>
+#include <Eigen/Geometry>
+#include <boost/format.hpp>
+
+#include <gtest/gtest.h>
+
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/slam/PriorFactor.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+#include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
+
+#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
+#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_ext/util/read_points.hpp>
+
+
+struct BATestBase : public testing::Test {
+  virtual void SetUp() {
+    const std::string data_path = "./data/newer_01";
+
+    std::ifstream ifs(data_path + "/graph.txt");
+    EXPECT_EQ(ifs.is_open(), true) << "Failed to open " << data_path << "/graph.txt";
+
+    gtsam::Values pose_noises;
+    pose_noises.insert(0, gtsam::Pose3::identity());
+    pose_noises.insert(1, gtsam::Pose3::Expmap((gtsam::Vector6() << 0.02, 0.02, 0.02, 0.2, 0.2, 0.2).finished()));
+    pose_noises.insert(2, gtsam::Pose3::Expmap((gtsam::Vector6() << -0.02, 0.02, 0.02, -0.2, 0.2, 0.2).finished()));
+    pose_noises.insert(3, gtsam::Pose3::Expmap((gtsam::Vector6() << 0.02, -0.02, 0.02, 0.2, -0.2, 0.2).finished()));
+    pose_noises.insert(4, gtsam::Pose3::Expmap((gtsam::Vector6() << 0.02, 0.02, -0.02, 0.2, 0.2, -0.2).finished()));
+
+    for (int i = 0; i < 5; i++) {
+      // Read poses
+      std::string token;
+      Eigen::Vector3d trans;
+      Eigen::Quaterniond quat;
+      ifs >> token >> trans.x() >> trans.y() >> trans.z() >> quat.x() >> quat.y() >> quat.z() >> quat.w();
+
+      Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
+      pose.translation() = trans;
+      pose.linear() = quat.toRotationMatrix();
+      poses.insert(i, gtsam::Pose3(pose.matrix()) * pose_noises.at<gtsam::Pose3>(i));
+      poses_gt.insert(i, gtsam::Pose3(pose.matrix()));
+
+      // Load points
+      const std::string edge_path = (boost::format("%s/edges_%06d.bin") % data_path % (i * 10)).str();
+      const std::string plane_path = (boost::format("%s/planes_%06d.bin") % data_path % (i * 10)).str();
+
+      auto edge_points = gtsam_ext::read_points(edge_path);
+      auto plane_points = gtsam_ext::read_points(plane_path);
+
+      EXPECT_NE(edge_points.size(), true) << "Faile to read edge points";
+      EXPECT_NE(plane_points.size(), true) << "Faile to read plane points";
+
+      edge_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(edge_points)));
+      plane_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(plane_points)));
+      }
+  }
+
+  std::vector<gtsam_ext::Frame::Ptr> edge_frames;
+  std::vector<gtsam_ext::Frame::Ptr> plane_frames;
+  gtsam::Values poses;
+  gtsam::Values poses_gt;
+};
+
+TEST_F(BATestBase, LoadCheck) {
+  EXPECT_EQ(edge_frames.size(), 5) << "Failed to load edge points";
+  EXPECT_EQ(plane_frames.size(), 5) << "Failed to load plane points";
+  EXPECT_EQ(poses.size(), 5) << "Failed to load GT poses";
+  EXPECT_EQ(poses_gt.size(), 5) << "Failed to load GT poses";
+}
+
+class FactorTest : public BATestBase {
+public:
+  void test_result(const gtsam::Values& result, const std::string& note = "") {
+    bool is_first = true;
+    gtsam::Pose3 delta;
+
+    for (const auto& value : result) {
+      const gtsam::Pose3 pose_gt = poses_gt.at<gtsam::Pose3>(value.key);
+      const gtsam::Pose3 pose = value.value.cast<gtsam::Pose3>();
+
+      if (is_first) {
+        is_first = false;
+        delta = pose_gt * pose.inverse();
+        continue;
+      }
+
+      const gtsam::Pose3 pose_error = pose_gt.inverse() * (delta * pose);
+      const gtsam::Vector6 error = gtsam::Pose3::Logmap(pose_error);
+      double error_r = error.head<3>().norm();
+      double error_t = error.tail<3>().norm();
+
+      EXPECT_LT(error_r, 0.015) << "Too large rotation error " << note;
+      EXPECT_LT(error_t, 0.20) << "Too large translation error " << note;
+    }
+  }
+};
+
+TEST_F(FactorTest, test) {
+  gtsam::Values values = poses;
+  gtsam::NonlinearFactorGraph graph;
+  graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e3)));
+
+  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> plane_centers;
+  plane_centers.push_back(Eigen::Vector3d(3.16, 1.79, -1.30));
+  plane_centers.push_back(Eigen::Vector3d(25.44, 8.26, 3.68));
+  plane_centers.push_back(Eigen::Vector3d(25.41, 19.51, 4.36));
+  plane_centers.push_back(Eigen::Vector3d(27.23, 27.48, 8.04));
+  plane_centers.push_back(Eigen::Vector3d(5.39, 14.86, 3.23));
+  plane_centers.push_back(Eigen::Vector3d(1.05, -13.85, -1.98));
+  plane_centers.push_back(Eigen::Vector3d(-7.39, 3.93, -0.25));
+  plane_centers.push_back(Eigen::Vector3d(11.15, 12.25, -0.45));
+  plane_centers.push_back(Eigen::Vector3d(11.17, -22.04, 4.52));
+
+  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> edge_centers;
+  edge_centers.push_back(Eigen::Vector3d(12.11, -10.86, 1.07));
+  edge_centers.push_back(Eigen::Vector3d(14.45, -7.17, 1.09));
+  edge_centers.push_back(Eigen::Vector3d(22.30, 15.17, 2.38));
+  edge_centers.push_back(Eigen::Vector3d(16.92, 19.16, 2.98));
+  edge_centers.push_back(Eigen::Vector3d(-4.82, 1.31, -0.09));
+  edge_centers.push_back(Eigen::Vector3d(-17.10, -7.10, 0.52));
+
+  // Create plane factors
+  gtsam::NonlinearFactorGraph plane_factors;
+  for (const auto& center : plane_centers) {
+    gtsam_ext::PlaneEVMFactor::shared_ptr factor(new gtsam_ext::PlaneEVMFactor());
+    for (int i = 0; i < plane_frames.size(); i++) {
+      for (int j = 0; j < plane_frames[i]->size(); j++) {
+        const Eigen::Vector3d pt = plane_frames[i]->points[j].head<3>();
+        const Eigen::Vector3d transed_pt = values.at<gtsam::Pose3>(i) * pt;
+        if ((transed_pt - center).norm() < 1.0) {
+          factor->add(pt, i);
+        }
+      }
+    }
+
+    plane_factors.add(factor);
+  }
+
+  // Create edge factors
+  gtsam::NonlinearFactorGraph edge_factors;
+  for (const auto& center : edge_centers) {
+    gtsam_ext::EdgeEVMFactor::shared_ptr factor(new gtsam_ext::EdgeEVMFactor());
+    for (int i = 0; i < edge_frames.size(); i++) {
+      for (int j = 0; j < edge_frames[i]->size(); j++) {
+        const Eigen::Vector3d pt = edge_frames[i]->points[j].head<3>();
+        const Eigen::Vector3d transed_pt = values.at<gtsam::Pose3>(i) * pt;
+        if ((transed_pt - center).norm() < 1.0) {
+          factor->add(pt, i);
+        }
+      }
+    }
+
+    edge_factors.add(factor);
+  }
+
+  graph.add(plane_factors);
+  graph.add(edge_factors);
+
+  gtsam::LevenbergMarquardtParams lm_params;
+  gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
+  values = optimizer.optimize();
+
+  test_result(values);
+}
+
+int main(int argc, char** argv) {
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
