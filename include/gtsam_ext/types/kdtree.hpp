@@ -21,6 +21,8 @@ public:
     return false;
   }
 
+  size_t knnSearch(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) { return index.knnSearch(pt, k, k_indices, k_sq_dists); }
+
 public:
   const int num_points;
   const Eigen::Vector4d* points;

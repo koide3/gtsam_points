@@ -117,12 +117,13 @@ if(BUILD_WITH_CUDA)
   )
 endif()
 
-# test
+# Test
 if(BUILD_TESTS)
   enable_testing()
   find_package(GTest REQUIRED)
   include(GoogleTest)
 
+  # Test for ICP factors
   add_executable(test_matching_cost_factors src/test/test_matching_cost_factors.cpp)
   target_include_directories(test_matching_cost_factors PUBLIC
     include
@@ -139,6 +140,7 @@ if(BUILD_TESTS)
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )
 
+  # Test for LOAM factors
   add_executable(test_loam_factors src/test/test_loam_factors.cpp)
   target_include_directories(test_loam_factors PUBLIC
     include
@@ -155,6 +157,7 @@ if(BUILD_TESTS)
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )
 
+  # Test for BA factors
   add_executable(test_bundle_adjustment src/test/test_bundle_adjustment.cpp)
   target_include_directories(test_bundle_adjustment PUBLIC
     include
@@ -167,6 +170,25 @@ if(BUILD_TESTS)
     ${GTEST_LIBRARIES}
   )
   gtest_discover_tests(test_bundle_adjustment
+    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
+  )
+
+
+  # Test for CT-ICP factor
+  add_executable(test_continuous_time src/test/test_continuous_time.cpp)
+  target_include_directories(test_continuous_time PUBLIC
+    include
+    ${EIGEN3_INCLUDE_DIR}
+    ${Boost_INCLUDE_DIRS}
+    ${GTSAM_INCLUDE_DIRS}
+    thirdparty/nanoflann/include
+  )
+  target_link_libraries(test_continuous_time
+    gtsam_ext
+    ${GTEST_LIBRARIES}
+  )
+  gtest_discover_tests(test_continuous_time
     WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
     EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
   )
