@@ -57,7 +57,7 @@ int main(int argc, char** argv) {
 
   std::ifstream ifs("data/newer_01/graph.txt");
   for (int i = 0; i < 5; i++) {
-    auto points_path = (boost::format("data/newer_01/edges_%06d.bin") % (i * 10)).str();
+    auto points_path = (boost::format("data/newer_01/planes_%06d.bin") % (i * 10)).str();
     auto points = gtsam_ext::read_points(points_path);
     frames.push_back(gtsam_ext::FrameCPU::Ptr(new gtsam_ext::FrameCPU(points)));
 
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     }
 
     if(ImGui::Button("add factor")) {
-      gtsam_ext::EdgeEVMFactor::shared_ptr plane_factor(new gtsam_ext::EdgeEVMFactor);
+      gtsam_ext::PlaneEVMFactor::shared_ptr plane_factor(new gtsam_ext::PlaneEVMFactor);
 
       for(int i=0; i<frames.size(); i++) {
         for(int j=0; j<frames[i]->size(); j++) {

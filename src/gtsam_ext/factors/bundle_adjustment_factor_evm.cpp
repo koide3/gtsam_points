@@ -20,6 +20,10 @@ void EVMFactorBase::add(const gtsam::Point3& pt, const gtsam::Key& key) {
   this->points.push_back(pt);
 }
 
+/**
+ * @brief Calculate k-th eigenvalue and its derivatives
+ *        k = 0 is the smallest eigenvalue
+ */
 template <int k>
 double EVMFactorBase::calc_eigenvalue(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points, Eigen::MatrixXd* H, Eigen::MatrixXd* J) const {
   BALMFeature feature(transed_points);
@@ -43,6 +47,10 @@ double EVMFactorBase::calc_eigenvalue(const std::vector<Eigen::Vector3d, Eigen::
   return feature.eigenvalues[k];
 }
 
+/**
+ * @brief Calculate dp / dT
+ * @ref   Eqs. (9) - (12)
+ */
 Eigen::MatrixXd EVMFactorBase::calc_pose_derivatives(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points) const {
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(3 * points.size(), 6 * keys_.size());
   for (int i = 0; i < transed_points.size(); i++) {
@@ -63,6 +71,28 @@ Eigen::MatrixXd EVMFactorBase::calc_pose_derivatives(const std::vector<Eigen::Ve
   return D;
 }
 
+/**
+ * @brief Compose a Hessian factor from derivatives
+ */
+gtsam::GaussianFactor::shared_ptr EVMFactorBase::compose_factor(const Eigen::MatrixXd& H, const Eigen::MatrixXd& J, double error) const {
+  std::vector<gtsam::Matrix> Gs;
+  std::vector<gtsam::Vector> gs;
+
+  for (int i = 0; i < keys_.size(); i++) {
+    for (int j = i; j < keys_.size(); j++) {
+      Gs.push_back(H.block<6, 6>(i * 6, j * 6));
+    }
+  }
+  for (int i = 0; i < keys_.size(); i++) {
+    gs.push_back(J.block<1, 6>(0, i * 6));
+  }
+
+  return boost::shared_ptr<gtsam::HessianFactor>(new gtsam::HessianFactor(keys_, Gs, gs, error));
+}
+
+/**
+ * @brief PlaneEVMFactor
+ */
 PlaneEVMFactor::PlaneEVMFactor() : EVMFactorBase() {}
 
 PlaneEVMFactor::~PlaneEVMFactor() {}
@@ -82,28 +112,20 @@ boost::shared_ptr<gtsam::GaussianFactor> PlaneEVMFactor::linearize(const gtsam::
   }
 
   Eigen::MatrixXd H, J;
-  double error = calc_eigenvalue<0>(transed_points, &H, &J);
+  double lambda_0 = calc_eigenvalue<0>(transed_points, &H, &J);
 
   Eigen::MatrixXd D = calc_pose_derivatives(transed_points);
 
+  // Eq. (13)
   Eigen::MatrixXd JD = -J * D;
   Eigen::MatrixXd DHD = D.transpose() * H.selfadjointView<Eigen::Upper>() * D;
 
-  std::vector<gtsam::Matrix> Gs;
-  std::vector<gtsam::Vector> gs;
-
-  for(int i=0; i<keys_.size(); i++) {
-    for(int j=i; j<keys_.size(); j++) {
-      Gs.push_back(DHD.block<6, 6>(i * 6, j * 6));
-    }
-  }
-  for(int i=0; i<keys_.size(); i++) {
-    gs.push_back(JD.block<1, 6>(0, i * 6));
-  }
-
-  return boost::shared_ptr<gtsam::GaussianFactor>(new gtsam::HessianFactor(keys_, Gs, gs, error));
+  return compose_factor(DHD, JD, lambda_0);
 }
 
+/**
+ * @brief EdgeEVMFactor
+ */
 EdgeEVMFactor::EdgeEVMFactor() : EVMFactorBase() {}
 
 EdgeEVMFactor::~EdgeEVMFactor() {}
@@ -131,21 +153,10 @@ boost::shared_ptr<gtsam::GaussianFactor> EdgeEVMFactor::linearize(const gtsam::V
   Eigen::MatrixXd H = H0 + H1;
   Eigen::MatrixXd J = J0 + J1;
 
+  // Eq. (13)
   Eigen::MatrixXd JD = -J * D;
   Eigen::MatrixXd DHD = D.transpose() * H.selfadjointView<Eigen::Upper>() * D;
 
-  std::vector<gtsam::Matrix> Gs;
-  std::vector<gtsam::Vector> gs;
-
-  for (int i = 0; i < keys_.size(); i++) {
-    for (int j = i; j < keys_.size(); j++) {
-      Gs.push_back(DHD.block<6, 6>(i * 6, j * 6));
-    }
-  }
-  for (int i = 0; i < keys_.size(); i++) {
-    gs.push_back(JD.block<1, 6>(0, i * 6));
-  }
-
-  return boost::shared_ptr<gtsam::GaussianFactor>(new gtsam::HessianFactor(keys_, Gs, gs, lambda_0 + lambda_1));
+  return compose_factor(DHD, JD, lambda_0 + lambda_1);
 }
 }
