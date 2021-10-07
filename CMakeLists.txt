@@ -74,7 +74,7 @@ add_library(gtsam_ext STATIC
   src/gtsam_ext/optimizers/isam2_ext_impl.cpp
   src/gtsam_ext/optimizers/incremental_fixed_lag_smoother_ext.cpp
 )
-target_include_directories(gtsam_ext PRIVATE
+target_include_directories(gtsam_ext PUBLIC
   include
   ${EIGEN3_INCLUDE_DIR}
   thirdparty/nanoflann/include
