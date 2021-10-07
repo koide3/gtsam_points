@@ -14,6 +14,13 @@
 
 namespace gtsam_ext {
 
+gtsam::Pose3 interpolate_pose(const gtsam::Pose3& pose0, const gtsam::Pose3& pose1, double t) {
+  gtsam::Vector6 vel = gtsam::Pose3::Logmap(pose0.inverse() * pose1);
+  gtsam::Pose3 inc = gtsam::Pose3::Expmap(t * vel);
+  gtsam::Pose3 pose = pose0 * inc;
+  return pose;
+}
+
 CTICPFactorExpr::CTICPFactorExpr(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,

@@ -9,6 +9,14 @@ namespace gtsam_ext {
 class KdTree;
 
 /**
+ * @brief Interpolate pose0 and pose1 with expmap/logmap interpolation
+ * @param pose0 source pose
+ * @param pose1 target pose
+ * @param t time in [0, 1]
+ */
+gtsam::Pose3 interpolate_pose(const gtsam::Pose3& pose0, const gtsam::Pose3& pose1, double t);
+
+/**
  * @brief Continuous Time ICP Factor
  * @note  This implementation is really slow and not well tested
  * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
