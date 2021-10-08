@@ -1,0 +1,230 @@
+#include <chrono>
+#include <thread>
+#include <fstream>
+#include <iostream>
+#include <boost/format.hpp>
+
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/slam/PriorFactor.h>
+#include <gtsam/nonlinear/NonlinearFactorGraph.h>
+
+#include <gtsam_ext/util/read_points.hpp>
+#include <gtsam_ext/util/covariance_estimation.hpp>
+
+#include <gtsam_ext/types/voxelized_frame.hpp>
+#include <gtsam_ext/types/voxelized_frame_cpu.hpp>
+#include <gtsam_ext/types/voxelized_frame_gpu.hpp>
+
+#include <gtsam_ext/factors/integrated_icp_factor.hpp>
+#include <gtsam_ext/factors/integrated_gicp_factor.hpp>
+#include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
+#include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
+#include <gtsam_ext/optimizers/isam2_ext.hpp>
+#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+
+#include <glk/thin_lines.hpp>
+#include <glk/pointcloud_buffer.hpp>
+#include <glk/primitives/primitives.hpp>
+#include <guik/viewer/light_viewer.hpp>
+
+class MatchingCostFactorDemo {
+public:
+  MatchingCostFactorDemo() {
+    auto viewer = guik::LightViewer::instance();
+    viewer->enable_vsync();
+
+    const std::string data_path = "data/kitti_07_dump";
+    std::ifstream ifs(data_path + "/graph.txt");
+    if (!ifs) {
+      std::cerr << "error: failed to open " << data_path + "/graph.txt" << std::endl;
+      abort();
+    }
+
+    for (int i = 0; i < 5; i++) {
+      std::string token;
+      gtsam::Vector3 trans;
+      gtsam::Quaternion quat;
+      ifs >> token >> trans.x() >> trans.y() >> trans.z() >> quat.x() >> quat.y() >> quat.z() >> quat.w();
+
+      gtsam::Pose3 pose(gtsam::Rot3(quat), trans);
+      poses.insert(i, pose);
+      poses_gt.insert(i, pose);
+
+      const std::string points_path = (boost::format("%s/%06d/points.bin") % data_path % i).str();
+      std::cout << "loading " << points_path << std::endl;
+
+      auto points_f = gtsam_ext::read_points(points_path);
+      if (points_f.empty()) {
+        std::cerr << "error: failed to read points " << points_path << std::endl;
+        abort();
+      }
+
+      std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points(points_f.size());
+      std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) { return (Eigen::Vector4d() << p.cast<double>(), 1.0).finished(); });
+      auto covs = gtsam_ext::estimate_covariances(points);
+
+#ifndef BUILD_GTSAM_EXT_GPU
+      std::cout << "CPU" << std::endl;
+      gtsam_ext::VoxelizedFrame::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameCPU>(2.0, points, covs);
+#else
+      std::cout << "GPU" << std::endl;
+      gtsam_ext::VoxelizedFrame::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameGPU>(2.0, points, covs);
+#endif
+      frames.push_back(frame);
+
+      viewer->update_drawable("frame_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size()), guik::Rainbow());
+    }
+    update_viewer(poses);
+
+    noise_scale = 0.1;
+
+    optimizer_type = 0;
+    optimizer_types.push_back("LM");
+    optimizer_types.push_back("ISAM2");
+
+    factor_type = 0;
+    factor_types.push_back("ICP");
+    factor_types.push_back("GICP");
+    factor_types.push_back("VGICP");
+    factor_types.push_back("VGICP_GPU");
+
+    full_connection = true;
+
+    viewer->register_ui_callback("control", [this] {
+      ImGui::DragFloat("noise_scale", &noise_scale, 0.01f, 0.0f);
+      if (ImGui::Button("add noise")) {
+        for (int i = 1; i < 5; i++) {
+          gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * noise_scale);
+          poses.update<gtsam::Pose3>(i, poses_gt.at<gtsam::Pose3>(i) * noise);
+        }
+        update_viewer(poses);
+      }
+
+      ImGui::Separator();
+      ImGui::Checkbox("full connection", &full_connection);
+      ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
+      ImGui::Combo("optimizer type", &optimizer_type, optimizer_types.data(), optimizer_types.size());
+
+      if (ImGui::Button("optimize")) {
+        if (optimization_thread.joinable()) {
+          optimization_thread.join();
+        }
+        optimization_thread = std::thread([this] { run_optimization(); });
+      }
+    });
+  }
+
+  ~MatchingCostFactorDemo() {
+    if(optimization_thread.joinable()) {
+      optimization_thread.join();
+    }
+  }
+
+  void update_viewer(const gtsam::Values& values) {
+    guik::LightViewer::instance()->invoke([=] {
+      auto viewer = guik::LightViewer::instance();
+
+      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> factor_lines;
+      for (int i = 0; i < 5; i++) {
+        Eigen::Isometry3f pose(values.at<gtsam::Pose3>(i).matrix().cast<float>());
+
+        auto drawable = viewer->find_drawable("frame_" + std::to_string(i));
+        drawable.first->add("model_matrix", pose);
+        viewer->update_drawable("coord_" + std::to_string(i), glk::Primitives::coordinate_system(), guik::VertexColor(pose * Eigen::UniformScaling<float>(5.0f)));
+
+        int j_end = full_connection ? 5 : std::min(i + 2, 5);
+        for (int j = i + 1; j<j_end; j++) {
+          factor_lines.push_back(values.at<gtsam::Pose3>(i).translation().cast<float>());
+          factor_lines.push_back(values.at<gtsam::Pose3>(j).translation().cast<float>());
+        }
+      }
+
+      viewer->update_drawable("factors", std::make_shared<glk::ThinLines>(factor_lines), guik::FlatColor(0.0f, 1.0f, 0.0f, 1.0f));
+    });
+  }
+
+  gtsam::NonlinearFactor::shared_ptr
+  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::VoxelizedFrame::ConstPtr& target, const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
+    if (factor_types[factor_type] ==  std::string("ICP")) {
+      return gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
+    } else if (factor_types[factor_type] == std::string("GICP")) {
+      return gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(target_key, source_key, target, source);
+    } else if (factor_types[factor_type] == std::string("VGICP")) {
+      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor>(target_key, source_key, target, source);
+    } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
+#ifdef BUILD_GTSAM_EXT_GPU
+      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactorGPU>(target_key, source_key, target, source);
+#endif
+    }
+
+    std::cerr << "error: unknown factor type " << factor_types[factor_type] << std::endl;
+    return nullptr;
+  }
+
+  void run_optimization() {
+    gtsam::NonlinearFactorGraph graph;
+    graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, poses.at<gtsam::Pose3>(0), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
+
+    for (int i = 0; i < 5; i++) {
+      int j_end = full_connection ? 5 : std::min(i + 2, 5);
+      for (int j = i + 1; j < j_end; j++) {
+        auto factor = create_factor(i, j, frames[i], frames[j]);
+        graph.add(factor);
+      }
+    }
+
+    if (optimizer_types[optimizer_type] == std::string("LM")) {
+      gtsam_ext::LevenbergMarquardtExtParams lm_params;
+      lm_params.callback = [this](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+        guik::LightViewer::instance()->append_text(status.to_string());
+        update_viewer(values);
+      };
+
+      gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, poses, lm_params);
+      optimizer.optimize();
+    } else if (optimizer_types[optimizer_type] == std::string("ISAM2")) {
+      gtsam::ISAM2Params isam2_params;
+      isam2_params.setRelinearizeSkip(1);
+      isam2_params.setRelinearizeThreshold(0.01);
+
+      gtsam_ext::ISAM2Ext isam2(isam2_params);
+
+      auto t1 = std::chrono::high_resolution_clock::now();
+      auto status = isam2.update(graph, poses);
+      update_viewer(isam2.calculateEstimate());
+      guik::LightViewer::instance()->append_text(status.to_string());
+
+      for (int i = 0; i < 10; i++) {
+        auto status = isam2.update();
+        update_viewer(isam2.calculateEstimate());
+        guik::LightViewer::instance()->append_text(status.to_string());
+      }
+
+      auto t2 = std::chrono::high_resolution_clock::now();
+      double msec = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6;
+      guik::LightViewer::instance()->append_text((boost::format("total:%.3f[msec]") % msec).str());
+    }
+  }
+
+private:
+  gtsam::Values poses;
+  gtsam::Values poses_gt;
+  std::vector<gtsam_ext::VoxelizedFrame::Ptr> frames;
+
+  float noise_scale;
+
+  std::vector<const char*> factor_types;
+  int factor_type;
+  bool full_connection;
+
+  std::vector<const char*> optimizer_types;
+  int optimizer_type;
+
+  std::thread optimization_thread;
+};
+
+int main(int argc, char** argv) {
+  MatchingCostFactorDemo demo;
+  guik::LightViewer::instance()->spin();
+  return 0;
+}

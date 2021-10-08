@@ -2,9 +2,11 @@ cmake_minimum_required(VERSION 3.0.2)
 project(gtsam_ext)
 
 add_compile_options(-std=c++17)
+set(default_build_type "Release")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 option(BUILD_TESTS "Build test" OFF)
+option(BUILD_DEMO "Build demo programs" OFF)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" OFF)
@@ -41,8 +43,6 @@ if(BUILD_WITH_CUDA)
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_75")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
 endif()
-
-# find_package(catkin REQUIRED COMPONENTS iridescence)
 
 ###########
 ## Build ##
@@ -117,79 +117,32 @@ if(BUILD_WITH_CUDA)
   )
 endif()
 
+#Demo
+if(BUILD_DEMO)
+  find_package(Iridescence REQUIRED)
+
+  file(GLOB demo_sources "src/demo/*.cpp")
+  foreach(demo_src IN LISTS demo_sources)
+    get_filename_component(demo_name ${demo_src} NAME_WE)
+
+    add_executable(${demo_name} ${demo_src})
+    target_include_directories(${demo_name} PUBLIC ${Iridescence_INCLUDE_DIRS})
+    target_link_libraries(${demo_name} gtsam_ext ${Iridescence_LIBRARIES})
+  endforeach()
+endif()
+
 # Test
 if(BUILD_TESTS)
   enable_testing()
   find_package(GTest REQUIRED)
   include(GoogleTest)
 
-  # Test for ICP factors
-  add_executable(test_matching_cost_factors src/test/test_matching_cost_factors.cpp)
-  target_include_directories(test_matching_cost_factors PUBLIC
-    include
-    ${EIGEN3_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${GTSAM_INCLUDE_DIRS}
-  )
-  target_link_libraries(test_matching_cost_factors
-    gtsam_ext
-    ${GTEST_LIBRARIES}
-  )
-  gtest_discover_tests(test_matching_cost_factors
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
-  )
+  file(GLOB test_sources "src/test/*.cpp")
+  foreach(test_src IN LISTS test_sources)
+    get_filename_component(test_name ${test_src} NAME_WE)
 
-  # Test for LOAM factors
-  add_executable(test_loam_factors src/test/test_loam_factors.cpp)
-  target_include_directories(test_loam_factors PUBLIC
-    include
-    ${EIGEN3_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${GTSAM_INCLUDE_DIRS}
-  )
-  target_link_libraries(test_loam_factors
-    gtsam_ext
-    ${GTEST_LIBRARIES}
-  )
-  gtest_discover_tests(test_loam_factors
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
-  )
-
-  # Test for BA factors
-  add_executable(test_bundle_adjustment src/test/test_bundle_adjustment.cpp)
-  target_include_directories(test_bundle_adjustment PUBLIC
-    include
-    ${EIGEN3_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${GTSAM_INCLUDE_DIRS}
-  )
-  target_link_libraries(test_bundle_adjustment
-    gtsam_ext
-    ${GTEST_LIBRARIES}
-  )
-  gtest_discover_tests(test_bundle_adjustment
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
-  )
-
-
-  # Test for CT-ICP factor
-  add_executable(test_continuous_time src/test/test_continuous_time.cpp)
-  target_include_directories(test_continuous_time PUBLIC
-    include
-    ${EIGEN3_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${GTSAM_INCLUDE_DIRS}
-    thirdparty/nanoflann/include
-  )
-  target_link_libraries(test_continuous_time
-    gtsam_ext
-    ${GTEST_LIBRARIES}
-  )
-  gtest_discover_tests(test_continuous_time
-    WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-    EXTRA_ARGS "${CMAKE_SOURCE_DIR}/data"
-  )
+    add_executable(${test_name} ${test_src})
+    target_link_libraries(${test_name} gtsam_ext ${GTEST_LIBRARIES})
+    gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+  endforeach()
 endif()
