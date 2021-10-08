@@ -66,6 +66,7 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/factors/integrated_vgicp_factor.cpp
   src/gtsam_ext/factors/integrated_loam_factor.cpp
   src/gtsam_ext/factors/integrated_ct_icp_factor.cpp
+  src/gtsam_ext/factors/integrated_ct_gicp_factor.cpp
   src/gtsam_ext/factors/expression_icp_factor.cpp
   src/gtsam_ext/factors/continuous_time_icp_factor.cpp
   src/gtsam_ext/factors/bundle_adjustment_factor_evm.cpp

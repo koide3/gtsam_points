@@ -113,7 +113,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(con
       -l.b_target.cast<double>(),
       l.H_source.cast<double>(),
       -l.b_source.cast<double>(),
-      0.0));
+      l.error));
   } else {
     factor.reset(new gtsam::HessianFactor(keys_[0], l.H_source.cast<double>(), -l.b_source.cast<double>(), 0.0));
   }

@@ -29,9 +29,9 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedMatchingCostFactor::linearize
   gtsam::HessianFactor::shared_ptr factor;
 
   if (is_binary) {
-    factor.reset(new gtsam::HessianFactor(keys()[0], keys()[1], H_target, H_target_source, -b_target, H_source, -b_source, 0.0));
+    factor.reset(new gtsam::HessianFactor(keys()[0], keys()[1], H_target, H_target_source, -b_target, H_source, -b_source, error));
   } else {
-    factor.reset(new gtsam::HessianFactor(keys()[0], H_source, -b_source, 0.0));
+    factor.reset(new gtsam::HessianFactor(keys()[0], H_source, -b_source, error));
   }
 
   return factor;

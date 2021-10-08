@@ -4,9 +4,11 @@
 
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/normal_estimation.hpp>
+#include <gtsam_ext/util/covariance_estimation.hpp>
 #include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/types/frame_cpu.hpp>
 #include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
+#include <gtsam_ext/factors/integrated_ct_gicp_factor.hpp>
 #include <gtsam_ext/factors/continuous_time_icp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
@@ -48,10 +50,12 @@ public:
 
       auto raw_frame = std::make_shared<gtsam_ext::FrameCPU>(raw_points);
       raw_frame->add_times(times);
+      raw_frame->add_covs(gtsam_ext::estimate_covariances(raw_frame->points, raw_frame->size()));
       raw_frames.push_back(raw_frame);
 
       auto deskewed_frame = std::make_shared<gtsam_ext::FrameCPU>(deskewed_points);
-      deskewed_frame->add_normals(gtsam_ext::estimate_normals(deskewed_frame->points_storage));
+      deskewed_frame->add_covs(gtsam_ext::estimate_covariances(deskewed_frame->points, deskewed_frame->size()));
+      deskewed_frame->add_normals(gtsam_ext::estimate_normals(deskewed_frame->points, deskewed_frame->covs, deskewed_frame->size()));
       deskewed_frames.push_back(deskewed_frame);
     }
 
@@ -109,8 +113,7 @@ public:
 
     gtsam::NonlinearFactorGraph graph;
 
-    auto noise_model = gtsam::noiseModel::Isotropic::Precision(1, 1.0);
-    auto factor = gtsam::make_shared<gtsam_ext::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+    auto factor = gtsam::make_shared<gtsam_ext::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
     // auto factor = gtsam_ext::create_integrated_cticp_factor(0, 1, deskewed_frames[data_id], raw_frames[data_id], noise_model);
     graph.add(factor);
 

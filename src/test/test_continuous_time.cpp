@@ -10,6 +10,7 @@
 #include <gtsam_ext/types/frame_cpu.hpp>
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/normal_estimation.hpp>
+#include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
 #include <gtsam_ext/factors/continuous_time_icp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
@@ -52,9 +53,10 @@ void test(int test_id) {
   values.insert(0, gtsam::Pose3::identity());
   values.insert(1, gtsam::Pose3::identity());
 
-  auto noise_model = gtsam::noiseModel::Isotropic::Precision(1, 1.0);
-  auto robust_model = gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(0.1), noise_model);
-  auto cticp_factor = gtsam_ext::create_integrated_cticp_factor(0, 1, target, source, robust_model);
+  // auto noise_model = gtsam::noiseModel::Isotropic::Precision(1, 1.0);
+  // auto robust_model = gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(0.1), noise_model);
+  // auto cticp_factor = gtsam_ext::create_integrated_cticp_factor(0, 1, target, source, robust_model);
+  auto cticp_factor = gtsam::make_shared<gtsam_ext::IntegratedCT_ICPFactor>(0, 1, target, source);
 
   gtsam::NonlinearFactorGraph graph;
   graph.add(cticp_factor);

@@ -11,13 +11,24 @@ IntegratedCT_ICPFactor::IntegratedCT_ICPFactor(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,
   const gtsam_ext::Frame::ConstPtr& target,
-  const gtsam_ext::Frame::ConstPtr& source)
+  const gtsam_ext::Frame::ConstPtr& source,
+  const std::shared_ptr<NearestNeighborSearch>& target_tree)
 : gtsam::NonlinearFactor(gtsam::cref_list_of<2>(source_t0_key)(source_t1_key)),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
   target(target),
   source(source) {
   //
+  if (!target->points || !source->points) {
+    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (!source->times) {
+    std::cerr << "error: source cloud doesn't have timestamps!!" << std::endl;
+    abort();
+  }
+
   time_table.reserve(source->size() / 10);
   time_indices.reserve(source->size());
 
@@ -34,8 +45,19 @@ IntegratedCT_ICPFactor::IntegratedCT_ICPFactor(
     t = t / time_table.back();
   }
 
-  target_tree.reset(new gtsam_ext::KdTree(target->points, target->size()));
+  if (target_tree) {
+    this->target_tree = target_tree;
+  } else {
+    this->target_tree.reset(new gtsam_ext::KdTree(target->points, target->size()));
+  }
 }
+
+IntegratedCT_ICPFactor::IntegratedCT_ICPFactor(
+  gtsam::Key source_t0_key,
+  gtsam::Key source_t1_key,
+  const gtsam_ext::Frame::ConstPtr& target,
+  const gtsam_ext::Frame::ConstPtr& source)
+: IntegratedCT_ICPFactor(source_t0_key, source_t1_key, target, source, nullptr) {}
 
 IntegratedCT_ICPFactor::~IntegratedCT_ICPFactor() {}
 
@@ -70,6 +92,11 @@ double IntegratedCT_ICPFactor::error(const gtsam::Values& values) const {
 }
 
 boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor::linearize(const gtsam::Values& values) const {
+  if (!target->normals) {
+    std::cerr << "error: target cloud doesn't have normals!!" << std::endl;
+    abort();
+  }
+
   update_poses(values);
   update_correspondences();
 

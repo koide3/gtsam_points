@@ -71,7 +71,7 @@ public:
 #else
       std::cout << "GPU" << std::endl;
       gtsam_ext::VoxelizedFrameGPU::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameGPU>(2.0, points, covs);
-      frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
+      // frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
 #endif
       frames.push_back(frame);
 
@@ -121,7 +121,7 @@ public:
   }
 
   ~MatchingCostFactorDemo() {
-    if(optimization_thread.joinable()) {
+    if (optimization_thread.joinable()) {
       optimization_thread.join();
     }
   }
@@ -139,7 +139,7 @@ public:
         viewer->update_drawable("coord_" + std::to_string(i), glk::Primitives::coordinate_system(), guik::VertexColor(pose * Eigen::UniformScaling<float>(5.0f)));
 
         int j_end = full_connection ? 5 : std::min(i + 2, 5);
-        for (int j = i + 1; j<j_end; j++) {
+        for (int j = i + 1; j < j_end; j++) {
           factor_lines.push_back(values.at<gtsam::Pose3>(i).translation().cast<float>());
           factor_lines.push_back(values.at<gtsam::Pose3>(j).translation().cast<float>());
         }

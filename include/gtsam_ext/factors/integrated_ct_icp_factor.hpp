@@ -14,7 +14,15 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedCT_ICPFactor>;
 
+  IntegratedCT_ICPFactor(
+    gtsam::Key source_t0_key,
+    gtsam::Key source_t1_key,
+    const gtsam_ext::Frame::ConstPtr& target,
+    const gtsam_ext::Frame::ConstPtr& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+
   IntegratedCT_ICPFactor(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const gtsam_ext::Frame::ConstPtr& target, const gtsam_ext::Frame::ConstPtr& source);
+
   virtual ~IntegratedCT_ICPFactor() override;
 
   virtual size_t dim() const override { return 6; }
@@ -24,11 +32,11 @@ public:
 
   std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> deskewed_source_points(const gtsam::Values& values);
 
-private:
-  void update_poses(const gtsam::Values& values) const;
-  void update_correspondences() const;
+protected:
+  virtual void update_poses(const gtsam::Values& values) const;
+  virtual void update_correspondences() const;
 
-private:
+protected:
   int num_threads;
   double max_correspondence_distance_sq;
 
