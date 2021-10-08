@@ -9,6 +9,10 @@ namespace gtsam_ext {
 
 struct NearestNeighborSearch;
 
+/**
+ * @brief Continuous Time ICP Factor
+ * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
+ */
 class IntegratedCT_ICPFactor : public gtsam::NonlinearFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

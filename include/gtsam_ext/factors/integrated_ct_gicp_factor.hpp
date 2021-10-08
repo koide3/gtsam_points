@@ -4,6 +4,11 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Continuous Time ICP with GICP's D2D cost
+ * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
+ * @ref Segal et al., "Generalized-ICP", RSS2005
+ */
 class IntegratedCT_GICPFactor : public IntegratedCT_ICPFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
