@@ -17,6 +17,11 @@ IntegratedVGICPFactor::IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key s
     abort();
   }
 
+  if (!target->covs || !source->covs) {
+    std::cerr << "error: target or source don't have covs!!" << std::endl;
+    abort();
+  }
+
   if (!target->voxels) {
     std::cerr << "error: target voxelmap has not been created!!" << std::endl;
     abort();

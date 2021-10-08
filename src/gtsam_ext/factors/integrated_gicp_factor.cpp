@@ -24,6 +24,12 @@ IntegratedGICPFactor::IntegratedGICPFactor(
     abort();
   }
 
+  //
+  if (!target->covs || !source->covs) {
+    std::cerr << "error: target or source don't have covs!!" << std::endl;
+    abort();
+  }
+
   if (target_tree) {
     this->target_tree = target_tree;
   } else {

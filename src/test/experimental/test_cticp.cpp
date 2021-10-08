@@ -1,58 +1,69 @@
 #include <iostream>
-#include <boost/format.hpp>
-
 #include <gtsam/geometry/Pose3.h>
-#include <gtsam/nonlinear/NonlinearFactorGraph.h>
-
-#include <gtsam_ext/types/frame_cpu.hpp>
-#include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/expressions.hpp>
-#include <gtsam_ext/util/normal_estimation.hpp>
-#include <gtsam_ext/factors/continuous_time_icp_factor.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
-void test(int test_id) {
-  auto times = gtsam_ext::read_times((boost::format("data/newer_06/times_%02d.bin") % test_id).str());
-  auto raw_points = gtsam_ext::read_points((boost::format("data/newer_06/raw_%02d.bin") % test_id).str());
-  auto deskewed_points = gtsam_ext::read_points((boost::format("data/newer_06/deskewed_%02d.bin") % test_id).str());
 
-  for (auto& pt : raw_points) {
-    Eigen::Quaternionf q(0, 0, 0, 1);
-    pt = q * pt;
+void eval_expr(const gtsam::Values& values) {
+  gtsam::Pose3_ pose0(0);
+  gtsam::Pose3_ pose1(1);
+
+  const double t = 0.25;
+  gtsam::Vector6_ vel = gtsam_ext::logmap(gtsam::between(pose0, pose1));
+  gtsam::Pose3_ inc = gtsam_ext::expmap(t * vel);
+  gtsam::Pose3_ pose = gtsam::compose(pose0, inc);
+
+  gtsam::Point3_ pt(gtsam::Point3(1, 2, 3));
+  gtsam::Point3_ transed = gtsam::transformFrom(pose, pt);
+
+  const auto& expr = transed;
+
+  std::vector<gtsam::Matrix> Hs(expr.keys().size());
+  const auto val = expr.value(values, Hs);
+
+  std::cout << "--- value ---" << std::endl << val << std::endl;
+  for (int i = 0; i < Hs.size(); i++) {
+    std::cout << "--- Hs[" << i << "] ---" << std::endl;
+    std::cout << Hs[i] << std::endl;
   }
+}
 
-  gtsam_ext::FrameCPU::Ptr source(new gtsam_ext::FrameCPU(raw_points));
-  source->add_times(times);
+void eval_real(const gtsam::Values& values) {
+  gtsam::Pose3 pose0 = values.at<gtsam::Pose3>(0);
+  gtsam::Pose3 pose1 = values.at<gtsam::Pose3>(1);
 
-  gtsam_ext::FrameCPU::Ptr target(new gtsam_ext::FrameCPU(deskewed_points));
-  target->add_normals(gtsam_ext::estimate_normals(target->points_storage));
+  gtsam::Matrix6 H_delta_0, H_delta_1;
+  gtsam::Pose3 delta = pose0.between(pose1, H_delta_0, H_delta_1);
 
-  gtsam::Values values;
-  values.insert(0, gtsam::Pose3::identity());
-  values.insert(1, gtsam::Pose3::identity());
+  gtsam::Matrix6 H_vel_delta;
+  gtsam::Vector6 vel = gtsam::Pose3::Logmap(delta, H_vel_delta);
 
-  auto noise_model = gtsam::noiseModel::Isotropic::Precision(1, 1.0);
-  auto robust_model = gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(0.1), noise_model);
-  auto cticp_factor = gtsam_ext::create_integrated_cticp_factor(0, 1, target, source, robust_model);
+  const double t = 0.25;
+  gtsam::Matrix6 H_inc_vel;
+  gtsam::Pose3 inc = gtsam::Pose3::Expmap(t * vel, H_inc_vel);
 
-  gtsam::NonlinearFactorGraph graph;
-  graph.add(cticp_factor);
+  gtsam::Matrix6 H_pose_0_a, H_pose_inc;
+  gtsam::Pose3 pose = pose0.compose(inc, H_pose_0_a, H_pose_inc);
 
-  gtsam_ext::LevenbergMarquardtExtParams lm_params;
-  lm_params.callback = [](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) { std::cout << status.to_string() << std::endl; };
-  gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
-  values = optimizer.optimize();
+  gtsam::Matrix6 H_inc_0_b = H_pose_inc * H_inc_vel * t * H_vel_delta * H_delta_0;
+  gtsam::Matrix6 H_pose_0 = H_pose_0_a + H_inc_0_b;
+  gtsam::Matrix6 H_pose_1 = H_pose_inc * H_inc_vel * t * H_vel_delta * H_delta_1;
 
-  std::cout << "--- values ---" << std::endl;
-  values.print();
+  gtsam::Matrix36 H_transed_pose;
+  gtsam::Point3 pt(1, 2, 3);
+  gtsam::Point3 transed = pose.transformFrom(pt, H_transed_pose);
 
-  auto deskewed_source = cticp_factor->deskewed_source_points(values);
-  std::cout << "deskewed:" << deskewed_source.size() << std::endl;
+  std::cout << "--- value ---" << std::endl << pt << std::endl;
+  std::cout << "--- H1 ---" << std::endl << H_transed_pose * H_pose_0 << std::endl;
+  std::cout << "--- H2 ---" << std::endl << H_transed_pose * H_pose_1 << std::endl;
 }
 
 int main(int argc, char** argv) {
-  for (int i = 0; i < 3; i++) {
-    test(i);
-  }
+  gtsam::Values values;
+  values.insert(0, gtsam::Pose3::Expmap(gtsam::Vector6::Random()));
+  values.insert(1, gtsam::Pose3::Expmap(gtsam::Vector6::Random()));
+
+  eval_expr(values);
+  eval_real(values);
+
   return 0;
 }

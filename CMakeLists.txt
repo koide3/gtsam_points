@@ -146,3 +146,7 @@ if(BUILD_TESTS)
     gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endforeach()
 endif()
+
+
+add_executable(test_cticp src/test/experimental/test_cticp.cpp)
+target_link_libraries(test_cticp gtsam_ext)
