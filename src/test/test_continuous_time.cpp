@@ -17,7 +17,7 @@ double pointcloud_distance(const gtsam_ext::Frame::ConstPtr& frame1, const gtsam
   gtsam_ext::KdTree tree(frame2->points, frame2->size());
 
   double sum_dists = 0.0;
-  for (int i = 0; i<frame1->size(); i++) {
+  for (int i = 0; i < frame1->size(); i++) {
     size_t k_index;
     double k_sq_dist;
     tree.knn_search(frame1->points[i].data(), 1, &k_index, &k_sq_dist);
@@ -33,8 +33,8 @@ void test(int test_id) {
   auto raw_points = gtsam_ext::read_points((boost::format("data/newer_06/raw_%02d.bin") % test_id).str());
   auto deskewed_points = gtsam_ext::read_points((boost::format("data/newer_06/deskewed_%02d.bin") % test_id).str());
 
-  ASSERT_EQ(times.empty(), false)                 << "Failed to load point times";
-  ASSERT_EQ(times.size(), raw_points.size())      << "Failed to raw points";
+  ASSERT_EQ(times.empty(), false) << "Failed to load point times";
+  ASSERT_EQ(times.size(), raw_points.size()) << "Failed to raw points";
   ASSERT_EQ(times.size(), deskewed_points.size()) << "Failed to deskewed points";
 
   for (auto& pt : raw_points) {

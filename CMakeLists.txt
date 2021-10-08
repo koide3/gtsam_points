@@ -2,8 +2,9 @@ cmake_minimum_required(VERSION 3.0.2)
 project(gtsam_ext)
 
 add_compile_options(-std=c++17)
-set(default_build_type "Release")
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
+set(CMAKE_BUILD_TYPE "RelWithDebInfo" CACHE STRING "Choose the type of build." FORCE)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 
 option(BUILD_TESTS "Build test" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
@@ -64,6 +65,7 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/factors/integrated_gicp_factor.cpp
   src/gtsam_ext/factors/integrated_vgicp_factor.cpp
   src/gtsam_ext/factors/integrated_loam_factor.cpp
+  src/gtsam_ext/factors/integrated_ct_icp_factor.cpp
   src/gtsam_ext/factors/expression_icp_factor.cpp
   src/gtsam_ext/factors/continuous_time_icp_factor.cpp
   src/gtsam_ext/factors/bundle_adjustment_factor_evm.cpp

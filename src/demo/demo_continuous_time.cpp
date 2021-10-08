@@ -6,6 +6,7 @@
 #include <gtsam_ext/util/normal_estimation.hpp>
 #include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
 #include <gtsam_ext/factors/continuous_time_icp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
@@ -109,7 +110,8 @@ public:
     gtsam::NonlinearFactorGraph graph;
 
     auto noise_model = gtsam::noiseModel::Isotropic::Precision(1, 1.0);
-    auto factor = gtsam_ext::create_integrated_cticp_factor(0, 1, deskewed_frames[data_id], raw_frames[data_id], noise_model);
+    auto factor = gtsam::make_shared<gtsam_ext::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+    // auto factor = gtsam_ext::create_integrated_cticp_factor(0, 1, deskewed_frames[data_id], raw_frames[data_id], noise_model);
     graph.add(factor);
 
     gtsam_ext::LevenbergMarquardtExtParams lm_params;
