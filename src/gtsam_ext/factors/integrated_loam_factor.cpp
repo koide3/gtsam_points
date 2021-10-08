@@ -31,7 +31,7 @@ void IntegratedPointToPlaneFactor::update_correspondences(const Eigen::Isometry3
 
     std::array<size_t, 3> k_indices;
     std::array<double, 3> k_sq_dists;
-    target_tree->index.knnSearch(pt.data(), 3, k_indices.data(), k_sq_dists.data());
+    target_tree->knn_search(pt.data(), 3, k_indices.data(), k_sq_dists.data());
 
     if (k_sq_dists.back() > max_correspondence_distance_sq) {
       correspondences[i] = std::make_tuple(-1, -1, -1);
@@ -163,7 +163,7 @@ void IntegratedPointToEdgeFactor::update_correspondences(const Eigen::Isometry3d
 
     std::array<size_t, 2> k_indices;
     std::array<double, 2> k_sq_dists;
-    target_tree->index.knnSearch(pt.data(), 2, k_indices.data(), k_sq_dists.data());
+    target_tree->knn_search(pt.data(), 2, k_indices.data(), k_sq_dists.data());
 
     if (k_sq_dists.back() > max_correspondence_distance_sq) {
       correspondences[i] = std::make_tuple(-1, -1);

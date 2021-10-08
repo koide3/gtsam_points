@@ -84,6 +84,54 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(
 
 VoxelizedFrameGPU::~VoxelizedFrameGPU() {}
 
+template <typename T>
+void VoxelizedFrameGPU::add_times(const std::vector<T>& times) {
+  assert(times.size() == size());
+  times_storage.resize(times.size());
+  thrust::transform(times.begin(), times.end(), times_storage.begin(), [](const auto& v) { return static_cast<double>(v); });
+  this->times = times_storage.data();
+
+  add_times_gpu(times);
+}
+
+template <typename T>
+void VoxelizedFrameGPU::add_times_gpu(const std::vector<T>& times) {
+  assert(times.size() == size());
+
+  thrust::host_vector<float> times_h(times.size());
+  std::transform(times.begin(), times.end(), times_h.begin(), [](const auto& v) { return static_cast<float>(v); });
+
+  times_gpu_storage->resize(times.size());
+  cudaMemcpy(thrust::raw_pointer_cast(times_gpu_storage->data()), times_h.data(), sizeof(float) * times.size(), cudaMemcpyHostToDevice);
+  this->times_gpu = thrust::raw_pointer_cast(times_gpu_storage->data());
+}
+
+template <typename T, int D>
+void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals) {
+  assert(normals.size() == size());
+  normals_storage.resize(normals.size(), Eigen::Vector4d(0, 0, 0, 1));
+  for (int i = 0; i < normals.size(); i++) {
+    normals_storage[i].template head<D>() = normals[i].template cast<double>();
+  }
+  this->normals = normals_storage.data();
+
+  add_normals_gpu(normals);
+}
+
+template <typename T, int D>
+void VoxelizedFrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals) {
+  assert(normals.size() == size());
+
+  thrust::host_vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_h(normals.size());
+  for (int i = 0; i < normals.size(); i++) {
+    normals_h[i] = normals[i].template head<3>().template cast<float>();
+  }
+
+  normals_gpu_storage->resize(normals.size());
+  cudaMemcpy(thrust::raw_pointer_cast(normals_gpu_storage->data()), normals_h.data(), sizeof(Eigen::Vector3f) * normals.size(), cudaMemcpyHostToDevice);
+  this->normals_gpu = thrust::raw_pointer_cast(normals_gpu_storage->data());
+}
+
 std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> VoxelizedFrameGPU::get_points_gpu() const {
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> buffer(points_gpu_storage->size());
   cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(points_gpu_storage->data()), sizeof(Eigen::Vector3f) * points_gpu_storage->size(), cudaMemcpyDeviceToHost);
@@ -109,5 +157,13 @@ std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> Voxelize
   cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(covs_storage.data()), sizeof(Eigen::Matrix3f) * covs_storage.size(), cudaMemcpyDeviceToHost);
   return buffer;
 }
+
+template void VoxelizedFrameGPU::add_times(const std::vector<float>&);
+template void VoxelizedFrameGPU::add_times(const std::vector<double>&);
+
+template void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
+template void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
+template void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
+template void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
 
 }  // namespace gtsam_ext

@@ -7,17 +7,15 @@
 
 namespace gtsam_ext {
 
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> estimate_covariances(
-  const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,
-  int k_neighbors) {
+std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors) {
   //
-  KdTree tree(points.size(), points.data());
+  KdTree tree(num_points, points);
 
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs(points.size());
-  for (int i = 0; i < points.size(); i++) {
+  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs(num_points);
+  for (int i = 0; i < num_points; i++) {
     std::vector<size_t> k_indices(k_neighbors);
     std::vector<double> k_sq_dists(k_neighbors);
-    tree.index.knnSearch(points[i].data(), k_neighbors, &k_indices[0], &k_sq_dists[0]);
+    tree.knn_search(points[i].data(), k_neighbors, &k_indices[0], &k_sq_dists[0]);
 
     Eigen::Vector4d sum_points = Eigen::Vector4d::Zero();
     Eigen::Matrix4d sum_covs = Eigen::Matrix4d::Zero();
@@ -41,6 +39,13 @@ std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> estimate
   }
 
   return covs;
+}
+
+std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> estimate_covariances(
+  const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,
+  int k_neighbors) {
+  //
+  return estimate_covariances(points.data(), points.size(), k_neighbors);
 }
 
 }  // namespace gtsam_ext

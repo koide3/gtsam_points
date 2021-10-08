@@ -48,7 +48,7 @@ endif()
 ## Build ##
 ###########
 
-add_library(gtsam_ext STATIC
+add_library(gtsam_ext SHARED
   # util
   src/gtsam_ext/util/covariance_estimation.cpp
   src/gtsam_ext/util/normal_estimation.cpp
@@ -88,7 +88,7 @@ target_link_libraries(gtsam_ext
 
 # GPU-related
 if(BUILD_WITH_CUDA)
-  cuda_add_library(gtsam_ext_cuda STATIC
+  cuda_add_library(gtsam_ext_cuda SHARED
     # cuda-related
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu

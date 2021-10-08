@@ -20,7 +20,7 @@ double pointcloud_distance(const gtsam_ext::Frame::ConstPtr& frame1, const gtsam
   for (int i = 0; i<frame1->size(); i++) {
     size_t k_index;
     double k_sq_dist;
-    tree.knnSearch(frame1->points[i].data(), 1, &k_index, &k_sq_dist);
+    tree.knn_search(frame1->points[i].data(), 1, &k_index, &k_sq_dist);
     sum_dists += k_sq_dist;
   }
 

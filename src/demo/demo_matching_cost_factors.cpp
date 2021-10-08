@@ -9,6 +9,7 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <gtsam_ext/util/read_points.hpp>
+#include <gtsam_ext/util/normal_estimation.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>
 
 #include <gtsam_ext/types/voxelized_frame.hpp>
@@ -65,10 +66,12 @@ public:
 
 #ifndef BUILD_GTSAM_EXT_GPU
       std::cout << "CPU" << std::endl;
-      gtsam_ext::VoxelizedFrame::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameCPU>(2.0, points, covs);
+      gtsam_ext::VoxelizedFrameCPU::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameCPU>(2.0, points, covs);
+      frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
 #else
       std::cout << "GPU" << std::endl;
-      gtsam_ext::VoxelizedFrame::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameGPU>(2.0, points, covs);
+      gtsam_ext::VoxelizedFrameGPU::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameGPU>(2.0, points, covs);
+      frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
 #endif
       frames.push_back(frame);
 
@@ -84,9 +87,12 @@ public:
 
     factor_type = 0;
     factor_types.push_back("ICP");
+    factor_types.push_back("ICP_PLANE");
     factor_types.push_back("GICP");
     factor_types.push_back("VGICP");
+#ifdef BUILD_GTSAM_EXT_GPU
     factor_types.push_back("VGICP_GPU");
+#endif
 
     full_connection = true;
 
@@ -145,8 +151,10 @@ public:
 
   gtsam::NonlinearFactor::shared_ptr
   create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::VoxelizedFrame::ConstPtr& target, const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
-    if (factor_types[factor_type] ==  std::string("ICP")) {
+    if (factor_types[factor_type] == std::string("ICP")) {
       return gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
+    } else if (factor_types[factor_type] == std::string("ICP_PLANE")) {
+      return gtsam::make_shared<gtsam_ext::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
     } else if (factor_types[factor_type] == std::string("GICP")) {
       return gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(target_key, source_key, target, source);
     } else if (factor_types[factor_type] == std::string("VGICP")) {

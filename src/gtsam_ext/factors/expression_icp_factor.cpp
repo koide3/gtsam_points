@@ -46,7 +46,7 @@ void ICPFactorExpr::update_correspondence(const gtsam::Values& values) const {
 
   size_t k_index = -1;
   double k_sq_dists = -1;
-  target_tree->index.knnSearch(transed_source.data(), 1, &k_index, &k_sq_dists);
+  target_tree->knn_search(transed_source.data(), 1, &k_index, &k_sq_dists);
   target_index = k_index;
 }
 

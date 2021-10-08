@@ -34,7 +34,7 @@ void IntegratedGICPFactor::update_correspondences(const Eigen::Isometry3d& delta
 
     size_t k_index = -1;
     double k_sq_dist = -1;
-    target_tree->index.knnSearch(pt.data(), 1, &k_index, &k_sq_dist);
+    target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
 
     if (k_sq_dist > max_correspondence_distance_sq) {
       correspondences[i] = -1;

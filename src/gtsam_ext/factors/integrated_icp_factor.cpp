@@ -7,15 +7,21 @@
 
 namespace gtsam_ext {
 
-IntegratedICPFactor::IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+IntegratedICPFactor::IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
+  use_point_to_plane(use_point_to_plane),
   target(target),
   source(source) {
   //
   if (!target->points || !source->points) {
     std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (use_point_to_plane && !target->normals) {
+    std::cerr << "error: target cloud doesn't have normals!!" << std::endl;
     abort();
   }
 
@@ -33,7 +39,7 @@ void IntegratedICPFactor::update_correspondences(const Eigen::Isometry3d& delta)
 
     size_t k_index = -1;
     double k_sq_dist = -1;
-    target_tree->index.knnSearch(pt.data(), 1, &k_index, &k_sq_dist);
+    target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
 
     if (k_sq_dist > max_correspondence_distance_sq) {
       correspondences[i] = -1;
@@ -80,13 +86,15 @@ double IntegratedICPFactor::evaluate(
     }
 
     const auto& mean_A = source->points[i];
-    const auto& cov_A = source->covs[i];
-
     const auto& mean_B = target->points[target_index];
-    const auto& cov_B = target->covs[target_index];
 
     Eigen::Vector4d transed_mean_A = delta * mean_A;
     Eigen::Vector4d error = mean_B - transed_mean_A;
+
+    if(use_point_to_plane) {
+      const auto& normal_B = target->normals[target_index];
+      error = normal_B.array() * error.array();
+    }
 
     sum_errors += 0.5 * error.transpose() * error;
 
@@ -101,6 +109,12 @@ double IntegratedICPFactor::evaluate(
     Eigen::Matrix<double, 4, 6> J_source = Eigen::Matrix<double, 4, 6>::Zero();
     J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.head<3>());
     J_source.block<3, 3>(0, 3) = -delta.linear();
+
+    if(use_point_to_plane) {
+      const auto& normal_B = target->normals[target_index];
+      J_target = normal_B.asDiagonal() * J_target;
+      J_source = normal_B.asDiagonal() * J_source;
+    }
 
     int thread_num = 0;
 #ifdef _OPENMP
