@@ -65,7 +65,7 @@ TEST_F(LOAMTestBase, LoadCheck) {
   EXPECT_EQ(poses_gt.size(), 5) << "Failed to load GT poses";
 }
 
-class FactorTest : public LOAMTestBase, public testing::WithParamInterface<std::string> {
+class LOAMFactorTest : public LOAMTestBase, public testing::WithParamInterface<std::string> {
 public:
   gtsam::NonlinearFactor::shared_ptr create_factor(
     gtsam::Key target_key,
@@ -118,9 +118,9 @@ public:
   }
 };
 
-INSTANTIATE_TEST_SUITE_P(gtsam_ext, FactorTest, testing::Values("EDGE", "PLANE", "LOAM"), [](const auto& info) { return info.param; });
+INSTANTIATE_TEST_SUITE_P(gtsam_ext, LOAMFactorTest, testing::Values("EDGE", "PLANE", "LOAM"), [](const auto& info) { return info.param; });
 
-TEST_P(FactorTest, test) {
+TEST_P(LOAMFactorTest, AlignmentTest) {
   auto f = create_factor(0, 1, edge_frames[0], plane_frames[0], edge_frames[1], plane_frames[1]);
   if (f == nullptr) {
     std::cerr << "[          ] SKIP:" << GetParam() << std::endl;

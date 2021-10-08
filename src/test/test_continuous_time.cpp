@@ -14,7 +14,7 @@
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
 double pointcloud_distance(const gtsam_ext::Frame::ConstPtr& frame1, const gtsam_ext::Frame::ConstPtr& frame2) {
-  gtsam_ext::KdTree tree(frame2->size(), frame2->points);
+  gtsam_ext::KdTree tree(frame2->points, frame2->size());
 
   double sum_dists = 0.0;
   for (int i = 0; i<frame1->size(); i++) {

@@ -7,7 +7,12 @@
 
 namespace gtsam_ext {
 
-IntegratedGICPFactor::IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+IntegratedGICPFactor::IntegratedGICPFactor(
+  gtsam::Key target_key,
+  gtsam::Key source_key,
+  const Frame::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  const std::shared_ptr<NearestNeighborSearch>& target_tree)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -19,8 +24,15 @@ IntegratedGICPFactor::IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key sou
     abort();
   }
 
-  target_tree.reset(new KdTree(target->num_points, target->points));
+  if (target_tree) {
+    this->target_tree = target_tree;
+  } else {
+    this->target_tree.reset(new KdTree(target->points, target->num_points));
+  }
 }
+
+IntegratedGICPFactor::IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+: IntegratedGICPFactor(target_key, source_key, target, source, nullptr) {}
 
 IntegratedGICPFactor::~IntegratedGICPFactor() {}
 
@@ -34,9 +46,9 @@ void IntegratedGICPFactor::update_correspondences(const Eigen::Isometry3d& delta
 
     size_t k_index = -1;
     double k_sq_dist = -1;
-    target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
+    size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
 
-    if (k_sq_dist > max_correspondence_distance_sq) {
+    if (num_found == 0 || k_sq_dist > max_correspondence_distance_sq) {
       correspondences[i] = -1;
       mahalanobis[i].setIdentity();
     } else {

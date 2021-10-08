@@ -9,7 +9,7 @@ namespace gtsam_ext {
 
 std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors) {
   //
-  KdTree tree(num_points, points);
+  KdTree tree(points, num_points);
 
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs(num_points);
   for (int i = 0; i < num_points; i++) {

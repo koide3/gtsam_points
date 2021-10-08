@@ -11,7 +11,7 @@ struct KdTree : public NearestNeighborSearch {
 public:
   using Index = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, KdTree>, KdTree, 3>;
 
-  KdTree(int num_points, const Eigen::Vector4d* points) : num_points(num_points), points(points), index(3, *this, nanoflann::KDTreeSingleIndexAdaptorParams(10)) {
+  KdTree(const Eigen::Vector4d* points, int num_points) : num_points(num_points), points(points), index(3, *this, nanoflann::KDTreeSingleIndexAdaptorParams(10)) {
     index.buildIndex();
   }
   virtual ~KdTree() override {}

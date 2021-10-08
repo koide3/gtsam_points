@@ -135,7 +135,7 @@ std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> Integrat
 gtsam::NonlinearFactorGraph::shared_ptr
 create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model) {
   gtsam::NonlinearFactorGraph::shared_ptr factors(new gtsam::NonlinearFactorGraph);
-  std::shared_ptr<KdTree> target_tree(new KdTree(target->size(), target->points));
+  std::shared_ptr<KdTree> target_tree(new KdTree(target->points, target->size()));
 
   for (int i = 0; i < source->size(); i++) {
     const double source_t0 = source->times[0];

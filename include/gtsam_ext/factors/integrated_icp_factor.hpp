@@ -8,7 +8,7 @@
 
 namespace gtsam_ext {
 
-struct KdTree;
+struct NearestNeighborSearch;
 
 /**
  * @brief Naive point-to-point ICP matching cost factor
@@ -19,7 +19,16 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedICPFactor>;
 
+  IntegratedICPFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const Frame::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree,
+    bool use_point_to_plane = false);
+
   IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane = false);
+
   virtual ~IntegratedICPFactor() override;
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
@@ -44,7 +53,7 @@ private:
   double max_correspondence_distance_sq;
   bool use_point_to_plane;
 
-  std::unique_ptr<KdTree> target_tree;
+  std::shared_ptr<NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   mutable std::vector<int> correspondences;

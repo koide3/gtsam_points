@@ -5,7 +5,12 @@
 
 namespace gtsam_ext {
 
-IntegratedPointToPlaneFactor::IntegratedPointToPlaneFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+IntegratedPointToPlaneFactor::IntegratedPointToPlaneFactor(
+  gtsam::Key target_key,
+  gtsam::Key source_key,
+  const Frame::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  const std::shared_ptr<NearestNeighborSearch>& target_tree)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -17,8 +22,15 @@ IntegratedPointToPlaneFactor::IntegratedPointToPlaneFactor(gtsam::Key target_key
     abort();
   }
 
-  target_tree.reset(new KdTree(target->num_points, target->points));
+  if(target_tree) {
+    this->target_tree = target_tree;
+  } else {
+    this->target_tree.reset(new KdTree(target->points, target->num_points));
+  }
 }
+
+IntegratedPointToPlaneFactor::IntegratedPointToPlaneFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+: IntegratedPointToPlaneFactor(target_key, source_key, target, source, nullptr) {}
 
 IntegratedPointToPlaneFactor::~IntegratedPointToPlaneFactor() {}
 
@@ -31,9 +43,9 @@ void IntegratedPointToPlaneFactor::update_correspondences(const Eigen::Isometry3
 
     std::array<size_t, 3> k_indices;
     std::array<double, 3> k_sq_dists;
-    target_tree->knn_search(pt.data(), 3, k_indices.data(), k_sq_dists.data());
+    size_t num_found = target_tree->knn_search(pt.data(), 3, k_indices.data(), k_sq_dists.data());
 
-    if (k_sq_dists.back() > max_correspondence_distance_sq) {
+    if (num_found < 3 || k_sq_dists.back() > max_correspondence_distance_sq) {
       correspondences[i] = std::make_tuple(-1, -1, -1);
     } else {
       correspondences[i] = std::make_tuple(k_indices[0], k_indices[1], k_indices[2]);
@@ -137,7 +149,12 @@ double IntegratedPointToPlaneFactor::evaluate(
   return sum_errors;
 }
 
-IntegratedPointToEdgeFactor::IntegratedPointToEdgeFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+IntegratedPointToEdgeFactor::IntegratedPointToEdgeFactor(
+  gtsam::Key target_key,
+  gtsam::Key source_key,
+  const Frame::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  const std::shared_ptr<NearestNeighborSearch>& target_tree)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -149,8 +166,15 @@ IntegratedPointToEdgeFactor::IntegratedPointToEdgeFactor(gtsam::Key target_key, 
     abort();
   }
 
-  target_tree.reset(new KdTree(target->num_points, target->points));
+  if(target_tree) {
+    this->target_tree = target_tree;
+  } else {
+    this->target_tree.reset(new KdTree(target->points, target->num_points));
+  }
 }
+
+IntegratedPointToEdgeFactor::IntegratedPointToEdgeFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+: gtsam_ext::IntegratedPointToEdgeFactor(target_key, source_key, target, source, nullptr) {}
 
 IntegratedPointToEdgeFactor::~IntegratedPointToEdgeFactor() {}
 
@@ -163,9 +187,9 @@ void IntegratedPointToEdgeFactor::update_correspondences(const Eigen::Isometry3d
 
     std::array<size_t, 2> k_indices;
     std::array<double, 2> k_sq_dists;
-    target_tree->knn_search(pt.data(), 2, k_indices.data(), k_sq_dists.data());
+    size_t num_found = target_tree->knn_search(pt.data(), 2, k_indices.data(), k_sq_dists.data());
 
-    if (k_sq_dists.back() > max_correspondence_distance_sq) {
+    if (num_found < 2 || k_sq_dists.back() > max_correspondence_distance_sq) {
       correspondences[i] = std::make_tuple(-1, -1);
     } else {
       correspondences[i] = std::make_tuple(k_indices[0], k_indices[1]);
@@ -272,6 +296,22 @@ double IntegratedPointToEdgeFactor::evaluate(
   }
 
   return sum_errors;
+}
+
+IntegratedLOAMFactor::IntegratedLOAMFactor(
+  gtsam::Key target_key,
+  gtsam::Key source_key,
+  const Frame::ConstPtr& target_edges,
+  const Frame::ConstPtr& target_planes,
+  const Frame::ConstPtr& source_edges,
+  const Frame::ConstPtr& source_planes,
+  const std::shared_ptr<NearestNeighborSearch>& target_edges_tree,
+  const std::shared_ptr<NearestNeighborSearch>& target_planes_tree)
+: gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
+  enable_correspondence_validation(false) {
+  //
+  edge_factor.reset(new IntegratedPointToEdgeFactor(target_key, source_key, target_edges, source_edges, target_edges_tree));
+  plane_factor.reset(new IntegratedPointToPlaneFactor(target_key, source_key, target_planes, source_planes, target_planes_tree));
 }
 
 IntegratedLOAMFactor::IntegratedLOAMFactor(

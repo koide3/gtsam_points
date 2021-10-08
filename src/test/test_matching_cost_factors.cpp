@@ -25,7 +25,7 @@
 #include <gtsam_ext/optimizers/isam2_ext.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
-struct ExtTestBase : public testing::Test {
+struct MatchingCostFactorsTestBase : public testing::Test {
   virtual void SetUp() {
     std::string dump_path = "./data/kitti_07_dump";
     std::ifstream ifs(dump_path + "/graph.txt");
@@ -85,12 +85,12 @@ struct ExtTestBase : public testing::Test {
 #endif
 };
 
-TEST_F(ExtTestBase, LoadCheck) {
+TEST_F(MatchingCostFactorsTestBase, LoadCheck) {
   EXPECT_EQ(poses.size(), 5) << "Failed to load submap poses";
   EXPECT_EQ(poses_gt.size(), 5) << "Failed to load submap poses";
 }
 
-class FactorTest : public ExtTestBase, public testing::WithParamInterface<std::string> {
+class MatchingCostFactorTest : public MatchingCostFactorsTestBase, public testing::WithParamInterface<std::string> {
 public:
   gtsam::NonlinearFactor::shared_ptr
   create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::VoxelizedFrame::ConstPtr& target, const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
@@ -144,9 +144,9 @@ public:
   }
 };
 
-INSTANTIATE_TEST_SUITE_P(gtsam_ext, FactorTest, testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), [](const auto& info) { return info.param; });
+INSTANTIATE_TEST_SUITE_P(gtsam_ext, MatchingCostFactorTest, testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), [](const auto& info) { return info.param; });
 
-TEST_P(FactorTest, test) {
+TEST_P(MatchingCostFactorTest, AlignmentTest) {
   auto f = create_factor(0, 1, frames[0], frames[1]);
   if (f == nullptr) {
     std::cerr << "[          ] SKIP:" << GetParam() << std::endl;

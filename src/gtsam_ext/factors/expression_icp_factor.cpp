@@ -88,7 +88,7 @@ gtsam::NonlinearFactorGraph::shared_ptr
 create_icp_factors(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model) {
   gtsam::NonlinearFactorGraph::shared_ptr factors(new gtsam::NonlinearFactorGraph);
 
-  std::shared_ptr<KdTree> target_tree(new KdTree(target->size(), target->points));
+  std::shared_ptr<KdTree> target_tree(new KdTree(target->points, target->size()));
 
   for (int i = 0; i < source->size(); i++) {
     gtsam::NonlinearFactor::shared_ptr factor(new ICPFactorExpr(target_key, source_key, target, target_tree, source->points[i].head<3>(), noise_model));

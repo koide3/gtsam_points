@@ -8,7 +8,7 @@
 
 namespace gtsam_ext {
 
-struct KdTree;
+struct NearestNeighborSearch;
 class IntegratedPointToPlaneFactor;
 class IntegratedPointToEdgeFactor;
 
@@ -23,6 +23,16 @@ class IntegratedLOAMFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedLOAMFactor>;
+
+  IntegratedLOAMFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const Frame::ConstPtr& target_edges,
+    const Frame::ConstPtr& target_planes,
+    const Frame::ConstPtr& source_edges,
+    const Frame::ConstPtr& source_planes,
+    const std::shared_ptr<NearestNeighborSearch>& target_edges_tree,
+    const std::shared_ptr<NearestNeighborSearch>& target_planes_tree);
 
   IntegratedLOAMFactor(
     gtsam::Key target_key,
@@ -70,6 +80,7 @@ public:
 
   friend class IntegratedLOAMFactor;
 
+  IntegratedPointToPlaneFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const std::shared_ptr<NearestNeighborSearch>& target_tree);
   IntegratedPointToPlaneFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
   ~IntegratedPointToPlaneFactor();
 
@@ -91,7 +102,7 @@ private:
   int num_threads;
   double max_correspondence_distance_sq;
 
-  std::unique_ptr<KdTree> target_tree;
+  std::shared_ptr<NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   mutable std::vector<std::tuple<int, int, int>> correspondences;
@@ -108,6 +119,7 @@ public:
 
   friend class IntegratedLOAMFactor;
 
+  IntegratedPointToEdgeFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const std::shared_ptr<NearestNeighborSearch>& target_tree);
   IntegratedPointToEdgeFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
   ~IntegratedPointToEdgeFactor();
 
@@ -129,7 +141,7 @@ private:
   int num_threads;
   double max_correspondence_distance_sq;
 
-  std::unique_ptr<KdTree> target_tree;
+  std::shared_ptr<NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   mutable std::vector<std::tuple<int, int>> correspondences;

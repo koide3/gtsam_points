@@ -136,7 +136,7 @@ TEST_F(BATestBase, LoadCheck) {
   EXPECT_EQ(poses_gt.size(), 5) << "Failed to load GT poses";
 }
 
-class FactorTest : public BATestBase {
+class BAFactorTest : public BATestBase {
 public:
   void test_result(const gtsam::Values& result, const std::string& note = "") {
     bool is_first = true;
@@ -163,7 +163,7 @@ public:
   }
 };
 
-TEST_F(FactorTest, test) {
+TEST_F(BAFactorTest, AlignmentTest) {
   gtsam::Values values = poses;
   gtsam::NonlinearFactorGraph graph;
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e3)));

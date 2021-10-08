@@ -8,7 +8,7 @@
 
 namespace gtsam_ext {
 
-struct KdTree;
+struct NearestNeighborSearch;
 
 /**
  * @brief Generalized ICP matching cost factor
@@ -20,6 +20,7 @@ public:
   using shared_ptr = boost::shared_ptr<IntegratedGICPFactor>;
 
   IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
+  IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const std::shared_ptr<NearestNeighborSearch>& target_tree);
   virtual ~IntegratedGICPFactor() override;
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
@@ -42,7 +43,7 @@ private:
   int num_threads;
   double max_correspondence_distance_sq;
 
-  std::unique_ptr<KdTree> target_tree;
+  std::shared_ptr<NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   mutable std::vector<int> correspondences;

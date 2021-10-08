@@ -7,7 +7,13 @@
 
 namespace gtsam_ext {
 
-IntegratedICPFactor::IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane)
+IntegratedICPFactor::IntegratedICPFactor(
+  gtsam::Key target_key,
+  gtsam::Key source_key,
+  const Frame::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  const std::shared_ptr<NearestNeighborSearch>& target_tree,
+  bool use_point_to_plane)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -25,8 +31,15 @@ IntegratedICPFactor::IntegratedICPFactor(gtsam::Key target_key, gtsam::Key sourc
     abort();
   }
 
-  target_tree.reset(new KdTree(target->num_points, target->points));
+  if(target_tree) {
+    this->target_tree = target_tree;
+  } else {
+    this->target_tree.reset(new KdTree(target->points, target->num_points));
+  }
 }
+
+IntegratedICPFactor::IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane)
+: gtsam_ext::IntegratedICPFactor(target_key, source_key, target, source, nullptr, use_point_to_plane) {}
 
 IntegratedICPFactor::~IntegratedICPFactor() {}
 
@@ -39,9 +52,9 @@ void IntegratedICPFactor::update_correspondences(const Eigen::Isometry3d& delta)
 
     size_t k_index = -1;
     double k_sq_dist = -1;
-    target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
+    size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
 
-    if (k_sq_dist > max_correspondence_distance_sq) {
+    if (num_found == 0 || k_sq_dist > max_correspondence_distance_sq) {
       correspondences[i] = -1;
     } else {
       correspondences[i] = k_index;
