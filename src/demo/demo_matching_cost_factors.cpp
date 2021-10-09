@@ -96,6 +96,9 @@ public:
 
     full_connection = true;
 
+    correspondence_update_tolerance_rot = 0.0f;
+    correspondence_update_tolerance_trans = 0.0f;
+
     viewer->register_ui_callback("control", [this] {
       ImGui::DragFloat("noise_scale", &noise_scale, 0.01f, 0.0f);
       if (ImGui::Button("add noise")) {
@@ -110,6 +113,9 @@ public:
       ImGui::Checkbox("full connection", &full_connection);
       ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
       ImGui::Combo("optimizer type", &optimizer_type, optimizer_types.data(), optimizer_types.size());
+
+      ImGui::DragFloat("corr update tolerance rot", &correspondence_update_tolerance_rot, 0.001f, 0.0f);
+      ImGui::DragFloat("corr update tolerance trans", &correspondence_update_tolerance_trans, 0.01f, 0.0f);
 
       if (ImGui::Button("optimize")) {
         if (optimization_thread.joinable()) {
@@ -152,11 +158,17 @@ public:
   gtsam::NonlinearFactor::shared_ptr
   create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::VoxelizedFrame::ConstPtr& target, const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
-      return gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
+      factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      return factor;
     } else if (factor_types[factor_type] == std::string("ICP_PLANE")) {
-      return gtsam::make_shared<gtsam_ext::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
+      factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      return factor;
     } else if (factor_types[factor_type] == std::string("GICP")) {
-      return gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(target_key, source_key, target, source);
+      factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      return factor;
     } else if (factor_types[factor_type] == std::string("VGICP")) {
       return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor>(target_key, source_key, target, source);
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
@@ -227,6 +239,9 @@ private:
 
   std::vector<const char*> optimizer_types;
   int optimizer_type;
+
+  float correspondence_update_tolerance_rot;
+  float correspondence_update_tolerance_trans;
 
   std::thread optimization_thread;
 };

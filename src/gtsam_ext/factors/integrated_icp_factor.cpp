@@ -18,6 +18,8 @@ IntegratedICPFactor::IntegratedICPFactor(
   num_threads(1),
   max_correspondence_distance_sq(1.0),
   use_point_to_plane(use_point_to_plane),
+  correspondence_update_tolerance_rot(0.0),
+  correspondence_update_tolerance_trans(0.0),
   target(target),
   source(source) {
   //
@@ -31,7 +33,7 @@ IntegratedICPFactor::IntegratedICPFactor(
     abort();
   }
 
-  if(target_tree) {
+  if (target_tree) {
     this->target_tree = target_tree;
   } else {
     this->target_tree.reset(new KdTree(target->points, target->num_points));
@@ -44,6 +46,15 @@ IntegratedICPFactor::IntegratedICPFactor(gtsam::Key target_key, gtsam::Key sourc
 IntegratedICPFactor::~IntegratedICPFactor() {}
 
 void IntegratedICPFactor::update_correspondences(const Eigen::Isometry3d& delta) const {
+  if (correspondences.size() == source->size() && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
+    Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
+    double diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
+    double diff_trans = diff.translation().norm();
+    if (diff_rot < correspondence_update_tolerance_rot && diff_trans < correspondence_update_tolerance_trans) {
+      return;
+    }
+  }
+
   correspondences.resize(source->size());
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
@@ -60,6 +71,8 @@ void IntegratedICPFactor::update_correspondences(const Eigen::Isometry3d& delta)
       correspondences[i] = k_index;
     }
   }
+
+  last_correspondence_point = delta;
 }
 
 double IntegratedICPFactor::evaluate(
@@ -104,7 +117,7 @@ double IntegratedICPFactor::evaluate(
     Eigen::Vector4d transed_mean_A = delta * mean_A;
     Eigen::Vector4d error = mean_B - transed_mean_A;
 
-    if(use_point_to_plane) {
+    if (use_point_to_plane) {
       const auto& normal_B = target->normals[target_index];
       error = normal_B.array() * error.array();
     }
@@ -123,7 +136,7 @@ double IntegratedICPFactor::evaluate(
     J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.head<3>());
     J_source.block<3, 3>(0, 3) = -delta.linear();
 
-    if(use_point_to_plane) {
+    if (use_point_to_plane) {
       const auto& normal_B = target->normals[target_index];
       J_target = normal_B.asDiagonal() * J_target;
       J_source = normal_B.asDiagonal() * J_source;

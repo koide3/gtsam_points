@@ -16,6 +16,8 @@ IntegratedGICPFactor::IntegratedGICPFactor(
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
+  correspondence_update_tolerance_rot(0.0),
+  correspondence_update_tolerance_trans(0.0),
   target(target),
   source(source) {
   //
@@ -43,29 +45,42 @@ IntegratedGICPFactor::IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key sou
 IntegratedGICPFactor::~IntegratedGICPFactor() {}
 
 void IntegratedGICPFactor::update_correspondences(const Eigen::Isometry3d& delta) const {
+  bool do_update = true;
+  if (correspondences.size() == source->size() && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
+    Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
+    double diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
+    double diff_trans = diff.translation().norm();
+    if (diff_rot < correspondence_update_tolerance_rot && diff_trans < correspondence_update_tolerance_trans) {
+      do_update = false;
+    }
+  }
+  
   correspondences.resize(source->size());
   mahalanobis.resize(source->size());
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
-    Eigen::Vector4d pt = delta * source->points[i];
+    if(do_update) {
+      Eigen::Vector4d pt = delta * source->points[i];
 
-    size_t k_index = -1;
-    double k_sq_dist = -1;
-    size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
+      size_t k_index = -1;
+      double k_sq_dist = -1;
+      size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
+      correspondences[i] = k_sq_dist < max_correspondence_distance_sq ? k_index : -1;
+    }
 
-    if (num_found == 0 || k_sq_dist > max_correspondence_distance_sq) {
-      correspondences[i] = -1;
+    if (correspondences[i] < 0) {
       mahalanobis[i].setIdentity();
     } else {
-      correspondences[i] = k_index;
-
-      Eigen::Matrix4d RCR = (target->covs[k_index] + delta.matrix() * source->covs[i] * delta.matrix().transpose());
+      const auto& target_cov = target->covs[correspondences[i]];
+      Eigen::Matrix4d RCR = (target_cov + delta.matrix() * source->covs[i] * delta.matrix().transpose());
       RCR(3, 3) = 1.0;
       mahalanobis[i] = RCR.inverse();
       mahalanobis[i](3, 3) = 0.0;
     }
   }
+
+  last_correspondence_point = delta;
 }
 
 double IntegratedGICPFactor::evaluate(

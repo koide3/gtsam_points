@@ -2,6 +2,7 @@
 #include <iostream>
 #include <boost/format.hpp>
 
+#include <gtsam/slam/BetweenFactor.h>
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/normal_estimation.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>
@@ -62,6 +63,12 @@ public:
     noise_scale = 0.0f;
     pose_noise = gtsam::Pose3::identity();
 
+    factor_type = 0;
+    enable_pose_constraint = true;
+    rot_noise_scale = 10.0f;
+    trans_noise_scale = 1000.0f;
+    max_corresponding_distance = 1.0f;
+
     data_id = 0;
     setup(data_id);
 
@@ -77,6 +84,14 @@ public:
       if (ImGui::Combo("DataID", &data_id, data_id_labels.data(), data_id_labels.size())) {
         setup(data_id);
       }
+
+      factor_types = std::vector<const char*>{"CT-ICP", "CT-GICP", "CT-ICP-EXPR"};
+      ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
+
+      ImGui::Checkbox("enable pose constraint", &enable_pose_constraint);
+      ImGui::DragFloat("pose rot noise scale", &rot_noise_scale, 0.1f, 0.0f);
+      ImGui::DragFloat("pose trans noise scale", &trans_noise_scale, 10.0f, 0.0f);
+      ImGui::DragFloat("max corresponding distance", &max_corresponding_distance, 0.1f, 0.0f);
 
       if (ImGui::Button("optimize")) {
         if (optimization_thread.joinable()) {
@@ -113,8 +128,29 @@ public:
 
     gtsam::NonlinearFactorGraph graph;
 
-    auto factor = gtsam::make_shared<gtsam_ext::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
-    // auto factor = gtsam_ext::create_integrated_cticp_factor(0, 1, deskewed_frames[data_id], raw_frames[data_id], noise_model);
+    if (enable_pose_constraint) {
+      gtsam::Vector6 noise_scales;
+      noise_scales << gtsam::Vector3::Ones() * rot_noise_scale, gtsam::Vector3::Ones() * trans_noise_scale;
+      graph.add(gtsam::BetweenFactor(0, 1, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precisions(noise_scales)));
+    }
+
+    gtsam::NonlinearFactor::shared_ptr factor;
+    if (factor_types[factor_type] == std::string("CT-ICP")) {
+      auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+      f->set_max_corresponding_distance(max_corresponding_distance);
+      factor = f;
+    } else if (factor_types[factor_type] == std::string("CT-GICP")) {
+      auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+      f->set_max_corresponding_distance(max_corresponding_distance);
+      factor = f;
+    } else if (factor_types[factor_type] == std::string("CT-ICP-EXPR")) {
+      auto noise_model = gtsam::noiseModel::Isotropic::Precision(1, 1.0);
+      auto robust_model = gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(max_corresponding_distance), noise_model);
+      factor = gtsam_ext::create_integrated_cticp_factor(0, 1, deskewed_frames[data_id], raw_frames[data_id], robust_model);
+    } else {
+      std::cerr << "error: unknown factor type " << factor_types[factor_type] << std::endl;
+    }
+
     graph.add(factor);
 
     gtsam_ext::LevenbergMarquardtExtParams lm_params;
@@ -123,7 +159,19 @@ public:
       viewer->append_text(status.to_string());
 
       std::vector<double> times(raw_frames[data_id]->times, raw_frames[data_id]->times + raw_frames[data_id]->size());
-      auto points = factor->deskewed_source_points(values);
+
+      std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points;
+      auto cticp_factor = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCT_ICPFactor>(factor);
+      if (cticp_factor) {
+        points = cticp_factor->deskewed_source_points(values);
+      } else {
+        auto cticp_factor_expr = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCTICPFactorExpr>(factor);
+        if (cticp_factor_expr) {
+          points = cticp_factor_expr->deskewed_source_points(values);
+        } else {
+          std::cerr << "FFF" << std::endl;
+        }
+      }
 
       std::vector<Eigen::Isometry3f, Eigen::aligned_allocator<Eigen::Isometry3f>> poses;
       for (int i = 0; i < 4; i++) {
@@ -152,6 +200,14 @@ private:
 
   float noise_scale;
   gtsam::Pose3 pose_noise;
+
+  int factor_type;
+  std::vector<const char*> factor_types;
+
+  bool enable_pose_constraint;
+  float rot_noise_scale;
+  float trans_noise_scale;
+  float max_corresponding_distance;
 
   int data_id;
   std::thread optimization_thread;

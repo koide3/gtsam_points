@@ -47,6 +47,7 @@ public:
   //     : and setting n>1 can rather affect the processing speed
   void set_num_threads(int n);
   void set_max_corresponding_distance(double dist_edge, double dist_plane);
+  void set_correspondence_update_tolerance(double angle, double trans);
   void set_enable_correspondence_validation(bool enable);
 
 private:
@@ -86,6 +87,10 @@ public:
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+  void set_correspondence_update_tolerance(double angle, double trans) {
+    correspondence_update_tolerance_rot = angle;
+    correspondence_update_tolerance_trans = trans;
+  }
 
 private:
   virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
@@ -105,6 +110,9 @@ private:
   std::shared_ptr<NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
+  double correspondence_update_tolerance_rot;
+  double correspondence_update_tolerance_trans;
+  mutable Eigen::Isometry3d last_correspondence_point;
   mutable std::vector<std::tuple<int, int, int>> correspondences;
 
   std::shared_ptr<const Frame> target;
@@ -125,6 +133,10 @@ public:
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+  void set_correspondence_update_tolerance(double angle, double trans) {
+    correspondence_update_tolerance_rot = angle;
+    correspondence_update_tolerance_trans = trans;
+  }
 
 private:
   virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
@@ -144,6 +156,9 @@ private:
   std::shared_ptr<NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
+  double correspondence_update_tolerance_rot;
+  double correspondence_update_tolerance_trans;
+  mutable Eigen::Isometry3d last_correspondence_point;
   mutable std::vector<std::tuple<int, int>> correspondences;
 
   std::shared_ptr<const Frame> target;

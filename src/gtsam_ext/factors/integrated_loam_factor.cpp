@@ -14,6 +14,8 @@ IntegratedPointToPlaneFactor::IntegratedPointToPlaneFactor(
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
+  correspondence_update_tolerance_rot(0.0),
+  correspondence_update_tolerance_trans(0.0),
   target(target),
   source(source) {
   //
@@ -35,6 +37,15 @@ IntegratedPointToPlaneFactor::IntegratedPointToPlaneFactor(gtsam::Key target_key
 IntegratedPointToPlaneFactor::~IntegratedPointToPlaneFactor() {}
 
 void IntegratedPointToPlaneFactor::update_correspondences(const Eigen::Isometry3d& delta) const {
+  if (correspondences.size() == source->size() && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
+    Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
+    double diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
+    double diff_trans = diff.translation().norm();
+    if (diff_rot < correspondence_update_tolerance_rot && diff_trans < correspondence_update_tolerance_trans) {
+      return;
+    }
+  }
+
   correspondences.resize(source->size());
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
@@ -51,6 +62,8 @@ void IntegratedPointToPlaneFactor::update_correspondences(const Eigen::Isometry3
       correspondences[i] = std::make_tuple(k_indices[0], k_indices[1], k_indices[2]);
     }
   }
+
+  last_correspondence_point = delta;
 }
 
 double IntegratedPointToPlaneFactor::evaluate(
@@ -158,6 +171,8 @@ IntegratedPointToEdgeFactor::IntegratedPointToEdgeFactor(
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
+  correspondence_update_tolerance_rot(0.0),
+  correspondence_update_tolerance_trans(0.0),
   target(target),
   source(source) {
   //
@@ -179,6 +194,15 @@ IntegratedPointToEdgeFactor::IntegratedPointToEdgeFactor(gtsam::Key target_key, 
 IntegratedPointToEdgeFactor::~IntegratedPointToEdgeFactor() {}
 
 void IntegratedPointToEdgeFactor::update_correspondences(const Eigen::Isometry3d& delta) const {
+  if (correspondences.size() == source->size() && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
+    Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
+    double diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
+    double diff_trans = diff.translation().norm();
+    if (diff_rot < correspondence_update_tolerance_rot && diff_trans < correspondence_update_tolerance_trans) {
+      return;
+    }
+  }
+  
   correspondences.resize(source->size());
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
@@ -195,6 +219,8 @@ void IntegratedPointToEdgeFactor::update_correspondences(const Eigen::Isometry3d
       correspondences[i] = std::make_tuple(k_indices[0], k_indices[1]);
     }
   }
+
+  last_correspondence_point = delta;
 }
 
 double IntegratedPointToEdgeFactor::evaluate(
@@ -377,6 +403,11 @@ double IntegratedLOAMFactor::evaluate(
   }
 
   return error;
+}
+
+void IntegratedLOAMFactor::set_correspondence_update_tolerance(double angle, double trans) {
+  plane_factor->set_correspondence_update_tolerance(angle, trans);
+  edge_factor->set_correspondence_update_tolerance(angle, trans);
 }
 
 void IntegratedLOAMFactor::validate_correspondences() const {

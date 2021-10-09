@@ -34,10 +34,19 @@ public:
   virtual double error(const gtsam::Values& values) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
+  void set_num_threads(int n) { num_threads = n; }
+  void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+
+  const std::vector<double>& get_time_table() const { return time_table; }
+  const std::vector<int>& get_time_indices() const { return time_indices; }
+  const std::vector<gtsam::Pose3, Eigen::aligned_allocator<gtsam::Pose3>>& get_source_poses() const { return source_poses; }
+
   std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> deskewed_source_points(const gtsam::Values& values);
 
-protected:
+public:
   virtual void update_poses(const gtsam::Values& values) const;
+
+protected:
   virtual void update_correspondences() const;
 
 protected:
