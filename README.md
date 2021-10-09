@@ -1,5 +1,7 @@
 # gtsam_ext
 
+This is a collection of GTSAM factors and optimizers that would be useful for range-based pose SLAM.
+
 ## Factors
 
 ### Scan Matching Factors
@@ -11,7 +13,8 @@
 - **IntegratedVGICPFactor**  
     GICP with voxel-based data association and multi-distribution-correspondence [[3]](#VGICP1)[[4]](#VGICP2)    
 - **IntegratedVGICPFactorGPU**  
-    GPU implementation of VGICP [[3]](#VGICP1)[[4]](#VGICP2)
+    GPU implementation of VGICP [[3]](#VGICP1)[[4]](#VGICP2)  
+    Need to set ```BUILD_WITH_CUDA``` cmake option to ```ON```
 - **IntegratedLOAMFactor**  
     Matching cost based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO)  
     
@@ -30,12 +33,60 @@
     Bundle adjustment factor based on EVM and EF optimal condition satisfaction [[9]](#BA_LSQ)
 
 
-## Optimizers for GPU-based factors
+## Optimizers for GPU-based Factors
 All the following optimizers were derived from the implementations in GTSAM
 
 - **LevenbergMarquardtOptimizerExt**
 - **ISAM2Ext**
 - **IncrementalFixedLagSmootherExt**
+
+## Installation
+
+```bash
+# Install gtsam
+git clone https://github.com/borglab/gtsam
+mkdir gtsam/build && cd gtsam/build
+cmake .. -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF -DGTSAM_BUILD_TESTS=OFF
+
+# If you face segfaults, try the following configuration
+# cmake .. \
+#   -DGTSAM_WITH_TBB=OFF \
+#   -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF
+
+make -j$(nproc)
+sudo make install
+
+# [optional] Install visualization library
+# This is required for only demo programs
+git clone https://github.com/koide3/iridescence --recursive
+mkdir iridescence/build && cd iridescence/build
+cmake ..
+make -j$(nproc)
+sudo make install
+
+## Install gtsam_ext
+git clone https://github.com/koide3/gtsam_ext --recursive
+mkdir gtsam_ext/build && cd gtsam/build
+cmake ..
+
+# Optional cmake arguments
+# cmake .. \
+#   -DBUILD_DEMO=OFF \
+#   -DBUILD_TESTS=OFF \
+#   -DBUILD_WITH_CUDA=OFF \
+#   -DBUILD_WITH_MARCH_NATIVE=OFF \
+#   -DBUILD_WITH_SYSTEM_EIGEN=OFF
+
+make -j$(nproc)
+```
+
+## Dependencies
+- [Eigen](https://eigen.tuxfamily.org/index.php)
+- [nanoflann](https://github.com/jlblancoc/nanoflann)
+- [GTSAM](https://gtsam.org/)
+- [optional] [OpenMP](https://www.openmp.org/)
+- [optional] [CUDA](https://developer.nvidia.com/cuda-toolkit)
+- [optional] [iridescence](https://github.com/koide3/iridescence)
 
 ## References
 <a name="ICP"></a> [1] Zhang, "Iterative Point Matching for Registration of Free-Form Curve", IJCV1994  
