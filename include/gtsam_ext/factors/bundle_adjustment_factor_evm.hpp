@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <gtsam/geometry/Point3.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
+#include <gtsam_ext/factors/bundle_adjustment_factor.hpp>
 
 namespace gtsam_ext {
 
@@ -15,22 +16,22 @@ struct BALMFeature;
  *
  * @note  The computation cost grows as the number of points increases
  *        Consider averaging points in a same scan in advance (see [Liu 2021])
- * 
+ *
  * @ref   Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021
  */
-class EVMFactorBase : public gtsam::NonlinearFactor {
+class EVMBundleAdjustmentFactorBase : public BundleAdjustmentFactorBase {
 public:
-  using shared_ptr = boost::shared_ptr<EVMFactorBase>;
+  using shared_ptr = boost::shared_ptr<EVMBundleAdjustmentFactorBase>;
 
-  EVMFactorBase();
-  virtual ~EVMFactorBase() override;
+  EVMBundleAdjustmentFactorBase();
+  virtual ~EVMBundleAdjustmentFactorBase() override;
   virtual size_t dim() const override { return 6; }
 
   // Assign a point to this factor
-  void add(const gtsam::Point3& pt, const gtsam::Key& key);
+  virtual void add(const gtsam::Point3& pt, const gtsam::Key& key) override;
 
   // The number of points assigned to this factor (feature)
-  int num_points() const { return points.size(); }
+  virtual int num_points() const override { return points.size(); }
 
 protected:
   template <int k>
@@ -50,7 +51,7 @@ protected:
 /**
  * @brief Plane EVM factor that minimizes lambda_0
  */
-class PlaneEVMFactor : public EVMFactorBase {
+class PlaneEVMFactor : public EVMBundleAdjustmentFactorBase {
 public:
   using shared_ptr = boost::shared_ptr<PlaneEVMFactor>;
 
@@ -66,7 +67,7 @@ public:
 /**
  * @brief Edge EVM factor that minimizes lambda_0 + lambda_1
  */
-class EdgeEVMFactor : public EVMFactorBase {
+class EdgeEVMFactor : public EVMBundleAdjustmentFactorBase {
 public:
   using shared_ptr = boost::shared_ptr<EdgeEVMFactor>;
 
@@ -76,4 +77,4 @@ public:
   virtual double error(const gtsam::Values& c) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
 };
-}
+}  // namespace gtsam_ext

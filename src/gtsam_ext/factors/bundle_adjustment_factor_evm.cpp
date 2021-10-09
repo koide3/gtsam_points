@@ -6,11 +6,11 @@
 
 namespace gtsam_ext {
 
-EVMFactorBase::EVMFactorBase() {}
+EVMBundleAdjustmentFactorBase::EVMBundleAdjustmentFactorBase() {}
 
-EVMFactorBase::~EVMFactorBase() {}
+EVMBundleAdjustmentFactorBase::~EVMBundleAdjustmentFactorBase() {}
 
-void EVMFactorBase::add(const gtsam::Point3& pt, const gtsam::Key& key) {
+void EVMBundleAdjustmentFactorBase::add(const gtsam::Point3& pt, const gtsam::Key& key) {
   if (std::find(keys_.begin(), keys_.end(), key) == keys_.end()) {
     key_index[key] = this->keys_.size();
     this->keys_.push_back(key);
@@ -25,9 +25,12 @@ void EVMFactorBase::add(const gtsam::Point3& pt, const gtsam::Key& key) {
  *        k = 0 is the smallest eigenvalue
  */
 template <int k>
-double EVMFactorBase::calc_eigenvalue(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points, Eigen::MatrixXd* H, Eigen::MatrixXd* J) const {
+double EVMBundleAdjustmentFactorBase::calc_eigenvalue(
+  const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points,
+  Eigen::MatrixXd* H,
+  Eigen::MatrixXd* J) const {
   BALMFeature feature(transed_points);
-  if(H == nullptr || J == nullptr) {
+  if (H == nullptr || J == nullptr) {
     return feature.eigenvalues[k];
   }
 
@@ -51,7 +54,7 @@ double EVMFactorBase::calc_eigenvalue(const std::vector<Eigen::Vector3d, Eigen::
  * @brief Calculate dp / dT
  * @ref   Eqs. (9) - (12)
  */
-Eigen::MatrixXd EVMFactorBase::calc_pose_derivatives(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points) const {
+Eigen::MatrixXd EVMBundleAdjustmentFactorBase::calc_pose_derivatives(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points) const {
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(3 * points.size(), 6 * keys_.size());
   for (int i = 0; i < transed_points.size(); i++) {
     Eigen::Matrix<double, 3, 6> Dij;
@@ -74,7 +77,7 @@ Eigen::MatrixXd EVMFactorBase::calc_pose_derivatives(const std::vector<Eigen::Ve
 /**
  * @brief Compose a Hessian factor from derivatives
  */
-gtsam::GaussianFactor::shared_ptr EVMFactorBase::compose_factor(const Eigen::MatrixXd& H, const Eigen::MatrixXd& J, double error) const {
+gtsam::GaussianFactor::shared_ptr EVMBundleAdjustmentFactorBase::compose_factor(const Eigen::MatrixXd& H, const Eigen::MatrixXd& J, double error) const {
   std::vector<gtsam::Matrix> Gs;
   std::vector<gtsam::Vector> gs;
 
@@ -93,7 +96,7 @@ gtsam::GaussianFactor::shared_ptr EVMFactorBase::compose_factor(const Eigen::Mat
 /**
  * @brief PlaneEVMFactor
  */
-PlaneEVMFactor::PlaneEVMFactor() : EVMFactorBase() {}
+PlaneEVMFactor::PlaneEVMFactor() : EVMBundleAdjustmentFactorBase() {}
 
 PlaneEVMFactor::~PlaneEVMFactor() {}
 
@@ -126,7 +129,7 @@ boost::shared_ptr<gtsam::GaussianFactor> PlaneEVMFactor::linearize(const gtsam::
 /**
  * @brief EdgeEVMFactor
  */
-EdgeEVMFactor::EdgeEVMFactor() : EVMFactorBase() {}
+EdgeEVMFactor::EdgeEVMFactor() : EVMBundleAdjustmentFactorBase() {}
 
 EdgeEVMFactor::~EdgeEVMFactor() {}
 
@@ -159,4 +162,4 @@ boost::shared_ptr<gtsam::GaussianFactor> EdgeEVMFactor::linearize(const gtsam::V
 
   return compose_factor(DHD, JD, lambda_0 + lambda_1);
 }
-}
+}  // namespace gtsam_ext

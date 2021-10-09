@@ -10,6 +10,7 @@
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/types/frame_cpu.hpp>
 #include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
+#include <gtsam_ext/factors/bundle_adjustment_factor_lsq.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/pointcloud_buffer.hpp>
@@ -139,11 +140,12 @@ public:
 
   void add_factor() {
     const auto& frames = edge_plane == 0 ? edge_frames : plane_frames;
-    gtsam_ext::EVMFactorBase::shared_ptr factor;
+    gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor;
     if (edge_plane == 0) {
       factor.reset(new gtsam_ext::EdgeEVMFactor());
     } else {
-      factor.reset(new gtsam_ext::PlaneEVMFactor());
+      // factor.reset(new gtsam_ext::PlaneEVMFactor());
+      factor.reset(new gtsam_ext::LsqBundleAdjustmentFactor());
     }
 
     for (int i = 0; i < frames.size(); i++) {
