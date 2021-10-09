@@ -61,6 +61,10 @@ public:
     noise_scale = 0.1f;
     center << 0.0, 0.0, 0.0;
 
+    factor_type = 0;
+    factor_types.push_back("EVM");
+    factor_types.push_back("LSQ");
+
     edge_plane = 1;
     viewer->add_drawable_filter("filter", [this](const std::string& name) {
       if (edge_plane == 0 && name.find("plane") != std::string::npos) {
@@ -101,8 +105,14 @@ public:
       }
 
       ImGui::Separator();
-      std::vector<const char*> edge_plane_labels = {"EDGE", "PLANE"};
-      ImGui::Combo("feature", &edge_plane, edge_plane_labels.data(), edge_plane_labels.size());
+      ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
+
+      if (factor_types[factor_type] == std::string("EVM")) {
+        std::vector<const char*> edge_plane_labels = {"EDGE", "PLANE"};
+        ImGui::Combo("feature", &edge_plane, edge_plane_labels.data(), edge_plane_labels.size());
+      } else {
+        edge_plane = 1;
+      }
 
       if (ImGui::Button("add factor")) {
         add_factor();
@@ -144,8 +154,11 @@ public:
     if (edge_plane == 0) {
       factor.reset(new gtsam_ext::EdgeEVMFactor());
     } else {
-      // factor.reset(new gtsam_ext::PlaneEVMFactor());
-      factor.reset(new gtsam_ext::LsqBundleAdjustmentFactor());
+      if (factor_types[factor_type] == std::string("EVM")) {
+        factor.reset(new gtsam_ext::PlaneEVMFactor());
+      } else if (factor_types[factor_type] == std::string("LSQ")) {
+        factor.reset(new gtsam_ext::LsqBundleAdjustmentFactor());
+      }
     }
 
     for (int i = 0; i < frames.size(); i++) {
@@ -183,6 +196,9 @@ private:
   std::vector<gtsam_ext::Frame::Ptr> plane_frames;
 
   float noise_scale;
+
+  std::vector<const char*> factor_types;
+  int factor_type;
 
   int edge_plane;
   gtsam::Point3 center;

@@ -16,6 +16,7 @@
 #include <gtsam_ext/types/frame_cpu.hpp>
 #include <gtsam_ext/factors/balm_feature.hpp>
 #include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
+#include <gtsam_ext/factors/bundle_adjustment_factor_lsq.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/numerical.hpp>
@@ -120,7 +121,7 @@ struct BATestBase : public testing::Test {
 
       edge_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(edge_points)));
       plane_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(plane_points)));
-      }
+    }
   }
 
   std::vector<gtsam_ext::Frame::Ptr> edge_frames;
@@ -190,7 +191,8 @@ TEST_F(BAFactorTest, AlignmentTest) {
   // Create plane factors
   gtsam::NonlinearFactorGraph plane_factors;
   for (const auto& center : plane_centers) {
-    gtsam_ext::PlaneEVMFactor::shared_ptr factor(new gtsam_ext::PlaneEVMFactor());
+    gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor(new gtsam_ext::PlaneEVMFactor());
+    // gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor(new gtsam_ext::LsqBundleAdjustmentFactor());
     for (int i = 0; i < plane_frames.size(); i++) {
       for (int j = 0; j < plane_frames[i]->size(); j++) {
         const Eigen::Vector3d pt = plane_frames[i]->points[j].head<3>();
@@ -207,7 +209,7 @@ TEST_F(BAFactorTest, AlignmentTest) {
   // Create edge factors
   gtsam::NonlinearFactorGraph edge_factors;
   for (const auto& center : edge_centers) {
-    gtsam_ext::EdgeEVMFactor::shared_ptr factor(new gtsam_ext::EdgeEVMFactor());
+    gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor(new gtsam_ext::EdgeEVMFactor());
     for (int i = 0; i < edge_frames.size(); i++) {
       for (int j = 0; j < edge_frames[i]->size(); j++) {
         const Eigen::Vector3d pt = edge_frames[i]->points[j].head<3>();
