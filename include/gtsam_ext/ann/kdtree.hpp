@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 #include <nanoflann.hpp>
 
-#include <gtsam_ext/types/nearest_neighbor_search.hpp>
+#include <gtsam_ext/ann/nearest_neighbor_search.hpp>
 
 namespace gtsam_ext {
 

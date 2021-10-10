@@ -3,7 +3,7 @@
 #include <nanoflann.hpp>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/HessianFactor.h>
-#include <gtsam_ext/types/kdtree.hpp>
+#include <gtsam_ext/ann/kdtree.hpp>
 
 namespace gtsam_ext {
 

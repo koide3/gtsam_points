@@ -49,21 +49,25 @@ public:
         pt = q * pt;
       }
 
+      // Source frames
       auto raw_frame = std::make_shared<gtsam_ext::FrameCPU>(raw_points);
       raw_frame->add_times(times);
       raw_frame->add_covs(gtsam_ext::estimate_covariances(raw_frame->points, raw_frame->size()));
       raw_frames.push_back(raw_frame);
 
+      // Target frames
       auto deskewed_frame = std::make_shared<gtsam_ext::FrameCPU>(deskewed_points);
       deskewed_frame->add_covs(gtsam_ext::estimate_covariances(deskewed_frame->points, deskewed_frame->size()));
       deskewed_frame->add_normals(gtsam_ext::estimate_normals(deskewed_frame->points, deskewed_frame->covs, deskewed_frame->size()));
       deskewed_frames.push_back(deskewed_frame);
     }
 
-    noise_scale = 0.0f;
+    pose_noise_scale = 0.0f;
     pose_noise = gtsam::Pose3::identity();
 
+    factor_types = std::vector<const char*>{"CT-ICP", "CT-GICP", "CT-ICP-EXPR"};
     factor_type = 0;
+
     enable_pose_constraint = true;
     rot_noise_scale = 10.0f;
     trans_noise_scale = 1000.0f;
@@ -73,9 +77,9 @@ public:
     setup(data_id);
 
     viewer->register_ui_callback("callback", [this] {
-      ImGui::DragFloat("noise scale", &noise_scale, 0.01f, 0.0f);
+      ImGui::DragFloat("noise scale", &pose_noise_scale, 0.01f, 0.0f);
       if (ImGui::Button("add noise")) {
-        pose_noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * noise_scale);
+        pose_noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * pose_noise_scale);
         setup(data_id);
       }
 
@@ -85,14 +89,14 @@ public:
         setup(data_id);
       }
 
-      factor_types = std::vector<const char*>{"CT-ICP", "CT-GICP", "CT-ICP-EXPR"};
+      // Configurations
       ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
-
       ImGui::Checkbox("enable pose constraint", &enable_pose_constraint);
       ImGui::DragFloat("pose rot noise scale", &rot_noise_scale, 0.1f, 0.0f);
       ImGui::DragFloat("pose trans noise scale", &trans_noise_scale, 10.0f, 0.0f);
       ImGui::DragFloat("max corresponding distance", &max_corresponding_distance, 0.1f, 0.0f);
 
+      // Run optimization
       if (ImGui::Button("optimize")) {
         if (optimization_thread.joinable()) {
           optimization_thread.join();
@@ -102,6 +106,7 @@ public:
       }
     });
   }
+
   ~ContinuousTimeDemo() {
     if (optimization_thread.joinable()) {
       optimization_thread.join();
@@ -128,12 +133,14 @@ public:
 
     gtsam::NonlinearFactorGraph graph;
 
+    // Create relative pose constraint between t0 and t1
     if (enable_pose_constraint) {
       gtsam::Vector6 noise_scales;
       noise_scales << gtsam::Vector3::Ones() * rot_noise_scale, gtsam::Vector3::Ones() * trans_noise_scale;
       graph.add(gtsam::BetweenFactor(0, 1, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precisions(noise_scales)));
     }
 
+    // Create continuous time ICP factor
     gtsam::NonlinearFactor::shared_ptr factor;
     if (factor_types[factor_type] == std::string("CT-ICP")) {
       auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
@@ -158,26 +165,25 @@ public:
       auto viewer = guik::LightViewer::instance();
       viewer->append_text(status.to_string());
 
-      std::vector<double> times(raw_frames[data_id]->times, raw_frames[data_id]->times + raw_frames[data_id]->size());
-
+      // Calculate deskewed source points
       std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points;
       auto cticp_factor = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCT_ICPFactor>(factor);
       if (cticp_factor) {
         points = cticp_factor->deskewed_source_points(values);
       } else {
         auto cticp_factor_expr = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCTICPFactorExpr>(factor);
-        if (cticp_factor_expr) {
-          points = cticp_factor_expr->deskewed_source_points(values);
-        } else {
-          std::cerr << "FFF" << std::endl;
-        }
+        points = cticp_factor_expr->deskewed_source_points(values);
       }
 
+      // Calculate interpolated poses for visualization
       std::vector<Eigen::Isometry3f, Eigen::aligned_allocator<Eigen::Isometry3f>> poses;
       for (int i = 0; i < 4; i++) {
         gtsam::Pose3 pose = gtsam_ext::interpolate_pose(values.at<gtsam::Pose3>(0), values.at<gtsam::Pose3>(1), static_cast<double>(i) / 3);
         poses.push_back(Eigen::Isometry3f(pose.matrix().cast<float>()));
       }
+
+      // Point times
+      std::vector<double> times(raw_frames[data_id]->times, raw_frames[data_id]->times + raw_frames[data_id]->size());
 
       viewer->invoke([=] {
         auto cloud_buffer = std::make_shared<glk::PointCloudBuffer>(points);
@@ -198,7 +204,7 @@ private:
   std::vector<gtsam_ext::Frame::Ptr> raw_frames;
   std::vector<gtsam_ext::Frame::Ptr> deskewed_frames;
 
-  float noise_scale;
+  float pose_noise_scale;
   gtsam::Pose3 pose_noise;
 
   int factor_type;

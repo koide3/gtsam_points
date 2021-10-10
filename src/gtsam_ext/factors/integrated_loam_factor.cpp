@@ -1,7 +1,7 @@
 #include <gtsam_ext/factors/integrated_loam_factor.hpp>
 
 #include <gtsam/geometry/SO3.h>
-#include <gtsam_ext/types/kdtree.hpp>
+#include <gtsam_ext/ann/kdtree.hpp>
 
 namespace gtsam_ext {
 

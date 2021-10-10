@@ -32,12 +32,12 @@ struct MatchingCostFactorsTestBase : public testing::Test {
     EXPECT_EQ(ifs.is_open(), true) << "Failed to open " << dump_path;
 
     // It seems generated random numbers change depending on the compiler
-    // Should we use pregenerated randoms saved in a file for reproductivity?
+    // Should we pregenerated randoms for reproductivity?
     const double pose_noise_scale = 0.1;
     std::mt19937 mt(8192 - 1);
     std::uniform_real_distribution<> udist(-pose_noise_scale, pose_noise_scale);
 
-    // load submap poses
+    // Read submap poses
     for (int i = 0; i < 5; i++) {
       std::string token;
       Eigen::Vector3d trans;
@@ -54,7 +54,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       poses.insert(i, poses_gt.at<gtsam::Pose3>(i) * gtsam::Pose3::Expmap(tan_noise));
     }
 
-    // load submap points
+    // Read submap points
     for (int i = 0; i < 5; i++) {
       const std::string points_path = (boost::format("%s/%06d/points.bin") % dump_path % i).str();
       auto points_f = gtsam_ext::read_points(points_path);
@@ -86,8 +86,8 @@ struct MatchingCostFactorsTestBase : public testing::Test {
 };
 
 TEST_F(MatchingCostFactorsTestBase, LoadCheck) {
-  EXPECT_EQ(poses.size(), 5) << "Failed to load submap poses";
-  EXPECT_EQ(poses_gt.size(), 5) << "Failed to load submap poses";
+  ASSERT_EQ(poses.size(), 5) << "Failed to load submap poses";
+  ASSERT_EQ(poses_gt.size(), 5) << "Failed to load submap poses";
 }
 
 class MatchingCostFactorTest : public MatchingCostFactorsTestBase, public testing::WithParamInterface<std::string> {

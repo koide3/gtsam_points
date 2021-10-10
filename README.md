@@ -1,6 +1,8 @@
 # gtsam_ext
 
-This is a collection of GTSAM factors and optimizers that would be useful for range-based pose SLAM.
+This is a collection of GTSAM factors and optimizers that would be useful for range-based SLAM.
+
+Tested on Ubuntu 20.04 and CUDA 11.1.
 
 ## Factors
 
@@ -40,6 +42,14 @@ All the following optimizers were derived from the implementations in GTSAM
 - **ISAM2Ext**
 - **IncrementalFixedLagSmootherExt**
 
+
+## Nearest Neighbor Search
+- **KdTree**  
+    Standard KdTree search using [nanoflann](https://github.com/jlblancoc/nanoflann)
+- **VoxelSearch** (to be implemented)
+- **ProjectiveSearch** (to be implemented)
+
+
 ## Installation
 
 ```bash
@@ -58,6 +68,7 @@ sudo make install
 
 # [optional] Install visualization library
 # This is required for only demo programs
+sudo apt install -y libglm-dev libglfw3-dev libpng-dev
 git clone https://github.com/koide3/iridescence --recursive
 mkdir iridescence/build && cd iridescence/build
 cmake ..
@@ -87,6 +98,11 @@ make -j$(nproc)
 - [optional] [OpenMP](https://www.openmp.org/)
 - [optional] [CUDA](https://developer.nvidia.com/cuda-toolkit)
 - [optional] [iridescence](https://github.com/koide3/iridescence)
+
+
+## Disclaimer
+
+The test data in ```data``` directory are generated from [The KITTI Vision Benchmark Suite](http://www.cvlibs.net/datasets/kitti/) and [The Newer College Dataset](https://ori-drs.github.io/newer-college-dataset/). Because they employ ```Creative Commons BY-NC-SA License 3.0 and 4.0```, the test data must not be used for commercial purposes.
 
 ## References
 <a name="ICP"></a> [1] Zhang, "Iterative Point Matching for Registration of Free-Form Curve", IJCV1994  

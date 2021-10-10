@@ -10,7 +10,7 @@
 #include <gtsam/nonlinear/expressions.h>
 #include <gtsam_ext/util/expressions.hpp>
 
-#include <gtsam_ext/types/kdtree.hpp>
+#include <gtsam_ext/ann/kdtree.hpp>
 
 namespace gtsam_ext {
 

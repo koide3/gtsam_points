@@ -24,8 +24,8 @@ public:
     viewer->enable_vsync();
     viewer->append_text("Usage: Right click a map point and then click [add factor] and [optimize]");
 
+    // Read test data
     const std::string data_path = "data/newer_01";
-
     std::ifstream ifs(data_path + "/graph.txt");
     if (!ifs) {
       std::cerr << "error: failed to open " << data_path + "/graph.txt" << std::endl;
@@ -58,7 +58,7 @@ public:
 
     update_viewer(poses_gt);
 
-    noise_scale = 0.1f;
+    pose_noise_scale = 0.1f;
     center << 0.0, 0.0, 0.0;
 
     factor_type = 0;
@@ -79,8 +79,8 @@ public:
     viewer->register_ui_callback("callback", [this] {
       auto viewer = guik::LightViewer::instance();
 
-      // click callback
       if (ImGui::IsMouseClicked(1)) {
+        // Calculate the 3D coordinates of the right clicked position
         auto mouse_pos = ImGui::GetMousePos();
         float depth = viewer->pick_depth(Eigen::Vector2i(mouse_pos.x, mouse_pos.y));
         if (depth >= 0.0f && depth < 1.0f) {
@@ -90,15 +90,17 @@ public:
         }
       }
 
-      ImGui::DragFloat("noise scale", &noise_scale, 0.01f, 0.0f);
+      ImGui::DragFloat("pose noise scale", &pose_noise_scale, 0.01f, 0.0f);
 
-      if (ImGui::Button("add noise")) {
+      if (ImGui::Button("initialize graph")) {
         graph.resize(0);
         poses.clear();
         for (int i = 0; i < 5; i++) {
-          gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * noise_scale);
+          gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * pose_noise_scale);
           gtsam::Pose3 pose = poses_gt.at<gtsam::Pose3>(i) * noise;
           poses.insert(i, pose);
+
+          // Add weak priors to avoid degenerated system
           graph.add(gtsam::PriorFactor<gtsam::Pose3>(i, pose, gtsam::noiseModel::Isotropic::Precision(6, 0.1)));
         }
         update_viewer(poses);
@@ -111,13 +113,16 @@ public:
         std::vector<const char*> edge_plane_labels = {"EDGE", "PLANE"};
         ImGui::Combo("feature", &edge_plane, edge_plane_labels.data(), edge_plane_labels.size());
       } else {
+        // Force set the selection mode to the plane mode, because LSQ BA only supports plane features
         edge_plane = 1;
       }
 
+      // Add a BA factor with points around the selected point
       if (ImGui::Button("add factor")) {
         add_factor();
       }
 
+      // Run optimization
       if (ImGui::Button("optimize")) {
         if (optimization_thread.joinable()) {
           optimization_thread.join();
@@ -150,6 +155,7 @@ public:
 
   void add_factor() {
     const auto& frames = edge_plane == 0 ? edge_frames : plane_frames;
+
     gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor;
     if (edge_plane == 0) {
       factor.reset(new gtsam_ext::EdgeEVMFactor());
@@ -161,6 +167,7 @@ public:
       }
     }
 
+    // Find points around the selected point and add them to the factor
     for (int i = 0; i < frames.size(); i++) {
       const gtsam::Pose3 pose = poses.at<gtsam::Pose3>(i);
       for (int j = 0; j < frames[i]->size(); j++) {
@@ -178,6 +185,8 @@ public:
       const std::string feature_type = edge_plane == 0 ? "edge" : "plane";
       guik::LightViewer::instance()->append_text(feature_type + " factor is created with " + std::to_string(factor->num_points()) + " points");
       graph.add(factor);
+    } else {
+      guik::LightViewer::instance()->append_text("ignoring the factor with too few points: " + std::to_string(factor->num_points()));
     }
   }
 
@@ -192,19 +201,19 @@ public:
   }
 
 private:
-  std::vector<gtsam_ext::Frame::Ptr> edge_frames;
-  std::vector<gtsam_ext::Frame::Ptr> plane_frames;
+  std::vector<gtsam_ext::Frame::Ptr> edge_frames;   // Frames containing edge points
+  std::vector<gtsam_ext::Frame::Ptr> plane_frames;  // Frames containing plane points
 
-  float noise_scale;
+  float pose_noise_scale;
 
   std::vector<const char*> factor_types;
   int factor_type;
 
-  int edge_plane;
-  gtsam::Point3 center;
+  int edge_plane;        // 0 = selecting edge points, 1 = plane points
+  gtsam::Point3 center;  // Center point for points extraction
 
-  gtsam::Values poses;
-  gtsam::Values poses_gt;
+  gtsam::Values poses;     // Current estimate
+  gtsam::Values poses_gt;  // True poses
   gtsam::NonlinearFactorGraph graph;
 
   std::thread optimization_thread;

@@ -1,7 +1,7 @@
 #include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
 
 #include <gtsam/linear/HessianFactor.h>
-#include <gtsam_ext/types/kdtree.hpp>
+#include <gtsam_ext/ann/kdtree.hpp>
 
 #include <gtsam_ext/util/expressions.hpp>
 

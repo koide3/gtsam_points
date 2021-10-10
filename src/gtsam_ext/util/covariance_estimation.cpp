@@ -3,7 +3,7 @@
 #include <Eigen/Eigen>
 #include <Eigen/Geometry>
 #include <nanoflann.hpp>
-#include <gtsam_ext/types/kdtree.hpp>
+#include <gtsam_ext/ann/kdtree.hpp>
 
 namespace gtsam_ext {
 

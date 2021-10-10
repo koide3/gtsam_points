@@ -131,13 +131,13 @@ struct BATestBase : public testing::Test {
 };
 
 TEST_F(BATestBase, LoadCheck) {
-  EXPECT_EQ(edge_frames.size(), 5) << "Failed to load edge points";
-  EXPECT_EQ(plane_frames.size(), 5) << "Failed to load plane points";
-  EXPECT_EQ(poses.size(), 5) << "Failed to load GT poses";
-  EXPECT_EQ(poses_gt.size(), 5) << "Failed to load GT poses";
+  ASSERT_EQ(edge_frames.size(), 5) << "Failed to load edge points";
+  ASSERT_EQ(plane_frames.size(), 5) << "Failed to load plane points";
+  ASSERT_EQ(poses.size(), 5) << "Failed to load GT poses";
+  ASSERT_EQ(poses_gt.size(), 5) << "Failed to load GT poses";
 }
 
-class BAFactorTest : public BATestBase {
+class BAFactorTest : public BATestBase, public testing::WithParamInterface<std::string> {
 public:
   void test_result(const gtsam::Values& result, const std::string& note = "") {
     bool is_first = true;
@@ -164,7 +164,9 @@ public:
   }
 };
 
-TEST_F(BAFactorTest, AlignmentTest) {
+INSTANTIATE_TEST_SUITE_P(gtsam_ext, BAFactorTest, testing::Values("EVM", "LSQ"), [](const auto& info) { return info.param; });
+
+TEST_P(BAFactorTest, AlignmentTest) {
   gtsam::Values values = poses;
   gtsam::NonlinearFactorGraph graph;
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e3)));
@@ -191,8 +193,14 @@ TEST_F(BAFactorTest, AlignmentTest) {
   // Create plane factors
   gtsam::NonlinearFactorGraph plane_factors;
   for (const auto& center : plane_centers) {
-    gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor(new gtsam_ext::PlaneEVMFactor());
-    // gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor(new gtsam_ext::LsqBundleAdjustmentFactor());
+    gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor;
+
+    if (GetParam() == "EVM") {
+      factor.reset(new gtsam_ext::PlaneEVMFactor());
+    } else if (GetParam() == "LSQ") {
+      factor.reset(new gtsam_ext::LsqBundleAdjustmentFactor());
+    }
+
     for (int i = 0; i < plane_frames.size(); i++) {
       for (int j = 0; j < plane_frames[i]->size(); j++) {
         const Eigen::Vector3d pt = plane_frames[i]->points[j].head<3>();
