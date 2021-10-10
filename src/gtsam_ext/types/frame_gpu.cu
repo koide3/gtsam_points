@@ -59,7 +59,7 @@ void FrameGPU::add_times_gpu(const std::vector<T>& times) {
 template <typename T, int D>
 void FrameGPU::add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals) {
   assert(normals.size() == size());
-  normals_storage.resize(normals.size(), Eigen::Vector4d(0, 0, 0, 1));
+  normals_storage.resize(normals.size(), Eigen::Vector4d(0, 0, 0, 0));
   for (int i = 0; i < normals.size(); i++) {
     normals_storage[i].template head<D>() = normals[i].template cast<double>();
   }

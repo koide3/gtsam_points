@@ -73,7 +73,7 @@ public:
 #else
       std::cout << "Create GPU frame" << std::endl;
       gtsam_ext::VoxelizedFrameGPU::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameGPU>(2.0, points, covs);
-      // frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
+      frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
 #endif
       frames.push_back(frame);
 

@@ -23,7 +23,9 @@ void VoxelizedFrameGPU::init(double voxel_resolution) {
   std::transform(points_storage.begin(), points_storage.end(), host_points.begin(), [](const Eigen::Vector4d& pt) { return pt.head<3>().cast<float>(); });
   std::transform(covs_storage.begin(), covs_storage.end(), host_covs.begin(), [](const Eigen::Matrix4d& cov) { return cov.block<3, 3>(0, 0).cast<float>(); });
 
+  times_gpu_storage.reset(new FloatsGPU);
   points_gpu_storage.reset(new PointsGPU);
+  normals_gpu_storage.reset(new PointsGPU);
   covs_gpu_storage.reset(new MatricesGPU);
 
   points_gpu_storage->resize(num_points);

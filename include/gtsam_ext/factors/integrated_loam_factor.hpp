@@ -41,6 +41,7 @@ public:
     const Frame::ConstPtr& target_planes,
     const Frame::ConstPtr& source_edges,
     const Frame::ConstPtr& source_planes);
+
   ~IntegratedLOAMFactor();
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
@@ -81,7 +82,12 @@ public:
 
   friend class IntegratedLOAMFactor;
 
-  IntegratedPointToPlaneFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const std::shared_ptr<NearestNeighborSearch>& target_tree);
+  IntegratedPointToPlaneFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const Frame::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree);
   IntegratedPointToPlaneFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
   ~IntegratedPointToPlaneFactor();
 
@@ -127,7 +133,12 @@ public:
 
   friend class IntegratedLOAMFactor;
 
-  IntegratedPointToEdgeFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const std::shared_ptr<NearestNeighborSearch>& target_tree);
+  IntegratedPointToEdgeFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const Frame::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree);
   IntegratedPointToEdgeFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
   ~IntegratedPointToEdgeFactor();
 

@@ -11,7 +11,10 @@ public:
 
   virtual ~BundleAdjustmentFactorBase() {}
 
+  // The number of points assigned to this factor (feature)
   virtual int num_points() const = 0;
+
+  // Assign a point to this factor
   virtual void add(const gtsam::Point3& pt, const gtsam::Key& key) = 0;
 };
 
