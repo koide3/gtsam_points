@@ -28,6 +28,28 @@ IntegratedVGICPFactor::IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key s
   }
 }
 
+IntegratedVGICPFactor::IntegratedVGICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source)
+: gtsam_ext::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
+  num_threads(1),
+  target(target),
+  source(source) {
+  //
+  if (!target->points || !source->points) {
+    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (!target->covs || !source->covs) {
+    std::cerr << "error: target or source don't have covs!!" << std::endl;
+    abort();
+  }
+
+  if (!target->voxels) {
+    std::cerr << "error: target voxelmap has not been created!!" << std::endl;
+    abort();
+  }
+}
+
 IntegratedVGICPFactor::~IntegratedVGICPFactor() {}
 
 void IntegratedVGICPFactor::update_correspondences(const Eigen::Isometry3d& delta) const {

@@ -10,6 +10,11 @@ IntegratedMatchingCostFactor::IntegratedMatchingCostFactor(gtsam::Key target_key
   is_binary(true),
   fixed_target_pose(Eigen::Isometry3d::Identity()) {}
 
+IntegratedMatchingCostFactor::IntegratedMatchingCostFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key)
+: gtsam::NonlinearFactor(gtsam::cref_list_of<1>(source_key)),
+  is_binary(false),
+  fixed_target_pose(fixed_target_pose.matrix()) {}
+
 IntegratedMatchingCostFactor::~IntegratedMatchingCostFactor() {}
 
 double IntegratedMatchingCostFactor::error(const gtsam::Values& values) const {
@@ -45,7 +50,7 @@ Eigen::Isometry3d IntegratedMatchingCostFactor::calc_delta(const gtsam::Values& 
     return delta;
   } else {
     gtsam::Pose3 target_pose(fixed_target_pose.matrix());
-    gtsam::Pose3 source_pose = values.at<gtsam::Pose3>(keys()[1]);
+    gtsam::Pose3 source_pose = values.at<gtsam::Pose3>(keys()[0]);
     Eigen::Isometry3d delta((target_pose.inverse() * source_pose).matrix());
     return delta;
   }

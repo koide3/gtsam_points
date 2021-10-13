@@ -20,7 +20,21 @@ public:
   using shared_ptr = boost::shared_ptr<IntegratedGICPFactor>;
 
   IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
-  IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const std::shared_ptr<NearestNeighborSearch>& target_tree);
+  IntegratedGICPFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const Frame::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+
+  IntegratedGICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
+  IntegratedGICPFactor(
+    const gtsam::Pose3& fixed_target_pose,
+    gtsam::Key source_key,
+    const Frame::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+
   virtual ~IntegratedGICPFactor() override;
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded

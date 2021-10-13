@@ -43,6 +43,47 @@ IntegratedICPFactor::IntegratedICPFactor(
 IntegratedICPFactor::IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane)
 : gtsam_ext::IntegratedICPFactor(target_key, source_key, target, source, nullptr, use_point_to_plane) {}
 
+IntegratedICPFactor::IntegratedICPFactor(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const Frame::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  const std::shared_ptr<NearestNeighborSearch>& target_tree,
+  bool use_point_to_plane)
+: gtsam_ext::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
+  num_threads(1),
+  max_correspondence_distance_sq(1.0),
+  use_point_to_plane(use_point_to_plane),
+  correspondence_update_tolerance_rot(0.0),
+  correspondence_update_tolerance_trans(0.0),
+  target(target),
+  source(source) {
+  //
+  if (!target->points || !source->points) {
+    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (use_point_to_plane && !target->normals) {
+    std::cerr << "error: target cloud doesn't have normals!!" << std::endl;
+    abort();
+  }
+
+  if (target_tree) {
+    this->target_tree = target_tree;
+  } else {
+    this->target_tree.reset(new KdTree(target->points, target->num_points));
+  }
+}
+
+IntegratedICPFactor::IntegratedICPFactor(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const Frame::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  bool use_point_to_plane)
+: gtsam_ext::IntegratedICPFactor(fixed_target_pose, source_key, target, source, nullptr, use_point_to_plane) {}
+
 IntegratedICPFactor::~IntegratedICPFactor() {}
 
 void IntegratedICPFactor::update_correspondences(const Eigen::Isometry3d& delta) const {

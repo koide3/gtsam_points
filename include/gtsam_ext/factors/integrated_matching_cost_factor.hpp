@@ -3,6 +3,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
+#include <gtsam/geometry/Pose3.h>
 #include <gtsam_ext/types/frame.hpp>
 
 namespace gtsam_ext {
@@ -16,6 +17,7 @@ public:
   using shared_ptr = boost::shared_ptr<IntegratedMatchingCostFactor>;
 
   IntegratedMatchingCostFactor(gtsam::Key target_key, gtsam::Key source_key);
+  IntegratedMatchingCostFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key);
   virtual ~IntegratedMatchingCostFactor() override;
 
   virtual size_t dim() const override { return 6; }

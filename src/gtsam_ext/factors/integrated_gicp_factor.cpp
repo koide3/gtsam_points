@@ -42,6 +42,41 @@ IntegratedGICPFactor::IntegratedGICPFactor(
 IntegratedGICPFactor::IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
 : IntegratedGICPFactor(target_key, source_key, target, source, nullptr) {}
 
+IntegratedGICPFactor::IntegratedGICPFactor(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const Frame::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  const std::shared_ptr<NearestNeighborSearch>& target_tree)
+: gtsam_ext::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
+  num_threads(1),
+  max_correspondence_distance_sq(1.0),
+  correspondence_update_tolerance_rot(0.0),
+  correspondence_update_tolerance_trans(0.0),
+  target(target),
+  source(source) {
+  //
+  if (!target->points || !source->points) {
+    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+    abort();
+  }
+
+  //
+  if (!target->covs || !source->covs) {
+    std::cerr << "error: target or source don't have covs!!" << std::endl;
+    abort();
+  }
+
+  if (target_tree) {
+    this->target_tree = target_tree;
+  } else {
+    this->target_tree.reset(new KdTree(target->points, target->num_points));
+  }
+}
+
+IntegratedGICPFactor::IntegratedGICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
+: IntegratedGICPFactor(fixed_target_pose, source_key, target, source, nullptr) {}
+
 IntegratedGICPFactor::~IntegratedGICPFactor() {}
 
 void IntegratedGICPFactor::update_correspondences(const Eigen::Isometry3d& delta) const {

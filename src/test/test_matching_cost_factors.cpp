@@ -115,10 +115,34 @@ public:
     return factor;
   }
 
-  void test_graph(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values, const std::string& note = "") {
+  gtsam::NonlinearFactor::shared_ptr
+  create_factor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const gtsam_ext::VoxelizedFrame::ConstPtr& target, const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
+    std::string method = GetParam();
+
+    gtsam::NonlinearFactor::shared_ptr factor;
+    if (method == "ICP") {
+      factor.reset(new gtsam_ext::IntegratedICPFactor(fixed_target_pose, source_key, target, source));
+    } else if (method == "GICP") {
+      factor.reset(new gtsam_ext::IntegratedGICPFactor(fixed_target_pose, source_key, target, source));
+    } else if (method == "VGICP") {
+      factor.reset(new gtsam_ext::IntegratedVGICPFactor(fixed_target_pose, source_key, target, source));
+    } else if (method == "VGICP_CUDA") {
+#ifdef BUILD_GTSAM_EXT_GPU
+      auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
+      const auto& stream = stream_buffer.first;
+      const auto& buffer = stream_buffer.second;
+      factor.reset(new gtsam_ext::IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target, source, stream, buffer));
+#endif
+    }
+
+    return factor;
+  }
+
+  void test_graph(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values, const gtsam::Values& additional_values, const std::string& note = "") {
     gtsam_ext::LevenbergMarquardtExtParams lm_params;
     gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
     gtsam::Values result = optimizer.optimize();
+    result.insert(additional_values);
 
     bool is_first = true;
     gtsam::Pose3 delta;
@@ -162,12 +186,24 @@ TEST_P(MatchingCostFactorTest, AlignmentTest) {
     graph.add(create_factor(i, i + 1, frames[i], frames[i + 1]));
     graph.add(gtsam::PriorFactor<gtsam::Pose3>(i, poses.at<gtsam::Pose3>(i), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
 
-    test_graph(graph, values, "FORWARD_TEST_" + std::to_string(i));
+    test_graph(graph, values, gtsam::Values(), "FORWARD_TEST_" + std::to_string(i));
 
     graph.erase(graph.begin() + static_cast<int>(graph.size()) - 1);
     graph.add(gtsam::PriorFactor<gtsam::Pose3>(i + 1, poses.at<gtsam::Pose3>(i + 1), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
 
-    test_graph(graph, values, "BACKWARD_TEST_" + std::to_string(i));
+    test_graph(graph, values, gtsam::Values(), "BACKWARD_TEST_" + std::to_string(i));
+  }
+
+  for (int i = 0; i < 4; i++) {
+    gtsam::Values values;
+    gtsam::Values fixed_values;
+    gtsam::NonlinearFactorGraph graph;
+
+    fixed_values.insert(i, poses.at<gtsam::Pose3>(i));
+    values.insert(i + 1, poses.at<gtsam::Pose3>(i + 1));
+    graph.add(create_factor(poses.at<gtsam::Pose3>(i), i + 1, frames[i], frames[i + 1]));
+
+    test_graph(graph, values, fixed_values, "UNARY_TEST_" + std::to_string(i));
   }
 
   gtsam::Values values;
@@ -179,7 +215,7 @@ TEST_P(MatchingCostFactorTest, AlignmentTest) {
     }
   }
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, poses.at<gtsam::Pose3>(0), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
-  test_graph(graph, values, "MULTI_FRAME");
+  test_graph(graph, values, gtsam::Values(), "MULTI_FRAME");
 }
 
 int main(int argc, char** argv) {

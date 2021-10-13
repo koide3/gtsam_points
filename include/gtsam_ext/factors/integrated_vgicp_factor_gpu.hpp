@@ -5,6 +5,10 @@
 
 struct CUstream_st;
 
+namespace gtsam {
+class Pose3;
+}
+
 namespace gtsam_ext {
 
 class LinearizedSystem6;
@@ -22,9 +26,17 @@ public:
   using shared_ptr = boost::shared_ptr<IntegratedVGICPFactorGPU>;
 
   IntegratedVGICPFactorGPU(gtsam::Key target_key, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
-
   IntegratedVGICPFactorGPU(
     gtsam::Key target_key,
+    gtsam::Key source_key,
+    const VoxelizedFrame::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    CUstream_st* stream,
+    std::shared_ptr<TempBufferManager> temp_buffer);
+
+  IntegratedVGICPFactorGPU(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
+  IntegratedVGICPFactorGPU(
+    const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
     const VoxelizedFrame::ConstPtr& target,
     const Frame::ConstPtr& source,

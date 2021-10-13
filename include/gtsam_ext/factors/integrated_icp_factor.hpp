@@ -29,6 +29,16 @@ public:
 
   IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane = false);
 
+  IntegratedICPFactor(
+    const gtsam::Pose3& fixed_target_pose,
+    gtsam::Key source_key,
+    const Frame::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree,
+    bool use_point_to_plane = false);
+
+  IntegratedICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane = false);
+
   virtual ~IntegratedICPFactor() override;
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded

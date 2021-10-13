@@ -152,5 +152,5 @@ if(BUILD_TESTS)
 endif()
 
 
-# add_executable(test_ann src/test/experimental/test_ann.cpp)
-# target_link_libraries(test_ann gtsam_ext)
+add_executable(test_derivatives src/test/experimental/test_derivatives.cpp)
+target_link_libraries(test_derivatives gtsam_ext)

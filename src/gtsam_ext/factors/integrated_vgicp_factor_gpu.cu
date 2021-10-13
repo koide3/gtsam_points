@@ -34,6 +34,35 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   }
 }
 
+IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const VoxelizedFrame::ConstPtr& target,
+  const Frame::ConstPtr& source)
+: IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target, source, nullptr, nullptr) {}
+
+IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const VoxelizedFrame::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  CUstream_st* stream,
+  std::shared_ptr<TempBufferManager> temp_buffer)
+: gtsam_ext::NonlinearFactorGPU(gtsam::cref_list_of<1>(source_key)),
+  is_binary(false),
+  fixed_target_pose(fixed_target_pose.matrix().cast<float>()),
+  target(target),
+  source(source),
+  derivatives(new IntegratedVGICPDerivatives(target, source, stream, temp_buffer)),
+  linearized(false),
+  linearization_point(Eigen::Isometry3f::Identity()) {
+  //
+  if (!target->voxels_gpu || !source->points_gpu || !source->covs_gpu) {
+    std::cerr << "error: GPU resources have not been allocated!!" << std::endl;
+    abort();
+  }
+}
+
 IntegratedVGICPFactorGPU::~IntegratedVGICPFactorGPU() {}
 
 void IntegratedVGICPFactorGPU::set_inlier_update_thresh(double trans, double angle) {
@@ -115,7 +144,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(con
       -l.b_source.cast<double>(),
       l.error));
   } else {
-    factor.reset(new gtsam::HessianFactor(keys_[0], l.H_source.cast<double>(), -l.b_source.cast<double>(), 0.0));
+    factor.reset(new gtsam::HessianFactor(keys_[0], l.H_source.cast<double>(), -l.b_source.cast<double>(), l.error));
   }
 
   return factor;

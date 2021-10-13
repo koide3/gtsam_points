@@ -22,6 +22,7 @@ public:
   using shared_ptr = boost::shared_ptr<IntegratedVGICPFactor>;
 
   IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
+  IntegratedVGICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
   virtual ~IntegratedVGICPFactor() override;
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
