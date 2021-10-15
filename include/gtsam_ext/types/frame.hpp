@@ -21,12 +21,14 @@ public:
 
   // calculate the fraction of points fell in target's voxels
   // (check if delta * this->points fall in target->voxels)
-  double overlap(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
-  double overlap(const std::vector<std::shared_ptr<VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
+  double overlap(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
+  double overlap(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
+    const;
 
-  double overlap_gpu(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3f* delta_gpu) const;
-  double overlap_gpu(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
-  double overlap_gpu(const std::vector<std::shared_ptr<VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
+  double overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3f* delta_gpu) const;
+  double overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
+  double overlap_gpu(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
+    const;
 
 public:
   size_t num_points;

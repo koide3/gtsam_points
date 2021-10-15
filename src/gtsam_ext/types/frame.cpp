@@ -6,7 +6,7 @@
 
 namespace gtsam_ext {
 
-double Frame::overlap(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const {
+double Frame::overlap(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const {
   if (target->voxels == nullptr) {
     std::cerr << "error: CPU voxelmap has not been created!!" << std::endl;
     abort();
@@ -24,7 +24,7 @@ double Frame::overlap(const std::shared_ptr<VoxelizedFrame>& target, const Eigen
   return static_cast<double>(num_overlap) / num_points;
 }
 
-double Frame::overlap(const std::vector<std::shared_ptr<VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
+double Frame::overlap(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
   const {
   //
   if (std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {

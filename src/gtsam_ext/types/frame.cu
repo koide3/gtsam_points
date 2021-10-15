@@ -49,7 +49,7 @@ struct cast_kernel {
   }
 };
 
-double Frame::overlap_gpu(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3f* delta_gpu) const {
+double Frame::overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3f* delta_gpu) const {
   if (!points_gpu || !covs_gpu || !target->voxels_gpu) {
     std::cerr << "error:  GPU (points/covs/target_voxel) has not been created!!" << std::endl;
     abort();
@@ -72,7 +72,7 @@ double Frame::overlap_gpu(const std::shared_ptr<VoxelizedFrame>& target, const E
   return static_cast<double>(num_inliers) / num_points;
 }
 
-double Frame::overlap_gpu(const std::shared_ptr<VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const {
+double Frame::overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const {
   if (!points_gpu || !covs_gpu || !target->voxels_gpu) {
     std::cerr << "error:  GPU (points/covs/target_voxel) has not been created!!" << std::endl;
     abort();
@@ -85,8 +85,10 @@ double Frame::overlap_gpu(const std::shared_ptr<VoxelizedFrame>& target, const E
   return overlap_gpu(target, thrust::raw_pointer_cast(delta_ptr.data()));
 }
 
-double Frame::overlap_gpu(const std::vector<std::shared_ptr<VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_)
-  const {
+double Frame::overlap_gpu(
+  const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_) const {
+  //
   if (!points_gpu || !covs_gpu || std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {
     std::cerr << "error:  GPU (points/covs/target_voxel) has not been created!!" << std::endl;
     abort();

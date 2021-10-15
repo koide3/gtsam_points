@@ -94,6 +94,7 @@ target_link_libraries(gtsam_ext
 if(BUILD_WITH_CUDA)
   cuda_add_library(gtsam_ext_cuda SHARED
     # cuda-related
+    src/gtsam_ext/cuda/cuda_device_sync.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu
     src/gtsam_ext/cuda/stream_temp_buffer_roundrobin.cu

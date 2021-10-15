@@ -89,7 +89,7 @@ void IntegratedGICPFactor::update_correspondences(const Eigen::Isometry3d& delta
       do_update = false;
     }
   }
-  
+
   correspondences.resize(source->size());
   mahalanobis.resize(source->size());
 
