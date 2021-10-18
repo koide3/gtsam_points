@@ -17,6 +17,10 @@ namespace gtsam_ext {
 
 struct VoxelizedFrameGPU : public VoxelizedFrame {
 public:
+  using FloatsGPU = thrust::device_vector<float, thrust::device_allocator<float>>;
+  using PointsGPU = thrust::device_vector<Eigen::Vector3f, thrust::device_allocator<Eigen::Vector3f>>;
+  using MatricesGPU = thrust::device_vector<Eigen::Matrix3f, thrust::device_allocator<Eigen::Matrix3f>>;
+
   using Ptr = std::shared_ptr<VoxelizedFrameGPU>;
   using ConstPtr = std::shared_ptr<const VoxelizedFrameGPU>;
 
@@ -34,6 +38,8 @@ public:
     double voxel_resolution,
     const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,
     const std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>& covs);
+
+  VoxelizedFrameGPU(double voxel_resolution, const PointsGPU& points, const MatricesGPU& covs, bool allocate_cpu = false);
 
   ~VoxelizedFrameGPU();
 
@@ -59,10 +65,6 @@ private:
   void init(double voxel_resolution);
 
 public:
-  using FloatsGPU = thrust::device_vector<float, thrust::device_allocator<float>>;
-  using PointsGPU = thrust::device_vector<Eigen::Vector3f, thrust::device_allocator<Eigen::Vector3f>>;
-  using MatricesGPU = thrust::device_vector<Eigen::Matrix3f, thrust::device_allocator<Eigen::Matrix3f>>;
-
   std::unique_ptr<GaussianVoxelMapCPU> voxels_storage;
   std::vector<double> times_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
