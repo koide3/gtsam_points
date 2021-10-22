@@ -198,14 +198,20 @@ void IntegratedCT_ICPFactor::update_correspondences() const {
   }
 }
 
-std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> IntegratedCT_ICPFactor::deskewed_source_points(const gtsam::Values& values) {
+std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> IntegratedCT_ICPFactor::deskewed_source_points(const gtsam::Values& values, bool local) {
   update_poses(values);
 
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> deskewed(source->size());
+  if (local) {
+    for (auto& pose : source_poses) {
+      pose = values.at<gtsam::Pose3>(keys_[0]).inverse() * pose;
+    }
+  }
+
+  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> deskewed(source->size());
   for (int i = 0; i < source->size(); i++) {
     const int time_index = time_indices[i];
     const auto& pose = source_poses[time_index];
-    deskewed[i] = pose * source->points[i].head<3>();
+    deskewed[i] = pose.matrix() * (Eigen::Vector4d() << source->points[i].head<3>(), 1.0).finished();
   }
 
   return deskewed;

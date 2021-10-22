@@ -32,6 +32,9 @@ public:
 
 class GaussianVoxelMapCPU : public GaussianVoxelMap {
 public:
+  using Ptr = std::shared_ptr<GaussianVoxelMapCPU>;
+  using ConstPtr = std::shared_ptr<const GaussianVoxelMapCPU>;
+
   GaussianVoxelMapCPU(double resolution);
   virtual ~GaussianVoxelMapCPU();
 

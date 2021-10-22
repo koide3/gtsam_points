@@ -17,7 +17,7 @@ void VoxelizedFrameGPU::init(double voxel_resolution) {
 
   voxels_storage.reset(new GaussianVoxelMapCPU(voxel_resolution));
   voxels_storage->create_voxelmap(*this);
-  voxels = voxels_storage.get();
+  voxels = voxels_storage;
 
   // GPU data
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> host_points(num_points);
@@ -40,7 +40,7 @@ void VoxelizedFrameGPU::init(double voxel_resolution) {
 
   voxels_gpu_storage.reset(new GaussianVoxelMapGPU(voxel_resolution));
   voxels_gpu_storage->create_voxelmap(*this);
-  voxels_gpu = voxels_gpu_storage.get();
+  voxels_gpu = voxels_gpu_storage;
 }
 
 VoxelizedFrameGPU::VoxelizedFrameGPU(
@@ -108,7 +108,7 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(
 
   voxels_gpu_storage.reset(new GaussianVoxelMapGPU(voxel_resolution));
   voxels_gpu_storage->create_voxelmap(*this);
-  voxels_gpu = voxels_gpu_storage.get();
+  voxels_gpu = voxels_gpu_storage;
 
   if(allocate_cpu) {
     thrust::host_vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> host_points(num_points);
@@ -128,7 +128,7 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(
 
     voxels_storage.reset(new GaussianVoxelMapCPU(voxel_resolution));
     voxels_storage->create_voxelmap(*this);
-    voxels = voxels_storage.get();
+    voxels = voxels_storage;
   }
 }
 

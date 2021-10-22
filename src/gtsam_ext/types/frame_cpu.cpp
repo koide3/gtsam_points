@@ -1,5 +1,7 @@
 #include <gtsam_ext/types/frame_cpu.hpp>
 
+#include <boost/iterator/counting_iterator.hpp>
+
 namespace gtsam_ext {
 
 template <typename T, int D>
@@ -12,6 +14,8 @@ FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allo
   this->num_points = points.size();
   this->points = &points_storage[0];
 }
+
+FrameCPU::FrameCPU() {}
 
 FrameCPU::~FrameCPU() {}
 
@@ -58,5 +62,49 @@ template void FrameCPU::add_covs(const std::vector<Eigen::Matrix<float, 3, 3>, E
 template void FrameCPU::add_covs(const std::vector<Eigen::Matrix<float, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 4>>>& covs);
 template void FrameCPU::add_covs(const std::vector<Eigen::Matrix<double, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 3>>>& covs);
 template void FrameCPU::add_covs(const std::vector<Eigen::Matrix<double, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 4>>>& covs);
+
+FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
+  const int num_samples = frame->size() * sampling_rate;
+
+  std::vector<int> sample_indices(num_samples);
+  std::iota(sample_indices.begin(), sample_indices.end(), 0);
+  std::sample(boost::counting_iterator<int>(0), boost::counting_iterator<int>(frame->size()), sample_indices.begin(), num_samples, mt);
+  std::sort(sample_indices.begin(), sample_indices.end());
+
+  FrameCPU::Ptr sampled(new FrameCPU);
+  sampled->num_points = num_samples;
+
+  sampled->points_storage.resize(num_samples);
+  sampled->points = sampled->points_storage.data();
+  for (int i = 0; i < num_samples; i++) {
+    sampled->points[i] = frame->points[sample_indices[i]];
+  }
+
+  if (frame->times) {
+    sampled->times_storage.resize(num_samples);
+    sampled->times = sampled->times_storage.data();
+    for (int i = 0; i < num_samples; i++) {
+      sampled->times[i] = frame->times[sample_indices[i]];
+    }
+  }
+
+  if (frame->covs) {
+    sampled->covs_storage.resize(num_samples);
+    sampled->covs = sampled->covs_storage.data();
+    for (int i = 0; i < num_samples; i++) {
+      sampled->covs[i] = frame->covs[sample_indices[i]];
+    }
+  }
+
+  if (frame->normals) {
+    sampled->normals_storage.resize(num_samples);
+    sampled->normals = sampled->normals_storage.data();
+    for (int i = 0; i < num_samples; i++) {
+      sampled->normals[i] = frame->normals[sample_indices[i]];
+    }
+  }
+
+  return sampled;
+}
 
 }  // namespace gtsam_ext

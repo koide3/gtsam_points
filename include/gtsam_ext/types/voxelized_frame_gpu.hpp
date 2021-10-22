@@ -65,13 +65,13 @@ private:
   void init(double voxel_resolution);
 
 public:
-  std::unique_ptr<GaussianVoxelMapCPU> voxels_storage;
+  std::shared_ptr<GaussianVoxelMapCPU> voxels_storage;
   std::vector<double> times_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals_storage;
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
 
-  std::unique_ptr<GaussianVoxelMapGPU> voxels_gpu_storage;
+  std::shared_ptr<GaussianVoxelMapGPU> voxels_gpu_storage;
   std::unique_ptr<FloatsGPU> times_gpu_storage;
   std::unique_ptr<PointsGPU> points_gpu_storage;
   std::unique_ptr<PointsGPU> normals_gpu_storage;

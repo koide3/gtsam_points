@@ -2,6 +2,7 @@
 #include <gtsam_ext/types/voxelized_frame.hpp>
 
 #include <iostream>
+#include <boost/iterator/counting_iterator.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 
 namespace gtsam_ext {

@@ -11,7 +11,18 @@
 namespace gtsam_ext {
 struct ISAM2ResultExt : public gtsam::ISAM2Result {
 public:
-  ISAM2ResultExt(bool enableDetailedResults = false) : gtsam::ISAM2Result(enableDetailedResults) {}
+  ISAM2ResultExt(bool enableDetailedResults = false)
+  : gtsam::ISAM2Result(enableDetailedResults),
+    delta(0.0),
+    update_count(0),
+    gpu_evaluation_count(0),
+    gpu_linearization_count(0),
+    num_factors(0),
+    num_values(0),
+    elapsed_time(0) {
+    variablesRelinearized = 0;
+    variablesReeliminated = 0;
+  }
 
   std::string to_string() const {
     std::stringstream sst1;
@@ -26,7 +37,7 @@ public:
     }
 
     sst1 << boost::format("%5s %5s %5s %5s %5s %5s %10s %10s") % "count" % "new" % "lin" % "elim" % "gpu_e" % "gpu_l" % "delta" % "time_msec";
-    sst2 << boost::format("%5d %5d %5d %5d %5d %5d %10g %10g") % update_count % newFactorsIndices.size() % variablesReeliminated % variablesReeliminated % gpu_evaluation_count %
+    sst2 << boost::format("%5d %5d %5d %5d %5d %5d %10g %10g") % update_count % newFactorsIndices.size() % variablesRelinearized % variablesReeliminated % gpu_evaluation_count %
               gpu_linearization_count % delta % (elapsed_time * 1000.0);
 
     sst1 << std::endl << sst2.str();
@@ -40,6 +51,9 @@ public:
 
   int gpu_evaluation_count;
   int gpu_linearization_count;
+
+  int num_factors;
+  int num_values;
 
   double elapsed_time;
 };

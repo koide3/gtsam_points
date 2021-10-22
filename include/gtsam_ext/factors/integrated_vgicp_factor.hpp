@@ -21,6 +21,7 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedVGICPFactor>;
 
+  IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const GaussianVoxelMapCPU::ConstPtr& target_voxels, const Frame::ConstPtr& source);
   IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
   IntegratedVGICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
   virtual ~IntegratedVGICPFactor() override;
@@ -47,7 +48,7 @@ private:
   mutable std::vector<std::shared_ptr<const GaussianVoxel>> correspondences;
   mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
 
-  std::shared_ptr<const VoxelizedFrame> target;
+  std::shared_ptr<const GaussianVoxelMapCPU> target_voxels;
   std::shared_ptr<const Frame> source;
 };
 

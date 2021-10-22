@@ -6,45 +6,48 @@
 
 namespace gtsam_ext {
 
-IntegratedVGICPFactor::IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source)
+IntegratedVGICPFactor::IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const GaussianVoxelMapCPU::ConstPtr& target_voxels, const Frame::ConstPtr& source)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
-  target(target),
+  target_voxels(target_voxels),
   source(source) {
   //
-  if (!target->points || !source->points) {
-    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+  if (!source->points) {
+    std::cerr << "error: source points have not been allocated!!" << std::endl;
     abort();
   }
 
-  if (!target->covs || !source->covs) {
-    std::cerr << "error: target or source don't have covs!!" << std::endl;
+  if (!source->covs) {
+    std::cerr << "error: source don't have covs!!" << std::endl;
     abort();
   }
 
-  if (!target->voxels) {
+  if (!target_voxels) {
     std::cerr << "error: target voxelmap has not been created!!" << std::endl;
     abort();
   }
 }
 
+IntegratedVGICPFactor::IntegratedVGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source)
+: IntegratedVGICPFactor(target_key, source_key, target->voxels, source) {}
+
 IntegratedVGICPFactor::IntegratedVGICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source)
 : gtsam_ext::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
-  target(target),
+  target_voxels(target->voxels),
   source(source) {
   //
-  if (!target->points || !source->points) {
-    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+  if (!source->points) {
+    std::cerr << "error: source points have not been allocated!!" << std::endl;
     abort();
   }
 
-  if (!target->covs || !source->covs) {
-    std::cerr << "error: target or source don't have covs!!" << std::endl;
+  if (!source->covs) {
+    std::cerr << "error: source don't have covs!!" << std::endl;
     abort();
   }
 
-  if (!target->voxels) {
+  if (!target_voxels) {
     std::cerr << "error: target voxelmap has not been created!!" << std::endl;
     abort();
   }
@@ -59,8 +62,8 @@ void IntegratedVGICPFactor::update_correspondences(const Eigen::Isometry3d& delt
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
     Eigen::Vector4d pt = delta * source->points[i];
-    Eigen::Vector3i coord = target->voxels->voxel_coord(pt);
-    auto voxel = target->voxels->lookup_voxel(coord);
+    Eigen::Vector3i coord = target_voxels->voxel_coord(pt);
+    auto voxel = target_voxels->lookup_voxel(coord);
 
     if (voxel == nullptr) {
       correspondences[i] = nullptr;

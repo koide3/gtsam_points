@@ -40,7 +40,7 @@ public:
   const std::vector<int>& get_time_indices() const { return time_indices; }
   const std::vector<gtsam::Pose3, Eigen::aligned_allocator<gtsam::Pose3>>& get_source_poses() const { return source_poses; }
 
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> deskewed_source_points(const gtsam::Values& values);
+  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> deskewed_source_points(const gtsam::Values& values, bool local = false);
 
 public:
   virtual void update_poses(const gtsam::Values& values) const;

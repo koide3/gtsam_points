@@ -413,6 +413,7 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
   this->update_count_ += 1;
   UpdateImpl::LogStartingUpdate(newFactors, *this);
   ISAM2ResultExt result(params_.enableDetailedResults);
+
   UpdateImpl update(params_, updateParams);
 
   gpu_factors->clear_counts();
@@ -481,6 +482,9 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
   result.gpu_evaluation_count = gpu_factors->evaluation_count();
   result.gpu_linearization_count = gpu_factors->linearization_count();
   result.elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - optimization_start_time).count() / 1e9;
+
+  result.num_factors = this->nonlinearFactors_.size();
+  result.num_values = this->theta_.size();
 
   return result;
 }

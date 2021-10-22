@@ -11,10 +11,14 @@ public:
   using Ptr = std::shared_ptr<VoxelizedFrameCPU>;
   using ConstPtr = std::shared_ptr<const VoxelizedFrameCPU>;
 
+  VoxelizedFrameCPU(double voxel_resolution, const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points);
+
   VoxelizedFrameCPU(
     double voxel_resolution,
     const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,
     const std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>& covs);
+
+  VoxelizedFrameCPU(double voxel_resolution, const Frame::ConstPtr& frame);
 
   ~VoxelizedFrameCPU();
 
@@ -24,8 +28,7 @@ public:
   template <typename T, int D>
   void add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals);
 
-
-  std::unique_ptr<GaussianVoxelMapCPU> voxels_storage;
+  std::shared_ptr<GaussianVoxelMapCPU> voxels_storage;
   std::vector<double> times_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals_storage;

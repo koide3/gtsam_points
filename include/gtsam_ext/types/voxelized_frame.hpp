@@ -31,13 +31,13 @@ public:
   }
 
 public:
-  GaussianVoxelMapCPU* voxels;
-  GaussianVoxelMapGPU* voxels_gpu;
+  std::shared_ptr<GaussianVoxelMapCPU> voxels;
+  std::shared_ptr<GaussianVoxelMapGPU> voxels_gpu;
 };
 
 VoxelizedFrame::Ptr merge_voxelized_frames(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<VoxelizedFrame::ConstPtr>& frames,
+  const std::vector<Frame::ConstPtr>& frames,
   double downsample_resolution,
   double voxel_resolution);
 

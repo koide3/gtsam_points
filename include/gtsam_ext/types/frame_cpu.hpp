@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <random>
 #include <Eigen/Core>
 
 #include <gtsam_ext/types/frame.hpp>
@@ -14,6 +15,8 @@ public:
 
   template <typename T, int D>
   FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points);
+
+  FrameCPU();
   ~FrameCPU();
 
   template <typename T>
@@ -31,5 +34,7 @@ public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals_storage;
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
 };
+
+FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt);
 
 }  // namespace gtsam_ext
