@@ -28,7 +28,11 @@ public:
   virtual double error(const gtsam::Values& values) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
+  void set_num_threads(int n) { num_threads = n; }
+
 protected:
+  int num_threads;
+
   virtual void update_correspondences() const override;
 
   mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;

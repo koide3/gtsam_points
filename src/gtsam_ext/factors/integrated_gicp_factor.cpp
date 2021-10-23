@@ -95,7 +95,7 @@ void IntegratedGICPFactor::update_correspondences(const Eigen::Isometry3d& delta
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
-    if(do_update) {
+    if (do_update) {
       Eigen::Vector4d pt = delta * source->points[i];
 
       size_t k_index = -1;
