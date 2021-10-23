@@ -209,10 +209,15 @@ const gtsam::Values& LevenbergMarquardtOptimizerExt::optimize() {
     // error can increase due to data association changes
     // terminate |= gtsam::checkConvergence(params.relativeErrorTol, params.absoluteErrorTol, params.errorTol, currentError, newError, params.verbosity);
 
-    double delta = std::abs(currentError - newError);
-    terminate |= delta < params.absoluteErrorTol;
-    terminate |= delta / currentError < params.relativeErrorTol;
+    double delta_error = std::abs(currentError - newError);
+    terminate |= delta_error < params.absoluteErrorTol;
+    terminate |= delta_error / currentError < params.relativeErrorTol;
     terminate |= newError < params.errorTol;
+
+    if (params_.termination_criteria) {
+      const auto state = static_cast<const State*>(state_.get());
+      terminate |= params_.termination_criteria(values());
+    }
 
     currentError = newError;
   } while (!terminate);

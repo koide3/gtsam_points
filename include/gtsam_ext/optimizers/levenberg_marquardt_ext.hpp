@@ -39,6 +39,7 @@ public:
 
   LevenbergMarquardtExtParams ensureHasOrdering(const gtsam::NonlinearFactorGraph& graph) const;
 
+  std::function<bool(const gtsam::Values& values)> termination_criteria;
   std::function<void(const LevenbergMarquardtOptimizationStatus&, const gtsam::Values&)> callback;  // callback for optimization iteration
 };
 
