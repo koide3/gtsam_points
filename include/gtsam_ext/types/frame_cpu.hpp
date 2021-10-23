@@ -28,6 +28,8 @@ public:
   template <typename T, int D>
   void add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs);
 
+  static FrameCPU::Ptr load(const std::string& path);
+
 public:
   std::vector<double> times_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;

@@ -1,5 +1,9 @@
 #include <gtsam_ext/types/frame_cpu.hpp>
 
+#include <fstream>
+#include <iostream>
+
+#include <boost/filesystem.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 
 namespace gtsam_ext {
@@ -105,6 +109,101 @@ FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double samplin
   }
 
   return sampled;
+}
+
+FrameCPU::Ptr FrameCPU::load(const std::string& path) {
+  FrameCPU::Ptr frame(new FrameCPU);
+
+  if (boost::filesystem::exists(path + "/points.bin")) {
+    std::ifstream ifs(path + "/points.bin", std::ios::binary | std::ios::ate);
+    std::streamsize points_bytes = ifs.tellg();
+    size_t num_points = points_bytes / (sizeof(Eigen::Vector4d));
+
+    frame->num_points = num_points;
+    frame->points_storage.resize(num_points);
+    frame->points = frame->points_storage.data();
+
+    ifs.seekg(0, std::ios::beg);
+    ifs.read(reinterpret_cast<char*>(frame->points), sizeof(Eigen::Vector4d) * frame->size());
+
+    if (boost::filesystem::exists(path + "/times.bin")) {
+      frame->times_storage.resize(frame->size());
+      frame->times = frame->times_storage.data();
+      std::ifstream ifs(path + "/times.bin", std::ios::binary);
+      ifs.read(reinterpret_cast<char*>(frame->times), sizeof(double) * frame->size());
+    }
+
+    if (boost::filesystem::exists(path + "/normals.bin")) {
+      frame->normals_storage.resize(frame->size());
+      frame->normals = frame->normals_storage.data();
+      std::ifstream ifs(path + "/normals.bin", std::ios::binary);
+      ifs.read(reinterpret_cast<char*>(frame->normals), sizeof(Eigen::Vector4d) * frame->size());
+    }
+
+    if (boost::filesystem::exists(path + "/covs.bin")) {
+      frame->covs_storage.resize(frame->size());
+      frame->covs = frame->covs_storage.data();
+      std::ifstream ifs(path + "/covs.bin", std::ios::binary);
+      ifs.read(reinterpret_cast<char*>(frame->covs), sizeof(Eigen::Matrix4d) * frame->size());
+    }
+  } else if (boost::filesystem::exists(path + "/points_compact.bin")) {
+    std::ifstream ifs(path + "/points_compact.bin", std::ios::binary | std::ios::ate);
+    std::streamsize points_bytes = ifs.tellg();
+    size_t num_points = points_bytes / (sizeof(Eigen::Vector3f));
+
+    frame->num_points = num_points;
+    frame->points_storage.resize(num_points);
+    frame->points = frame->points_storage.data();
+    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_f(num_points);
+
+    ifs.seekg(0, std::ios::beg);
+    ifs.read(reinterpret_cast<char*>(points_f.data()), sizeof(Eigen::Vector3f) * frame->size());
+    std::transform(points_f.begin(), points_f.end(), frame->points, [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p[0], p[1], p[2], 1.0); });
+
+    if (boost::filesystem::exists(path + "/times_compact.bin")) {
+      frame->times_storage.resize(frame->size());
+      frame->times = frame->times_storage.data();
+      std::vector<float> times_f(frame->size());
+
+      std::ifstream ifs(path + "/times_compact.bin", std::ios::binary);
+      ifs.read(reinterpret_cast<char*>(times_f.data()), sizeof(float) * frame->size());
+      std::copy(times_f.begin(), times_f.end(), frame->times);
+    }
+
+    if (boost::filesystem::exists(path + "/normals_compact.bin")) {
+      frame->normals_storage.resize(frame->size());
+      frame->normals = frame->normals_storage.data();
+      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_f(frame->size());
+
+      std::ifstream ifs(path + "/normals_compact.bin", std::ios::binary);
+      ifs.read(reinterpret_cast<char*>(normals_f.data()), sizeof(Eigen::Vector3f) * frame->size());
+      std::transform(normals_f.begin(), normals_f.end(), frame->normals, [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p[0], p[1], p[2], 1.0); });
+    }
+
+    if (boost::filesystem::exists(path + "/covs_compact.bin")) {
+      frame->covs_storage.resize(frame->size());
+      frame->covs = frame->covs_storage.data();
+      std::vector<Eigen::Matrix<float, 6, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 6, 1>>> covs_f(frame->size());
+
+      std::ifstream ifs(path + "/covs_compact.bin", std::ios::binary);
+      ifs.read(reinterpret_cast<char*>(covs_f.data()), sizeof(Eigen::Matrix<float, 6, 1>) * frame->size());
+      std::transform(covs_f.begin(), covs_f.end(), frame->covs, [](const Eigen::Matrix<float, 6, 1>& c) {
+        Eigen::Matrix4d cov = Eigen::Matrix4d::Zero();
+        cov(0, 0) = c[0];
+        cov(0, 1) = cov(1, 0) = c[1];
+        cov(0, 2) = cov(2, 0) = c[2];
+        cov(1, 1) = c[3];
+        cov(1, 2) = cov(2, 1) = c[4];
+        cov(2, 2) = c[5];
+        return cov;
+      });
+    }
+  } else {
+    std::cerr << "error: " << path << " does not constain points(_compact)?.bin" << std::endl;
+    return nullptr;
+  }
+
+  return frame;
 }
 
 }  // namespace gtsam_ext

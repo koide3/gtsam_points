@@ -30,6 +30,9 @@ public:
   double overlap_gpu(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
     const;
 
+  void save(const std::string& path) const;
+  void save_compact(const std::string& path) const;
+
 public:
   size_t num_points;
 

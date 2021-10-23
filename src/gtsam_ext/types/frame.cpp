@@ -1,6 +1,7 @@
 #include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/types/voxelized_frame.hpp>
 
+#include <fstream>
 #include <iostream>
 #include <boost/iterator/counting_iterator.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
@@ -49,6 +50,59 @@ double Frame::overlap(const std::vector<std::shared_ptr<const VoxelizedFrame>>& 
   }
 
   return static_cast<double>(num_overlap) / num_points;
+}
+
+namespace {
+void write_binary(const std::string& filename, void* data, size_t size) {
+  std::ofstream ofs(filename, std::ios::binary);
+  ofs.write(reinterpret_cast<char*>(data), size);
+}
+}  // namespace
+
+void Frame::save(const std::string& path) const {
+  if (times) {
+    write_binary(path + "/times.bin", times, sizeof(double) * num_points);
+  }
+
+  if (points) {
+    write_binary(path + "/points.bin", points, sizeof(Eigen::Vector4d) * num_points);
+  }
+
+  if (normals) {
+    write_binary(path + "/normals.bin", normals, sizeof(Eigen::Vector4d) * num_points);
+  }
+
+  if (covs) {
+    write_binary(path + "/covs.bin", covs, sizeof(Eigen::Matrix4d) * num_points);
+  }
+}
+
+void Frame::save_compact(const std::string& path) const {
+  if (times) {
+    std::vector<float> times_f(num_points);
+    std::copy(times, times + num_points, times_f.begin());
+    write_binary(path + "/times_compact.bin", times_f.data(), sizeof(float) * num_points);
+  }
+
+  if (points) {
+    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_f(num_points);
+    std::transform(points, points + num_points, points_f.begin(), [](const Eigen::Vector4d& p) { return p.head<3>().cast<float>(); });
+    write_binary(path + "/points_compact.bin", points_f.data(), sizeof(Eigen::Vector3f) * num_points);
+  }
+
+  if (normals) {
+    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_f(num_points);
+    std::transform(normals, normals + num_points, normals_f.begin(), [](const Eigen::Vector4d& p) { return p.head<3>().cast<float>(); });
+    write_binary(path + "/normals_compact.bin", normals_f.data(), sizeof(Eigen::Vector3f) * num_points);
+  }
+
+  if (covs) {
+    std::vector<Eigen::Matrix<float, 6, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 6, 1>>> covs_f(num_points);
+    std::transform(covs, covs + num_points, covs_f.begin(), [](const Eigen::Matrix4d& cov) {
+      return (Eigen::Matrix<float, 6, 1>() << cov(0, 0), cov(0, 1), cov(0, 2), cov(1, 1), cov(1, 2), cov(2, 2)).finished();
+    });
+    write_binary(path + "/covs_compact.bin", covs_f.data(), sizeof(Eigen::Matrix<float, 6, 1>) * num_points);
+  }
 }
 
 }  // namespace gtsam_ext
