@@ -48,4 +48,10 @@ VoxelizedFrame::Ptr merge_voxelized_frames_gpu(
   double voxel_resolution,
   bool allocate_cpu);
 
+VoxelizedFrame::Ptr merge_voxelized_frames_auto(
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
+  const std::vector<Frame::ConstPtr>& frames,
+  double downsample_resolution,
+  double voxel_resolution);
+
 }  // namespace gtsam_ext

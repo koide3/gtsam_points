@@ -86,11 +86,16 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(
   init(voxel_resolution);
 }
 
-VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const PointsGPU& points,
-  const MatricesGPU& covs,
-  bool allocate_cpu) {
+VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points) {
+  points_storage.resize(num_points);
+  covs_storage.resize(num_points);
+  std::copy(points, points + num_points, points_storage.begin());
+  std::copy(covs, covs + num_points, covs_storage.begin());
+
+  init(voxel_resolution);
+}
+
+VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const PointsGPU& points, const MatricesGPU& covs, bool allocate_cpu) {
   // GPU data
   times_gpu_storage.reset(new FloatsGPU);
   points_gpu_storage.reset(new PointsGPU);
@@ -110,7 +115,7 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(
   voxels_gpu_storage->create_voxelmap(*this);
   voxels_gpu = voxels_gpu_storage;
 
-  if(allocate_cpu) {
+  if (allocate_cpu) {
     thrust::host_vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> host_points(num_points);
     thrust::host_vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> host_covs(num_points);
     cudaMemcpy(thrust::raw_pointer_cast(host_points.data()), points_gpu, sizeof(Eigen::Vector3f) * num_points, cudaMemcpyDeviceToHost);
@@ -241,7 +246,7 @@ struct transform_covs_kernel {
 
   const thrust::device_ptr<const Eigen::Isometry3f> transform_ptr;
 };
-}
+}  // namespace
 
 VoxelizedFrame::Ptr merge_voxelized_frames_gpu(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,

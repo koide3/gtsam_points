@@ -10,7 +10,7 @@ namespace gtsam_ext {
 
 double Frame::overlap(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const {
   if (target->voxels == nullptr) {
-    std::cerr << "error: CPU voxelmap has not been created!!" << std::endl;
+    std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;
     abort();
   }
 
@@ -30,7 +30,7 @@ double Frame::overlap(const std::vector<std::shared_ptr<const VoxelizedFrame>>& 
   const {
   //
   if (std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {
-    std::cerr << "error: CPU voxelmap has not been created!!" << std::endl;
+    std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;
     abort();
   }
 
@@ -50,6 +50,26 @@ double Frame::overlap(const std::vector<std::shared_ptr<const VoxelizedFrame>>& 
   }
 
   return static_cast<double>(num_overlap) / num_points;
+}
+
+double Frame::overlap_auto(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const {
+#ifdef BUILD_GTSAM_EXT_GPU
+  if (points_gpu && target->voxels_gpu) {
+    return overlap_gpu(target, delta);
+  }
+#endif
+  return overlap(target, delta);
+}
+
+double Frame::overlap_auto(
+  const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const {
+#ifdef BUILD_GTSAM_EXT_GPU
+  if (points_gpu && !targets.empty() && targets[0]->voxels_gpu) {
+    return overlap_gpu(targets, deltas);
+  }
+#endif
+  return overlap(targets, deltas);
 }
 
 namespace {

@@ -39,6 +39,8 @@ public:
     const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,
     const std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>& covs);
 
+  VoxelizedFrameGPU(double voxel_resolution, const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points);
+
   VoxelizedFrameGPU(double voxel_resolution, const PointsGPU& points, const MatricesGPU& covs, bool allocate_cpu = false);
 
   ~VoxelizedFrameGPU();

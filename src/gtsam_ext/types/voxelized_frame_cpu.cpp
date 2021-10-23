@@ -102,4 +102,19 @@ VoxelizedFrame::Ptr merge_voxelized_frames(
   return VoxelizedFrame::Ptr(new VoxelizedFrameCPU(voxel_resolution, downsampled_points, downsampled_covs));
 }
 
+VoxelizedFrame::Ptr merge_voxelized_frames_auto(
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
+  const std::vector<Frame::ConstPtr>& frames,
+  double downsample_resolution,
+  double voxel_resolution) {
+//
+#ifdef BUILD_GTSAM_EXT_GPU
+  if (frames[0]->points_gpu) {
+    return merge_voxelized_frames_gpu(poses, frames, downsample_resolution, voxel_resolution, true);
+  }
+#endif
+
+  return merge_voxelized_frames(poses, frames, downsample_resolution, voxel_resolution);
+}
+
 }  // namespace gtsam_ext

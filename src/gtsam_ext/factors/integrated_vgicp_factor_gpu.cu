@@ -28,8 +28,18 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   linearized(false),
   linearization_point(Eigen::Isometry3f::Identity()) {
   //
-  if (!target->voxels_gpu || !source->points_gpu || !source->covs_gpu) {
-    std::cerr << "error: GPU resources have not been allocated!!" << std::endl;
+  if (!source->points_gpu) {
+    std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (!source->covs_gpu) {
+    std::cerr << "error: GPU source covs have not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (!target->voxels_gpu) {
+    std::cerr << "error: GPU target voxels have not been created!!" << std::endl;
     abort();
   }
 }
@@ -57,8 +67,18 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   linearized(false),
   linearization_point(Eigen::Isometry3f::Identity()) {
   //
-  if (!target->voxels_gpu || !source->points_gpu || !source->covs_gpu) {
-    std::cerr << "error: GPU resources have not been allocated!!" << std::endl;
+  if (!source->points_gpu) {
+    std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (!source->covs_gpu) {
+    std::cerr << "error: GPU source covs have not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (!target->voxels_gpu) {
+    std::cerr << "error: GPU target voxels have not been created!!" << std::endl;
     abort();
   }
 }

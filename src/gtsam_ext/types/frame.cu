@@ -50,8 +50,13 @@ struct cast_kernel {
 };
 
 double Frame::overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3f* delta_gpu) const {
-  if (!points_gpu || !covs_gpu || !target->voxels_gpu) {
-    std::cerr << "error:  GPU (points/covs/target_voxel) has not been created!!" << std::endl;
+  if (!points_gpu) {
+    std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (!target->voxels_gpu) {
+    std::cerr << "error:  GPU target voxels have not been created!!" << std::endl;
     abort();
   }
 
@@ -73,8 +78,13 @@ double Frame::overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, c
 }
 
 double Frame::overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const {
-  if (!points_gpu || !covs_gpu || !target->voxels_gpu) {
-    std::cerr << "error:  GPU (points/covs/target_voxel) has not been created!!" << std::endl;
+  if (!points_gpu) {
+    std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (!target->voxels_gpu) {
+    std::cerr << "error:  GPU target voxels have not been created!!" << std::endl;
     abort();
   }
 
@@ -89,8 +99,13 @@ double Frame::overlap_gpu(
   const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_) const {
   //
-  if (!points_gpu || !covs_gpu || std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {
-    std::cerr << "error:  GPU (points/covs/target_voxel) has not been created!!" << std::endl;
+  if (!points_gpu) {
+    std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
+    abort();
+  }
+
+  if (std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {
+    std::cerr << "error:  GPU target voxels have not been created!!" << std::endl;
     abort();
   }
 

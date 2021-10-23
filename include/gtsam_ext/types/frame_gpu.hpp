@@ -25,6 +25,7 @@ public:
 
   template <typename T, int D>
   FrameGPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points, bool allocate_cpu = true);
+  FrameGPU(const Frame& frame, bool allocate_cpu = true);
   ~FrameGPU();
 
   // add_*_gpu() only adds attributes to GPU storage
