@@ -19,6 +19,28 @@ FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allo
   this->points = &points_storage[0];
 }
 
+FrameCPU::FrameCPU(const Frame& frame) {
+  num_points = frame.size();
+
+  points_storage.assign(frame.points, frame.points + frame.size());
+  points = points_storage.data();
+
+  if (frame.times) {
+    times_storage.assign(frame.times, frame.times + frame.size());
+    times = times_storage.data();
+  }
+
+  if (frame.normals) {
+    normals_storage.assign(frame.normals, frame.normals + frame.size());
+    normals = normals_storage.data();
+  }
+
+  if (frame.covs) {
+    covs_storage.assign(frame.covs, frame.covs + frame.size());
+    covs = covs_storage.data();
+  }
+}
+
 FrameCPU::FrameCPU() {}
 
 FrameCPU::~FrameCPU() {}
@@ -68,6 +90,10 @@ template void FrameCPU::add_covs(const std::vector<Eigen::Matrix<double, 3, 3>, 
 template void FrameCPU::add_covs(const std::vector<Eigen::Matrix<double, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 4>>>& covs);
 
 FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
+  if (sampling_rate >= 0.99) {
+    return FrameCPU::Ptr(new FrameCPU(*frame));
+  }
+
   const int num_samples = frame->size() * sampling_rate;
 
   std::vector<int> sample_indices(num_samples);

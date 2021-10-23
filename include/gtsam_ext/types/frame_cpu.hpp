@@ -15,9 +15,10 @@ public:
 
   template <typename T, int D>
   FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points);
-
+  FrameCPU(const Frame& frame);
   FrameCPU();
   ~FrameCPU();
+
 
   template <typename T>
   void add_times(const std::vector<T>& times);
