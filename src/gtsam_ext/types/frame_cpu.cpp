@@ -9,35 +9,28 @@
 namespace gtsam_ext {
 
 template <typename T, int D>
-FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points) {
-  points_storage.resize(points.size(), Eigen::Vector4d(0, 0, 0, 1));
-  for (int i = 0; i < points.size(); i++) {
-    points_storage[i].head<D>() = points[i].template head<D>().template cast<double>();
-  }
-
-  this->num_points = points.size();
-  this->points = &points_storage[0];
+FrameCPU::FrameCPU(const Eigen::Matrix<T, D, 1>* points, int num_points) {
+  add_points(points, num_points);
 }
 
-FrameCPU::FrameCPU(const Frame& frame) {
-  num_points = frame.size();
+template <typename T, int D>
+FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points) : FrameCPU(points.data(), points.size()) {}
 
-  points_storage.assign(frame.points, frame.points + frame.size());
-  points = points_storage.data();
+FrameCPU::FrameCPU(const Frame& frame) {
+  if (frame.points) {
+    add_points(frame.points, frame.size());
+  }
 
   if (frame.times) {
-    times_storage.assign(frame.times, frame.times + frame.size());
-    times = times_storage.data();
+    add_times(frame.times, frame.size());
   }
 
   if (frame.normals) {
-    normals_storage.assign(frame.normals, frame.normals + frame.size());
-    normals = normals_storage.data();
+    add_normals(frame.normals, frame.size());
   }
 
   if (frame.covs) {
-    covs_storage.assign(frame.covs, frame.covs + frame.size());
-    covs = covs_storage.data();
+    add_covs(frame.covs, frame.size());
   }
 }
 
@@ -46,31 +39,61 @@ FrameCPU::FrameCPU() {}
 FrameCPU::~FrameCPU() {}
 
 template <typename T>
+void FrameCPU::add_times(const T* times, int num_points) {
+  assert(num_points == size());
+  times_storage.resize(num_points);
+  std::copy(times, times + num_points, times_storage.begin());
+  this->times = this->times_storage.data();
+}
+
+template <typename T>
 void FrameCPU::add_times(const std::vector<T>& times) {
-  assert(times.size() == size());
-  times_storage.resize(times.size());
-  std::transform(times.begin(), times.end(), times_storage.begin(), [](const auto& t) { return static_cast<double>(t); });
-  this->times = times_storage.data();
+  add_times(times.data(), times.size());
 }
 
 template <typename T, int D>
-void FrameCPU::add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals) {
-  assert(normals.size() == size());
-  normals_storage.resize(normals.size(), Eigen::Vector4d::Zero());
-  for (int i = 0; i < normals.size(); i++) {
+void FrameCPU::add_points(const Eigen::Matrix<T, D, 1>* points, int num_points) {
+  points_storage.resize(num_points, Eigen::Vector4d(0.0, 0.0, 0.0, 1.0));
+  for (int i = 0; i < num_points; i++) {
+    points_storage[i].head<D>() = points[i].template head<D>().template cast<double>();
+  }
+  this->points = points_storage.data();
+  this->num_points = num_points;
+}
+
+template <typename T, int D>
+void FrameCPU::add_points(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points) {
+  add_points(points.data(), points.size());
+}
+
+template <typename T, int D>
+void FrameCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
+  assert(num_points == size());
+  normals_storage.resize(num_points, Eigen::Vector4d::Zero());
+  for (int i = 0; i < num_points; i++) {
     normals_storage[i].head<D>() = normals[i].template head<D>().template cast<double>();
   }
   this->normals = normals_storage.data();
 }
 
 template <typename T, int D>
-void FrameCPU::add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs) {
-  assert(covs.size() == size());
-  covs_storage.resize(covs.size(), Eigen::Matrix4d::Zero());
-  for (int i = 0; i < covs.size(); i++) {
+void FrameCPU::add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals) {
+  add_normals(normals.data(), normals.size());
+}
+
+template <typename T, int D>
+void FrameCPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points) {
+  assert(num_points == size());
+  covs_storage.resize(num_points, Eigen::Matrix4d::Zero());
+  for (int i = 0; i < num_points; i++) {
     covs_storage[i].block<D, D>(0, 0) = covs[i].template block<D, D>(0, 0).template cast<double>();
   }
   this->covs = covs_storage.data();
+}
+
+template <typename T, int D>
+void FrameCPU::add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs) {
+  add_covs(covs.data(), covs.size());
 }
 
 template FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
@@ -80,6 +103,10 @@ template FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen
 
 template void FrameCPU::add_times(const std::vector<float>& times);
 template void FrameCPU::add_times(const std::vector<double>& times);
+template void FrameCPU::add_points(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>& points);
+template void FrameCPU::add_points(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>& points);
+template void FrameCPU::add_points(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>& points);
+template void FrameCPU::add_points(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>& points);
 template void FrameCPU::add_normals(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>& normals);
 template void FrameCPU::add_normals(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>& normals);
 template void FrameCPU::add_normals(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>& normals);

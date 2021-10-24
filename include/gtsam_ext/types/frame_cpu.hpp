@@ -14,18 +14,30 @@ public:
   using ConstPtr = std::shared_ptr<const FrameCPU>;
 
   template <typename T, int D>
+  FrameCPU(const Eigen::Matrix<T, D, 1>* points, int num_points);
+  template <typename T, int D>
   FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points);
   FrameCPU(const Frame& frame);
   FrameCPU();
   ~FrameCPU();
 
-
+  template <typename T>
+  void add_times(const T* times, int num_points);
   template <typename T>
   void add_times(const std::vector<T>& times);
 
   template <typename T, int D>
+  void add_points(const Eigen::Matrix<T, D, 1>* points, int num_points);
+  template <typename T, int D>
+  void add_points(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points);
+
+  template <typename T, int D>
+  void add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points);
+  template <typename T, int D>
   void add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals);
 
+  template <typename T, int D>
+  void add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points);
   template <typename T, int D>
   void add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs);
 

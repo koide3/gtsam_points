@@ -24,21 +24,45 @@ public:
   using ConstPtr = std::shared_ptr<const FrameGPU>;
 
   template <typename T, int D>
+  FrameGPU(const Eigen::Matrix<T, D, 1>* points, int num_points, bool allocate_cpu = true);
+  template <typename T, int D>
   FrameGPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points, bool allocate_cpu = true);
   FrameGPU(const Frame& frame, bool allocate_cpu = true);
+  FrameGPU();
   ~FrameGPU();
 
   // add_*_gpu() only adds attributes to GPU storage
+  template <typename T>
+  void add_times(const T* times, int num_points);
+  template <typename T>
+  void add_times_gpu(const T* times, int num_points);
   template <typename T>
   void add_times(const std::vector<T>& times);
   template <typename T>
   void add_times_gpu(const std::vector<T>& times);
 
   template <typename T, int D>
+  void add_points(const Eigen::Matrix<T, D, 1>* points, int num_points);
+  template <typename T, int D>
+  void add_points_gpu(const Eigen::Matrix<T, D, 1>* points, int num_points);
+  template <typename T, int D>
+  void add_points(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points);
+  template <typename T, int D>
+  void add_points_gpu(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points);
+
+  template <typename T, int D>
+  void add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points);
+  template <typename T, int D>
+  void add_normals_gpu(const Eigen::Matrix<T, D, 1>* normals, int num_points);
+  template <typename T, int D>
   void add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals);
   template <typename T, int D>
   void add_normals_gpu(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals);
 
+  template <typename T, int D>
+  void add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points);
+  template <typename T, int D>
+  void add_covs_gpu(const Eigen::Matrix<T, D, D>* covs, int num_points);
   template <typename T, int D>
   void add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs);
   template <typename T, int D>
