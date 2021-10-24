@@ -35,7 +35,12 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(
   bool allocate_cpu)
 : VoxelizedFrameGPU(voxel_resolution, points.data(), covs.data(), points.size(), allocate_cpu) {}
 
-VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Frame& frame, bool allocate_cpu) {
+VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Frame& frame, bool allocate_cpu)
+: times_gpu_storage(new FloatsGPU()),
+  points_gpu_storage(new PointsGPU()),
+  normals_gpu_storage(new PointsGPU()),
+  covs_gpu_storage(new MatricesGPU()) {
+  //
   num_points = frame.size();
 
   copy_to_gpu(*times_gpu_storage, &times_gpu, frame.times, frame.times_gpu, num_points);
