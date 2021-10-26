@@ -190,15 +190,57 @@ template FrameGPU::FrameGPU(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen
 
 template void FrameGPU::add_times(const std::vector<float>&);
 template void FrameGPU::add_times(const std::vector<double>&);
+template void FrameGPU::add_times_gpu(const std::vector<float>&);
+template void FrameGPU::add_times_gpu(const std::vector<double>&);
+
+template void FrameGPU::add_points(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
+template void FrameGPU::add_points(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
+template void FrameGPU::add_points(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
+template void FrameGPU::add_points(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
+template void FrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
+template void FrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
+template void FrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
+template void FrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
 
 template void FrameGPU::add_normals(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
 template void FrameGPU::add_normals(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
 template void FrameGPU::add_normals(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
 template void FrameGPU::add_normals(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
+template void FrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
+template void FrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
+template void FrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
+template void FrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
 
 template void FrameGPU::add_covs(const std::vector<Eigen::Matrix<float, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 3>>>&);
 template void FrameGPU::add_covs(const std::vector<Eigen::Matrix<float, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 4>>>&);
 template void FrameGPU::add_covs(const std::vector<Eigen::Matrix<double, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 3>>>&);
 template void FrameGPU::add_covs(const std::vector<Eigen::Matrix<double, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 4>>>&);
+template void FrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<float, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 3>>>&);
+template void FrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<float, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 4>>>&);
+template void FrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<double, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 3>>>&);
+template void FrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<double, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 4>>>&);
+
+// copy data from GPU to CPU
+std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> FrameGPU::get_points_gpu() const {
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_h;
+  if (!points_gpu) {
+    return points_h;
+  }
+
+  points_h.resize(num_points);
+  cudaMemcpy(points_h.data(), points_gpu, sizeof(Eigen::Vector3f) * num_points, cudaMemcpyDeviceToHost);
+  return points_h;
+}
+
+std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> FrameGPU::get_covs_gpu() const {
+  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs_h;
+  if (!covs_gpu) {
+    return covs_h;
+  }
+
+  covs_h.resize(num_points);
+  cudaMemcpy(covs_h.data(), covs_gpu, sizeof(Eigen::Matrix3f) * num_points, cudaMemcpyDeviceToHost);
+  return covs_h;
+}
 
 }  // namespace gtsam_ext

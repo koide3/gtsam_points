@@ -230,7 +230,7 @@ FrameCPU::Ptr FrameCPU::load(const std::string& path) {
 
       std::ifstream ifs(path + "/normals_compact.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(normals_f.data()), sizeof(Eigen::Vector3f) * frame->size());
-      std::transform(normals_f.begin(), normals_f.end(), frame->normals, [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p[0], p[1], p[2], 1.0); });
+      std::transform(normals_f.begin(), normals_f.end(), frame->normals, [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p[0], p[1], p[2], 0.0); });
     }
 
     if (boost::filesystem::exists(path + "/covs_compact.bin")) {
