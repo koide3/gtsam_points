@@ -18,7 +18,7 @@ if(BUILD_WITH_MARCH_NATIVE)
   set(CMAKE_CXX_FLAGS "-march=native ${CMAKE_CXX_FLAGS}")
 endif()
 
-find_package(Boost REQUIRED timer)
+find_package(Boost REQUIRED COMPONENTS timer filesystem)
 find_package(GTSAM REQUIRED)
 
 if(BUILD_WITH_SYSTEM_EIGEN)
@@ -90,6 +90,7 @@ target_include_directories(gtsam_ext PUBLIC
 )
 target_link_libraries(gtsam_ext
   pthread
+  ${Boost_LIBRARIES}
   ${GTSAM_LIBRARIES}
 )
 
