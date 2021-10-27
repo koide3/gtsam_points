@@ -43,6 +43,41 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Frame& frame
   //
   num_points = frame.size();
 
+  if (allocate_cpu) {
+    if (frame.points) {
+      add_points(frame.points, frame.size());
+    }
+
+    if (frame.times) {
+      add_times(frame.times, frame.size());
+    }
+
+    if (frame.normals) {
+      add_normals(frame.normals, frame.size());
+    }
+
+    if (frame.covs) {
+      add_covs(frame.covs, frame.size());
+    }
+  } else {
+    if (frame.points) {
+      add_points_gpu(frame.points, frame.size());
+    }
+
+    if (frame.times) {
+      add_times_gpu(frame.times, frame.size());
+    }
+
+    if (frame.normals) {
+      add_normals_gpu(frame.normals, frame.size());
+    }
+
+    if (frame.covs) {
+      add_covs_gpu(frame.covs, frame.size());
+    }
+  }
+
+  /*
   copy_to_gpu(*times_gpu_storage, &times_gpu, frame.times, frame.times_gpu, num_points);
   copy_to_gpu(*points_gpu_storage, &points_gpu, frame.points, frame.points_gpu, num_points);
   copy_to_gpu(*normals_gpu_storage, &normals_gpu, frame.normals, frame.normals_gpu, num_points);
@@ -54,6 +89,7 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Frame& frame
     copy_to_cpu(normals_storage, &normals, frame.normals, frame.normals_gpu, num_points, Eigen::Vector4d::Zero().eval());
     copy_to_cpu(covs_storage, &covs, frame.covs, frame.covs_gpu, num_points, Eigen::Matrix4d::Zero().eval());
   }
+  */
 
   create_voxelmap(voxel_resolution);
 }

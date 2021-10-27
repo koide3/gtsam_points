@@ -33,6 +33,41 @@ FrameGPU::FrameGPU(const Frame& frame, bool allocate_cpu)
   //
   num_points = frame.size();
 
+  if (allocate_cpu) {
+    if (frame.points) {
+      add_points(frame.points, frame.size());
+    }
+
+    if (frame.times) {
+      add_times(frame.times, frame.size());
+    }
+
+    if (frame.normals) {
+      add_normals(frame.normals, frame.size());
+    }
+
+    if (frame.covs) {
+      add_covs(frame.covs, frame.size());
+    }
+  } else {
+    if (frame.points) {
+      add_points_gpu(frame.points, frame.size());
+    }
+
+    if (frame.times) {
+      add_times_gpu(frame.times, frame.size());
+    }
+
+    if (frame.normals) {
+      add_normals_gpu(frame.normals, frame.size());
+    }
+
+    if (frame.covs) {
+      add_covs_gpu(frame.covs, frame.size());
+    }
+  }
+
+  /*
   copy_to_gpu(*times_gpu_storage, &times_gpu, frame.times, frame.times_gpu, num_points);
   copy_to_gpu(*points_gpu_storage, &points_gpu, frame.points, frame.points_gpu, num_points);
   copy_to_gpu(*normals_gpu_storage, &normals_gpu, frame.normals, frame.normals_gpu, num_points);
@@ -44,6 +79,7 @@ FrameGPU::FrameGPU(const Frame& frame, bool allocate_cpu)
     copy_to_cpu(normals_storage, &normals, frame.normals, frame.normals_gpu, num_points, Eigen::Vector4d::Zero().eval());
     copy_to_cpu(covs_storage, &covs, frame.covs, frame.covs_gpu, num_points, Eigen::Matrix4d::Zero().eval());
   }
+  */
 }
 
 FrameGPU::FrameGPU() : times_gpu_storage(new FloatsGPU()), points_gpu_storage(new PointsGPU()), normals_gpu_storage(new PointsGPU()), covs_gpu_storage(new MatricesGPU()) {}
@@ -182,6 +218,11 @@ template <typename T, int D>
 void FrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs) {
   add_covs_gpu(covs.data(), covs.size());
 }
+
+template FrameGPU::FrameGPU(const Eigen::Matrix<float, 3, 1>*, int, bool);
+template FrameGPU::FrameGPU(const Eigen::Matrix<float, 4, 1>*, int, bool);
+template FrameGPU::FrameGPU(const Eigen::Matrix<double, 3, 1>*, int, bool);
+template FrameGPU::FrameGPU(const Eigen::Matrix<double, 4, 1>*, int, bool);
 
 template FrameGPU::FrameGPU(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&, bool);
 template FrameGPU::FrameGPU(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&, bool);
