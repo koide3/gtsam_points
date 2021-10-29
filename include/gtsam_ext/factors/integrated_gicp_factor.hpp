@@ -46,6 +46,12 @@ public:
     correspondence_update_tolerance_trans = trans;
   }
 
+  double inlier_fraction() const {
+    const int outliers = std::count(correspondences.begin(), correspondences.end(), -1);
+    const int inliers = correspondences.size() - outliers;
+    return static_cast<double>(inliers) / correspondences.size();
+  }
+
 private:
   virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
 
