@@ -153,7 +153,9 @@ struct finalize_voxels_kernel {
   thrust::device_ptr<Eigen::Matrix3f> voxel_covs_ptr;
 };
 
-GaussianVoxelMapGPU::GaussianVoxelMapGPU(float resolution, int init_num_buckets, int max_bucket_scan_count) : init_num_buckets(init_num_buckets) {
+GaussianVoxelMapGPU::GaussianVoxelMapGPU(float resolution, int init_num_buckets, int max_bucket_scan_count, double target_points_drop_rate)
+: init_num_buckets(init_num_buckets),
+  target_points_drop_rate(target_points_drop_rate) {
   voxelmap_info.num_voxels = 0;
   voxelmap_info.num_buckets = init_num_buckets;
   voxelmap_info.max_bucket_scan_count = max_bucket_scan_count;
@@ -235,7 +237,7 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const Frame& 
       voxel_bucket_assignment_kernel(voxelmap_info_ptr->data(), coords, index_buckets, voxels_failures));
 
     thrust::host_vector<int> h_voxels_failures = voxels_failures;
-    if (static_cast<double>(h_voxels_failures[1]) / frame.size() < 0.01) {
+    if (h_voxels_failures[1] == 0 || static_cast<double>(h_voxels_failures[1]) / frame.size() <= target_points_drop_rate) {
       voxelmap_info.num_voxels = h_voxels_failures[0];
       (*voxelmap_info_ptr)[0] = voxelmap_info;
       break;

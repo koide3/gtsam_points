@@ -77,7 +77,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(const gtsam::GaussianFactorGraph&
   double modelFidelity = 0.0;
   bool step_is_successful = false;
   bool stopSearchingLambda = false;
-  double newError = std::numeric_limits<double>::infinity(), costChange;
+  double newError = std::numeric_limits<double>::infinity(), costChange = 0.0;
   gtsam::Values newValues;
   gtsam::VectorValues delta;
 
@@ -129,7 +129,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(const gtsam::GaussianFactorGraph&
     LevenbergMarquardtOptimizationStatus status;
     status.iterations = currentState->iterations;
     status.total_inner_iterations = currentState->totalNumberInnerIterations;
-    status.error = newError;
+    status.error = oldError;
     status.cost_change = costChange;
     status.lambda = currentState->lambda;
     status.solve_success = systemSolvedSuccessfully;

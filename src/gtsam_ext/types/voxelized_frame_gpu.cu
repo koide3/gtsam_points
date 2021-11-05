@@ -294,7 +294,14 @@ std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> Voxelize
   return buffer;
 }
 
-std::vector<int> VoxelizedFrameGPU::get_voxel_num_points() const {
+std::vector<std::pair<Eigen::Vector3i, int>> VoxelizedFrameGPU::get_voxel_buckets_gpu() const {
+  const auto& buckets_storage = *(voxels_gpu->buckets);
+  std::vector<std::pair<Eigen::Vector3i, int>> buffer(buckets_storage.size());
+  cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(buckets_storage.data()), sizeof(thrust::pair<Eigen::Vector3i, int>) * buckets_storage.size(), cudaMemcpyDeviceToHost);
+  return buffer;
+}
+
+std::vector<int> VoxelizedFrameGPU::get_voxel_num_points_gpu() const {
   const auto& num_points_storage = *(voxels_gpu->num_points);
   std::vector<int> buffer(num_points_storage.size());
   cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(num_points_storage.data()), sizeof(int) * num_points_storage.size(), cudaMemcpyDeviceToHost);

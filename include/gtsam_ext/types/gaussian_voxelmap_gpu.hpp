@@ -31,7 +31,15 @@ struct VoxelMapInfo {
 
 class GaussianVoxelMapGPU : GaussianVoxelMap {
 public:
-  GaussianVoxelMapGPU(float resolution, int init_num_buckets = 8192 * 2, int max_bucket_scan_count = 10);
+  /**
+   * @param resolution               Voxel resolution
+   * @param init_num_buckets         Initial buckets size
+   * @param max_bucket_scan_count    Maximum count of open hashmap addressing trials
+   *                                 If a target voxel coord is not found in successive N buckets, it is considered to be not found
+   *                                 Setting a larger value makes the hashing slower but results in a smaller memory footprint
+   * @param target_points_drop_rate  This parameter allows to drop a fraction of points during the bucket creation
+   */
+  GaussianVoxelMapGPU(float resolution, int init_num_buckets = 8192 * 2, int max_bucket_scan_count = 10, double target_points_drop_rate = 1e-3);
   virtual ~GaussianVoxelMapGPU();
 
   virtual double voxel_resolution() const override { return voxelmap_info.voxel_resolution; }
@@ -48,6 +56,7 @@ public:
   using VoxelMapInfoVec = thrust::device_vector<VoxelMapInfo, thrust::device_allocator<VoxelMapInfo>>;
 
   const int init_num_buckets;
+  const double target_points_drop_rate;
   VoxelMapInfo voxelmap_info;
   std::unique_ptr<VoxelMapInfoVec> voxelmap_info_ptr;
 

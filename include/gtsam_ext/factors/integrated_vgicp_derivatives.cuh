@@ -47,8 +47,6 @@ private:
   cudaStream_t stream;
   std::shared_ptr<TempBufferManager> temp_buffer;
 
-  std::vector<thrust::system::cuda::unique_eager_event> events;
-
   VoxelizedFrame::ConstPtr target;
   Frame::ConstPtr source;
 

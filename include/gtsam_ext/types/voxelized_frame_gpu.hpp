@@ -80,7 +80,8 @@ public:
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> get_points_gpu() const;
   std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> get_covs_gpu() const;
 
-  std::vector<int> get_voxel_num_points() const;
+  std::vector<std::pair<Eigen::Vector3i, int>> get_voxel_buckets_gpu() const;
+  std::vector<int> get_voxel_num_points_gpu() const;
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> get_voxel_means_gpu() const;
   std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> get_voxel_covs_gpu() const;
 

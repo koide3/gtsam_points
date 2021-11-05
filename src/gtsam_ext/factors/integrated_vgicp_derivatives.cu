@@ -2,9 +2,6 @@
 
 #include <iostream>
 #include <thrust/remove.h>
-#include <thrust/async/reduce.h>
-#include <thrust/async/for_each.h>
-#include <thrust/async/transform.h>
 #include <thrust/iterator/transform_iterator.h>
 
 #include <cub/device/device_reduce.cuh>
@@ -27,7 +24,7 @@ IntegratedVGICPDerivatives::IntegratedVGICPDerivatives(
   CUstream_st* ext_stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
 : inlier_update_thresh_trans(1e-3),
-  inlier_update_thresh_angle(1e-2),
+  inlier_update_thresh_angle(1e-3),
   target(target),
   source(source),
   external_stream(true),
@@ -42,26 +39,15 @@ IntegratedVGICPDerivatives::IntegratedVGICPDerivatives(
   if (this->temp_buffer == nullptr) {
     this->temp_buffer.reset(new TempBufferManager());
   }
-
-  events.reserve(5);
 }
 
 IntegratedVGICPDerivatives::~IntegratedVGICPDerivatives() {
-  for (auto& e : events) {
-    e.wait();
-  }
-
   if (!external_stream) {
     cudaStreamDestroy(stream);
   }
 }
 
 void IntegratedVGICPDerivatives::sync_stream() {
-  for (auto& e : events) {
-    e.wait();
-  }
-  events.clear();
-
   cudaStreamSynchronize(stream);
 }
 
