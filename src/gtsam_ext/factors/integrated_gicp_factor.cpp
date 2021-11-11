@@ -21,14 +21,13 @@ IntegratedGICPFactor::IntegratedGICPFactor(
   target(target),
   source(source) {
   //
-  if (!target->points || !source->points) {
-    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+  if (!target->has_points() || !target->has_covs()) {
+    std::cerr << "error: target frame doesn't have required attributes for gicp" << std::endl;
     abort();
   }
 
-  //
-  if (!target->covs || !source->covs) {
-    std::cerr << "error: target or source don't have covs!!" << std::endl;
+  if (!source->has_points() || !source->has_covs()) {
+    std::cerr << "error: source frame doesn't have required attributes for gicp" << std::endl;
     abort();
   }
 
@@ -149,7 +148,7 @@ double IntegratedGICPFactor::evaluate(
 
 #pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
-    int target_index = correspondences[i];
+    const int target_index = correspondences[i];
     if (target_index < 0) {
       continue;
     }

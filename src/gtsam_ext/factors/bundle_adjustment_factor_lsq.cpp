@@ -113,7 +113,7 @@ boost::shared_ptr<gtsam::GaussianFactor> LsqBundleAdjustmentFactor::linearize(co
 
   double sum_errors = 0.0;
 
-  // TODO: Non-diagonal blocks always be zero
+  // TODO: Non-diagonal blocks are always zero
   //     : Should use independent Gaussian factors
   std::vector<int> Hs_indices;
   std::vector<gtsam::Matrix> Hs;

@@ -23,13 +23,13 @@ IntegratedICPFactor::IntegratedICPFactor(
   target(target),
   source(source) {
   //
-  if (!target->points || !source->points) {
-    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+  if (!target->has_points() || (use_point_to_plane && !target->has_normals())) {
+    std::cerr << "error: target frame doesn't have required attributes for icp" << std::endl;
     abort();
   }
 
-  if (use_point_to_plane && !target->normals) {
-    std::cerr << "error: target cloud doesn't have normals!!" << std::endl;
+  if (!source->has_points()) {
+    std::cerr << "error: source frame doesn't have required attributes for icp" << std::endl;
     abort();
   }
 

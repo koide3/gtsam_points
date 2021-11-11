@@ -8,6 +8,41 @@
 
 namespace gtsam_ext {
 
+bool Frame::has_times() const {
+  if (!times) {
+    std::cerr << "warning: frame doesn't have times" << std::endl;
+  }
+  return times;
+}
+
+bool Frame::has_points() const {
+  if (!points) {
+    std::cerr << "warning: frame doesn't have points" << std::endl;
+  }
+  return points;
+}
+
+bool Frame::has_normals() const {
+  if (!normals) {
+    std::cerr << "warning: frame doesn't have normals" << std::endl;
+  }
+  return normals;
+}
+
+bool Frame::has_covs() const {
+  if (!covs) {
+    std::cerr << "warning: frame doesn't have covs" << std::endl;
+  }
+  return covs;
+}
+
+bool Frame::has_intensities() const {
+  if (!intensities) {
+    std::cerr << "warning: frame doesn't have intensities" << std::endl;
+  }
+  return intensities;
+}
+
 double Frame::overlap(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const {
   if (target->voxels == nullptr) {
     std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;
@@ -95,6 +130,10 @@ void Frame::save(const std::string& path) const {
   if (covs) {
     write_binary(path + "/covs.bin", covs, sizeof(Eigen::Matrix4d) * num_points);
   }
+
+  if (intensities) {
+    write_binary(path + "/intensities.bin", intensities, sizeof(double) * num_points);
+  }
 }
 
 void Frame::save_compact(const std::string& path) const {
@@ -122,6 +161,12 @@ void Frame::save_compact(const std::string& path) const {
       return (Eigen::Matrix<float, 6, 1>() << cov(0, 0), cov(0, 1), cov(0, 2), cov(1, 1), cov(1, 2), cov(2, 2)).finished();
     });
     write_binary(path + "/covs_compact.bin", covs_f.data(), sizeof(Eigen::Matrix<float, 6, 1>) * num_points);
+  }
+
+  if (intensities) {
+    std::vector<float> intensities_f(num_points);
+    std::copy(intensities, intensities + num_points, intensities_f.begin());
+    write_binary(path + "/intensities_compact.bin", intensities_f.data(), sizeof(float) * num_points);
   }
 }
 

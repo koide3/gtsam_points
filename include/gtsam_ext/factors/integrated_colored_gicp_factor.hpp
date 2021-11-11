@@ -1,0 +1,61 @@
+#pragma once
+
+#include <gtsam/nonlinear/NonlinearFactor.h>
+
+#include <memory>
+#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/factors/intensity_gradients.hpp>
+#include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
+
+namespace gtsam_ext {
+
+struct NearestNeighborSearch;
+
+class IntegratedColoredGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using shared_ptr = boost::shared_ptr<IntegratedColoredGICPFactor>;
+
+  IntegratedColoredGICPFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const Frame::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree,
+    const IntensityGradients::ConstPtr& target_gradients);
+
+  virtual ~IntegratedColoredGICPFactor() override;
+
+  void set_num_threads(int n) { num_threads = n; }
+  void set_max_correspondence_distance(double d) { max_correspondence_distance_sq = d * d; }
+  void set_photometric_term_weight(double w) { photometric_term_weight = w; }
+
+private:
+  virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
+
+  virtual double evaluate(
+    const Eigen::Isometry3d& delta,
+    Eigen::Matrix<double, 6, 6>* H_target = nullptr,
+    Eigen::Matrix<double, 6, 6>* H_source = nullptr,
+    Eigen::Matrix<double, 6, 6>* H_target_source = nullptr,
+    Eigen::Matrix<double, 6, 1>* b_target = nullptr,
+    Eigen::Matrix<double, 6, 1>* b_source = nullptr) const override;
+
+private:
+  int num_threads;
+  double max_correspondence_distance_sq;
+  double photometric_term_weight;  // [0, 1]
+
+  std::shared_ptr<const Frame> target;
+  std::shared_ptr<const Frame> source;
+  std::shared_ptr<const NearestNeighborSearch> target_tree;
+  std::shared_ptr<const IntensityGradients> target_gradients;
+
+  double correspondence_update_tolerance_rot;
+  double correspondence_update_tolerance_trans;
+  mutable Eigen::Isometry3d last_correspondence_point;
+  mutable std::vector<int> correspondences;
+  mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
+};
+}  // namespace gtsam_ext

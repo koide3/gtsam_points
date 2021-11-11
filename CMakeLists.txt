@@ -68,6 +68,8 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/factors/integrated_gicp_factor.cpp
   src/gtsam_ext/factors/integrated_vgicp_factor.cpp
   src/gtsam_ext/factors/integrated_loam_factor.cpp
+  src/gtsam_ext/factors/intensity_gradients.cpp
+  src/gtsam_ext/factors/integrated_colored_gicp_factor.cpp
   src/gtsam_ext/factors/integrated_ct_icp_factor.cpp
   src/gtsam_ext/factors/integrated_ct_gicp_factor.cpp
   src/gtsam_ext/factors/expression_icp_factor.cpp
@@ -157,5 +159,6 @@ if(BUILD_TESTS)
 endif()
 
 
-add_executable(test_derivatives src/test/experimental/test_derivatives.cpp)
-target_link_libraries(test_derivatives gtsam_ext)
+add_executable(test_colored src/test/experimental/test_colored.cpp)
+target_include_directories(test_colored PRIVATE ${Iridescence_INCLUDE_DIRS})
+target_link_libraries(test_colored gtsam_ext ${Iridescence_LIBRARIES})

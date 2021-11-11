@@ -19,12 +19,17 @@ IntegratedPointToPlaneFactor::IntegratedPointToPlaneFactor(
   target(target),
   source(source) {
   //
-  if (!target->points || !source->points) {
-    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+  if (!target->has_points()) {
+    std::cerr << "error: target frame doesn't have required attributes for loam" << std::endl;
     abort();
   }
 
-  if(target_tree) {
+  if (!source->has_points()) {
+    std::cerr << "error: source frame doesn't have required attributes for loam" << std::endl;
+    abort();
+  }
+
+  if (target_tree) {
     this->target_tree = target_tree;
   } else {
     this->target_tree.reset(new KdTree(target->points, target->num_points));
@@ -181,7 +186,7 @@ IntegratedPointToEdgeFactor::IntegratedPointToEdgeFactor(
     abort();
   }
 
-  if(target_tree) {
+  if (target_tree) {
     this->target_tree = target_tree;
   } else {
     this->target_tree.reset(new KdTree(target->points, target->num_points));
@@ -202,7 +207,7 @@ void IntegratedPointToEdgeFactor::update_correspondences(const Eigen::Isometry3d
       return;
     }
   }
-  
+
   correspondences.resize(source->size());
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
@@ -388,7 +393,7 @@ double IntegratedLOAMFactor::evaluate(
 
   double error = edge_factor->evaluate(delta, H_target, H_source, H_target_source, b_target, b_source);
 
-  if(H_target && H_source && H_target_source && b_target && b_source) {
+  if (H_target && H_source && H_target_source && b_target && b_source) {
     Eigen::Matrix<double, 6, 6> H_t, H_s, H_ts;
     Eigen::Matrix<double, 6, 1> b_t, b_s;
     error += plane_factor->evaluate(delta, &H_t, &H_s, &H_ts, &b_t, &b_s);
@@ -411,13 +416,13 @@ void IntegratedLOAMFactor::set_correspondence_update_tolerance(double angle, dou
 }
 
 void IntegratedLOAMFactor::validate_correspondences() const {
-  if(!enable_correspondence_validation) {
+  if (!enable_correspondence_validation) {
     return;
   }
 
   // Validate edge correspondences
   for (auto& corr : edge_factor->correspondences) {
-    if(std::get<0>(corr) < 0) {
+    if (std::get<0>(corr) < 0) {
       continue;
     }
 
@@ -454,4 +459,4 @@ void IntegratedLOAMFactor::validate_correspondences() const {
   }
 }
 
-}
+}  // namespace gtsam_ext

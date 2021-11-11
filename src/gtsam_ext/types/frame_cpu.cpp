@@ -96,13 +96,31 @@ void FrameCPU::add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned
   add_covs(covs.data(), covs.size());
 }
 
+template <typename T>
+void FrameCPU::add_intensities(const T* intensities, int num_points) {
+  assert(num_points == size());
+  intensities_storage.resize(num_points);
+  std::copy(intensities, intensities + num_points, intensities_storage.begin());
+  this->intensities = this->intensities_storage.data();
+}
+
+template <typename T>
+void FrameCPU::add_intensities(const std::vector<T>& intensities) {
+  add_intensities(intensities.data(), intensities.size());
+}
+
 template FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
 template FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
 template FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
 template FrameCPU::FrameCPU(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
 
+template void FrameCPU::add_intensities(const float* intensities, int num_points);
+template void FrameCPU::add_intensities(const double* intensities, int num_points);
+
 template void FrameCPU::add_times(const std::vector<float>& times);
 template void FrameCPU::add_times(const std::vector<double>& times);
+template void FrameCPU::add_intensities(const std::vector<float>& intensities);
+template void FrameCPU::add_intensities(const std::vector<double>& intensities);
 template void FrameCPU::add_points(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>& points);
 template void FrameCPU::add_points(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>& points);
 template void FrameCPU::add_points(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>& points);
@@ -161,6 +179,14 @@ FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double samplin
     }
   }
 
+  if (frame->intensities) {
+    sampled->intensities_storage.resize(num_samples);
+    sampled->intensities = sampled->intensities_storage.data();
+    for (int i = 0; i < num_samples; i++) {
+      sampled->intensities[i] = frame->intensities[sample_indices[i]];
+    }
+  }
+
   return sampled;
 }
 
@@ -198,6 +224,13 @@ FrameCPU::Ptr FrameCPU::load(const std::string& path) {
       frame->covs = frame->covs_storage.data();
       std::ifstream ifs(path + "/covs.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(frame->covs), sizeof(Eigen::Matrix4d) * frame->size());
+    }
+
+    if (boost::filesystem::exists(path + "/intensities.bin")) {
+      frame->intensities_storage.resize(frame->size());
+      frame->intensities = frame->intensities_storage.data();
+      std::ifstream ifs(path + "/intensities.bin", std::ios::binary);
+      ifs.read(reinterpret_cast<char*>(frame->intensities), sizeof(double) * frame->size());
     }
   } else if (boost::filesystem::exists(path + "/points_compact.bin")) {
     std::ifstream ifs(path + "/points_compact.bin", std::ios::binary | std::ios::ate);
@@ -251,6 +284,17 @@ FrameCPU::Ptr FrameCPU::load(const std::string& path) {
         return cov;
       });
     }
+
+    if (boost::filesystem::exists(path + "/intensities_compact.bin")) {
+      frame->intensities_storage.resize(frame->size());
+      frame->intensities = frame->intensities_storage.data();
+      std::vector<float> intensities_f(frame->size());
+
+      std::ifstream ifs(path + "/intensities_compact.bin", std::ios::binary);
+      ifs.read(reinterpret_cast<char*>(intensities_f.data()), sizeof(Eigen::Vector4f) * frame->size());
+      std::copy(intensities_f.begin(), intensities_f.end(), frame->intensities);
+    }
+
   } else {
     std::cerr << "error: " << path << " does not constain points(_compact)?.bin" << std::endl;
     return nullptr;

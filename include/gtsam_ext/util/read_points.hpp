@@ -25,7 +25,7 @@ std::vector<float> read_times(const std::string& path) {
 
 std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> read_points(const std::string& path) {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
-  if(!ifs) {
+  if (!ifs) {
     std::cerr << "error: failed to open " << path << std::endl;
     return std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>>();
   }
@@ -39,4 +39,22 @@ std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> read_poi
 
   return points;
 }
+
+std::vector<Eigen::Vector4f, Eigen::aligned_allocator<Eigen::Vector4f>> read_points4(const std::string& path) {
+  std::ifstream ifs(path, std::ios::binary | std::ios::ate);
+  if (!ifs) {
+    std::cerr << "error: failed to open " << path << std::endl;
+    return std::vector<Eigen::Vector4f, Eigen::aligned_allocator<Eigen::Vector4f>>();
+  }
+
+  std::streamsize points_bytes = ifs.tellg();
+  size_t num_points = points_bytes / (sizeof(Eigen::Vector4f));
+
+  ifs.seekg(0, std::ios::beg);
+  std::vector<Eigen::Vector4f, Eigen::aligned_allocator<Eigen::Vector4f>> points(num_points);
+  ifs.read(reinterpret_cast<char*>(points.data()), sizeof(Eigen::Vector4f) * num_points);
+
+  return points;
 }
+
+}  // namespace gtsam_ext

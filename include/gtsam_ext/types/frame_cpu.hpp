@@ -41,6 +41,11 @@ public:
   template <typename T, int D>
   void add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs);
 
+  template <typename T>
+  void add_intensities(const T* intensities, int num_points);
+  template <typename T>
+  void add_intensities(const std::vector<T>& intensities);
+
   static FrameCPU::Ptr load(const std::string& path);
 
 public:
@@ -48,6 +53,7 @@ public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals_storage;
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
+  std::vector<double> intensities_storage;
 };
 
 FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt);

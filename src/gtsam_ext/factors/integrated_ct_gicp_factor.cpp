@@ -14,8 +14,13 @@ IntegratedCT_GICPFactor::IntegratedCT_GICPFactor(
 : IntegratedCT_ICPFactor(source_t0_key, source_t1_key, target, source, target_tree),
   num_threads(1) {
   //
-  if (!target->covs || !source->covs) {
-    std::cerr << "error: target or source doesn't have covs!!" << std::endl;
+  if (!target->has_points() || !target->has_covs()) {
+    std::cerr << "error: target frame doesn't have required attributes for ct_gicp" << std::endl;
+    abort();
+  }
+
+  if (!source->has_points() || !source->has_covs()) {
+    std::cerr << "error: source frame doesn't have required attributes for ct_gicp" << std::endl;
     abort();
   }
 }

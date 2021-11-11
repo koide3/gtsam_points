@@ -19,13 +19,13 @@ IntegratedCT_ICPFactor::IntegratedCT_ICPFactor(
   target(target),
   source(source) {
   //
-  if (!target->points || !source->points) {
-    std::cerr << "error: target or source points has not been allocated!!" << std::endl;
+  if (!target->has_points()) {
+    std::cerr << "error: target frame doesn't have required attributes for ct_icp" << std::endl;
     abort();
   }
 
-  if (!source->times) {
-    std::cerr << "error: source cloud doesn't have timestamps!!" << std::endl;
+  if (!source->has_points() || !source->has_times()) {
+    std::cerr << "error: source frame doesn't have required attributes for ct_icp" << std::endl;
     abort();
   }
 

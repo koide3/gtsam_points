@@ -166,13 +166,14 @@ public:
       viewer->append_text(status.to_string());
 
       // Calculate deskewed source points
-      std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points;
+      std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points;
       auto cticp_factor = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCT_ICPFactor>(factor);
       if (cticp_factor) {
         points = cticp_factor->deskewed_source_points(values);
       } else {
         auto cticp_factor_expr = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCTICPFactorExpr>(factor);
-        points = cticp_factor_expr->deskewed_source_points(values);
+        auto deskewed = cticp_factor_expr->deskewed_source_points(values);
+        std::transform(deskewed.begin(), deskewed.end(), std::back_inserter(points), [](const Eigen::Vector3d& p) { return (Eigen::Vector4d() << p, 1.0).finished(); });
       }
 
       // Calculate interpolated poses for visualization
