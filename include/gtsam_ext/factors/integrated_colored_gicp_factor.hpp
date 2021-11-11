@@ -31,6 +31,11 @@ public:
   void set_max_correspondence_distance(double d) { max_correspondence_distance_sq = d * d; }
   void set_photometric_term_weight(double w) { photometric_term_weight = w; }
 
+  void set_correspondence_update_tolerance(double angle, double trans) {
+    correspondence_update_tolerance_rot = angle;
+    correspondence_update_tolerance_trans = trans;
+  }
+
 private:
   virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
 

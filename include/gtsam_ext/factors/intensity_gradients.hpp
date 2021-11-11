@@ -15,8 +15,8 @@ public:
   using ConstPtr = std::shared_ptr<const IntensityGradients>;
 
   static IntensityGradients::Ptr estimate(const gtsam_ext::Frame::ConstPtr& frame, int k_neighbors = 10);
-  static IntensityGradients::Ptr estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_neighbors = 10);
-  static IntensityGradients::Ptr estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors);
+  static IntensityGradients::Ptr estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_neighbors = 10, int num_threads = 1);
+  static IntensityGradients::Ptr estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads);
 
 public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> intensity_gradients;

@@ -14,11 +14,11 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::Con
   }
 }
 
-IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_neighbors) {
-  return estimate(frame, k_neighbors, k_neighbors);
+IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_neighbors, int num_threads) {
+  return estimate(frame, k_neighbors, k_neighbors, num_threads);
 }
 
-IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors) {
+IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads) {
   gtsam_ext::KdTree kdtree(frame->points, frame->size());
 
   bool estimate_normals = frame->normals == nullptr;
@@ -39,6 +39,7 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::
 
   const int k_neighbors = std::max(k_geom_neighbors, k_photo_neighbors);
 
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
   for (int i = 0; i < frame->size(); i++) {
     std::vector<size_t> k_indices(k_neighbors);
     std::vector<double> k_sq_dists(k_neighbors);
@@ -86,11 +87,11 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::
     Eigen::Matrix<double, -1, 4> A = Eigen::Matrix<double, -1, 4>::Zero(k_photo_neighbors, 4);
     Eigen::VectorXd b = Eigen::VectorXd::Zero(k_photo_neighbors);
 
-    // Orthogonal constraint
-    A.row(0) = (k_photo_neighbors - 1) * normal;
+    // dp^T np = 0
+    A.row(0) = normal;
     b[0] = 0.0;
 
-    // Intensity gradient in the tangent
+    // Intensity gradient in the tangent space
     for (int j = 1; j < k_photo_neighbors; j++) {
       const int index = k_indices[j];
       const auto& point_ = frame->points[index];
@@ -102,9 +103,7 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::
 
     Eigen::Matrix3d H = (A.transpose() * A).block<3, 3>(0, 0);
     Eigen::Vector3d e = (A.transpose() * b).head<3>();
-
-    Eigen::LDLT<Eigen::Matrix3d> solver(H);
-    gradients->intensity_gradients[i] << solver.solve(e), 0.0;
+    gradients->intensity_gradients[i] << H.inverse() * e, 0.0;
   }
 
   return gradients;

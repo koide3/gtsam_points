@@ -55,9 +55,11 @@ void IntegratedColoredGICPFactor::update_correspondences(const Eigen::Isometry3d
   for (int i = 0; i < source->size(); i++) {
     if (do_update) {
       Eigen::Vector4d pt = delta * source->points[i];
+      pt[3] = target->intensities[i];
 
       size_t k_index = -1;
       double k_sq_dist = -1;
+
       size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
       correspondences[i] = k_sq_dist < max_correspondence_distance_sq ? k_index : -1;
     }
@@ -84,32 +86,42 @@ double IntegratedColoredGICPFactor::evaluate(
   Eigen::Matrix<double, 6, 1>* b_target,
   Eigen::Matrix<double, 6, 1>* b_source) const {
   //
+  if (correspondences.size() != source->size()) {
+    update_correspondences(delta);
+  }
+
   const double geometric_term_weight = 1.0 - photometric_term_weight;
 
   double sum_errors_geom = 0.0;
   double sum_errors_photo = 0.0;
 
-  if (H_target) {
-    H_target->setZero();
-    H_source->setZero();
-    H_target_source->setZero();
-    b_target->setZero();
-    b_source->setZero();
+  std::vector<Eigen::Matrix<double, 6, 6>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 6>>> Hs_target;
+  std::vector<Eigen::Matrix<double, 6, 6>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 6>>> Hs_source;
+  std::vector<Eigen::Matrix<double, 6, 6>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 6>>> Hs_target_source;
+  std::vector<Eigen::Matrix<double, 6, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 1>>> bs_target;
+  std::vector<Eigen::Matrix<double, 6, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 1>>> bs_source;
+
+  if (H_target && H_source && H_target_source && b_target && b_source) {
+    Hs_target.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
+    Hs_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
+    Hs_target_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
+    bs_target.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
+    bs_source.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
   }
 
-  //
+#pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors_geom) reduction(+ : sum_errors_photo) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
     const int target_index = correspondences[i];
     if (target_index < 0) {
       continue;
     }
 
-    // source
+    // source atributes
     const auto& mean_A = source->points[i];
     const auto& cov_A = source->covs[i];
     const double intensity_A = source->intensities[i];
 
-    // target
+    // target attributes
     const auto& mean_B = target->points[target_index];
     const auto& cov_B = target->covs[target_index];
     const auto& normal_B = target->normals[target_index];
@@ -133,6 +145,11 @@ double IntegratedColoredGICPFactor::evaluate(
       continue;
     }
 
+    int thread_num = 0;
+#ifdef _OPENMP
+    thread_num = omp_get_thread_num();
+#endif
+
     Eigen::Matrix<double, 4, 6> J_transed_target = Eigen::Matrix<double, 4, 6>::Zero();
     J_transed_target.block<3, 3>(0, 0) = gtsam::SO3::Hat(transed_A.head<3>());
     J_transed_target.block<3, 3>(0, 3) = -Eigen::Matrix3d::Identity();
@@ -141,17 +158,17 @@ double IntegratedColoredGICPFactor::evaluate(
     J_transed_source.block<3, 3>(0, 0) = -delta.linear() * gtsam::SO3::Hat(mean_A.head<3>());
     J_transed_source.block<3, 3>(0, 3) = delta.linear();
 
-    // geometric error
+    // geometric error derivatives
     const auto& J_egeom_target = J_transed_target;
     const auto& J_egeom_source = J_transed_source;
 
-    (*H_target) += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_target;
-    (*H_source) += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
-    (*H_target_source) += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
-    (*b_target) += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
-    (*b_source) += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
+    Hs_target[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_target;
+    Hs_source[thread_num] += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
+    Hs_target_source[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
+    bs_target[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
+    bs_source[thread_num] += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
 
-    // photometric error
+    // photometric error derivatives
     Eigen::Matrix<double, 4, 4> J_projected_transed = Eigen::Matrix4d::Identity() - normal_B * normal_B.transpose();
     J_projected_transed(3, 3) = 0.0;
     const auto& J_offset_transed = J_projected_transed;
@@ -162,11 +179,27 @@ double IntegratedColoredGICPFactor::evaluate(
     Eigen::Matrix<double, 1, 6> J_ephoto_target = J_ephoto_transed * J_transed_target;
     Eigen::Matrix<double, 1, 6> J_ephoto_source = J_ephoto_transed * J_transed_source;
 
-    (*H_target) += J_ephoto_target.transpose() * photometric_term_weight * J_ephoto_target;
-    (*H_source) += J_ephoto_source.transpose() * photometric_term_weight * J_ephoto_source;
-    (*H_target_source) += J_ephoto_target.transpose() * photometric_term_weight * J_ephoto_source;
-    (*b_target) += J_ephoto_target.transpose() * photometric_term_weight * error_photo;
-    (*b_source) += J_ephoto_source.transpose() * photometric_term_weight * error_photo;
+    Hs_target[thread_num] += J_ephoto_target.transpose() * photometric_term_weight * J_ephoto_target;
+    Hs_source[thread_num] += J_ephoto_source.transpose() * photometric_term_weight * J_ephoto_source;
+    Hs_target_source[thread_num] += J_ephoto_target.transpose() * photometric_term_weight * J_ephoto_source;
+    bs_target[thread_num] += J_ephoto_target.transpose() * photometric_term_weight * error_photo;
+    bs_source[thread_num] += J_ephoto_source.transpose() * photometric_term_weight * error_photo;
+  }
+
+  if (H_target && H_source && H_target_source && b_target && b_source) {
+    H_target->setZero();
+    H_source->setZero();
+    H_target_source->setZero();
+    b_target->setZero();
+    b_source->setZero();
+
+    for (int i = 0; i < num_threads; i++) {
+      (*H_target) += Hs_target[i];
+      (*H_source) += Hs_source[i];
+      (*H_target_source) += Hs_target_source[i];
+      (*b_target) += bs_target[i];
+      (*b_source) += bs_source[i];
+    }
   }
 
   return sum_errors_geom + sum_errors_photo;
