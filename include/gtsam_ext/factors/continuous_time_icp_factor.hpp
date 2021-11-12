@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #pragma once
 
 #include <gtsam/slam/expressions.h>
@@ -26,13 +29,13 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   CTICPFactorExpr(
-    gtsam::Key source_t0_key,   // source pose at the scan beginning
-    gtsam::Key source_t1_key,   // source pose at the scan ending
+    gtsam::Key source_t0_key,  // source pose at the scan beginning
+    gtsam::Key source_t1_key,  // source pose at the scan ending
     const std::shared_ptr<const Frame>& target,
     const std::shared_ptr<const KdTree>& target_tree,
-    const double source_t0,     // time of the very first point in source
-    const double source_t1,     // time of the very last point in source
-    const double source_ti,     // time of the point in interest (source_pt)
+    const double source_t0,  // time of the very first point in source
+    const double source_t1,  // time of the very last point in source
+    const double source_ti,  // time of the point in interest (source_pt)
     const gtsam::Point3& source_pt,
     const gtsam::SharedNoiseModel& noise_model);
 

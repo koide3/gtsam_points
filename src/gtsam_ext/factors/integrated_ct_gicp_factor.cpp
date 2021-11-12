@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #include <gtsam_ext/factors/integrated_ct_gicp_factor.hpp>
 
 #include <gtsam/linear/HessianFactor.h>

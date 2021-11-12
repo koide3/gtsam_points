@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #pragma once
 
 #include <Eigen/Core>
@@ -99,8 +102,8 @@ public:
   Eigen::Vector3d mean;
   Eigen::Matrix3d cov;
 
-  Eigen::Vector3d eigenvalues;    // The smaller the first
-  Eigen::Matrix3d eigenvectors;   // 
+  Eigen::Vector3d eigenvalues;   // The smaller the first
+  Eigen::Matrix3d eigenvectors;  //
 };
 
-}
+}  // namespace gtsam_ext

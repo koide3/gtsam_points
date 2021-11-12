@@ -96,7 +96,7 @@ make -j$(nproc)
 
 ## License
 
-This library is released under MIT license.
+This library is released under the MIT license.
 
 ## Dependencies
 - [Eigen](https://eigen.tuxfamily.org/index.php)

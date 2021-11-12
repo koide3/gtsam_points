@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #pragma once
 
 #include <gtsam/geometry/Pose3.h>
@@ -15,10 +18,8 @@ inline gtsam::Vector6_ logmap(const gtsam::Pose3_& x) {
 }
 
 inline gtsam::Pose3_ inverse(const gtsam::Pose3_& x) {
-  auto f = [](const gtsam::Pose3& x, gtsam::OptionalJacobian<6, 6> H) {
-    return x.inverse(H);
-  };
+  auto f = [](const gtsam::Pose3& x, gtsam::OptionalJacobian<6, 6> H) { return x.inverse(H); };
   return gtsam::Pose3_(f, x);
 }
 
-}
+}  // namespace gtsam_ext

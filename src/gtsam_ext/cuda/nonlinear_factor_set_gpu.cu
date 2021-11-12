@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #include <gtsam_ext/cuda/nonlinear_factor_set_gpu.hpp>
 
 #include <thrust/device_vector.h>

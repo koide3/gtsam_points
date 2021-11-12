@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #include <gtsam_ext/cuda/stream_roundrobin.hpp>
 
 #include <cuda_runtime_api.h>
