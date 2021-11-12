@@ -16,9 +16,9 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
     GICP with voxel-based data association and multi-distribution-correspondence [[3]](#VGICP1)[[4]](#VGICP2)
 - **IntegratedVGICPFactorGPU**  
     GPU implementation of VGICP [[3]](#VGICP1)[[4]](#VGICP2)  
-    Need to set ```BUILD_WITH_CUDA``` cmake option to ```ON```
+    To enable this factor, need to set ```BUILD_WITH_CUDA``` cmake option to ```ON```
 - **IntegratedLOAMFactor**  
-    Matching cost based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO)
+    Matching cost factor based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO)
 
 ### Colored Scan Matching Factors
 
@@ -30,7 +30,7 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
 - **IntegratedCT_ICPFactor**  
     Continuous Time ICP Factor [[8]](#CTICP)
 - **IntegratedCT_GICPFactor**  
-    Continuous Time ICP with GICP's D2D cost [[2]](#GICP)[[8]](#CTICP)
+    Continuous Time ICP with GICP's D2D matching cost [[2]](#GICP)[[8]](#CTICP)
 
 ### Bundle Adjustment Factors
 
@@ -52,7 +52,6 @@ All the following optimizers were derived from the implementations in GTSAM
 ## Nearest Neighbor Search
 - **KdTree**
     Standard KdTree-based nearest neighbor search using [nanoflann](https://github.com/jlblancoc/nanoflann)
-
 
 ## Installation
 
