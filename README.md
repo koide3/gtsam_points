@@ -1,6 +1,6 @@
 # gtsam_ext
 
-This is a collection of GTSAM factors and optimizers that would be useful for range-based SLAM.
+This is a collection of GTSAM factors and optimizers for range-based SLAM.
 
 Tested on Ubuntu 20.04 and CUDA 11.1.
 
@@ -21,6 +21,7 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
     Matching cost based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO)
 
 ### Colored Scan Matching Factors
+
 - **IntegratedColoredGICPFactor**  
     GICP + photometric error [[2]](#GICP)[[7]](#COLORED)
 
@@ -40,6 +41,7 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
 
 
 ## Optimizers for GPU-based Factors
+
 All the following optimizers were derived from the implementations in GTSAM
 
 - **LevenbergMarquardtOptimizerExt**
@@ -92,6 +94,10 @@ cmake ..
 
 make -j$(nproc)
 ```
+
+## License
+
+This library is released under MIT license.
 
 ## Dependencies
 - [Eigen](https://eigen.tuxfamily.org/index.php)
