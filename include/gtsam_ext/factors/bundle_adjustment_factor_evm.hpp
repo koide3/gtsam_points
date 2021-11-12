@@ -30,10 +30,17 @@ public:
   virtual ~EVMBundleAdjustmentFactorBase() override;
   virtual size_t dim() const override { return 6; }
 
-  // Assign a point to this factor
+  /**
+   * @brief  Assign a point to the factor
+   * @param  pt       Point to be added
+   * @param  key      Key of the pose corresponding to the point
+   */
   virtual void add(const gtsam::Point3& pt, const gtsam::Key& key) override;
 
-  // The number of points assigned to this factor (feature)
+  /**
+   * @brief Number of points assigned to this factor
+   * @return Number of points
+   */
   virtual int num_points() const override { return points.size(); }
 
 protected:

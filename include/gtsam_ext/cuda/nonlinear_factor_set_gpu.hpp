@@ -18,15 +18,30 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief This class holds a set of GPU-based NonlinearFactors and manages their linearization and cost evaluation tasks
+ */
 class NonlinearFactorSetGPU {
 public:
   NonlinearFactorSetGPU();
   ~NonlinearFactorSetGPU();
 
+  /**
+   * @brief Number of GPU factors in the set
+   * @return Number of GPU factors in the set
+   */
   int size() const { return factors.size(); }
+
+  /**
+   * @brief Remove all the factors from the set
+   */
   void clear() { factors.clear(); }
 
+  /**
+   * @brief Reset the linearization and cost evaluation counts
+   */
   void clear_counts();
+
   int linearization_count() const { return num_linearizations; }
   int evaluation_count() const { return num_evaluations; }
 

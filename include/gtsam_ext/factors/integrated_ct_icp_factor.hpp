@@ -21,6 +21,14 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedCT_ICPFactor>;
 
+  /**
+   * @brief Constructor
+   * @param source_t0_key   Key of the source pose at the beginning of the scan
+   * @param source_t1_key   Key of the source pose at the end of the scan
+   * @param target          Target point cloud
+   * @param source          Source point cloud
+   * @param target_tree     NN search for the target point cloud
+   */
   IntegratedCT_ICPFactor(
     gtsam::Key source_t0_key,
     gtsam::Key source_t1_key,
@@ -28,6 +36,13 @@ public:
     const gtsam_ext::Frame::ConstPtr& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
+  /**
+   * @brief Constructor
+   * @param source_t0_key   Key of the source pose at the beginning of the scan
+   * @param source_t1_key   Key of the source pose at the end of the scan
+   * @param target          Target point cloud
+   * @param source          Source point cloud
+   */
   IntegratedCT_ICPFactor(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const gtsam_ext::Frame::ConstPtr& target, const gtsam_ext::Frame::ConstPtr& source);
 
   virtual ~IntegratedCT_ICPFactor() override;
