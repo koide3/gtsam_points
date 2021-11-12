@@ -8,6 +8,9 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Wrapper for nanoflann
+ */
 struct KdTree : public NearestNeighborSearch {
 public:
   using Index = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, KdTree>, KdTree, 3>;

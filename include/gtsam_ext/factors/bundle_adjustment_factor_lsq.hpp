@@ -26,10 +26,7 @@ public:
   virtual double error(const gtsam::Values& c) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
 
-  // Assign a point to this factor
   virtual void add(const gtsam::Point3& pt, const gtsam::Key& key) override;
-
-  // The number of points assigned to this factor (feature)
   virtual int num_points() const override { return global_num_points; }
 
 private:
