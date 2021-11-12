@@ -74,14 +74,14 @@ sudo make install
 sudo apt install -y libglm-dev libglfw3-dev libpng-dev
 git clone https://github.com/koide3/iridescence --recursive
 mkdir iridescence/build && cd iridescence/build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 sudo make install
 
 ## Install gtsam_ext
 git clone https://github.com/koide3/gtsam_ext --recursive
 mkdir gtsam_ext/build && cd gtsam/build
-cmake ..
+cmake .. -DCMAKE_BUILD_TYPE=Release
 
 # Optional cmake arguments
 # cmake .. \
@@ -92,6 +92,15 @@ cmake ..
 #   -DBUILD_WITH_SYSTEM_EIGEN=OFF
 
 make -j$(nproc)
+```
+
+## Demo
+
+```bash
+cd gtsam_ext
+./build/demo_matching_cost_factors
+./build/demo_bundle_adjustment
+./build/demo_continuous_time
 ```
 
 ## License
