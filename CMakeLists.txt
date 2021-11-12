@@ -157,8 +157,3 @@ if(BUILD_TESTS)
     gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endforeach()
 endif()
-
-
-add_executable(test_colored src/test/experimental/test_colored.cpp)
-target_include_directories(test_colored PRIVATE ${Iridescence_INCLUDE_DIRS})
-target_link_libraries(test_colored gtsam_ext ${Iridescence_LIBRARIES})

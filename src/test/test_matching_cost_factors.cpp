@@ -115,8 +115,11 @@ public:
     return factor;
   }
 
-  gtsam::NonlinearFactor::shared_ptr
-  create_factor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const gtsam_ext::VoxelizedFrame::ConstPtr& target, const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
+  gtsam::NonlinearFactor::shared_ptr create_factor(
+    const gtsam::Pose3& fixed_target_pose,
+    gtsam::Key source_key,
+    const gtsam_ext::VoxelizedFrame::ConstPtr& target,
+    const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
     std::string method = GetParam();
 
     gtsam::NonlinearFactor::shared_ptr factor;

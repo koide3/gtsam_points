@@ -12,6 +12,19 @@ namespace gtsam_ext {
 
 struct NearestNeighborSearch;
 
+/**
+ * @brief Colored GICP matching cost factor
+ *
+ * @note  This factor uses (x, y, z, intensity) to query nearest neighbor search
+ *        The 4th element (intensity) will be simply ignored if a standard gtsam_ext::KdTree is given
+ *        while it can provide additional distance information between points if gtsam_ext::IntensityKdTree is used
+ *
+ * @note  While the use of IntensityKdTree significantly improves the convergence speed,
+ *        it can affect optimization stability in some cases
+ *
+ * @ref Segal et al., "Generalized-ICP", RSS2005
+ * @ref Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
+ */
 class IntegratedColoredGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
