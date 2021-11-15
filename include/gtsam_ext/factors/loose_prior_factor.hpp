@@ -38,6 +38,16 @@ public:
   }
 
 private:
+  /** Serialization function */
+  friend class boost::serialization::access;
+  template <class ARCHIVE>
+  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
+    namespace bs = ::boost::serialization;
+    ar& boost::serialization::make_nvp("NonlinearFactor", boost::serialization::base_object<gtsam::NonlinearFactor>(*this));
+    ar& BOOST_SERIALIZATION_NVP(noise_model_);
+  }
+
+private:
   gtsam::SharedNoiseModel noise_model_;
   mutable boost::shared_ptr<gtsam::PriorFactor<T>> prior_;
 };
