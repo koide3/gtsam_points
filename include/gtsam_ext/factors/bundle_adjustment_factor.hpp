@@ -15,6 +15,11 @@ public:
   virtual ~BundleAdjustmentFactorBase() {}
 
   /**
+   * @brief Set a constant error scale to boost the weight of the constraint
+   */
+  virtual void set_scale(double scale) {}
+
+  /**
    * @brief Number of points assigned to the factor
    * @return Number of points
    */

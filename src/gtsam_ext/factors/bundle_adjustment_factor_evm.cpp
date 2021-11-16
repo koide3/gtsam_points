@@ -9,9 +9,13 @@
 
 namespace gtsam_ext {
 
-EVMBundleAdjustmentFactorBase::EVMBundleAdjustmentFactorBase() {}
+EVMBundleAdjustmentFactorBase::EVMBundleAdjustmentFactorBase() : error_scale(1.0) {}
 
 EVMBundleAdjustmentFactorBase::~EVMBundleAdjustmentFactorBase() {}
+
+void EVMBundleAdjustmentFactorBase::set_scale(double scale) {
+  error_scale = scale;
+}
 
 void EVMBundleAdjustmentFactorBase::add(const gtsam::Point3& pt, const gtsam::Key& key) {
   if (std::find(keys_.begin(), keys_.end(), key) == keys_.end()) {
@@ -108,7 +112,7 @@ double PlaneEVMFactor::error(const gtsam::Values& values) const {
   for (int i = 0; i < points.size(); i++) {
     transed_points[i] = values.at<gtsam::Pose3>(keys[i]) * points[i];
   }
-  return calc_eigenvalue<0>(transed_points);
+  return error_scale * calc_eigenvalue<0>(transed_points);
 }
 
 boost::shared_ptr<gtsam::GaussianFactor> PlaneEVMFactor::linearize(const gtsam::Values& values) const {
@@ -126,7 +130,7 @@ boost::shared_ptr<gtsam::GaussianFactor> PlaneEVMFactor::linearize(const gtsam::
   Eigen::MatrixXd JD = -J * D;
   Eigen::MatrixXd DHD = D.transpose() * H.selfadjointView<Eigen::Upper>() * D;
 
-  return compose_factor(DHD, JD, lambda_0);
+  return compose_factor(error_scale * DHD, error_scale * JD, error_scale * lambda_0);
 }
 
 /**

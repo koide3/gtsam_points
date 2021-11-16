@@ -31,6 +31,12 @@ public:
   virtual size_t dim() const override { return 6; }
 
   /**
+   * @brief  Set a constant error scaling factor to boost the weight of the factor
+   * @param  scale  Error scale
+   */
+  virtual void set_scale(double scale) override;
+
+  /**
    * @brief  Assign a point to the factor
    * @param  pt       Point to be added
    * @param  key      Key of the pose corresponding to the point
@@ -53,6 +59,7 @@ protected:
   gtsam::GaussianFactor::shared_ptr compose_factor(const Eigen::MatrixXd& H, const Eigen::MatrixXd& J, double error) const;
 
 protected:
+  double error_scale;
   std::vector<gtsam::Key> keys;
   std::vector<gtsam::Point3, Eigen::aligned_allocator<gtsam::Point3>> points;
   std::unordered_map<gtsam::Key, int> key_index;
