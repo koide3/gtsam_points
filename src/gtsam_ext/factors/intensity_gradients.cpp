@@ -57,10 +57,6 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::Con
   return gradients;
 }
 
-IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_neighbors, int num_threads) {
-  return estimate(frame, k_neighbors, k_neighbors, num_threads);
-}
-
 IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads) {
   gtsam_ext::KdTree kdtree(frame->points, frame->size());
 

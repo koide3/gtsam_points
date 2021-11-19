@@ -14,12 +14,20 @@ RUN apt-get update \
     git cmake libeigen3-dev ca-certificates \
     libtbb-dev libboost-all-dev libgtest-dev libmetis-dev \
     libgtsam-dev libgtsam-unstable-dev \
+    libglm-dev libglfw3-dev libpng-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /root
+RUN git clone https://github.com/koide3/iridescence.git --recursive
+WORKDIR /root/iridescence/build
+RUN cmake ..
+RUN make -j$(nproc) && make install
 
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build
 RUN cmake .. \
+  -DBUILD_DEMO=ON \
   -DBUILD_TESTS=ON \
   -DBUILD_WITH_CUDA=ON \
   -DBUILD_WITH_SYSTEM_EIGEN=OFF \
