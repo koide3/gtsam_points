@@ -54,6 +54,8 @@ public:
   IntegratedVGICPFactorGPU(const IntegratedVGICPFactorGPU&) = delete;
   IntegratedVGICPFactorGPU& operator=(const IntegratedVGICPFactorGPU&) = delete;
 
+  virtual gtsam::NonlinearFactor::shared_ptr clone() const override;
+
   virtual size_t dim() const override { return 6; }
   virtual double error(const gtsam::Values& values) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;

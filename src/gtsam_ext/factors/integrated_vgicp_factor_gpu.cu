@@ -92,6 +92,14 @@ void IntegratedVGICPFactorGPU::set_inlier_update_thresh(double trans, double ang
   derivatives->set_inlier_update_thresh(trans, angle);
 }
 
+gtsam::NonlinearFactor::shared_ptr IntegratedVGICPFactorGPU::clone() const {
+  if (is_binary) {
+    return gtsam::make_shared<IntegratedVGICPFactorGPU>(keys()[0], keys()[1], target, source);
+  }
+
+  return gtsam::make_shared<IntegratedVGICPFactorGPU>(gtsam::Pose3(fixed_target_pose.cast<double>().matrix()), keys()[0], target, source);
+}
+
 size_t IntegratedVGICPFactorGPU::linearization_input_size() const {
   return sizeof(Eigen::Isometry3f);
 }
