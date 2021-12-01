@@ -54,7 +54,7 @@ public:
     }
   }
 
-  void test_factor(const gtsam::NonlinearFactor::shared_ptr& factor) {
+  void test_factor(const gtsam::NonlinearFactor::shared_ptr& factor, const std::string& tag) {
     gtsam::Values values;
     values.insert(0, gtsam::Pose3::identity());
     values.insert(1, gtsam::Pose3::identity());
@@ -71,8 +71,8 @@ public:
     double error_angle = Eigen::AngleAxisd(error.linear()).angle();
     double error_trans = error.translation().norm();
 
-    EXPECT_LE(error_angle, 0.1 * M_PI / 180.0) << "[FORWARD] Too large rotation error" << std::endl;
-    EXPECT_LE(error_trans, 0.01) << "[FORWARD] Too large translation error" << std::endl;
+    EXPECT_LE(error_angle, 0.1 * M_PI / 180.0) << "[FORWARD] Too large rotation error " << tag;
+    EXPECT_LE(error_trans, 0.01) << "[FORWARD] Too large translation error" << tag;
 
     // Backward test (fix the second)
     values.update(0, gtsam::Pose3::identity());
@@ -88,8 +88,8 @@ public:
     error_angle = Eigen::AngleAxisd(error.linear()).angle();
     error_trans = error.translation().norm();
 
-    EXPECT_LE(error_angle, 0.1 * M_PI / 180.0) << "[BACKWARD] Too large rotation error" << std::endl;
-    EXPECT_LE(error_trans, 0.01) << "[BACKWARD] Too large translation error" << std::endl;
+    EXPECT_LE(error_angle, 0.1 * M_PI / 180.0) << "[BACKWARD] Too large rotation error" << tag;
+    EXPECT_LE(error_trans, 0.01) << "[BACKWARD] Too large translation error" << tag;
   }
 
   Eigen::Isometry3d delta;
@@ -102,13 +102,13 @@ public:
 TEST_F(ColoredGICPTestBase, Check) {
   gtsam_ext::FrameCPU::Ptr target(new gtsam_ext::FrameCPU(target_points));
   target->add_intensities(target_intensities);
-  auto target_gradients = gtsam_ext::IntensityGradients::estimate(target, 10, 50);
+  auto target_gradients = gtsam_ext::IntensityGradients::estimate(target, 10, 50, 1);
 
   EXPECT_NE(target->normals, nullptr);
   EXPECT_NE(target->covs, nullptr);
 
   gtsam_ext::Frame::Ptr target_ = target;
-  auto target_gradients2 = gtsam_ext::IntensityGradients::estimate(target_, 50);
+  auto target_gradients2 = gtsam_ext::IntensityGradients::estimate(target_, 50, 1);
 
   gtsam_ext::FrameCPU::Ptr source(new gtsam_ext::FrameCPU(source_points));
   source->add_intensities(source_intensities);
@@ -117,9 +117,9 @@ TEST_F(ColoredGICPTestBase, Check) {
   std::shared_ptr<gtsam_ext::KdTree> target_tree(new gtsam_ext::KdTree(target->points, target->size()));
   std::shared_ptr<gtsam_ext::IntensityKdTree> target_intensity_tree(new gtsam_ext::IntensityKdTree(target->points, target->intensities, target->size()));
 
-  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients));
-  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients));
-  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients2));
+  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients), "DEFAULT");
+  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients), "ESTIMATE_PHOTO_AND_GEOM");
+  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients2), "ESTIMATE_PHOTO_ONLY");
 }
 
 int main(int argc, char** argv) {
