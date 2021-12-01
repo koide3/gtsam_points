@@ -283,7 +283,7 @@ void creation_test_voxels_gpu() {
   frame_gpu->create_voxelmap(0.5);
   EXPECT_NE(frame_gpu->voxels_gpu, nullptr);
 
-  const auto voxel_num_points_gpu = frame_gpu->get_voxel_num_points();
+  const auto voxel_num_points_gpu = frame_gpu->get_voxel_num_points_gpu();
   const auto voxel_means_gpu = frame_gpu->get_voxel_means_gpu();
   const auto voxel_covs_gpu = frame_gpu->get_voxel_covs_gpu();
 
