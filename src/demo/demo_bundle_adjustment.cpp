@@ -66,7 +66,7 @@ public:
     factor_types.push_back("LSQ");
 
     edge_plane = 1;
-    viewer->add_drawable_filter("filter", [this](const std::string& name) {
+    viewer->register_drawable_filter("filter", [this](const std::string& name) {
       if (edge_plane == 0 && name.find("plane") != std::string::npos) {
         return false;
       }
