@@ -78,10 +78,11 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/factors/integrated_colored_gicp_factor.cpp
   src/gtsam_ext/factors/integrated_ct_icp_factor.cpp
   src/gtsam_ext/factors/integrated_ct_gicp_factor.cpp
-  src/gtsam_ext/factors/expression_icp_factor.cpp
-  src/gtsam_ext/factors/continuous_time_icp_factor.cpp
   src/gtsam_ext/factors/bundle_adjustment_factor_evm.cpp
   src/gtsam_ext/factors/bundle_adjustment_factor_lsq.cpp
+  # experimental
+  src/gtsam_ext/factors/experimental/expression_icp_factor.cpp
+  src/gtsam_ext/factors/experimental/continuous_time_icp_factor.cpp
   # optimizers
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp

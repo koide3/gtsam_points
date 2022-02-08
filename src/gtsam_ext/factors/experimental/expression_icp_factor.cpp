@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
-#include <gtsam_ext/factors/expression_icp_factor.hpp>
+#include <gtsam_ext/factors/experimental/expression_icp_factor.hpp>
 
 #include <memory>
 #include <gtsam/geometry/Pose3.h>

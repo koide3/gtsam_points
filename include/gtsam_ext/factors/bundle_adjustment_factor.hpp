@@ -15,22 +15,21 @@ public:
   virtual ~BundleAdjustmentFactorBase() {}
 
   /**
-   * @brief Set a constant error scale to boost the weight of the constraint
+   * @brief Assign a point to the factor
+   * @param pt  Point
+   * @param key Key of the frame corresponding to the point
    */
-  virtual void set_scale(double scale) {}
+  virtual void add(const gtsam::Point3& pt, const gtsam::Key& key) = 0;
 
   /**
    * @brief Number of points assigned to the factor
    * @return Number of points
    */
   virtual int num_points() const = 0;
-
+  
   /**
-   * @brief Assign a point to the factor
-   * @param pt  Point
-   * @param key Key of the frame corresponding to the point
+   * @brief Set a constant error scale to boost the weight of the constraint
    */
-  virtual void add(const gtsam::Point3& pt, const gtsam::Key& key) = 0;
+  virtual void set_scale(double scale) {}
 };
-
 }

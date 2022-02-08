@@ -27,18 +27,18 @@ public:
   ~NonlinearFactorSetGPU();
 
   /**
-   * @brief Number of GPU factors in the set
-   * @return Number of GPU factors in the set
+   * @brief Number of GPU factors in this set
+   * @return Number of GPU factors in this set
    */
   int size() const { return factors.size(); }
 
   /**
-   * @brief Remove all the factors from the set
+   * @brief Remove all factors
    */
   void clear() { factors.clear(); }
 
   /**
-   * @brief Reset the linearization and cost evaluation counts
+   * @brief Reset linearization and cost evaluation counts
    */
   void clear_counts();
 
@@ -81,6 +81,9 @@ namespace gtsam_ext {
 
 class NonlinearFactorGPU;
 
+/**
+ * @brief Dummy class for GPU-disabled build
+ */
 class NonlinearFactorSetGPU {
 public:
   NonlinearFactorSetGPU() {}

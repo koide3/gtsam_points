@@ -12,12 +12,14 @@
 
 namespace gtsam_ext {
 
+// constructor with points & covs
 template <typename T, int D>
 VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Eigen::Matrix<T, D, 1>* points, const Eigen::Matrix<T, D, D>* covs, int num_points, bool allocate_cpu)
 : times_gpu_storage(new FloatsGPU()),
   points_gpu_storage(new PointsGPU()),
   normals_gpu_storage(new PointsGPU()),
-  covs_gpu_storage(new MatricesGPU()) {
+  covs_gpu_storage(new MatricesGPU()),
+  intensities_gpu_storage(new FloatsGPU()) {
   //
   if (allocate_cpu) {
     add_points(points, num_points);
@@ -30,19 +32,38 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Eigen::Matri
   create_voxelmap(voxel_resolution);
 }
 
-template <typename T, int D>
-VoxelizedFrameGPU::VoxelizedFrameGPU(
+template VoxelizedFrameGPU::VoxelizedFrameGPU(
   double voxel_resolution,
-  const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points,
-  const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs,
-  bool allocate_cpu)
-: VoxelizedFrameGPU(voxel_resolution, points.data(), covs.data(), points.size(), allocate_cpu) {}
+  const Eigen::Matrix<float, 3, 1>* points,
+  const Eigen::Matrix<float, 3, 3>* covs,
+  int num_points,
+  bool allocate_cpu);
+template VoxelizedFrameGPU::VoxelizedFrameGPU(
+  double voxel_resolution,
+  const Eigen::Matrix<float, 4, 1>* points,
+  const Eigen::Matrix<float, 4, 4>* covs,
+  int num_points,
+  bool allocate_cpu);
+template VoxelizedFrameGPU::VoxelizedFrameGPU(
+  double voxel_resolution,
+  const Eigen::Matrix<double, 3, 1>* points,
+  const Eigen::Matrix<double, 3, 3>* covs,
+  int num_points,
+  bool allocate_cpu);
+template VoxelizedFrameGPU::VoxelizedFrameGPU(
+  double voxel_resolution,
+  const Eigen::Matrix<double, 4, 1>* points,
+  const Eigen::Matrix<double, 4, 4>* covs,
+  int num_points,
+  bool allocate_cpu);
 
+// deep copy constructor
 VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Frame& frame, bool allocate_cpu)
 : times_gpu_storage(new FloatsGPU()),
   points_gpu_storage(new PointsGPU()),
   normals_gpu_storage(new PointsGPU()),
-  covs_gpu_storage(new MatricesGPU()) {
+  covs_gpu_storage(new MatricesGPU()),
+  intensities_gpu_storage(new FloatsGPU()) {
   //
   num_points = frame.size();
 
@@ -62,6 +83,10 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Frame& frame
     if (frame.covs) {
       add_covs(frame.covs, frame.size());
     }
+
+    if (frame.intensities) {
+      add_intensities(frame.intensities, frame.size());
+    }
   } else {
     if (frame.points) {
       add_points_gpu(frame.points, frame.size());
@@ -77,6 +102,10 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Frame& frame
 
     if (frame.covs) {
       add_covs_gpu(frame.covs, frame.size());
+    }
+
+    if (frame.intensities) {
+      add_intensities_gpu(frame.intensities, frame.size());
     }
   }
 
@@ -137,7 +166,8 @@ VoxelizedFrameGPU::VoxelizedFrameGPU()
 : times_gpu_storage(new FloatsGPU()),
   points_gpu_storage(new PointsGPU()),
   normals_gpu_storage(new PointsGPU()),
-  covs_gpu_storage(new MatricesGPU()) {}
+  covs_gpu_storage(new MatricesGPU()),
+  intensities_gpu_storage(new FloatsGPU()) {}
 
 VoxelizedFrameGPU::~VoxelizedFrameGPU() {}
 
@@ -153,6 +183,7 @@ void VoxelizedFrameGPU::create_voxelmap(double voxel_resolution) {
   voxels_gpu = voxels_gpu_storage;
 }
 
+// add_times
 template <typename T>
 void VoxelizedFrameGPU::add_times(const T* times, int num_points) {
   add_times_gpu(times, num_points);
@@ -173,16 +204,10 @@ void VoxelizedFrameGPU::add_times_gpu(const T* times, int num_points) {
   this->times_gpu = thrust::raw_pointer_cast(times_gpu_storage->data());
 }
 
-template <typename T>
-void VoxelizedFrameGPU::add_times(const std::vector<T>& times) {
-  add_times(times.data(), times.size());
-}
+template void VoxelizedFrameGPU::add_times(const float* times, int num_points);
+template void VoxelizedFrameGPU::add_times(const double* times, int num_points);
 
-template <typename T>
-void VoxelizedFrameGPU::add_times_gpu(const std::vector<T>& times) {
-  add_times_gpu(times.data(), times.size());
-}
-
+// add_points
 template <typename T, int D>
 void VoxelizedFrameGPU::add_points(const Eigen::Matrix<T, D, 1>* points, int num_points) {
   add_points_gpu(points, num_points);
@@ -207,16 +232,13 @@ void VoxelizedFrameGPU::add_points_gpu(const Eigen::Matrix<T, D, 1>* points, int
   cudaMemcpy(points_gpu, points_f.data(), sizeof(Eigen::Vector3f) * num_points, cudaMemcpyHostToDevice);
 }
 
-template <typename T, int D>
-void VoxelizedFrameGPU::add_points(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points) {
-  add_points(points.data(), points.size());
-}
+template void VoxelizedFrameGPU::add_points(const Eigen::Matrix<float, 3, 1>* points, int num_points);
+template void VoxelizedFrameGPU::add_points(const Eigen::Matrix<float, 4, 1>* points, int num_points);
+template void VoxelizedFrameGPU::add_points(const Eigen::Matrix<double, 3, 1>* points, int num_points);
+template void VoxelizedFrameGPU::add_points(const Eigen::Matrix<double, 4, 1>* points, int num_points);
 
-template <typename T, int D>
-void VoxelizedFrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points) {
-  add_points_gpu(points.data(), points.size());
-}
 
+// add_normals
 template <typename T, int D>
 void VoxelizedFrameGPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
   add_normals_gpu(normals, num_points);
@@ -242,16 +264,13 @@ void VoxelizedFrameGPU::add_normals_gpu(const Eigen::Matrix<T, D, 1>* normals, i
   this->normals_gpu = thrust::raw_pointer_cast(normals_gpu_storage->data());
 }
 
-template <typename T, int D>
-void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals) {
-  add_normals(normals.data(), normals.size());
-}
+template void VoxelizedFrameGPU::add_normals(const Eigen::Matrix<float, 3, 1>* normals, int num_points);
+template void VoxelizedFrameGPU::add_normals(const Eigen::Matrix<float, 4, 1>* normals, int num_points);
+template void VoxelizedFrameGPU::add_normals(const Eigen::Matrix<double, 3, 1>* normals, int num_points);
+template void VoxelizedFrameGPU::add_normals(const Eigen::Matrix<double, 4, 1>* normals, int num_points);
 
-template <typename T, int D>
-void VoxelizedFrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals) {
-  add_normals_gpu(normals.data(), normals.size());
-}
 
+// add_covs
 template <typename T, int D>
 void VoxelizedFrameGPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points) {
   add_covs_gpu(covs, num_points);
@@ -276,22 +295,37 @@ void VoxelizedFrameGPU::add_covs_gpu(const Eigen::Matrix<T, D, D>* covs, int num
   this->covs_gpu = thrust::raw_pointer_cast(covs_gpu_storage->data());
 }
 
-template <typename T, int D>
-void VoxelizedFrameGPU::add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs) {
-  add_covs(covs.data(), covs.size());
-}
+template void VoxelizedFrameGPU::add_covs(const Eigen::Matrix<float, 3, 3>* covs, int num_points);
+template void VoxelizedFrameGPU::add_covs(const Eigen::Matrix<float, 4, 4>* covs, int num_points);
+template void VoxelizedFrameGPU::add_covs(const Eigen::Matrix<double, 3, 3>* covs, int num_points);
+template void VoxelizedFrameGPU::add_covs(const Eigen::Matrix<double, 4, 4>* covs, int num_points);
 
-template <typename T, int D>
-void VoxelizedFrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs) {
-  add_covs_gpu(covs.data(), covs.size());
-}
 
-void VoxelizedFrameGPU::add_intensities(const double* intensities, int num_points) {
+// add_intensities
+template <typename T>
+void VoxelizedFrameGPU::add_intensities(const T* intensities, int num_points) {
+  add_intensities_gpu(intensities, num_points);
+
   intensities_storage.resize(num_points);
-  std::copy(intensities, intensities + num_points, intensities_storage.begin());
+  thrust::copy(intensities, intensities + num_points, intensities_storage.begin());
   this->intensities = intensities_storage.data();
 }
+template <typename T>
+void VoxelizedFrameGPU::add_intensities_gpu(const T* intensities, int num_points) {
+  assert(num_points == size());
+  thrust::host_vector<float> intensities_h(num_points);
+  std::copy(intensities, intensities + num_points, intensities_h.begin());
 
+  intensities_gpu_storage->resize(num_points);
+  cudaMemcpy(thrust::raw_pointer_cast(intensities_gpu_storage->data()), intensities_h.data(), sizeof(float) * num_points, cudaMemcpyHostToDevice);
+  this->intensities_gpu = thrust::raw_pointer_cast(intensities_gpu_storage->data());
+}
+
+template void VoxelizedFrameGPU::add_intensities(const float* intensities, int num_points);
+template void VoxelizedFrameGPU::add_intensities(const double* intensities, int num_points);
+
+
+// GPU-to-CPU copy
 std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> VoxelizedFrameGPU::get_points_gpu() const {
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> buffer(points_gpu_storage->size());
   cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(points_gpu_storage->data()), sizeof(Eigen::Vector3f) * points_gpu_storage->size(), cudaMemcpyDeviceToHost);
@@ -331,84 +365,6 @@ std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> Voxelize
   cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(covs_storage.data()), sizeof(Eigen::Matrix3f) * covs_storage.size(), cudaMemcpyDeviceToHost);
   return buffer;
 }
-
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<float, 3, 1>* points,
-  const Eigen::Matrix<float, 3, 3>* covs,
-  int num_points,
-  bool allocate_cpu);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<float, 4, 1>* points,
-  const Eigen::Matrix<float, 4, 4>* covs,
-  int num_points,
-  bool allocate_cpu);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<double, 3, 1>* points,
-  const Eigen::Matrix<double, 3, 3>* covs,
-  int num_points,
-  bool allocate_cpu);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<double, 4, 1>* points,
-  const Eigen::Matrix<double, 4, 4>* covs,
-  int num_points,
-  bool allocate_cpu);
-
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&,
-  const std::vector<Eigen::Matrix<float, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 3>>>&,
-  bool);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&,
-  const std::vector<Eigen::Matrix<float, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 4>>>&,
-  bool);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&,
-  const std::vector<Eigen::Matrix<double, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 3>>>&,
-  bool);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&,
-  const std::vector<Eigen::Matrix<double, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 4>>>&,
-  bool);
-
-template void VoxelizedFrameGPU::add_times(const std::vector<float>&);
-template void VoxelizedFrameGPU::add_times(const std::vector<double>&);
-template void VoxelizedFrameGPU::add_times_gpu(const std::vector<float>&);
-template void VoxelizedFrameGPU::add_times_gpu(const std::vector<double>&);
-
-template void VoxelizedFrameGPU::add_points(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
-template void VoxelizedFrameGPU::add_points(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
-template void VoxelizedFrameGPU::add_points(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
-template void VoxelizedFrameGPU::add_points(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
-template void VoxelizedFrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
-template void VoxelizedFrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
-template void VoxelizedFrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
-template void VoxelizedFrameGPU::add_points_gpu(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
-
-template void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
-template void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
-template void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
-template void VoxelizedFrameGPU::add_normals(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
-template void VoxelizedFrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<float, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 1>>>&);
-template void VoxelizedFrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<float, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 1>>>&);
-template void VoxelizedFrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<double, 3, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 1>>>&);
-template void VoxelizedFrameGPU::add_normals_gpu(const std::vector<Eigen::Matrix<double, 4, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 1>>>&);
-
-template void VoxelizedFrameGPU::add_covs(const std::vector<Eigen::Matrix<float, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 3>>>&);
-template void VoxelizedFrameGPU::add_covs(const std::vector<Eigen::Matrix<float, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 4>>>&);
-template void VoxelizedFrameGPU::add_covs(const std::vector<Eigen::Matrix<double, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 3>>>&);
-template void VoxelizedFrameGPU::add_covs(const std::vector<Eigen::Matrix<double, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 4>>>&);
-template void VoxelizedFrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<float, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<float, 3, 3>>>&);
-template void VoxelizedFrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<float, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<float, 4, 4>>>&);
-template void VoxelizedFrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<double, 3, 3>, Eigen::aligned_allocator<Eigen::Matrix<double, 3, 3>>>&);
-template void VoxelizedFrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<double, 4, 4>, Eigen::aligned_allocator<Eigen::Matrix<double, 4, 4>>>&);
 
 /**************** merge_voxelized_frames_gpu **********************/
 

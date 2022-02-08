@@ -40,8 +40,8 @@ public:
   bool has_covs() const;
   bool has_intensities() const;
 
-  // calculate the fraction of points fell in target's voxels
-  // (check if delta * this->points fall in target->voxels)
+  // Calculate the fraction of points fell in target's voxels
+  // (evaluate if delta * this->points fall in target->voxels)
   double overlap(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
   double overlap(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
     const;
@@ -62,11 +62,11 @@ public:
 public:
   size_t num_points;
 
-  double* times;             // time w.r.t. the first point (sorted)
-  Eigen::Vector4d* points;   // point coordinates (x, y, z, 1)
-  Eigen::Vector4d* normals;  // point normals (nx, ny, nz, 0)
-  Eigen::Matrix4d* covs;     // point covariances cov(3, 3) = 0
-  double* intensities;       // point intensity
+  double* times;             // Time w.r.t. the first point (sorted)
+  Eigen::Vector4d* points;   // Point coordinates (x, y, z, 1)
+  Eigen::Vector4d* normals;  // Point normals (nx, ny, nz, 0)
+  Eigen::Matrix4d* covs;     // Point covariances cov(3, 3) = 0
+  double* intensities;       // Point intensities
 
   float* times_gpu;
   Eigen::Vector3f* points_gpu;

@@ -9,6 +9,7 @@
 
 #include <gtsam_ext/ann/nearest_neighbor_search.hpp>
 
+// forward declaration
 namespace nanoflann {
 
 template <class T, class DataSource, typename _DistanceType>

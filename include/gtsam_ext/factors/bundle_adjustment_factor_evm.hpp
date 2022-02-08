@@ -31,12 +31,6 @@ public:
   virtual size_t dim() const override { return 6; }
 
   /**
-   * @brief  Set a constant error scaling factor to boost the weight of the factor
-   * @param  scale  Error scale
-   */
-  virtual void set_scale(double scale) override;
-
-  /**
    * @brief  Assign a point to the factor
    * @param  pt       Point to be added
    * @param  key      Key of the pose corresponding to the point
@@ -48,6 +42,12 @@ public:
    * @return Number of points
    */
   virtual int num_points() const override { return points.size(); }
+
+  /**
+   * @brief  Set a constant error scaling factor to boost the weight of the factor
+   * @param  scale  Error scale
+   */
+  virtual void set_scale(double scale) override;
 
 protected:
   template <int k>

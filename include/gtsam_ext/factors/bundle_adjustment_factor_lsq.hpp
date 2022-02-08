@@ -10,7 +10,7 @@ namespace gtsam_ext {
 /**
  * @brief Bundle adjustment factor based on EVM and EF optimal condition satisfaction
  *
- * @note  The evaluation cost of this factor is dependent on the number of frames
+ * @note  The evaluation cost of this factor depends on the number of frames
  *        and is independent of the number of points
  * @note  This factor requires a better initial guess compared to EVM-based one
  *        because the global normal not included in the optimization

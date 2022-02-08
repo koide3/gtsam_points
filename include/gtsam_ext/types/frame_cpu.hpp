@@ -18,36 +18,40 @@ public:
 
   template <typename T, int D>
   FrameCPU(const Eigen::Matrix<T, D, 1>* points, int num_points);
-  template <typename T, int D>
-  FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points);
+
+  template <typename T, int D, typename Alloc>
+  FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : FrameCPU(points.data(), points.size()) {}
+
+  // deep copy
   FrameCPU(const Frame& frame);
+
   FrameCPU();
   ~FrameCPU();
 
   template <typename T>
   void add_times(const T* times, int num_points);
   template <typename T>
-  void add_times(const std::vector<T>& times);
+  void add_times(const std::vector<T>& times) { add_times(times.data(), times.size()); }
 
   template <typename T, int D>
   void add_points(const Eigen::Matrix<T, D, 1>* points, int num_points);
-  template <typename T, int D>
-  void add_points(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& points);
+  template <typename T, int D, typename Alloc>
+  void add_points(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) { add_points(points.data(), points.size()); }
 
   template <typename T, int D>
   void add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points);
-  template <typename T, int D>
-  void add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>>& normals);
+  template <typename T, int D, typename Alloc>
+  void add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& normals) { add_normals(normals.data(), normals.size()); }
 
   template <typename T, int D>
   void add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points);
-  template <typename T, int D>
-  void add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs);
+  template <typename T, int D, typename Alloc>
+  void add_covs(const std::vector<Eigen::Matrix<T, D, D>, Alloc>& covs) { add_covs(covs.data(), covs.size()); }
 
   template <typename T>
   void add_intensities(const T* intensities, int num_points);
   template <typename T>
-  void add_intensities(const std::vector<T>& intensities);
+  void add_intensities(const std::vector<T>& intensities) { add_intensities(intensities.data(), intensities.size()); }
 
   static FrameCPU::Ptr load(const std::string& path);
 

@@ -10,7 +10,7 @@
 #include <gtsam_ext/types/frame_cpu.hpp>
 #include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
 #include <gtsam_ext/factors/integrated_ct_gicp_factor.hpp>
-#include <gtsam_ext/factors/continuous_time_icp_factor.hpp>
+#include <gtsam_ext/factors/experimental/continuous_time_icp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/pointcloud_buffer.hpp>
