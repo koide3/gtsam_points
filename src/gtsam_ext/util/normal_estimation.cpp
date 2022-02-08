@@ -29,20 +29,5 @@ std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate
   return estimate_normals(points, covs.data(), num_points, k_neighbors);
 }
 
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate_normals(
-  const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,
-  const std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>& covs,
-  int k_neighbors) {
-  //
-  return estimate_normals(points.data(), covs.data(), points.size(), k_neighbors);
-}
-
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate_normals(
-  const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,
-  int k_neighbors) {
-  //
-  auto covs = estimate_covariances(points, k_neighbors);
-  return estimate_normals(points, covs);
-}
 
 }  // namespace gtsam_ext

@@ -46,10 +46,5 @@ std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> estimate
   return covs;
 }
 
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
-estimate_covariances(const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points, int k_neighbors, int num_threads) {
-  //
-  return estimate_covariances(points.data(), points.size(), k_neighbors, num_threads);
-}
 
 }  // namespace gtsam_ext
