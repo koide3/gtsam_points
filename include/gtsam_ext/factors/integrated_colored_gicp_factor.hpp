@@ -38,7 +38,7 @@ public:
     gtsam::Key source_key,
     const Frame::ConstPtr& target,
     const Frame::ConstPtr& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree,
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     const IntensityGradients::ConstPtr& target_gradients);
 
   virtual ~IntegratedColoredGICPFactor() override;

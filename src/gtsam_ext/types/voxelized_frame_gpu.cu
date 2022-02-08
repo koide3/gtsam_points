@@ -101,7 +101,8 @@ VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const PointsGPU& p
 : times_gpu_storage(new FloatsGPU()),
   points_gpu_storage(new PointsGPU()),
   normals_gpu_storage(new PointsGPU()),
-  covs_gpu_storage(new MatricesGPU()) {
+  covs_gpu_storage(new MatricesGPU()),
+  intensities_gpu_storage(new FloatsGPU()) {
   //
   this->num_points = num_points;
   points_gpu_storage->resize(num_points);
@@ -283,6 +284,12 @@ void VoxelizedFrameGPU::add_covs(const std::vector<Eigen::Matrix<T, D, D>, Eigen
 template <typename T, int D>
 void VoxelizedFrameGPU::add_covs_gpu(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs) {
   add_covs_gpu(covs.data(), covs.size());
+}
+
+void VoxelizedFrameGPU::add_intensities(const double* intensities, int num_points) {
+  intensities_storage.resize(num_points);
+  std::copy(intensities, intensities + num_points, intensities_storage.begin());
+  this->intensities = intensities_storage.data();
 }
 
 std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> VoxelizedFrameGPU::get_points_gpu() const {

@@ -79,6 +79,8 @@ public:
   template <typename T, int D>
   void add_covs_gpu(const std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>>& covs);
 
+  void add_intensities(const double* intensities, int num_points);
+
   // copy data from GPU to CPU
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> get_points_gpu() const;
   std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> get_covs_gpu() const;
@@ -97,12 +99,14 @@ public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals_storage;
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
+  std::vector<double> intensities_storage;
 
   std::shared_ptr<GaussianVoxelMapGPU> voxels_gpu_storage;
   std::unique_ptr<FloatsGPU> times_gpu_storage;
   std::unique_ptr<PointsGPU> points_gpu_storage;
   std::unique_ptr<PointsGPU> normals_gpu_storage;
   std::unique_ptr<MatricesGPU> covs_gpu_storage;
+  std::unique_ptr<FloatsGPU> intensities_gpu_storage;
 };
 
 }  // namespace gtsam_ext

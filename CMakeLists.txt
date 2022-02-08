@@ -59,6 +59,9 @@ add_library(gtsam_ext SHARED
   # util
   src/gtsam_ext/util/covariance_estimation.cpp
   src/gtsam_ext/util/normal_estimation.cpp
+  # ann
+  src/gtsam_ext/ann/kdtree.cpp
+  src/gtsam_ext/ann/intensity_kdtree.cpp
   # types
   src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/frame_cpu.cpp

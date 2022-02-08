@@ -14,7 +14,7 @@ IntegratedColoredGICPFactor::IntegratedColoredGICPFactor(
   gtsam::Key source_key,
   const Frame::ConstPtr& target,
   const Frame::ConstPtr& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree,
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree,
   const IntensityGradients::ConstPtr& target_gradients)
 : IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
@@ -58,7 +58,7 @@ void IntegratedColoredGICPFactor::update_correspondences(const Eigen::Isometry3d
   for (int i = 0; i < source->size(); i++) {
     if (do_update) {
       Eigen::Vector4d pt = delta * source->points[i];
-      pt[3] = target->intensities[i];
+      pt[3] = source->intensities[i];
 
       size_t k_index = -1;
       double k_sq_dist = -1;
