@@ -8,7 +8,7 @@
 
 namespace gtsam_ext {
 
-// This factor "loosely" fixes a variable around the current estimate point
+// This factor "loosely" fixes a variable at the current estimate point
 // This can be used to fix the gauge freedom (there should be a better way though...)
 template <class VALUE>
 class LoosePriorFactor : public gtsam::NonlinearFactor {
@@ -30,7 +30,7 @@ public:
 
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override {
     T current_value = values.at<T>(keys()[0]);
-    if (prior_->error(values) > 1e-3) {
+    if (!prior_ || prior_->error(values) > 1e-3) {
       prior_.reset(new gtsam::PriorFactor<T>(keys()[0], current_value, noise_model_));
     }
 
