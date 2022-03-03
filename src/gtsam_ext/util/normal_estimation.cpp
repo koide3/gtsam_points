@@ -8,8 +8,7 @@
 
 namespace gtsam_ext {
 
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>
-estimate_normals(const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points, int k_neighbors) {
+std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate_normals(const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points) {
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals(num_points, Eigen::Vector4d::Zero());
   for (int i = 0; i < num_points; i++) {
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig;
@@ -26,7 +25,7 @@ estimate_normals(const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int
 
 std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate_normals(const Eigen::Vector4d* points, int num_points, int k_neighbors) {
   auto covs = estimate_covariances(points, num_points, k_neighbors);
-  return estimate_normals(points, covs.data(), num_points, k_neighbors);
+  return estimate_normals(points, covs.data(), num_points);
 }
 
 

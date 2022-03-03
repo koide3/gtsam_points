@@ -10,6 +10,57 @@
 
 namespace gtsam_ext {
 
+IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::ConstPtr& frame, const std::vector<int>& neighbors, int k_photo_neighbors) {
+  if (!frame->has_points() || !frame->has_normals() || !frame->has_intensities()) {
+    std::cerr << "error: input frame doesn't have required attributes for intensity gradient estimation!!" << std::endl;
+    abort();
+  }
+
+  const int k = neighbors.size() / frame->size();
+  if (frame->size() * k != neighbors.size()) {
+    std::cerr << "error: k * frame->size() != neighbors.size()!!" << std::endl;
+    abort();
+  }
+
+  if (k_photo_neighbors > k) {
+    std::cerr << "error: k_photo_neighbors > k!!" << std::endl;
+    abort();
+  }
+
+  IntensityGradients::Ptr gradients(new IntensityGradients);
+  gradients->intensity_gradients.resize(frame->size());
+
+  for (int i = 0; i < frame->size(); i++) {
+    // Estimate color gradient
+    const auto& point = frame->points[i];
+    const auto& normal = frame->normals[i];
+    const double intensity = frame->intensities[i];
+
+    Eigen::Matrix<double, -1, 4> A = Eigen::Matrix<double, -1, 4>::Zero(k_photo_neighbors, 4);
+    Eigen::VectorXd b = Eigen::VectorXd::Zero(k_photo_neighbors);
+
+    // dp^T np = 0
+    A.row(0) = normal;
+    b[0] = 0.0;
+
+    // Intensity gradient in the tangent space
+    for (int j = 1; j < k_photo_neighbors; j++) {
+      const int index = neighbors[k * i + j];
+      const auto& point_ = frame->points[index];
+      const double intensity_ = frame->intensities[index];
+      const Eigen::Vector4d projected = point_ - (point_ - point).dot(normal) * normal;
+      A.row(j) = projected - point;
+      b(j) = (intensity_ - intensity);
+    }
+
+    Eigen::Matrix3d H = (A.transpose() * A).block<3, 3>(0, 0);
+    Eigen::Vector3d e = (A.transpose() * b).head<3>();
+    gradients->intensity_gradients[i] << H.inverse() * e, 0.0;
+  }
+
+  return gradients;
+}
+
 IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::ConstPtr& frame, int k_neighbors, int num_threads) {
   if (!frame->has_points() || !frame->has_normals() || !frame->has_intensities()) {
     std::cerr << "error: input frame doesn't have required attributes for intensity gradient estimation!!" << std::endl;

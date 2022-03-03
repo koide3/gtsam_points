@@ -16,7 +16,7 @@ namespace gtsam_ext {
 struct NearestNeighborSearch;
 
 /**
- * @brief Colored GICP matching cost factor
+ * @brief Photometric consistency factor between point clouds
  *
  * @note  This factor uses (x, y, z, intensity) to query nearest neighbor search
  *        The 4th element (intensity) will be simply ignored if a standard gtsam_ext::KdTree is given
@@ -25,15 +25,14 @@ struct NearestNeighborSearch;
  * @note  While the use of IntensityKdTree significantly improves the convergence speed,
  *        it can affect optimization stability in some cases
  *
- * @ref Segal et al., "Generalized-ICP", RSS2005
  * @ref Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
  */
-class IntegratedColoredGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
+class IntegratedColorConsistencyFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedColoredGICPFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedColorConsistencyFactor>;
 
-  IntegratedColoredGICPFactor(
+  IntegratedColorConsistencyFactor(
     gtsam::Key target_key,
     gtsam::Key source_key,
     const Frame::ConstPtr& target,
@@ -41,7 +40,7 @@ public:
     const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     const IntensityGradients::ConstPtr& target_gradients);
 
-  IntegratedColoredGICPFactor(
+  IntegratedColorConsistencyFactor(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
     const Frame::ConstPtr& target,
@@ -49,7 +48,7 @@ public:
     const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     const IntensityGradients::ConstPtr& target_gradients);
 
-  virtual ~IntegratedColoredGICPFactor() override;
+  virtual ~IntegratedColorConsistencyFactor() override;
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_correspondence_distance(double d) { max_correspondence_distance_sq = d * d; }
@@ -85,6 +84,5 @@ private:
   double correspondence_update_tolerance_trans;
   mutable Eigen::Isometry3d last_correspondence_point;
   mutable std::vector<int> correspondences;
-  mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
 };
 }  // namespace gtsam_ext

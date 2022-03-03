@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
-#include <gtsam_ext/factors/integrated_colored_gicp_factor.hpp>
+#include <gtsam_ext/factors/integrated_color_consistency_factor.hpp>
 
 #include <vector>
 #include <gtsam_ext/ann/kdtree.hpp>
@@ -9,7 +9,7 @@
 
 namespace gtsam_ext {
 
-IntegratedColoredGICPFactor::IntegratedColoredGICPFactor(
+IntegratedColorConsistencyFactor::IntegratedColorConsistencyFactor(
   gtsam::Key target_key,
   gtsam::Key source_key,
   const Frame::ConstPtr& target,
@@ -19,7 +19,7 @@ IntegratedColoredGICPFactor::IntegratedColoredGICPFactor(
 : IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
-  photometric_term_weight(0.25),
+  photometric_term_weight(1.0),
   correspondence_update_tolerance_rot(0.0),
   correspondence_update_tolerance_trans(0.0),
   target(target),
@@ -27,18 +27,18 @@ IntegratedColoredGICPFactor::IntegratedColoredGICPFactor(
   target_tree(target_tree),
   target_gradients(target_gradients) {
   //
-  if (!target->has_points() || !target->has_normals() || !target->has_covs() || !target->has_intensities()) {
+  if (!target->has_points() || !target->has_normals() || !target->has_intensities()) {
     std::cerr << "error: target frame doesn't have required attributes for colored_gicp" << std::endl;
     abort();
   }
 
-  if (!source->has_points() || !source->has_covs() || !source->has_intensities()) {
+  if (!source->has_points() || !source->has_intensities()) {
     std::cerr << "error: source frame doesn't have required attributes for colored_gicp" << std::endl;
     abort();
   }
 }
 
-IntegratedColoredGICPFactor::IntegratedColoredGICPFactor(
+IntegratedColorConsistencyFactor::IntegratedColorConsistencyFactor(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
   const Frame::ConstPtr& target,
@@ -48,7 +48,7 @@ IntegratedColoredGICPFactor::IntegratedColoredGICPFactor(
 : IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
-  photometric_term_weight(0.25),
+  photometric_term_weight(1.0),
   correspondence_update_tolerance_rot(0.0),
   correspondence_update_tolerance_trans(0.0),
   target(target),
@@ -56,20 +56,20 @@ IntegratedColoredGICPFactor::IntegratedColoredGICPFactor(
   target_tree(target_tree),
   target_gradients(target_gradients) {
   //
-  if (!target->has_points() || !target->has_normals() || !target->has_covs() || !target->has_intensities()) {
+  if (!target->has_points() || !target->has_normals() || !target->has_intensities()) {
     std::cerr << "error: target frame doesn't have required attributes for colored_gicp" << std::endl;
     abort();
   }
 
-  if (!source->has_points() || !source->has_covs() || !source->has_intensities()) {
+  if (!source->has_points() || !source->has_intensities()) {
     std::cerr << "error: source frame doesn't have required attributes for colored_gicp" << std::endl;
     abort();
   }
 }
 
-IntegratedColoredGICPFactor::~IntegratedColoredGICPFactor() {}
+IntegratedColorConsistencyFactor::~IntegratedColorConsistencyFactor() {}
 
-void IntegratedColoredGICPFactor::update_correspondences(const Eigen::Isometry3d& delta) const {
+void IntegratedColorConsistencyFactor::update_correspondences(const Eigen::Isometry3d& delta) const {
   bool do_update = true;
   if (correspondences.size() == source->size() && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
@@ -81,7 +81,6 @@ void IntegratedColoredGICPFactor::update_correspondences(const Eigen::Isometry3d
   }
 
   correspondences.resize(source->size());
-  mahalanobis.resize(source->size());
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
@@ -95,22 +94,12 @@ void IntegratedColoredGICPFactor::update_correspondences(const Eigen::Isometry3d
       size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
       correspondences[i] = k_sq_dist < max_correspondence_distance_sq ? k_index : -1;
     }
-
-    if (correspondences[i] < 0) {
-      mahalanobis[i].setIdentity();
-    } else {
-      const auto& target_cov = target->covs[correspondences[i]];
-      Eigen::Matrix4d RCR = (target_cov + delta.matrix() * source->covs[i] * delta.matrix().transpose());
-      RCR(3, 3) = 1.0;
-      mahalanobis[i] = RCR.inverse();
-      mahalanobis[i](3, 3) = 0.0;
-    }
   }
 
   last_correspondence_point = delta;
 }
 
-double IntegratedColoredGICPFactor::evaluate(
+double IntegratedColorConsistencyFactor::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
   Eigen::Matrix<double, 6, 6>* H_source,
@@ -122,9 +111,6 @@ double IntegratedColoredGICPFactor::evaluate(
     update_correspondences(delta);
   }
 
-  const double geometric_term_weight = 1.0 - photometric_term_weight;
-
-  double sum_errors_geom = 0.0;
   double sum_errors_photo = 0.0;
 
   std::vector<Eigen::Matrix<double, 6, 6>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 6>>> Hs_target;
@@ -141,7 +127,7 @@ double IntegratedColoredGICPFactor::evaluate(
     bs_source.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
   }
 
-#pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors_geom) reduction(+ : sum_errors_photo) schedule(guided, 8)
+#pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors_photo) schedule(guided, 8)
   for (int i = 0; i < source->size(); i++) {
     const int target_index = correspondences[i];
     if (target_index < 0) {
@@ -150,21 +136,15 @@ double IntegratedColoredGICPFactor::evaluate(
 
     // source atributes
     const auto& mean_A = source->points[i];
-    const auto& cov_A = source->covs[i];
     const double intensity_A = source->intensities[i];
 
     // target attributes
     const auto& mean_B = target->points[target_index];
-    const auto& cov_B = target->covs[target_index];
     const auto& normal_B = target->normals[target_index];
     const auto& gradient_B = target_gradients->intensity_gradients[target_index];
     const double intensity_B = target->intensities[target_index];
 
     const Eigen::Vector4d transed_A = delta * mean_A;
-
-    // geometric error
-    const Eigen::Vector4d error_geom = transed_A - mean_B;
-    sum_errors_geom += 0.5 * error_geom.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
 
     // photometric error
     const Eigen::Vector4d projected = transed_A - (transed_A - mean_B).dot(normal_B) * normal_B;
@@ -189,16 +169,6 @@ double IntegratedColoredGICPFactor::evaluate(
     Eigen::Matrix<double, 4, 6> J_transed_source = Eigen::Matrix<double, 4, 6>::Zero();
     J_transed_source.block<3, 3>(0, 0) = -delta.linear() * gtsam::SO3::Hat(mean_A.head<3>());
     J_transed_source.block<3, 3>(0, 3) = delta.linear();
-
-    // geometric error derivatives
-    const auto& J_egeom_target = J_transed_target;
-    const auto& J_egeom_source = J_transed_source;
-
-    Hs_target[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_target;
-    Hs_source[thread_num] += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
-    Hs_target_source[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
-    bs_target[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
-    bs_source[thread_num] += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
 
     // photometric error derivatives
     Eigen::Matrix<double, 4, 4> J_projected_transed = Eigen::Matrix4d::Identity() - normal_B * normal_B.transpose();
@@ -234,7 +204,7 @@ double IntegratedColoredGICPFactor::evaluate(
     }
   }
 
-  return sum_errors_geom + sum_errors_photo;
+  return sum_errors_photo;
 }
 
 }  // namespace gtsam_ext
