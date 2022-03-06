@@ -92,6 +92,7 @@ ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_p
 }
 
 void extract_edge_plane_points_line(const std::vector<Eigen::Vector4d>& points, std::vector<Eigen::Vector4d>& plane_points, std::vector<Eigen::Vector4d>& edge_points) {
+  // TODO: remove hardcoded parameters!!
   const int half_curvature_window = 15;
   const double edge_thresh = 0.35;
   const double plane_thresh = 0.05;
@@ -188,6 +189,7 @@ void extract_edge_plane_points_line(const std::vector<Eigen::Vector4d>& points, 
 }
 
 std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points) {
+  // Estimate tilt and heading angles of each point
   std::vector<std::tuple<double, double, int>> tilt_heading_points(num_points);
   for (int i = 0; i < num_points; i++) {
     std::get<0>(tilt_heading_points[i]) = std::atan2(points[i].z(), points[i].head<2>().norm());
@@ -195,6 +197,7 @@ std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLine
     std::get<2>(tilt_heading_points[i]) = i;
   }
 
+  // Sort by tilt angles and partition points in each scan line
   std::sort(tilt_heading_points.begin(), tilt_heading_points.end(), [](const std::tuple<double, double, int>& lhs, const std::tuple<double, double, int>& rhs) {
     return std::get<0>(lhs) < std::get<0>(rhs);
   });
@@ -213,6 +216,7 @@ std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLine
     lines[tilt_cursor].push_back(tilt_heading_point);
   }
 
+  // Extract edge and plane points
   std::vector<Eigen::Vector4d> plane_points, edge_points;
 
   for (int i = 0; i < scan_lines.size(); i++) {

@@ -24,8 +24,11 @@ int main(int argc, char** argv) {
   const auto points0 = read_points(filename0);
   const auto points1 = read_points(filename1);
 
+  // Estimate beam projection angles
+  // This estimation needs to be done for only the first frame, and can be re-used for successive frames
   const auto scan_lines = gtsam_ext::estimate_scan_lines(points0.data(), points0.size(), 64, 0.2 * M_PI / 180.0);
 
+  // Edge and plane points extraction
   const auto edge_plane_points0 = gtsam_ext::extract_edge_plane_points(scan_lines, points0.data(), points0.size());
   const auto edge_plane_points1 = gtsam_ext::extract_edge_plane_points(scan_lines, points1.data(), points1.size());
 
@@ -35,7 +38,10 @@ int main(int argc, char** argv) {
 
   gtsam::NonlinearFactorGraph graph;
   graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+  // Create point-to-edge, point-to-plane matching-based constraint
   graph.emplace_shared<gtsam_ext::IntegratedLOAMFactor>(0, 1, edge_plane_points0.first, edge_plane_points0.second, edge_plane_points1.first, edge_plane_points1.second);
+
+  // Alternatively, it is also possible to create edge and plane constraints separately
   // graph.emplace_shared<gtsam_ext::IntegratedPointToEdgeFactor>(0, 1, edge_plane_points0.first, edge_plane_points1.first);
   // graph.emplace_shared<gtsam_ext::IntegratedPointToPlaneFactor>(0, 1, edge_plane_points0.second, edge_plane_points1.second);
 
@@ -45,6 +51,7 @@ int main(int argc, char** argv) {
   viewer->spin_until_click();
 
   gtsam_ext::LevenbergMarquardtExtParams lm_params;
+  lm_params.setMaxIterations(15);
   lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
     std::cout << status.to_string() << std::endl;
 
