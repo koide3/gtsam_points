@@ -169,7 +169,7 @@ void extract_edge_plane_points_line(const std::vector<Eigen::Vector4d>& points, 
   for (auto c_point = curvatures.rbegin(); c_point != partition_edge; c_point++) {
     const int i = c_point->second;
 
-    // The point can be occluded by closer objects or too many edge points in the subregion
+    // The point can be occluded by closer objects, or there are too many edge points in the subregion
     if (occlusion_counts[i] >= occlusion_thresh || num_selected_edges[i] >= max_edge_num) {
       continue;
     }

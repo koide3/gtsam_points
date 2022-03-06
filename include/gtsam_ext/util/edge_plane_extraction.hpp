@@ -19,8 +19,26 @@ struct ScanLineInformation {
   std::vector<double> tilt_angles;
 };
 
+/**
+ * @brief Estimate beam projection angles of velodyne-like point cloud
+ *
+ * @param points          Points
+ * @param num_points      Number of points
+ * @param num_scan_lines  Number of scan lines (-1 to automatically estimate)
+ * @param angle_eps       Minimum angle between scan lines
+ * @return Estimated scan line information
+ */
 ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_points, int num_scan_lines = -1, double angle_eps = 0.05 * M_PI / 180.0);
 
+/**
+ * @brief Extract edge and plane points
+ * @ref   Zhang and Singh, "LOAM: Lidar Odometry and Mapping in Real-time", RSS2014
+ *
+ * @param scan_lines    Scan line information
+ * @param points        Points
+ * @param num_points    Number of points
+ * @return Extracted edge and plane points
+ */
 std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points);
 
 }  // namespace gtsam_ext

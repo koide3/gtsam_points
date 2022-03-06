@@ -38,6 +38,7 @@ int main(int argc, char** argv) {
 
   gtsam::NonlinearFactorGraph graph;
   graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+
   // Create point-to-edge, point-to-plane matching-based constraint
   graph.emplace_shared<gtsam_ext::IntegratedLOAMFactor>(0, 1, edge_plane_points0.first, edge_plane_points0.second, edge_plane_points1.first, edge_plane_points1.second);
 
