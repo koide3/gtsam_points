@@ -91,6 +91,8 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/optimizers/isam2_ext.cpp
   src/gtsam_ext/optimizers/isam2_ext_impl.cpp
   src/gtsam_ext/optimizers/incremental_fixed_lag_smoother_ext.cpp
+  # src/gtsam_ext/optimizers/dogleg_optimizer_ext.cpp
+  src/gtsam_ext/optimizers/dogleg_optimizer_ext_impl.cpp
 )
 target_include_directories(gtsam_ext PUBLIC
   include

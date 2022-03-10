@@ -29,6 +29,7 @@
 #include <gtsam/nonlinear/LinearContainerFactor.h>
 
 #include <gtsam_ext/optimizers/isam2_ext.hpp>
+#include <gtsam_ext/optimizers/dogleg_optimizer_ext_impl.hpp>
 #include <gtsam_ext/cuda/nonlinear_factor_set_gpu.hpp>
 
 #include <algorithm>
@@ -744,17 +745,12 @@ void ISAM2Ext::updateDelta(bool forceFullSolve) const {
     gpu_factors->linearize(theta_);
     gpu_factors->error(theta_);
 
+    double error0 = nonlinearFactors_.error(theta_);
+    DoglegOptimizerImplExt::TrustRegionAdaptationMode adaptationMode = static_cast<DoglegOptimizerImplExt::TrustRegionAdaptationMode>(doglegParams.adaptationMode);
+
     // Compute dogleg point
-    DoglegOptimizerImpl::IterationResult doglegResult(DoglegOptimizerImpl::Iterate(
-      *doglegDelta_,
-      doglegParams.adaptationMode,
-      dx_u,
-      deltaNewton_,
-      *this,
-      nonlinearFactors_,
-      theta_,
-      nonlinearFactors_.error(theta_),
-      doglegParams.verbose));
+    DoglegOptimizerImplExt::IterationResult doglegResult(
+      DoglegOptimizerImplExt::Iterate(*doglegDelta_, adaptationMode, dx_u, deltaNewton_, *this, nonlinearFactors_, *gpu_factors, theta_, error0, doglegParams.verbose));
     gttoc(Dogleg_Iterate);
 
     gttic(Copy_dx_d);
