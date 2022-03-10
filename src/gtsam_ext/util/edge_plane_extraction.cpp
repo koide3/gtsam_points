@@ -5,6 +5,7 @@
 
 #include <chrono>
 #include <iostream>
+#include <Eigen/Geometry>
 
 namespace gtsam_ext {
 
@@ -90,25 +91,148 @@ ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_p
   return scan_line_info;
 }
 
-void extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points) {
-  const auto t1 = std::chrono::high_resolution_clock::now();
+void extract_edge_plane_points_line(const std::vector<Eigen::Vector4d>& points, std::vector<Eigen::Vector4d>& plane_points, std::vector<Eigen::Vector4d>& edge_points) {
+  // TODO: remove hardcoded parameters!!
+  const int half_curvature_window = 15;
+  const double edge_thresh = 0.35;
+  const double plane_thresh = 0.05;
+  const int max_edge_num = 2;
+  const int max_plane_num = 4;
+  const int occlusion_thresh = half_curvature_window * 0.75;
 
-  std::vector<std::pair<double, int>> tilt_angles(num_points);
-  for (int i = 0; i < num_points; i++) {
-    tilt_angles[i].first = std::atan2(points[i].z(), points[i].head<2>().norm());
-    tilt_angles[i].second = i;
+  // Precompute distances to points
+  std::vector<double> distances(points.size());
+  for (int i = 0; i < points.size(); i++) {
+    distances[i] = points[i].norm();
   }
 
-  const auto t2 = std::chrono::high_resolution_clock::now();
+  // Calculate local curvatures (local smoothness)
+  std::vector<int> occlusion_counts(points.size());
+  std::vector<std::pair<double, int>> curvatures(points.size());
+  for (int i = 0; i < points.size(); i++) {
+    double sum_dists = 0.0;
+    for (int offset = -half_curvature_window; offset <= half_curvature_window; offset++) {
+      if (offset == 0) {
+        continue;
+      }
 
-  std::sort(tilt_angles.begin(), tilt_angles.end(), [](const std::pair<double, int>& lhs, const std::pair<double, int>& rhs) { return lhs.first < rhs.first; });
+      int j = i + offset;
+      j = j < 0 ? j + points.size() : j;
+      j = j >= points.size() ? j - points.size() : j;
 
-  std::vector<std::vector<int>> lines(scan_lines.point_counts.size());
+      sum_dists += (points[i] - points[j]).norm();
 
-  const auto t3 = std::chrono::high_resolution_clock::now();
+      if (distances[j] < distances[i] * 0.9) {
+        occlusion_counts[i]++;
+      }
+    }
 
-  std::cout << "d1:" << std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count() << "[msec]" << std::endl;
-  std::cout << "d2:" << std::chrono::duration_cast<std::chrono::milliseconds>(t3 - t2).count() << "[msec]" << std::endl;
+    const double c = 1.0 / (2 * half_curvature_window * distances[i]) * sum_dists;
+    curvatures[i].first = c;
+    curvatures[i].second = i;
+  }
+
+  // Sort points in increasing order by curvatures
+  std::sort(curvatures.begin(), curvatures.end(), [](const std::pair<double, int>& lhs, const std::pair<double, int>& rhs) { return lhs.first < rhs.first; });
+
+  // Extract plane points
+  const auto partition_plane =
+    std::lower_bound(curvatures.begin(), curvatures.end(), plane_thresh, [](const std::pair<double, int>& c, const double thresh) { return c.first < thresh; });
+
+  std::vector<int> num_selected_planes(points.size(), 0);
+  for (auto c_point = curvatures.begin(); c_point != partition_plane; c_point++) {
+    const int i = c_point->second;
+
+    // Too many points in the subregion
+    if (num_selected_planes[i] >= max_plane_num) {
+      continue;
+    }
+
+    plane_points.push_back(points[i]);
+    for (int offset = -half_curvature_window; offset <= half_curvature_window; offset++) {
+      if (offset == 0) {
+        continue;
+      }
+
+      int j = i + offset;
+      j = j < 0 ? j + points.size() : j;
+      j = j >= points.size() ? j - points.size() : j;
+      num_selected_planes[j]++;
+    }
+  }
+
+  // Extract edge points
+  const auto partition_edge =
+    std::lower_bound(curvatures.rbegin(), curvatures.rend(), edge_thresh, [](const std::pair<double, int>& c, const double thresh) { return c.first > thresh; });
+
+  std::vector<int> num_selected_edges(points.size(), 0);
+  for (auto c_point = curvatures.rbegin(); c_point != partition_edge; c_point++) {
+    const int i = c_point->second;
+
+    // The point can be occluded by closer objects, or there are too many edge points in the subregion
+    if (occlusion_counts[i] >= occlusion_thresh || num_selected_edges[i] >= max_edge_num) {
+      continue;
+    }
+
+    edge_points.push_back(points[i]);
+    for (int offset = -half_curvature_window; offset <= half_curvature_window; offset++) {
+      if (offset == 0) {
+        continue;
+      }
+
+      int j = i + offset;
+      j = j < 0 ? j + points.size() : j;
+      j = j >= points.size() ? j - points.size() : j;
+      num_selected_edges[j]++;
+    }
+  }
+}
+
+std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points) {
+  // Estimate tilt and heading angles of each point
+  std::vector<std::tuple<double, double, int>> tilt_heading_points(num_points);
+  for (int i = 0; i < num_points; i++) {
+    std::get<0>(tilt_heading_points[i]) = std::atan2(points[i].z(), points[i].head<2>().norm());
+    std::get<1>(tilt_heading_points[i]) = std::atan2(points[i].y(), points[i].x());
+    std::get<2>(tilt_heading_points[i]) = i;
+  }
+
+  // Sort by tilt angles and partition points in each scan line
+  std::sort(tilt_heading_points.begin(), tilt_heading_points.end(), [](const std::tuple<double, double, int>& lhs, const std::tuple<double, double, int>& rhs) {
+    return std::get<0>(lhs) < std::get<0>(rhs);
+  });
+
+  std::vector<std::vector<std::tuple<double, double, int>>> lines(scan_lines.size());
+  for (auto& line : lines) {
+    line.reserve(2 * num_points / scan_lines.size());
+  }
+
+  int tilt_cursor = 0;
+  for (const auto& tilt_heading_point : tilt_heading_points) {
+    const double tilt = std::get<0>(tilt_heading_point);
+    while (tilt_cursor < scan_lines.size() - 1 && std::abs(scan_lines.angle(tilt_cursor + 1) - tilt) < std::abs(scan_lines.angle(tilt_cursor) - tilt)) {
+      tilt_cursor++;
+    }
+    lines[tilt_cursor].push_back(tilt_heading_point);
+  }
+
+  // Extract edge and plane points
+  std::vector<Eigen::Vector4d> plane_points, edge_points;
+
+  for (int i = 0; i < scan_lines.size(); i++) {
+    auto& line = lines[i];
+    std::sort(line.begin(), line.end(), [](const std::tuple<double, double, int>& lhs, const std::tuple<double, double, int>& rhs) { return std::get<1>(lhs) < std::get<1>(rhs); });
+
+    std::vector<Eigen::Vector4d> line_points(line.size());
+    std::transform(line.begin(), line.end(), line_points.begin(), [&](const std::tuple<double, double, int>& x) { return points[std::get<2>(x)]; });
+
+    extract_edge_plane_points_line(line_points, plane_points, edge_points);
+  }
+
+  FrameCPU::Ptr edges(new FrameCPU(edge_points));
+  FrameCPU::Ptr planes(new FrameCPU(plane_points));
+
+  return std::make_pair(edges, planes);
 }
 
 }  // namespace gtsam_ext
