@@ -8,8 +8,22 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Estimate point normals from covariances
+ * @param points      Input points
+ * @param covs        Input covariances
+ * @param num_points  Number of input points and covariances
+ * @return            Estimated normals
+ */
 std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate_normals(const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points);
 
+/**
+ * @brief Estimate point normals from neighboring points
+ * @param points      Input points
+ * @param num_points  Number of input points and covariances
+ * @param k_neighbors Number of neighboring points for normal estimation
+ * @return            Estimated normals
+ */
 std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate_normals(const Eigen::Vector4d* points, int num_points, int k_neighbors = 10);
 
 template <template <typename> typename Alloc>
