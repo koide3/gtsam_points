@@ -33,4 +33,12 @@ gtsam::Pose3_ bspline(const gtsam::Key key0, const gtsam::Key key1, const gtsam:
  */
 gtsam::Pose3_ bspline_se3(const gtsam::Key key0, const gtsam::Key key1, const gtsam::Key key2, const gtsam::Key key3, const gtsam::Double_& t);
 
+inline gtsam::Pose3_ bspline(const gtsam::Key key1, const gtsam::Double_& t) {
+  return bspline(key1 - 1, key1, key1 + 1, key1 + 2, t);
+}
+
+inline gtsam::Pose3_ bspline_se3(const gtsam::Key key1, const gtsam::Double_& t) {
+  return bspline_se3(key1 - 1, key1, key1 + 1, key1 + 2, t);
+}
+
 }  // namespace gtsam_ext

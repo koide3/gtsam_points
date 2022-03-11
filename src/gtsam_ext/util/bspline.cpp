@@ -37,7 +37,7 @@ gtsam::Pose3_ bspline(const gtsam::Key key0, const gtsam::Key key1, const gtsam:
 
   const gtsam::Rot3_ rot = gtsam::compose(gtsam::compose(gtsam::compose(rot0, r_delta1), r_delta2), r_delta3);
   const gtsam::Vector3_ trans = gtsam::compose(gtsam::compose(gtsam::compose(trans0, t_delta1), t_delta2), t_delta3);
-  const gtsam::Pose3_ pose = gtsam_ext::se3(rot, trans);
+  const gtsam::Pose3_ pose = gtsam_ext::create_se3(rot, trans);
 
   return pose;
 }
