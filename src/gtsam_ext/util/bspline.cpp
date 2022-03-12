@@ -4,7 +4,7 @@
 
 namespace gtsam_ext {
 
-gtsam::Pose3_ bspline(const gtsam::Pose3_ pose0, const gtsam::Pose3_ pose1, const gtsam::Pose3_ pose2, const gtsam::Pose3_ pose3, const gtsam::Double_& t) {
+gtsam::Pose3_ bspline(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, const gtsam::Pose3_& pose2, const gtsam::Pose3_& pose3, const gtsam::Double_& t) {
   const gtsam::Double_ t2 = t * t;
   const gtsam::Double_ t3 = t2 * t;
 
@@ -37,7 +37,7 @@ gtsam::Pose3_ bspline(const gtsam::Pose3_ pose0, const gtsam::Pose3_ pose1, cons
   return pose;
 }
 
-gtsam::Pose3_ bspline_se3(const gtsam::Pose3_ pose0, const gtsam::Pose3_ pose1, const gtsam::Pose3_ pose2, const gtsam::Pose3_ pose3, const gtsam::Double_& t) {
+gtsam::Pose3_ bspline_se3(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, const gtsam::Pose3_& pose2, const gtsam::Pose3_& pose3, const gtsam::Double_& t) {
   const gtsam::Double_ t2 = t * t;
   const gtsam::Double_ t3 = t2 * t;
 
@@ -52,6 +52,40 @@ gtsam::Pose3_ bspline_se3(const gtsam::Pose3_ pose0, const gtsam::Pose3_ pose1, 
   const gtsam::Pose3_ pose = gtsam::compose(gtsam::compose(gtsam::compose(pose0, delta1), delta2), delta3);
 
   return pose;
+}
+
+gtsam::Rot3_ bspline_so3(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, const gtsam::Rot3_& rot2, const gtsam::Rot3_& rot3, const gtsam::Double_& t) {
+  const gtsam::Double_ t2 = t * t;
+  const gtsam::Double_ t3 = t2 * t;
+
+  const gtsam::Double_ beta1 = gtsam::Double_(5.0 / 6.0) + 3.0 / 6.0 * t - 3.0 / 6.0 * t2 + 1.0 / 6.0 * t3;
+  const gtsam::Double_ beta2 = gtsam::Double_(1.0 / 6.0) + 3.0 / 6.0 * t + 3.0 / 6.0 * t2 - 2.0 / 6.0 * t3;
+  const gtsam::Double_ beta3 = 1.0 / 6.0 * t3;
+
+  const gtsam::Rot3_ r_delta1 = gtsam_ext::expmap(gtsam_ext::scale(beta1, gtsam::logmap(rot0, rot1)));
+  const gtsam::Rot3_ r_delta2 = gtsam_ext::expmap(gtsam_ext::scale(beta2, gtsam::logmap(rot1, rot2)));
+  const gtsam::Rot3_ r_delta3 = gtsam_ext::expmap(gtsam_ext::scale(beta3, gtsam::logmap(rot2, rot3)));
+
+  const gtsam::Rot3_ rot = gtsam::compose(gtsam::compose(gtsam::compose(rot0, r_delta1), r_delta2), r_delta3);
+
+  return rot;
+}
+
+gtsam::Vector3_ bspline_trans(const gtsam::Vector3_& trans0, const gtsam::Vector3_& trans1, const gtsam::Vector3_& trans2, const gtsam::Vector3_& trans3, const gtsam::Double_& t) {
+  const gtsam::Double_ t2 = t * t;
+  const gtsam::Double_ t3 = t2 * t;
+
+  const gtsam::Double_ beta1 = gtsam::Double_(5.0 / 6.0) + 3.0 / 6.0 * t - 3.0 / 6.0 * t2 + 1.0 / 6.0 * t3;
+  const gtsam::Double_ beta2 = gtsam::Double_(1.0 / 6.0) + 3.0 / 6.0 * t + 3.0 / 6.0 * t2 - 2.0 / 6.0 * t3;
+  const gtsam::Double_ beta3 = 1.0 / 6.0 * t3;
+
+  const gtsam::Vector3_ t_delta1 = gtsam_ext::scale(beta1, gtsam::between(trans0, trans1));
+  const gtsam::Vector3_ t_delta2 = gtsam_ext::scale(beta2, gtsam::between(trans1, trans2));
+  const gtsam::Vector3_ t_delta3 = gtsam_ext::scale(beta3, gtsam::between(trans2, trans3));
+
+  const gtsam::Vector3_ trans = gtsam::compose(gtsam::compose(gtsam::compose(trans0, t_delta1), t_delta2), t_delta3);
+
+  return trans;
 }
 
 gtsam::Vector3_ bspline_angular_vel(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, const gtsam::Rot3_& rot2, const gtsam::Rot3_& rot3, const gtsam::Double_& t) {
@@ -133,7 +167,8 @@ bspline_linear_acc(const gtsam::Vector3_& trans0, const gtsam::Vector3_& trans1,
   return omega3_;
 }
 
-gtsam::Vector6_ bspline_imu(const gtsam::Pose3_ pose0, const gtsam::Pose3_ pose1, const gtsam::Pose3_ pose2, const gtsam::Pose3_ pose3, const gtsam::Double_& t) {
+gtsam::Vector6_
+bspline_imu(const gtsam::Pose3_ pose0, const gtsam::Pose3_ pose1, const gtsam::Pose3_ pose2, const gtsam::Pose3_ pose3, const gtsam::Double_& t, const gtsam::Vector3& g) {
   const gtsam::Double_ t2 = t * t;
   const gtsam::Double_ t3 = t2 * t;
 
@@ -170,6 +205,8 @@ gtsam::Vector6_ bspline_imu(const gtsam::Pose3_ pose0, const gtsam::Pose3_ pose1
 
   const gtsam::Rot3_ rot = gtsam::compose(gtsam::compose(gtsam::compose(rot0, r_A1), r_A2), r_A3);
 
+  const gtsam::Vector3_ angular_vel = gtsam::unrotate(rot, r_omega3);
+
   // Translation
   const gtsam::Vector3_ trans0 = gtsam_ext::translation(pose0);
   const gtsam::Vector3_ trans1 = gtsam_ext::translation(pose1);
@@ -184,8 +221,8 @@ gtsam::Vector6_ bspline_imu(const gtsam::Pose3_ pose0, const gtsam::Pose3_ pose1
   const gtsam::Vector3_ t_omega2_ = gtsam::compose(t_omega1_, gtsam_ext::scale(H2_beta2_t, t_d2));
   const gtsam::Vector3_ t_omega3_ = gtsam::compose(t_omega2_, gtsam_ext::scale(H2_beta3_t, t_d3));
 
-  const gtsam::Vector3_ linear_acc = gtsam::unrotate(rot, t_omega3_);
+  const gtsam::Vector3_ linear_acc = gtsam::unrotate(rot, t_omega3_ + gtsam::Vector3_(g));
 
-  return gtsam_ext::concatenate(linear_acc, r_omega3);
+  return gtsam_ext::concatenate(linear_acc, angular_vel);
 }
-}
+}  // namespace gtsam_ext

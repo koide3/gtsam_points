@@ -13,12 +13,11 @@
 
 namespace gtsam_ext {
 
-ContinuousTrajectory::ContinuousTrajectory(const char symbol, const double start_time, const double end_time, const double knot_interval, const RotTransMotionModel motion_model)
+ContinuousTrajectory::ContinuousTrajectory(const char symbol, const double start_time, const double end_time, const double knot_interval)
 : symbol(symbol),
   start_time(start_time - knot_interval / 2),
   end_time(end_time + knot_interval / 2),
-  knot_interval(knot_interval),
-  motion_model(motion_model) {}
+  knot_interval(knot_interval) {}
 
 const double ContinuousTrajectory::knot_stamp(const int i) const {
   return start_time + (i - 1) * knot_interval;
@@ -32,7 +31,22 @@ const int ContinuousTrajectory::knot_max_id() const {
   return knot_id(end_time) + 2;
 }
 
-gtsam::Values ContinuousTrajectory::fit_knots(const std::vector<double>& stamps, const std::vector<Eigen::Isometry3d>& poses, double smoothness) const {
+const gtsam::Pose3_ ContinuousTrajectory::pose(const double t, const gtsam::Double_& t_) {
+  const int knot_i = knot_id(t);
+  const double knot_t = knot_stamp(knot_i);
+  const double p = (t - knot_t) / knot_interval;
+
+  const gtsam::Double_ p_ = (1.0 / knot_interval) * (t_ - gtsam::Double_(knot_t));
+
+  return gtsam_ext::bspline(gtsam::Symbol(symbol, knot_i), p_);
+}
+
+const gtsam::Pose3 ContinuousTrajectory::pose(const gtsam::Values& values, const double t) {
+  const auto pose_ = pose(t, gtsam::Double_(t));
+  return pose_.value(values);
+}
+
+gtsam::Values ContinuousTrajectory::fit_knots(const std::vector<double>& stamps, const std::vector<gtsam::Pose3>& poses, double smoothness) const {
   gtsam::Values values;
   gtsam::NonlinearFactorGraph graph;
 
@@ -45,7 +59,7 @@ gtsam::Values ContinuousTrajectory::fit_knots(const std::vector<double>& stamps,
       pose_cursor++;
     }
 
-    values.insert(gtsam::Symbol(symbol, i), gtsam::Pose3(poses[pose_cursor].matrix()));
+    values.insert(gtsam::Symbol(symbol, i), poses[pose_cursor]);
   }
 
   // Smoothness regularization to prevent optimization corruption
@@ -62,7 +76,7 @@ gtsam::Values ContinuousTrajectory::fit_knots(const std::vector<double>& stamps,
     const double knot_t = knot_stamp(knot_i);
     const double p = (stamps[i] - knot_t) / knot_interval;
 
-    gtsam::Pose3_ pose_ = motion_model == RotTransMotionModel::INDEPENDENT ? bspline(gtsam::Symbol(symbol, knot_i), p) : bspline_se3(gtsam::Symbol(symbol, knot_i), p);
+    gtsam::Pose3_ pose_ = bspline(gtsam::Symbol(symbol, knot_i), p);
 
     const auto noise_model = gtsam::noiseModel::Isotropic::Precision(6, 1.0);
     graph.emplace_shared<gtsam::ExpressionFactor<gtsam::Pose3>>(noise_model, gtsam::Pose3(poses[i].matrix()), pose_);
@@ -70,7 +84,7 @@ gtsam::Values ContinuousTrajectory::fit_knots(const std::vector<double>& stamps,
 
   // Optimize knot poses
   gtsam::LevenbergMarquardtParams lm_params;
-  lm_params.setVerbosityLM("SUMMARY");
+  // lm_params.setVerbosityLM("SUMMARY");
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
   values = optimizer.optimize();
 
