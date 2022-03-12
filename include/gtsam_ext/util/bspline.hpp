@@ -141,4 +141,8 @@ inline gtsam::Pose3_ bspline_se3(const gtsam::Key key1, const gtsam::Double_& t)
   return bspline_se3(gtsam::Pose3_(key1 - 1), gtsam::Pose3_(key1), gtsam::Pose3_(key1 + 1), gtsam::Pose3_(key1 + 2), t);
 }
 
+inline gtsam::Vector6_ bspline_imu(const gtsam::Key key1, const gtsam::Double_& t, const double knot_interval, const gtsam::Vector3& g) {
+  return bspline_imu(gtsam::Pose3_(key1 - 1), gtsam::Pose3_(key1), gtsam::Pose3_(key1 + 1), gtsam::Pose3_(key1 + 2), t, knot_interval, g);
+}
+
 }  // namespace gtsam_ext
