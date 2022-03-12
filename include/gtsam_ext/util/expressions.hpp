@@ -15,20 +15,43 @@ inline gtsam::Vector3 translation(const gtsam::Pose3& pose, gtsam::OptionalJacob
 }
 
 template <int N>
-inline Eigen::Matrix<double, N, 1> scale(const double s, const Eigen::Matrix<double, N, 1>& v, gtsam::OptionalJacobian<N, 1> H1, gtsam::OptionalJacobian<N, N> H2) {
-  if (H1) {
-    *H1 = v;
-  }
-  if (H2) {
-    *H2 = s * Eigen::Matrix<double, N, N>::Identity();
-  }
-  return s * v;
-}
-
-template <int N>
 struct vector_traits {
+  static Eigen::Matrix<double, N, 1>
+  Add(const Eigen::Matrix<double, N, 1>& v1, const Eigen::Matrix<double, N, 1>& v2, gtsam::OptionalJacobian<N, N> H1, gtsam::OptionalJacobian<N, N> H2) {
+    if (H1) {
+      H1->setIdentity();
+    }
+    if (H2) {
+      H2->setIdentity();
+    }
+    return v1 + v2;
+  }
+
   static Eigen::Matrix<double, N, 1> Scale(const double s, const Eigen::Matrix<double, N, 1>& v, gtsam::OptionalJacobian<N, 1> H1, gtsam::OptionalJacobian<N, N> H2) {
-    return scale(s, v, H1, H2);
+    if (H1) {
+      *H1 = v;
+    }
+    if (H2) {
+      *H2 = s * Eigen::Matrix<double, N, N>::Identity();
+    }
+    return s * v;
+  }
+};
+
+template <int N, int M>
+struct vector2_traits {
+  static Eigen::Matrix<double, N + M, 1>
+  Concatenate(const Eigen::Matrix<double, N, 1>& x1, const Eigen::Matrix<double, M, 1>& x2, gtsam::OptionalJacobian<N + M, N> H1, gtsam::OptionalJacobian<N + M, M> H2) {
+    if (H1) {
+      H1->setZero();
+      H1->template topLeftCorner<N, N>().setIdentity();
+    }
+    if (H2) {
+      H2->setZero();
+      H2->template bottomRightCorner<M, M>().setIdentity();
+    }
+
+    return (Eigen::Matrix<double, N + M, 1>() << x1, x2).finished();
   }
 };
 
@@ -41,6 +64,16 @@ inline gtsam::Vector3_ translation(const gtsam::Pose3_& x) {
 template <int N>
 gtsam::Expression<Eigen::Matrix<double, N, 1>> scale(const gtsam::Double_& s, const gtsam::Expression<Eigen::Matrix<double, N, 1>>& v) {
   return gtsam::Expression<Eigen::Matrix<double, N, 1>>(&internal::vector_traits<N>::Scale, s, v);
+}
+
+template <int N>
+gtsam::Expression<Eigen::Matrix<double, N, 1>> add(const gtsam::Expression<Eigen::Matrix<double, N, 1>>& v1, const gtsam::Expression<Eigen::Matrix<double, N, 1>>& v2) {
+  return gtsam::Expression<Eigen::Matrix<double, N, 1>>(&internal::vector_traits<N>::Add, v1, v2);
+}
+
+template <int N, int M>
+gtsam::Expression<Eigen::Matrix<double, N + M, 1>> concatenate(const gtsam::Expression<Eigen::Matrix<double, N, 1>>& x1, const gtsam::Expression<Eigen::Matrix<double, M, 1>>& x2) {
+  return gtsam::Expression<Eigen::Matrix<double, N + M, 1>>(&internal::vector2_traits<N, M>::Concatenate, x1, x2);
 }
 
 inline gtsam::Pose3_ create_se3(const gtsam::Rot3_& rot, const gtsam::Vector3_& trans) {

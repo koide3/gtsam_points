@@ -215,7 +215,7 @@ public:
     // iSAM2 optimization
     else if (optimizer_types[optimizer_type] == std::string("ISAM2")) {
       gtsam::ISAM2Params isam2_params;
-      isam2_params.setRelinearizeSkip(1);
+      // isam2_params.setRelinearizeSkip(1);
       isam2_params.setRelinearizeThreshold(0.01);
       gtsam_ext::ISAM2Ext isam2(isam2_params);
 

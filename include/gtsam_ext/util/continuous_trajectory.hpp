@@ -6,6 +6,10 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Continuous trajectory class for offline batch optimization
+ *
+ */
 class ContinuousTrajectory {
 public:
   /**
