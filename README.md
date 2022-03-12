@@ -20,10 +20,12 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
 - **IntegratedLOAMFactor**  
     Matching cost factor based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO)
 
+
 ### Colored Scan Matching Factors
 
 - **IntegratedColoredGICPFactor**  
     GICP + photometric error [[2]](#GICP)[[7]](#COLORED)
+
 
 ### Continuous-time ICP Factors
 
@@ -31,6 +33,7 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
     Continuous Time ICP Factor [[8]](#CTICP)
 - **IntegratedCT_GICPFactor**  
     Continuous Time ICP with GICP's D2D matching cost [[2]](#GICP)[[8]](#CTICP)
+
 
 ### Bundle Adjustment Factors
 
@@ -52,6 +55,14 @@ All the following optimizers were derived from the implementations in GTSAM
 ## Nearest Neighbor Search
 - **KdTree**
     Standard KdTree-based nearest neighbor search using [nanoflann](https://github.com/jlblancoc/nanoflann)
+
+
+## Continuous-Time Trajectory
+- **B-Spline**
+    Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[11]](#BSPLINE_D)
+- **ContinuousTrajectory**
+    Cubic B-Spline-based continuous trajectory representation for offline batch optimization
+
 
 ## Installation
 
@@ -131,3 +142,4 @@ The test data in ```data``` directory are generated from [The KITTI Vision Bench
 <a name="CTICP"></a> [8] Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021  
 <a name="BA_EVM"></a> [9] Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021  
 <a name="BA_LSQ"></a> [10] Huang et al, "On Bundle Adjustment for Multiview Point Cloud Registration", IEEE RA-L, 2021  
+<a name="BSPLINE_D"></a> [11] Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
