@@ -93,34 +93,37 @@ TEST_F(ContinuousTrajectoryTestBase, InterpolationTest) {
     check_pose_error(pose, gtsam::Pose3(rot0, trans0), "Independent");
 
     // Derivatives
-    const auto dr_dt_ = gtsam_ext::bspline_angular_vel(  //
+    const auto dr_dt_ = gtsam_ext::bspline_angular_vel(
       gtsam::rotation(X(knot_i - 1)),
       gtsam::rotation(X(knot_i)),
       gtsam::rotation(X(knot_i + 1)),
       gtsam::rotation(X(knot_i + 2)),
-      p);
+      p,
+      ct->knot_interval);
     const auto dr_dt = dr_dt_.value(*values);
-    check_error(dr_dt, Hs_rot0.front() * ct->knot_interval, "Angular vel", 5e-2);
+    check_error(dr_dt, Hs_rot0.front(), "Angular vel", 1e-1);
 
     const auto dt_dt_ = gtsam_ext::bspline_linear_vel(
       gtsam_ext::translation(X(knot_i - 1)),
       gtsam_ext::translation(X(knot_i)),
       gtsam_ext::translation(X(knot_i + 1)),
       gtsam_ext::translation(X(knot_i + 2)),
-      p);
+      p,
+      ct->knot_interval);
 
     std::vector<gtsam::Matrix> Hs_tvel(dt_dt_.keys().size());
     const auto dt_dt = dt_dt_.value(*values, Hs_tvel);
-    check_error(dt_dt / ct->knot_interval, Hs_trans0.front(), "Linear vel", 5e-2);
+    check_error(dt_dt, Hs_trans0.front(), "Linear vel", 5e-2);
 
     const auto dt_dt2_ = gtsam_ext::bspline_linear_acc(
       gtsam_ext::translation(X(knot_i - 1)),
       gtsam_ext::translation(X(knot_i)),
       gtsam_ext::translation(X(knot_i + 1)),
       gtsam_ext::translation(X(knot_i + 2)),
-      p);
+      p,
+      ct->knot_interval);
     const auto dt_dt2 = dt_dt2_.value(*values);
-    check_error(dt_dt2 / ct->knot_interval, Hs_tvel.front(), "Linear acc", 5e-2);
+    check_error(dt_dt2, Hs_tvel.front(), "Linear acc", 5e-2);
 
     const Eigen::Vector3d g(0.0, 0.0, 9.80665);
     const auto imu_ = gtsam_ext::bspline_imu(  //
@@ -129,6 +132,7 @@ TEST_F(ContinuousTrajectoryTestBase, InterpolationTest) {
       gtsam::Pose3_(X(knot_i + 1)),
       gtsam::Pose3_(X(knot_i + 2)),
       p,
+      ct->knot_interval,
       g);
     const auto imu = imu_.value(*values);
     gtsam::Vector6 imu2 = (gtsam::Vector6() << rot0.unrotate(dt_dt2 + g), rot0.unrotate(dr_dt)).finished();
