@@ -43,7 +43,7 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
     Bundle adjustment factor based on EVM and EF optimal condition satisfaction [[10]](#BA_LSQ)
 
 
-## Optimizers for GPU-based Factors
+## Optimizers for GPU Factors
 
 All the following optimizers were derived from the implementations in GTSAM
 
