@@ -113,7 +113,7 @@ bspline_angular_vel(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, const gt
   const gtsam::Vector3_ omega2 = gtsam_ext::add(gtsam::unrotate(A1, omega1), gtsam_ext::scale(H_beta2_t, d2));
   const gtsam::Vector3_ omega3 = gtsam_ext::add(gtsam::unrotate(A2, omega2), gtsam_ext::scale(H_beta3_t, d3));
 
-  return gtsam_ext::scale(1.0 / knot_interval, omega3);
+  return (1.0 / knot_interval) * omega3;
 }
 
 gtsam::Vector3_ bspline_linear_vel(
@@ -143,7 +143,7 @@ gtsam::Vector3_ bspline_linear_vel(
   const gtsam::Vector3_ omega2 = gtsam::compose(omega1, gtsam_ext::scale(H_beta2_t, d2));
   const gtsam::Vector3_ omega3 = gtsam::compose(omega2, gtsam_ext::scale(H_beta3_t, d3));
 
-  return gtsam_ext::scale(1.0 / knot_interval, omega3);
+  return (1.0 / knot_interval) * omega3;
 }
 
 gtsam::Vector3_ bspline_linear_acc(
@@ -177,7 +177,7 @@ gtsam::Vector3_ bspline_linear_acc(
   const gtsam::Vector3_ omega2_ = gtsam::compose(omega1_, gtsam_ext::scale(H2_beta2_t, d2));
   const gtsam::Vector3_ omega3_ = gtsam::compose(omega2_, gtsam_ext::scale(H2_beta3_t, d3));
 
-  return gtsam_ext::scale(1.0 / (knot_interval * knot_interval), omega3_);
+  return (1.0 / (knot_interval * knot_interval)) * omega3_;
 }
 
 gtsam::Vector6_ bspline_imu(
@@ -242,8 +242,10 @@ gtsam::Vector6_ bspline_imu(
 
   const double inv_knot_interval = 1.0 / knot_interval;
   const double inv_knot_interval2 = inv_knot_interval * inv_knot_interval;
-  const gtsam::Vector3_ angular_vel = gtsam::unrotate(rot, gtsam_ext::scale(inv_knot_interval, r_omega3));
-  const gtsam::Vector3_ linear_acc = gtsam::unrotate(rot, gtsam_ext::scale(inv_knot_interval2, t_omega3_) + gtsam::Vector3_(g));
+  // const gtsam::Vector3_ angular_vel = gtsam::unrotate(rot, inv_knot_interval * r_omega3);
+
+  const gtsam::Vector3_ angular_vel = inv_knot_interval * r_omega3;
+  const gtsam::Vector3_ linear_acc = gtsam::unrotate(rot, inv_knot_interval2 * t_omega3_ + gtsam::Vector3_(g));
 
   return gtsam_ext::concatenate(linear_acc, angular_vel);
 }

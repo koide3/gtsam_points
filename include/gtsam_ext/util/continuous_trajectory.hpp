@@ -40,15 +40,30 @@ public:
   /**
    * @brief Get an expression of the interpolated time at t
    * @param t  Time
+   * @param t_ Expression of t
    */
   const gtsam::Pose3_ pose(const double t, const gtsam::Double_& t_);
 
   /**
-   * @brief Get the interpolated time at t
+   * @brief Calculate the interpolated time at t
    * @param values  Values including knot poses
    * @param t       Time
    */
   const gtsam::Pose3 pose(const gtsam::Values& values, const double t);
+
+  /**
+   * @brief Get an expression of the linear acceleration and angular velocity at t
+   * @param t  Time
+   * @param t_ Expression of t
+   */
+  const gtsam::Vector6_ imu(const double t, const gtsam::Double_& t_, const Eigen::Vector3d& g = Eigen::Vector3d(0.0, 0.0, 9.80665));
+
+  /**
+   * @brief Calculate the linear acceleration and angular velocity at t
+   * @param values  Values including knot poses
+   * @param t       Time
+   */
+  const gtsam::Vector6 imu(const gtsam::Values& values, const double t, const Eigen::Vector3d& g = Eigen::Vector3d(0.0, 0.0, 9.80665));
 
   /**
    * @brief Optimize spline knots to fit the interpolated trajectory to a set of poses

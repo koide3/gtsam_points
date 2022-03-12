@@ -34,8 +34,6 @@ const int ContinuousTrajectory::knot_max_id() const {
 const gtsam::Pose3_ ContinuousTrajectory::pose(const double t, const gtsam::Double_& t_) {
   const int knot_i = knot_id(t);
   const double knot_t = knot_stamp(knot_i);
-  const double p = (t - knot_t) / knot_interval;
-
   const gtsam::Double_ p_ = (1.0 / knot_interval) * (t_ - gtsam::Double_(knot_t));
 
   return gtsam_ext::bspline(gtsam::Symbol(symbol, knot_i), p_);
@@ -44,6 +42,19 @@ const gtsam::Pose3_ ContinuousTrajectory::pose(const double t, const gtsam::Doub
 const gtsam::Pose3 ContinuousTrajectory::pose(const gtsam::Values& values, const double t) {
   const auto pose_ = pose(t, gtsam::Double_(t));
   return pose_.value(values);
+}
+
+const gtsam::Vector6_ ContinuousTrajectory::imu(const double t, const gtsam::Double_& t_, const Eigen::Vector3d& g) {
+  const int knot_i = knot_id(t);
+  const double knot_t = knot_stamp(knot_i);
+  const gtsam::Double_ p_ = (1.0 / knot_interval) * (t_ - gtsam::Double_(knot_t));
+
+  return gtsam_ext::bspline_imu(gtsam::Symbol(symbol, knot_i), p_, knot_interval, g);
+}
+
+const gtsam::Vector6 ContinuousTrajectory::imu(const gtsam::Values& values, const double t, const Eigen::Vector3d& g) {
+  const auto imu_ = imu(t, gtsam::Double_(t), g);
+  return imu_.value(values);
 }
 
 gtsam::Values ContinuousTrajectory::fit_knots(const std::vector<double>& stamps, const std::vector<gtsam::Pose3>& poses, double smoothness) const {
