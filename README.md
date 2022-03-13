@@ -23,8 +23,11 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
 
 ### Colored Scan Matching Factors
 
+- **IntegratedColorConsistencyFactor**  
+    Photometric ICP error [[7]](#COLORED)
+
 - **IntegratedColoredGICPFactor**  
-    GICP + photometric error [[2]](#GICP)[[7]](#COLORED)
+    Photometric ICP error + GICP geometric error [[2]](#GICP)[[7]](#COLORED)
 
 
 ### Continuous-time ICP Factors
