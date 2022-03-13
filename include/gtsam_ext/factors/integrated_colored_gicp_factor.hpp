@@ -6,8 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/frame.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/basic_frame.hpp>
 #include <gtsam_ext/factors/intensity_gradients.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
@@ -28,6 +27,7 @@ struct NearestNeighborSearch;
  * @ref Segal et al., "Generalized-ICP", RSS2005
  * @ref Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
  */
+template <typename Frame = BasicFrame>
 class IntegratedColoredGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -36,16 +36,16 @@ public:
   IntegratedColoredGICPFactor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     const IntensityGradients::ConstPtr& target_gradients);
 
   IntegratedColoredGICPFactor(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     const IntensityGradients::ConstPtr& target_gradients);
 

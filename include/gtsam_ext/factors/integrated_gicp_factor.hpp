@@ -6,7 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/basic_frame.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
 namespace gtsam_ext {
@@ -17,25 +17,36 @@ struct NearestNeighborSearch;
  * @brief Generalized ICP matching cost factor
  * @ref Segal et al., "Generalized-ICP", RSS2005
  */
+template <typename Frame = BasicFrame>
 class IntegratedGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedGICPFactor>;
 
-  IntegratedGICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
   IntegratedGICPFactor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source);
+
+  IntegratedGICPFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
-  IntegratedGICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
   IntegratedGICPFactor(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source);
+
+  IntegratedGICPFactor(
+    const gtsam::Pose3& fixed_target_pose,
+    gtsam::Key source_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
   virtual ~IntegratedGICPFactor() override;

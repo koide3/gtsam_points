@@ -12,10 +12,11 @@ namespace gtsam_ext {
  * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
  * @ref Segal et al., "Generalized-ICP", RSS2005
  */
-class IntegratedCT_GICPFactor : public IntegratedCT_ICPFactor {
+template <typename Frame = BasicFrame>
+class IntegratedCT_GICPFactor : public IntegratedCT_ICPFactor<Frame> {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedCT_GICPFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedCT_GICPFactor<Frame>>;
 
   /**
    * @brief Constructor
@@ -28,8 +29,8 @@ public:
   IntegratedCT_GICPFactor(
     gtsam::Key source_t0_key,
     gtsam::Key source_t1_key,
-    const gtsam_ext::Frame::ConstPtr& target,
-    const gtsam_ext::Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
   /**
@@ -39,7 +40,11 @@ public:
    * @param target          Target point cloud
    * @param source          Source point cloud
    */
-  IntegratedCT_GICPFactor(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const gtsam_ext::Frame::ConstPtr& target, const gtsam_ext::Frame::ConstPtr& source);
+  IntegratedCT_GICPFactor(
+    gtsam::Key source_t0_key,
+    gtsam::Key source_t1_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source);
 
   virtual ~IntegratedCT_GICPFactor() override;
 

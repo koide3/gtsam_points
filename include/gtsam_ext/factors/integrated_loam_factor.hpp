@@ -6,13 +6,16 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/basic_frame.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
 namespace gtsam_ext {
 
 struct NearestNeighborSearch;
+
+template <typename Frame>
 class IntegratedPointToPlaneFactor;
+template <typename Frame>
 class IntegratedPointToEdgeFactor;
 
 /**
@@ -22,6 +25,7 @@ class IntegratedPointToEdgeFactor;
  * @ref Zhang and Singh, "LOAM: LiDAR Odometry and Mapping in Real-time", RSS2014
  * @ref Tixiao and Brendan, "LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain", IROS2018
  */
+template <typename Frame = BasicFrame>
 class IntegratedLOAMFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -30,20 +34,20 @@ public:
   IntegratedLOAMFactor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target_edges,
-    const Frame::ConstPtr& target_planes,
-    const Frame::ConstPtr& source_edges,
-    const Frame::ConstPtr& source_planes,
+    const std::shared_ptr<const Frame>& target_edges,
+    const std::shared_ptr<const Frame>& target_planes,
+    const std::shared_ptr<const Frame>& source_edges,
+    const std::shared_ptr<const Frame>& source_planes,
     const std::shared_ptr<NearestNeighborSearch>& target_edges_tree,
     const std::shared_ptr<NearestNeighborSearch>& target_planes_tree);
 
   IntegratedLOAMFactor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target_edges,
-    const Frame::ConstPtr& target_planes,
-    const Frame::ConstPtr& source_edges,
-    const Frame::ConstPtr& source_planes);
+    const std::shared_ptr<const Frame>& target_edges,
+    const std::shared_ptr<const Frame>& target_planes,
+    const std::shared_ptr<const Frame>& source_edges,
+    const std::shared_ptr<const Frame>& source_planes);
 
   ~IntegratedLOAMFactor();
 
@@ -73,25 +77,32 @@ protected:
 
 private:
   bool enable_correspondence_validation;
-  std::unique_ptr<IntegratedPointToEdgeFactor> edge_factor;
-  std::unique_ptr<IntegratedPointToPlaneFactor> plane_factor;
+  std::unique_ptr<IntegratedPointToEdgeFactor<Frame>> edge_factor;
+  std::unique_ptr<IntegratedPointToPlaneFactor<Frame>> plane_factor;
 };
 
 // Point-to-plane distance
+template <typename Frame = BasicFrame>
 class IntegratedPointToPlaneFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneFactor<Frame>>;
 
-  friend class IntegratedLOAMFactor;
+  friend class IntegratedLOAMFactor<Frame>;
 
   IntegratedPointToPlaneFactor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
-  IntegratedPointToPlaneFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
+
+  IntegratedPointToPlaneFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source);
+
   ~IntegratedPointToPlaneFactor();
 
   void set_num_threads(int n) { num_threads = n; }
@@ -129,20 +140,27 @@ private:
 };
 
 // Point-to-edge distance
+template <typename Frame = BasicFrame>
 class IntegratedPointToEdgeFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedPointToEdgeFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedPointToEdgeFactor<Frame>>;
 
-  friend class IntegratedLOAMFactor;
+  friend class IntegratedLOAMFactor<Frame>;
 
   IntegratedPointToEdgeFactor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
-  IntegratedPointToEdgeFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source);
+
+  IntegratedPointToEdgeFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source);
+
   ~IntegratedPointToEdgeFactor();
 
   void set_num_threads(int n) { num_threads = n; }

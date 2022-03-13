@@ -53,16 +53,16 @@ GaussianVoxel::Ptr GaussianVoxelMapCPU::lookup_voxel(const Eigen::Vector3i& coor
   return found->second;
 }
 
-void GaussianVoxelMapCPU::create_voxelmap(const Frame& frame) {
-  if (!frame.points || !frame.covs) {
+void GaussianVoxelMapCPU::create_voxelmap(const BasicFrame& frame) {
+  if (!frame::has_points(frame) || !frame::has_covs(frame)) {
     std::cerr << "error: points/covs not allocated!!" << std::endl;
     abort();
   }
 
   voxels.clear();
 
-  for (int i = 0; i < frame.num_points; i++) {
-    Eigen::Vector3i coord = voxel_coord(frame.points[i]);
+  for (int i = 0; i < frame::size(frame); i++) {
+    Eigen::Vector3i coord = voxel_coord(frame::point(frame, i));
 
     auto found = voxels.find(coord);
     if (found == voxels.end()) {
@@ -71,7 +71,7 @@ void GaussianVoxelMapCPU::create_voxelmap(const Frame& frame) {
     }
 
     auto& voxel = found->second;
-    voxel->append(frame.points[i], frame.covs[i]);
+    voxel->append(frame::point(frame, i), frame::cov(frame, i));
   }
 
   for (auto& voxel : voxels) {

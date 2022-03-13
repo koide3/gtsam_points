@@ -6,7 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/basic_frame.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
 namespace gtsam_ext {
@@ -17,30 +17,41 @@ struct NearestNeighborSearch;
  * @brief Naive point-to-point ICP matching cost factor
  * @ref Zhang, "Iterative Point Matching for Registration of Free-Form Curve", IJCV1994
  */
+template <typename Frame = BasicFrame>
 class IntegratedICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedICPFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedICPFactor<Frame>>;
 
   IntegratedICPFactor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree,
     bool use_point_to_plane = false);
 
-  IntegratedICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane = false);
+  IntegratedICPFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
+    bool use_point_to_plane = false);
 
   IntegratedICPFactor(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree,
     bool use_point_to_plane = false);
 
-  IntegratedICPFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, bool use_point_to_plane = false);
+  IntegratedICPFactor(
+    const gtsam::Pose3& fixed_target_pose,
+    gtsam::Key source_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
+    bool use_point_to_plane = false);
 
   virtual ~IntegratedICPFactor() override;
 
@@ -82,12 +93,17 @@ private:
   std::shared_ptr<const Frame> source;
 };
 
-class IntegratedPointToPlaneICPFactor : public gtsam_ext::IntegratedICPFactor {
+template <typename Frame>
+class IntegratedPointToPlaneICPFactor : public gtsam_ext::IntegratedICPFactor<Frame> {
 public:
-  using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneICPFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneICPFactor<Frame>>;
 
-  IntegratedPointToPlaneICPFactor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source)
-  : IntegratedICPFactor(target_key, source_key, target, source, true) {}
+  IntegratedPointToPlaneICPFactor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source)
+  : IntegratedICPFactor<Frame>(target_key, source_key, target, source, true) {}
 };
 
 }  // namespace gtsam_ext

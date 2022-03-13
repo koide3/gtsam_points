@@ -22,8 +22,7 @@ template FrameCPU::FrameCPU(const Eigen::Matrix<float, 4, 1>* points, int num_po
 template FrameCPU::FrameCPU(const Eigen::Matrix<double, 3, 1>* points, int num_points);
 template FrameCPU::FrameCPU(const Eigen::Matrix<double, 4, 1>* points, int num_points);
 
-
-FrameCPU::FrameCPU(const Frame& frame) {
+FrameCPU::FrameCPU(const BasicFrame& frame) {
   if (frame.points) {
     add_points(frame.points, frame.size());
   }
@@ -40,7 +39,7 @@ FrameCPU::FrameCPU(const Frame& frame) {
     add_covs(frame.covs, frame.size());
   }
 
-  if(frame.intensities) {
+  if (frame.intensities) {
     add_intensities(frame.intensities, frame.size());
   }
 }
@@ -48,7 +47,6 @@ FrameCPU::FrameCPU(const Frame& frame) {
 FrameCPU::FrameCPU() {}
 
 FrameCPU::~FrameCPU() {}
-
 
 // add_times
 template <typename T>
@@ -61,7 +59,6 @@ void FrameCPU::add_times(const T* times, int num_points) {
 
 template void FrameCPU::add_times(const float* times, int num_points);
 template void FrameCPU::add_times(const double* times, int num_points);
-
 
 // add_points
 template <typename T, int D>
@@ -79,7 +76,6 @@ template void FrameCPU::add_points(const Eigen::Matrix<float, 4, 1>* points, int
 template void FrameCPU::add_points(const Eigen::Matrix<double, 3, 1>* points, int num_points);
 template void FrameCPU::add_points(const Eigen::Matrix<double, 4, 1>* points, int num_points);
 
-
 // add_normals
 template <typename T, int D>
 void FrameCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
@@ -95,7 +91,6 @@ template void FrameCPU::add_normals(const Eigen::Matrix<float, 3, 1>* normals, i
 template void FrameCPU::add_normals(const Eigen::Matrix<float, 4, 1>* normals, int num_points);
 template void FrameCPU::add_normals(const Eigen::Matrix<double, 3, 1>* normals, int num_points);
 template void FrameCPU::add_normals(const Eigen::Matrix<double, 4, 1>* normals, int num_points);
-
 
 // add_covs
 template <typename T, int D>
@@ -113,7 +108,6 @@ template void FrameCPU::add_covs(const Eigen::Matrix<float, 4, 4>* covs, int num
 template void FrameCPU::add_covs(const Eigen::Matrix<double, 3, 3>* covs, int num_points);
 template void FrameCPU::add_covs(const Eigen::Matrix<double, 4, 4>* covs, int num_points);
 
-
 // add_intensities
 template <typename T>
 void FrameCPU::add_intensities(const T* intensities, int num_points) {
@@ -126,8 +120,8 @@ void FrameCPU::add_intensities(const T* intensities, int num_points) {
 template void FrameCPU::add_intensities(const float* intensities, int num_points);
 template void FrameCPU::add_intensities(const double* intensities, int num_points);
 
-
-FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
+/*
+FrameCPU::Ptr random_sampling(const BasicFrame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
   if (sampling_rate >= 0.99) {
     return FrameCPU::Ptr(new FrameCPU(*frame));
   }
@@ -182,6 +176,7 @@ FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double samplin
 
   return sampled;
 }
+*/
 
 FrameCPU::Ptr FrameCPU::load(const std::string& path) {
   FrameCPU::Ptr frame(new FrameCPU);
@@ -256,7 +251,9 @@ FrameCPU::Ptr FrameCPU::load(const std::string& path) {
 
       std::ifstream ifs(path + "/normals_compact.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(normals_f.data()), sizeof(Eigen::Vector3f) * frame->size());
-      std::transform(normals_f.begin(), normals_f.end(), frame->normals, [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p[0], p[1], p[2], 0.0); });
+      std::transform(normals_f.begin(), normals_f.end(), frame->normals, [](const Eigen::Vector3f& p) {
+        return Eigen::Vector4d(p[0], p[1], p[2], 0.0);
+      });
     }
 
     if (boost::filesystem::exists(path + "/covs_compact.bin")) {

@@ -10,14 +10,14 @@
 
 namespace gtsam_ext {
 
-IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::ConstPtr& frame, const std::vector<int>& neighbors, int k_photo_neighbors) {
-  if (!frame->has_points() || !frame->has_normals() || !frame->has_intensities()) {
+IntensityGradients::Ptr IntensityGradients::estimate(const BasicFrame::ConstPtr& frame, const std::vector<int>& neighbors, int k_photo_neighbors) {
+  if (!frame::has_points(*frame) || !frame::has_normals(*frame) || !frame::has_intensities(*frame)) {
     std::cerr << "error: input frame doesn't have required attributes for intensity gradient estimation!!" << std::endl;
     abort();
   }
 
-  const int k = neighbors.size() / frame->size();
-  if (frame->size() * k != neighbors.size()) {
+  const int k = neighbors.size() / frame::size(*frame);
+  if (frame::size(*frame) * k != neighbors.size()) {
     std::cerr << "error: k * frame->size() != neighbors.size()!!" << std::endl;
     abort();
   }
@@ -28,13 +28,13 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::Con
   }
 
   IntensityGradients::Ptr gradients(new IntensityGradients);
-  gradients->intensity_gradients.resize(frame->size());
+  gradients->intensity_gradients.resize(frame::size(*frame));
 
-  for (int i = 0; i < frame->size(); i++) {
+  for (int i = 0; i < frame::size(*frame); i++) {
     // Estimate color gradient
-    const auto& point = frame->points[i];
-    const auto& normal = frame->normals[i];
-    const double intensity = frame->intensities[i];
+    const auto& point = frame::point(*frame, i);
+    const auto& normal = frame::normal(*frame, i);
+    const double intensity = frame::intensity(*frame, i);
 
     Eigen::Matrix<double, -1, 4> A = Eigen::Matrix<double, -1, 4>::Zero(k_photo_neighbors, 4);
     Eigen::VectorXd b = Eigen::VectorXd::Zero(k_photo_neighbors);
@@ -46,8 +46,8 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::Con
     // Intensity gradient in the tangent space
     for (int j = 1; j < k_photo_neighbors; j++) {
       const int index = neighbors[k * i + j];
-      const auto& point_ = frame->points[index];
-      const double intensity_ = frame->intensities[index];
+      const auto& point_ = frame::point(*frame, index);
+      const double intensity_ = frame::intensity(*frame, index);
       const Eigen::Vector4d projected = point_ - (point_ - point).dot(normal) * normal;
       A.row(j) = projected - point;
       b(j) = (intensity_ - intensity);
@@ -61,27 +61,33 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::Con
   return gradients;
 }
 
-IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::ConstPtr& frame, int k_neighbors, int num_threads) {
-  if (!frame->has_points() || !frame->has_normals() || !frame->has_intensities()) {
+IntensityGradients::Ptr IntensityGradients::estimate(const BasicFrame::ConstPtr& frame, int k_neighbors, int num_threads) {
+  if (!frame::has_points(*frame) || !frame::has_normals(*frame) || !frame::has_intensities(*frame)) {
     std::cerr << "error: input frame doesn't have required attributes for intensity gradient estimation!!" << std::endl;
     abort();
   }
 
-  gtsam_ext::KdTree kdtree(frame->points, frame->size());
+  const Eigen::Vector4d* points_ptr = frame::points_ptr(*frame);
+  if (points_ptr == nullptr) {
+    std::cerr << "error: failed to obtain a pointer to points!!" << std::endl;
+    abort();
+  }
+
+  gtsam_ext::KdTree kdtree(points_ptr, frame::size(*frame));
 
   IntensityGradients::Ptr gradients(new IntensityGradients);
-  gradients->intensity_gradients.resize(frame->size());
+  gradients->intensity_gradients.resize(frame::size(*frame));
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
-  for (int i = 0; i < frame->size(); i++) {
+  for (int i = 0; i < frame::size(*frame); i++) {
     std::vector<size_t> k_indices(k_neighbors);
     std::vector<double> k_sq_dists(k_neighbors);
-    kdtree.knn_search(frame->points[i].data(), k_neighbors, k_indices.data(), k_sq_dists.data());
+    kdtree.knn_search(frame::point(*frame, i).data(), k_neighbors, k_indices.data(), k_sq_dists.data());
 
     // Estimate color gradient
-    const auto& point = frame->points[i];
-    const auto& normal = frame->normals[i];
-    const double intensity = frame->intensities[i];
+    const auto& point = frame::point(*frame, i);
+    const auto& normal = frame::normal(*frame, i);
+    const double intensity = frame::intensity(*frame, i);
 
     Eigen::Matrix<double, -1, 4> A = Eigen::Matrix<double, -1, 4>::Zero(k_neighbors, 4);
     Eigen::VectorXd b = Eigen::VectorXd::Zero(k_neighbors);
@@ -93,8 +99,8 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::Con
     // Intensity gradient in the tangent space
     for (int j = 1; j < k_neighbors; j++) {
       const int index = k_indices[j];
-      const auto& point_ = frame->points[index];
-      const double intensity_ = frame->intensities[index];
+      const auto& point_ = frame::point(*frame, index);
+      const double intensity_ = frame::intensity(*frame, index);
       const Eigen::Vector4d projected = point_ - (point_ - point).dot(normal) * normal;
       A.row(j) = projected - point;
       b(j) = (intensity_ - intensity);
@@ -108,8 +114,16 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::Frame::Con
   return gradients;
 }
 
-IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads) {
-  gtsam_ext::KdTree kdtree(frame->points, frame->size());
+/*
+IntensityGradients::Ptr
+IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads) {
+  const Eigen::Vector4d* points_ptr = frame::points_ptr<BasicFrame>(*frame);
+  if (points_ptr == nullptr) {
+    std::cerr << "error: failed to obtain a pointer to points!!" << std::endl;
+    abort();
+  }
+
+  gtsam_ext::KdTree kdtree(points_ptr, frame::size<BasicFrame>(*frame));
 
   bool estimate_normals = frame->normals == nullptr;
   bool estimate_covs = frame->covs == nullptr;
@@ -198,5 +212,6 @@ IntensityGradients::Ptr IntensityGradients::estimate(const gtsam_ext::FrameCPU::
 
   return gradients;
 }
+*/
 
 }  // namespace gtsam_ext

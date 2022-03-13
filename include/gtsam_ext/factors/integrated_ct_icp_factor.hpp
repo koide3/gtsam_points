@@ -6,7 +6,7 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/basic_frame.hpp>
 
 namespace gtsam_ext {
 
@@ -16,10 +16,11 @@ struct NearestNeighborSearch;
  * @brief Continuous Time ICP Factor
  * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
  */
+template <typename Frame = BasicFrame>
 class IntegratedCT_ICPFactor : public gtsam::NonlinearFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedCT_ICPFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedCT_ICPFactor<Frame>>;
 
   /**
    * @brief Constructor
@@ -32,8 +33,8 @@ public:
   IntegratedCT_ICPFactor(
     gtsam::Key source_t0_key,
     gtsam::Key source_t1_key,
-    const gtsam_ext::Frame::ConstPtr& target,
-    const gtsam_ext::Frame::ConstPtr& source,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
   /**
@@ -43,7 +44,11 @@ public:
    * @param target          Target point cloud
    * @param source          Source point cloud
    */
-  IntegratedCT_ICPFactor(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const gtsam_ext::Frame::ConstPtr& target, const gtsam_ext::Frame::ConstPtr& source);
+  IntegratedCT_ICPFactor(
+    gtsam::Key source_t0_key,
+    gtsam::Key source_t1_key,
+    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const Frame>& source);
 
   virtual ~IntegratedCT_ICPFactor() override;
 

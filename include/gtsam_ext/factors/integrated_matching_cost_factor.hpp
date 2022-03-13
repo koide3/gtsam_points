@@ -7,7 +7,6 @@
 
 #include <memory>
 #include <gtsam/geometry/Pose3.h>
-#include <gtsam_ext/types/frame.hpp>
 
 namespace gtsam_ext {
 
