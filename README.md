@@ -112,6 +112,7 @@ cd gtsam_ext
 ./build/demo_matching_cost_factors
 ./build/demo_bundle_adjustment
 ./build/demo_continuous_time
+./build/demo_continuous_trajectory
 ```
 
 ## License
