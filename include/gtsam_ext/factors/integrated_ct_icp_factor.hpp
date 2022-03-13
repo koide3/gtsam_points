@@ -6,7 +6,7 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include <gtsam_ext/types/basic_frame.hpp>
+#include <gtsam_ext/types/frame.hpp>
 
 namespace gtsam_ext {
 
@@ -16,7 +16,7 @@ struct NearestNeighborSearch;
  * @brief Continuous Time ICP Factor
  * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
  */
-template <typename Frame = BasicFrame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedCT_ICPFactor : public gtsam::NonlinearFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -7,6 +7,7 @@
 #include <vector>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <gtsam_ext/types/frame_traits.hpp>
 
 namespace gtsam_ext {
 
@@ -43,18 +44,21 @@ public:
   // Calculate the fraction of points fell in target's voxels
   // (evaluate if delta * this->points fall in target->voxels)
   double overlap(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
-  double overlap(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
-    const;
+  double overlap(
+    const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
+    const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
 
   double overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3f* delta_gpu) const;
   double overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
-  double overlap_gpu(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
-    const;
+  double overlap_gpu(
+    const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
+    const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
 
   // Automatically select CPU or GPU method
   double overlap_auto(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
-  double overlap_auto(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
-    const;
+  double overlap_auto(
+    const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
+    const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
 
   void save(const std::string& path) const;
   void save_compact(const std::string& path) const;
@@ -75,4 +79,26 @@ public:
   float* intensities_gpu;
 };
 
+namespace frame {
+
+template <>
+struct traits<Frame> {
+  static int size(const Frame& frame) { return frame.size(); }
+
+  static bool has_times(const Frame& frame) { return frame.has_times(); }
+  static bool has_points(const Frame& frame) { return frame.has_points(); }
+  static bool has_normals(const Frame& frame) { return frame.has_normals(); }
+  static bool has_covs(const Frame& frame) { return frame.has_covs(); }
+  static bool has_intensities(const Frame& frame) { return frame.has_intensities(); }
+
+  static double time(const Frame& frame, int i) { return frame.times[i]; }
+  static const Eigen::Vector4d& point(const Frame& frame, int i) { return frame.points[i]; }
+  static const Eigen::Vector4d& normal(const Frame& frame, int i) { return frame.normals[i]; }
+  static const Eigen::Matrix4d& cov(const Frame& frame, int i) { return frame.covs[i]; }
+  static double intensity(const Frame& frame, int i) { return frame.intensities[i]; }
+
+  static const Eigen::Vector4d* points_ptr(const Frame& frame) { return frame.points; }
+};
+
+}  // namespace frame
 }  // namespace gtsam_ext

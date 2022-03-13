@@ -61,7 +61,9 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       EXPECT_NE(points_f.empty(), true) << "Failed to read points";
 
       std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points(points_f.size());
-      std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p[0], p[1], p[2], 1.0); });
+      std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) {
+        return Eigen::Vector4d(p[0], p[1], p[2], 1.0);
+      });
       std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs = gtsam_ext::estimate_covariances(points);
 
 #ifndef BUILD_GTSAM_EXT_GPU
@@ -92,17 +94,20 @@ TEST_F(MatchingCostFactorsTestBase, LoadCheck) {
 
 class MatchingCostFactorTest : public MatchingCostFactorsTestBase, public testing::WithParamInterface<std::string> {
 public:
-  gtsam::NonlinearFactor::shared_ptr
-  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::VoxelizedFrame::ConstPtr& target, const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
+  gtsam::NonlinearFactor::shared_ptr create_factor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const gtsam_ext::VoxelizedFrame::ConstPtr& target,
+    const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
     std::string method = GetParam();
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      factor.reset(new gtsam_ext::IntegratedICPFactor(target_key, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedICPFactor<>(target_key, source_key, target, source));
     } else if (method == "GICP") {
-      factor.reset(new gtsam_ext::IntegratedGICPFactor(target_key, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedGICPFactor<>(target_key, source_key, target, source));
     } else if (method == "VGICP") {
-      factor.reset(new gtsam_ext::IntegratedVGICPFactor(target_key, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedVGICPFactor<>(target_key, source_key, target, source));
     } else if (method == "VGICP_CUDA") {
 #ifdef BUILD_GTSAM_EXT_GPU
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
@@ -124,11 +129,11 @@ public:
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      factor.reset(new gtsam_ext::IntegratedICPFactor(fixed_target_pose, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedICPFactor<>(fixed_target_pose, source_key, target, source));
     } else if (method == "GICP") {
-      factor.reset(new gtsam_ext::IntegratedGICPFactor(fixed_target_pose, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedGICPFactor<>(fixed_target_pose, source_key, target, source));
     } else if (method == "VGICP") {
-      factor.reset(new gtsam_ext::IntegratedVGICPFactor(fixed_target_pose, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedVGICPFactor<>(fixed_target_pose, source_key, target, source));
     } else if (method == "VGICP_CUDA") {
 #ifdef BUILD_GTSAM_EXT_GPU
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
@@ -141,7 +146,11 @@ public:
     return factor;
   }
 
-  void test_graph(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values, const gtsam::Values& additional_values, const std::string& note = "") {
+  void test_graph(
+    const gtsam::NonlinearFactorGraph& graph,
+    const gtsam::Values& values,
+    const gtsam::Values& additional_values,
+    const std::string& note = "") {
     gtsam_ext::LevenbergMarquardtExtParams lm_params;
     gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
     gtsam::Values result = optimizer.optimize();
@@ -171,7 +180,9 @@ public:
   }
 };
 
-INSTANTIATE_TEST_SUITE_P(gtsam_ext, MatchingCostFactorTest, testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), [](const auto& info) { return info.param; });
+INSTANTIATE_TEST_SUITE_P(gtsam_ext, MatchingCostFactorTest, testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), [](const auto& info) {
+  return info.param;
+});
 
 TEST_P(MatchingCostFactorTest, AlignmentTest) {
   auto f = create_factor(0, 1, frames[0], frames[1]);

@@ -64,8 +64,9 @@ double Frame::overlap(const std::shared_ptr<const VoxelizedFrame>& target, const
   return static_cast<double>(num_overlap) / num_points;
 }
 
-double Frame::overlap(const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets, const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas)
-  const {
+double Frame::overlap(
+  const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const {
   //
   if (std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {
     std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;

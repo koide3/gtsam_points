@@ -28,7 +28,12 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedVGICPFactorGPU>;
 
-  IntegratedVGICPFactorGPU(gtsam::Key target_key, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
+  IntegratedVGICPFactorGPU(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const VoxelizedFrame::ConstPtr& target,
+    const std::shared_ptr<const Frame>& source);
+
   IntegratedVGICPFactorGPU(
     gtsam::Key target_key,
     gtsam::Key source_key,
@@ -37,7 +42,12 @@ public:
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
 
-  IntegratedVGICPFactorGPU(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key, const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source);
+  IntegratedVGICPFactorGPU(
+    const gtsam::Pose3& fixed_target_pose,
+    gtsam::Key source_key,
+    const VoxelizedFrame::ConstPtr& target,
+    const Frame::ConstPtr& source);
+
   IntegratedVGICPFactorGPU(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
@@ -66,7 +76,10 @@ public:
   virtual size_t evaluation_output_size() const override;
 
   virtual void set_linearization_point(const gtsam::Values& values, void* lin_input_cpu) override;
-  virtual void issue_linearize(const void* lin_input_cpu, const thrust::device_ptr<const void>& lin_input_gpu, const thrust::device_ptr<void>& lin_output_gpu) override;
+  virtual void issue_linearize(
+    const void* lin_input_cpu,
+    const thrust::device_ptr<const void>& lin_input_gpu,
+    const thrust::device_ptr<void>& lin_output_gpu) override;
   virtual void store_linearized(const void* lin_output_cpu) override;
 
   virtual void set_evaluation_point(const gtsam::Values& values, void* eval_input_cpu) override;

@@ -83,11 +83,11 @@ TEST_P(ContinuousTimeFactorTest, AlignmentTest) {
     const auto& target = deskewed_target_frames[i];
     const auto& source = raw_source_frames[i];
 
-    gtsam_ext::IntegratedCT_ICPFactor::shared_ptr factor;
+    gtsam_ext::IntegratedCT_ICPFactor<>::shared_ptr factor;
     if (GetParam() == "CTICP") {
-      factor.reset(new gtsam_ext::IntegratedCT_ICPFactor(0, 1, target, source));
+      factor.reset(new gtsam_ext::IntegratedCT_ICPFactor<>(0, 1, target, source));
     } else if (GetParam() == "CTGICP") {
-      factor.reset(new gtsam_ext::IntegratedCT_GICPFactor(0, 1, target, source));
+      factor.reset(new gtsam_ext::IntegratedCT_GICPFactor<>(0, 1, target, source));
     }
 
     gtsam::NonlinearFactorGraph graph;

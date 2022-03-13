@@ -120,7 +120,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor<Frame>::lineariz
   gtsam::Vector6 b_0 = gtsam::Vector6::Zero();
   gtsam::Vector6 b_1 = gtsam::Vector6::Zero();
 
-  for (int i = 0; i < source->size(); i++) {
+  for (int i = 0; i < frame::size(*source); i++) {
     const int target_index = correspondences[i];
     if (target_index < 0) {
       continue;

@@ -115,11 +115,16 @@ TEST_F(ColoredGICPTestBase, Check) {
   source->add_covs(gtsam_ext::estimate_covariances(source->points, source->size()));
 
   std::shared_ptr<gtsam_ext::KdTree> target_tree(new gtsam_ext::KdTree(target->points, target->size()));
-  std::shared_ptr<gtsam_ext::IntensityKdTree> target_intensity_tree(new gtsam_ext::IntensityKdTree(target->points, target->intensities, target->size()));
+  std::shared_ptr<gtsam_ext::IntensityKdTree> target_intensity_tree(
+    new gtsam_ext::IntensityKdTree(target->points, target->intensities, target->size()));
 
-  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients), "DEFAULT");
-  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients), "ESTIMATE_PHOTO_AND_GEOM");
-  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients2), "ESTIMATE_PHOTO_ONLY");
+  test_factor(gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor<>>(0, 1, target, source, target_tree, target_gradients), "DEFAULT");
+  test_factor(
+    gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor<>>(0, 1, target, source, target_intensity_tree, target_gradients),
+    "ESTIMATE_PHOTO_AND_GEOM");
+  test_factor(
+    gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor<>>(0, 1, target, source, target_intensity_tree, target_gradients2),
+    "ESTIMATE_PHOTO_ONLY");
 }
 
 int main(int argc, char** argv) {

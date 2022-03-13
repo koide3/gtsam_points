@@ -6,7 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/basic_frame.hpp>
+#include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
 namespace gtsam_ext {
@@ -17,7 +17,7 @@ struct NearestNeighborSearch;
  * @brief Naive point-to-point ICP matching cost factor
  * @ref Zhang, "Iterative Point Matching for Registration of Free-Form Curve", IJCV1994
  */
-template <typename Frame = BasicFrame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -93,7 +93,7 @@ private:
   std::shared_ptr<const Frame> source;
 };
 
-template <typename Frame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedPointToPlaneICPFactor : public gtsam_ext::IntegratedICPFactor<Frame> {
 public:
   using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneICPFactor<Frame>>;

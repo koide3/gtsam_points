@@ -12,7 +12,7 @@ namespace gtsam_ext {
  * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
  * @ref Segal et al., "Generalized-ICP", RSS2005
  */
-template <typename Frame = BasicFrame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedCT_GICPFactor : public IntegratedCT_ICPFactor<Frame> {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

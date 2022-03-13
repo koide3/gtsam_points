@@ -28,7 +28,8 @@ struct ScanLineInformation {
  * @param angle_eps       Minimum angle between scan lines
  * @return Estimated scan line information
  */
-ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_points, int num_scan_lines = -1, double angle_eps = 0.05 * M_PI / 180.0);
+ScanLineInformation
+estimate_scan_lines(const Eigen::Vector4d* points, int num_points, int num_scan_lines = -1, double angle_eps = 0.05 * M_PI / 180.0);
 
 /**
  * @brief Extract edge and plane points
@@ -39,6 +40,7 @@ ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_p
  * @param num_points    Number of points
  * @return Extracted edge and plane points
  */
-std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points);
+std::pair<FrameCPU::Ptr, FrameCPU::Ptr>
+extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points);
 
 }  // namespace gtsam_ext

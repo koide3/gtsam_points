@@ -6,7 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/basic_frame.hpp>
+#include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/types/voxelized_frame.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
@@ -19,7 +19,7 @@ struct GaussianVoxel;
  * @ref Koide et al., "Voxelized GICP for Fast and Accurate 3D Point Cloud Registration", ICRA2021
  * @ref Koide et al., "Globally Consistent 3D LiDAR Mapping with GPU-accelerated GICP Matching Cost Factors", RA-L2021
  */
-template <typename Frame = BasicFrame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedVGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

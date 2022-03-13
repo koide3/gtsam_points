@@ -6,7 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/basic_frame.hpp>
+#include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/factors/intensity_gradients.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
@@ -26,7 +26,7 @@ struct NearestNeighborSearch;
  *
  * @ref Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
  */
-template <typename Frame = BasicFrame>
+template <typename Frame = Frame>
 class IntegratedColorConsistencyFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

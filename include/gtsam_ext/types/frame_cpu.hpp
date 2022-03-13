@@ -7,11 +7,11 @@
 #include <random>
 #include <Eigen/Core>
 
-#include <gtsam_ext/types/basic_frame.hpp>
+#include <gtsam_ext/types/frame.hpp>
 
 namespace gtsam_ext {
 
-struct FrameCPU : public BasicFrame {
+struct FrameCPU : public Frame {
 public:
   using Ptr = std::shared_ptr<FrameCPU>;
   using ConstPtr = std::shared_ptr<const FrameCPU>;
@@ -23,7 +23,7 @@ public:
   FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : FrameCPU(points.data(), points.size()) {}
 
   // deep copy
-  FrameCPU(const BasicFrame& frame);
+  FrameCPU(const Frame& frame);
 
   FrameCPU();
   ~FrameCPU();
@@ -73,6 +73,6 @@ public:
   std::vector<double> intensities_storage;
 };
 
-FrameCPU::Ptr random_sampling(const BasicFrame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt);
+FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt);
 
 }  // namespace gtsam_ext

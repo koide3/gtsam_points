@@ -53,7 +53,7 @@ GaussianVoxel::Ptr GaussianVoxelMapCPU::lookup_voxel(const Eigen::Vector3i& coor
   return found->second;
 }
 
-void GaussianVoxelMapCPU::create_voxelmap(const BasicFrame& frame) {
+void GaussianVoxelMapCPU::create_voxelmap(const Frame& frame) {
   if (!frame::has_points(frame) || !frame::has_covs(frame)) {
     std::cerr << "error: points/covs not allocated!!" << std::endl;
     abort();

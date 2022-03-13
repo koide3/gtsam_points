@@ -6,7 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/basic_frame.hpp>
+#include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
 namespace gtsam_ext {
@@ -25,7 +25,7 @@ class IntegratedPointToEdgeFactor;
  * @ref Zhang and Singh, "LOAM: LiDAR Odometry and Mapping in Real-time", RSS2014
  * @ref Tixiao and Brendan, "LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain", IROS2018
  */
-template <typename Frame = BasicFrame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedLOAMFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -82,7 +82,7 @@ private:
 };
 
 // Point-to-plane distance
-template <typename Frame = BasicFrame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedPointToPlaneFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -140,7 +140,7 @@ private:
 };
 
 // Point-to-edge distance
-template <typename Frame = BasicFrame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedPointToEdgeFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

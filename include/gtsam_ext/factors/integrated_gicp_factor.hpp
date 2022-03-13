@@ -6,7 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/basic_frame.hpp>
+#include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
 namespace gtsam_ext {
@@ -17,7 +17,7 @@ struct NearestNeighborSearch;
  * @brief Generalized ICP matching cost factor
  * @ref Segal et al., "Generalized-ICP", RSS2005
  */
-template <typename Frame = BasicFrame>
+template <typename Frame = gtsam_ext::Frame>
 class IntegratedGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

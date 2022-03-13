@@ -46,10 +46,10 @@ public:
   virtual ~GaussianVoxelMapGPU();
 
   virtual double voxel_resolution() const override { return voxelmap_info.voxel_resolution; }
-  virtual void create_voxelmap(const BasicFrame& frame) override;
+  virtual void create_voxelmap(const Frame& frame) override;
 
 private:
-  void create_bucket_table(CUstream_st* stream, const BasicFrame& frame);
+  void create_bucket_table(CUstream_st* stream, const Frame& frame);
 
 public:
   using Indices = thrust::device_vector<int, thrust::device_allocator<int>>;

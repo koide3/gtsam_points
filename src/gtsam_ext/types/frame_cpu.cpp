@@ -22,7 +22,7 @@ template FrameCPU::FrameCPU(const Eigen::Matrix<float, 4, 1>* points, int num_po
 template FrameCPU::FrameCPU(const Eigen::Matrix<double, 3, 1>* points, int num_points);
 template FrameCPU::FrameCPU(const Eigen::Matrix<double, 4, 1>* points, int num_points);
 
-FrameCPU::FrameCPU(const BasicFrame& frame) {
+FrameCPU::FrameCPU(const Frame& frame) {
   if (frame.points) {
     add_points(frame.points, frame.size());
   }
@@ -120,8 +120,7 @@ void FrameCPU::add_intensities(const T* intensities, int num_points) {
 template void FrameCPU::add_intensities(const float* intensities, int num_points);
 template void FrameCPU::add_intensities(const double* intensities, int num_points);
 
-/*
-FrameCPU::Ptr random_sampling(const BasicFrame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
+FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
   if (sampling_rate >= 0.99) {
     return FrameCPU::Ptr(new FrameCPU(*frame));
   }
@@ -176,7 +175,6 @@ FrameCPU::Ptr random_sampling(const BasicFrame::ConstPtr& frame, const double sa
 
   return sampled;
 }
-*/
 
 FrameCPU::Ptr FrameCPU::load(const std::string& path) {
   FrameCPU::Ptr frame(new FrameCPU);

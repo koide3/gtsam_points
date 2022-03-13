@@ -63,7 +63,9 @@ public:
 
       // Transform points from floats to doubles and estimate their covariances
       std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points(points_f.size());
-      std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) { return (Eigen::Vector4d() << p.cast<double>(), 1.0).finished(); });
+      std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) {
+        return (Eigen::Vector4d() << p.cast<double>(), 1.0).finished();
+      });
       auto covs = gtsam_ext::estimate_covariances(points);
 
 #ifndef BUILD_GTSAM_EXT_GPU
@@ -148,7 +150,10 @@ public:
 
         auto drawable = viewer->find_drawable("frame_" + std::to_string(i));
         drawable.first->add("model_matrix", pose);
-        viewer->update_drawable("coord_" + std::to_string(i), glk::Primitives::coordinate_system(), guik::VertexColor(pose * Eigen::UniformScaling<float>(5.0f)));
+        viewer->update_drawable(
+          "coord_" + std::to_string(i),
+          glk::Primitives::coordinate_system(),
+          guik::VertexColor(pose * Eigen::UniformScaling<float>(5.0f)));
 
         int j_end = full_connection ? 5 : std::min(i + 2, 5);
         for (int j = i + 1; j < j_end; j++) {
@@ -161,22 +166,25 @@ public:
     });
   }
 
-  gtsam::NonlinearFactor::shared_ptr
-  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::VoxelizedFrame::ConstPtr& target, const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
+  gtsam::NonlinearFactor::shared_ptr create_factor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const gtsam_ext::VoxelizedFrame::ConstPtr& target,
+    const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor<>>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("ICP_PLANE")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedPointToPlaneICPFactor<>>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("GICP")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor<>>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("VGICP")) {
-      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor>(target_key, source_key, target, source);
+      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor<>>(target_key, source_key, target, source);
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
 #ifdef BUILD_GTSAM_EXT_GPU
       return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactorGPU>(target_key, source_key, target, source);

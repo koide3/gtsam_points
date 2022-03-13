@@ -42,7 +42,7 @@ public:
   virtual ~GaussianVoxelMapCPU();
 
   virtual double voxel_resolution() const override { return resolution; }
-  virtual void create_voxelmap(const BasicFrame& frame) override;
+  virtual void create_voxelmap(const Frame& frame) override;
 
   Eigen::Vector3i voxel_coord(const Eigen::Vector4d& x) const;
   GaussianVoxel::Ptr lookup_voxel(const Eigen::Vector3i& coord) const;

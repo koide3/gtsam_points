@@ -59,17 +59,17 @@ add_library(gtsam_ext SHARED
   # util
   src/gtsam_ext/util/covariance_estimation.cpp
   src/gtsam_ext/util/normal_estimation.cpp
-  # src/gtsam_ext/util/edge_plane_extraction.cpp
+  src/gtsam_ext/util/edge_plane_extraction.cpp
   src/gtsam_ext/util/bspline.cpp
   src/gtsam_ext/util/continuous_trajectory.cpp
   # ann
   src/gtsam_ext/ann/kdtree.cpp
   src/gtsam_ext/ann/intensity_kdtree.cpp
   # types
-  # src/gtsam_ext/types/frame.cpp
+  src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/frame_cpu.cpp
-  # src/gtsam_ext/types/voxelized_frame.cpp
-  # src/gtsam_ext/types/voxelized_frame_cpu.cpp
+  src/gtsam_ext/types/voxelized_frame.cpp
+  src/gtsam_ext/types/voxelized_frame_cpu.cpp
   src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
   # factors
   src/gtsam_ext/factors/integrated_matching_cost_factor.cpp
@@ -85,8 +85,7 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/factors/bundle_adjustment_factor_evm.cpp
   src/gtsam_ext/factors/bundle_adjustment_factor_lsq.cpp
   # experimental
-  # src/gtsam_ext/factors/experimental/expression_icp_factor.cpp
-  # src/gtsam_ext/factors/experimental/continuous_time_icp_factor.cpp
+  src/gtsam_ext/factors/experimental/continuous_time_icp_factor.cpp
   # optimizers
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
@@ -108,8 +107,6 @@ target_link_libraries(gtsam_ext
   ${Boost_LIBRARIES}
   ${GTSAM_LIBRARIES}
 )
-
-if(FALSE)
 
 # GPU-related
 if(BUILD_WITH_CUDA)
@@ -171,5 +168,4 @@ if(BUILD_TESTS)
     target_link_libraries(${test_name} gtsam_ext ${GTEST_LIBRARIES})
     gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endforeach()
-endif()
 endif()
