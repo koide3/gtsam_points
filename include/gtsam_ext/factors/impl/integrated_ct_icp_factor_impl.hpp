@@ -10,12 +10,12 @@
 
 namespace gtsam_ext {
 
-template <typename Frame>
-IntegratedCT_ICPFactor<Frame>::IntegratedCT_ICPFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_ICPFactor_(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source,
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<NearestNeighborSearch>& target_tree)
 : gtsam::NonlinearFactor(gtsam::cref_list_of<2>(source_t0_key)(source_t1_key)),
   num_threads(1),
@@ -61,19 +61,19 @@ IntegratedCT_ICPFactor<Frame>::IntegratedCT_ICPFactor(
   }
 }
 
-template <typename Frame>
-IntegratedCT_ICPFactor<Frame>::IntegratedCT_ICPFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_ICPFactor_(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source)
-: IntegratedCT_ICPFactor(source_t0_key, source_t1_key, target, source, nullptr) {}
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source)
+: IntegratedCT_ICPFactor_(source_t0_key, source_t1_key, target, source, nullptr) {}
 
-template <typename Frame>
-IntegratedCT_ICPFactor<Frame>::~IntegratedCT_ICPFactor() {}
+template <typename TargetFrame, typename SourceFrame>
+IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::~IntegratedCT_ICPFactor_() {}
 
-template <typename Frame>
-double IntegratedCT_ICPFactor<Frame>::error(const gtsam::Values& values) const {
+template <typename TargetFrame, typename SourceFrame>
+double IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Values& values) const {
   update_poses(values);
   if (correspondences.size() != frame::size(*source)) {
     update_correspondences();
@@ -103,8 +103,8 @@ double IntegratedCT_ICPFactor<Frame>::error(const gtsam::Values& values) const {
   return sum_errors;
 }
 
-template <typename Frame>
-boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor<Frame>::linearize(const gtsam::Values& values) const {
+template <typename TargetFrame, typename SourceFrame>
+boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::linearize(const gtsam::Values& values) const {
   if (!frame::has_normals(*target)) {
     std::cerr << "error: target cloud doesn't have normals!!" << std::endl;
     abort();
@@ -160,8 +160,8 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor<Frame>::lineariz
   return factor;
 }
 
-template <typename Frame>
-void IntegratedCT_ICPFactor<Frame>::update_poses(const gtsam::Values& values) const {
+template <typename TargetFrame, typename SourceFrame>
+void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::update_poses(const gtsam::Values& values) const {
   gtsam::Pose3 pose0 = values.at<gtsam::Pose3>(keys_[0]);
   gtsam::Pose3 pose1 = values.at<gtsam::Pose3>(keys_[1]);
 
@@ -191,8 +191,8 @@ void IntegratedCT_ICPFactor<Frame>::update_poses(const gtsam::Values& values) co
   }
 }
 
-template <typename Frame>
-void IntegratedCT_ICPFactor<Frame>::update_correspondences() const {
+template <typename TargetFrame, typename SourceFrame>
+void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::update_correspondences() const {
   correspondences.resize(frame::size(*source));
 
   for (int i = 0; i < frame::size(*source); i++) {
@@ -213,8 +213,8 @@ void IntegratedCT_ICPFactor<Frame>::update_correspondences() const {
   }
 }
 
-template <typename Frame>
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> IntegratedCT_ICPFactor<Frame>::deskewed_source_points(
+template <typename TargetFrame, typename SourceFrame>
+std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::deskewed_source_points(
   const gtsam::Values& values,
   bool local) {
   update_poses(values);

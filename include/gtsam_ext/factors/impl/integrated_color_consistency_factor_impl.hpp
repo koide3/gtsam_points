@@ -9,12 +9,12 @@
 
 namespace gtsam_ext {
 
-template <typename Frame>
-IntegratedColorConsistencyFactor<Frame>::IntegratedColorConsistencyFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame>::IntegratedColorConsistencyFactor_(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source,
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<const NearestNeighborSearch>& target_tree,
   const IntensityGradients::ConstPtr& target_gradients)
 : IntegratedMatchingCostFactor(target_key, source_key),
@@ -39,12 +39,12 @@ IntegratedColorConsistencyFactor<Frame>::IntegratedColorConsistencyFactor(
   }
 }
 
-template <typename Frame>
-IntegratedColorConsistencyFactor<Frame>::IntegratedColorConsistencyFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame>::IntegratedColorConsistencyFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source,
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<const NearestNeighborSearch>& target_tree,
   const IntensityGradients::ConstPtr& target_gradients)
 : IntegratedMatchingCostFactor(fixed_target_pose, source_key),
@@ -69,11 +69,11 @@ IntegratedColorConsistencyFactor<Frame>::IntegratedColorConsistencyFactor(
   }
 }
 
-template <typename Frame>
-IntegratedColorConsistencyFactor<Frame>::~IntegratedColorConsistencyFactor() {}
+template <typename TargetFrame, typename SourceFrame>
+IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame>::~IntegratedColorConsistencyFactor_() {}
 
-template <typename Frame>
-void IntegratedColorConsistencyFactor<Frame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+template <typename TargetFrame, typename SourceFrame>
+void IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   bool do_update = true;
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
@@ -103,8 +103,8 @@ void IntegratedColorConsistencyFactor<Frame>::update_correspondences(const Eigen
   last_correspondence_point = delta;
 }
 
-template <typename Frame>
-double IntegratedColorConsistencyFactor<Frame>::evaluate(
+template <typename TargetFrame, typename SourceFrame>
+double IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame>::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
   Eigen::Matrix<double, 6, 6>* H_source,

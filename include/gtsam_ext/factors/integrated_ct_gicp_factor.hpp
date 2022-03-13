@@ -12,11 +12,11 @@ namespace gtsam_ext {
  * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
  * @ref Segal et al., "Generalized-ICP", RSS2005
  */
-template <typename Frame = gtsam_ext::Frame>
-class IntegratedCT_GICPFactor : public IntegratedCT_ICPFactor<Frame> {
+template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+class IntegratedCT_GICPFactor_ : public IntegratedCT_ICPFactor_<TargetFrame, SourceFrame> {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedCT_GICPFactor<Frame>>;
+  using shared_ptr = boost::shared_ptr<IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>>;
 
   /**
    * @brief Constructor
@@ -26,11 +26,11 @@ public:
    * @param source          Source point cloud
    * @param target_tree     NN search for the target point cloud
    */
-  IntegratedCT_GICPFactor(
+  IntegratedCT_GICPFactor_(
     gtsam::Key source_t0_key,
     gtsam::Key source_t1_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
   /**
@@ -40,13 +40,13 @@ public:
    * @param target          Target point cloud
    * @param source          Source point cloud
    */
-  IntegratedCT_GICPFactor(
+  IntegratedCT_GICPFactor_(
     gtsam::Key source_t0_key,
     gtsam::Key source_t1_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source);
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source);
 
-  virtual ~IntegratedCT_GICPFactor() override;
+  virtual ~IntegratedCT_GICPFactor_() override;
 
   virtual double error(const gtsam::Values& values) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
@@ -60,5 +60,7 @@ protected:
 
   mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
 };
+
+using IntegratedCT_GICPFactor = IntegratedCT_GICPFactor_<>;
 
 }  // namespace gtsam_ext

@@ -2,7 +2,7 @@
 #include <gtsam_ext/factors/integrated_color_consistency_factor.hpp>
 #include <gtsam_ext/factors/impl/integrated_color_consistency_factor_impl.hpp>
 
-template class gtsam_ext::IntegratedColorConsistencyFactor<gtsam_ext::Frame>;
+template class gtsam_ext::IntegratedColorConsistencyFactor_<gtsam_ext::Frame, gtsam_ext::Frame>;
 
 #include <gtsam_ext/types/dummy_frame.hpp>
-template class gtsam_ext::IntegratedColorConsistencyFactor<gtsam_ext::DummyFrame>;
+template class gtsam_ext::IntegratedColorConsistencyFactor_<gtsam_ext::DummyFrame, gtsam_ext::DummyFrame>;

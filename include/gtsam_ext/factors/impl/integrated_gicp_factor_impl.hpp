@@ -11,12 +11,12 @@
 
 namespace gtsam_ext {
 
-template <typename Frame>
-IntegratedGICPFactor<Frame>::IntegratedGICPFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source,
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<NearestNeighborSearch>& target_tree)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
@@ -48,20 +48,20 @@ IntegratedGICPFactor<Frame>::IntegratedGICPFactor(
   }
 }
 
-template <typename Frame>
-IntegratedGICPFactor<Frame>::IntegratedGICPFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source)
-: IntegratedGICPFactor(target_key, source_key, target, source, nullptr) {}
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source)
+: IntegratedGICPFactor_(target_key, source_key, target, source, nullptr) {}
 
-template <typename Frame>
-IntegratedGICPFactor<Frame>::IntegratedGICPFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source,
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<NearestNeighborSearch>& target_tree)
 : gtsam_ext::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
@@ -93,19 +93,19 @@ IntegratedGICPFactor<Frame>::IntegratedGICPFactor(
   }
 }
 
-template <typename Frame>
-IntegratedGICPFactor<Frame>::IntegratedGICPFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source)
-: IntegratedGICPFactor(fixed_target_pose, source_key, target, source, nullptr) {}
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source)
+: IntegratedGICPFactor_(fixed_target_pose, source_key, target, source, nullptr) {}
 
-template <typename Frame>
-IntegratedGICPFactor<Frame>::~IntegratedGICPFactor() {}
+template <typename TargetFrame, typename SourceFrame>
+IntegratedGICPFactor_<TargetFrame, SourceFrame>::~IntegratedGICPFactor_() {}
 
-template <typename Frame>
-void IntegratedGICPFactor<Frame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+template <typename TargetFrame, typename SourceFrame>
+void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   bool do_update = true;
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
@@ -144,8 +144,8 @@ void IntegratedGICPFactor<Frame>::update_correspondences(const Eigen::Isometry3d
   last_correspondence_point = delta;
 }
 
-template <typename Frame>
-double IntegratedGICPFactor<Frame>::evaluate(
+template <typename TargetFrame, typename SourceFrame>
+double IntegratedGICPFactor_<TargetFrame, SourceFrame>::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
   Eigen::Matrix<double, 6, 6>* H_source,

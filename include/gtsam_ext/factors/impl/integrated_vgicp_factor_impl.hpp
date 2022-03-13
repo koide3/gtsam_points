@@ -9,12 +9,12 @@
 
 namespace gtsam_ext {
 
-template <typename Frame>
-IntegratedVGICPFactor<Frame>::IntegratedVGICPFactor(
+template <typename SourceFrame>
+IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
   gtsam::Key target_key,
   gtsam::Key source_key,
   const GaussianVoxelMapCPU::ConstPtr& target_voxels,
-  const std::shared_ptr<const Frame>& source)
+  const std::shared_ptr<const SourceFrame>& source)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   target_voxels(target_voxels),
@@ -36,20 +36,20 @@ IntegratedVGICPFactor<Frame>::IntegratedVGICPFactor(
   }
 }
 
-template <typename Frame>
-IntegratedVGICPFactor<Frame>::IntegratedVGICPFactor(
+template <typename SourceFrame>
+IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
   gtsam::Key target_key,
   gtsam::Key source_key,
   const VoxelizedFrame::ConstPtr& target,
-  const std::shared_ptr<const Frame>& source)
-: IntegratedVGICPFactor(target_key, source_key, target->voxels, source) {}
+  const std::shared_ptr<const SourceFrame>& source)
+: IntegratedVGICPFactor_(target_key, source_key, target->voxels, source) {}
 
-template <typename Frame>
-IntegratedVGICPFactor<Frame>::IntegratedVGICPFactor(
+template <typename SourceFrame>
+IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
   const VoxelizedFrame::ConstPtr& target,
-  const std::shared_ptr<const Frame>& source)
+  const std::shared_ptr<const SourceFrame>& source)
 : gtsam_ext::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
   target_voxels(target->voxels),
@@ -71,11 +71,11 @@ IntegratedVGICPFactor<Frame>::IntegratedVGICPFactor(
   }
 }
 
-template <typename Frame>
-IntegratedVGICPFactor<Frame>::~IntegratedVGICPFactor() {}
+template <typename SourceFrame>
+IntegratedVGICPFactor_<SourceFrame>::~IntegratedVGICPFactor_() {}
 
-template <typename Frame>
-void IntegratedVGICPFactor<Frame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+template <typename SourceFrame>
+void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   correspondences.resize(frame::size(*source));
   mahalanobis.resize(frame::size(*source));
 
@@ -99,8 +99,8 @@ void IntegratedVGICPFactor<Frame>::update_correspondences(const Eigen::Isometry3
   }
 }
 
-template <typename Frame>
-double IntegratedVGICPFactor<Frame>::evaluate(
+template <typename SourceFrame>
+double IntegratedVGICPFactor_<SourceFrame>::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
   Eigen::Matrix<double, 6, 6>* H_source,

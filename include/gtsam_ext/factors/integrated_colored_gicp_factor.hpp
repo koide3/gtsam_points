@@ -27,29 +27,29 @@ struct NearestNeighborSearch;
  * @ref Segal et al., "Generalized-ICP", RSS2005
  * @ref Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
  */
-template <typename Frame = gtsam_ext::Frame>
-class IntegratedColoredGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
+template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+class IntegratedColoredGICPFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedColoredGICPFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>>;
 
-  IntegratedColoredGICPFactor(
+  IntegratedColoredGICPFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     const IntensityGradients::ConstPtr& target_gradients);
 
-  IntegratedColoredGICPFactor(
+  IntegratedColoredGICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     const IntensityGradients::ConstPtr& target_gradients);
 
-  virtual ~IntegratedColoredGICPFactor() override;
+  virtual ~IntegratedColoredGICPFactor_() override;
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_correspondence_distance(double d) { max_correspondence_distance_sq = d * d; }
@@ -76,8 +76,8 @@ private:
   double max_correspondence_distance_sq;
   double photometric_term_weight;  // [0, 1]
 
-  std::shared_ptr<const Frame> target;
-  std::shared_ptr<const Frame> source;
+  std::shared_ptr<const TargetFrame> target;
+  std::shared_ptr<const SourceFrame> source;
   std::shared_ptr<const NearestNeighborSearch> target_tree;
   std::shared_ptr<const IntensityGradients> target_gradients;
 
@@ -87,4 +87,7 @@ private:
   mutable std::vector<int> correspondences;
   mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
 };
+
+using IntegratedColoredGICPFactor = IntegratedColoredGICPFactor_<>;
+
 }  // namespace gtsam_ext

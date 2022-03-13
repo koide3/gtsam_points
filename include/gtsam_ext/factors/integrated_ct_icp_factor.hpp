@@ -16,11 +16,11 @@ struct NearestNeighborSearch;
  * @brief Continuous Time ICP Factor
  * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
  */
-template <typename Frame = gtsam_ext::Frame>
-class IntegratedCT_ICPFactor : public gtsam::NonlinearFactor {
+template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+class IntegratedCT_ICPFactor_ : public gtsam::NonlinearFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedCT_ICPFactor<Frame>>;
+  using shared_ptr = boost::shared_ptr<IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>>;
 
   /**
    * @brief Constructor
@@ -30,11 +30,11 @@ public:
    * @param source          Source point cloud
    * @param target_tree     NN search for the target point cloud
    */
-  IntegratedCT_ICPFactor(
+  IntegratedCT_ICPFactor_(
     gtsam::Key source_t0_key,
     gtsam::Key source_t1_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
   /**
@@ -44,13 +44,13 @@ public:
    * @param target          Target point cloud
    * @param source          Source point cloud
    */
-  IntegratedCT_ICPFactor(
+  IntegratedCT_ICPFactor_(
     gtsam::Key source_t0_key,
     gtsam::Key source_t1_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source);
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source);
 
-  virtual ~IntegratedCT_ICPFactor() override;
+  virtual ~IntegratedCT_ICPFactor_() override;
 
   virtual size_t dim() const override { return 6; }
   virtual double error(const gtsam::Values& values) const override;
@@ -85,8 +85,10 @@ protected:
   std::vector<int> time_indices;
   mutable std::vector<int> correspondences;
 
-  std::shared_ptr<const Frame> target;
-  std::shared_ptr<const Frame> source;
+  std::shared_ptr<const TargetFrame> target;
+  std::shared_ptr<const SourceFrame> source;
 };
+
+using IntegratedCT_ICPFactor = IntegratedCT_ICPFactor_<>;
 
 }  // namespace gtsam_ext

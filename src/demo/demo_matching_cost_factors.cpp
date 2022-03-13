@@ -172,19 +172,19 @@ public:
     const gtsam_ext::VoxelizedFrame::ConstPtr& target,
     const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor<>>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("ICP_PLANE")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedPointToPlaneICPFactor<>>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("GICP")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor<>>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("VGICP")) {
-      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor<>>(target_key, source_key, target, source);
+      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor>(target_key, source_key, target, source);
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
 #ifdef BUILD_GTSAM_EXT_GPU
       return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactorGPU>(target_key, source_key, target, source);

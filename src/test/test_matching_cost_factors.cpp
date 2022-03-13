@@ -103,11 +103,11 @@ public:
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      factor.reset(new gtsam_ext::IntegratedICPFactor<>(target_key, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedICPFactor(target_key, source_key, target, source));
     } else if (method == "GICP") {
-      factor.reset(new gtsam_ext::IntegratedGICPFactor<>(target_key, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedGICPFactor(target_key, source_key, target, source));
     } else if (method == "VGICP") {
-      factor.reset(new gtsam_ext::IntegratedVGICPFactor<>(target_key, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedVGICPFactor(target_key, source_key, target, source));
     } else if (method == "VGICP_CUDA") {
 #ifdef BUILD_GTSAM_EXT_GPU
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
@@ -129,11 +129,11 @@ public:
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      factor.reset(new gtsam_ext::IntegratedICPFactor<>(fixed_target_pose, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedICPFactor(fixed_target_pose, source_key, target, source));
     } else if (method == "GICP") {
-      factor.reset(new gtsam_ext::IntegratedGICPFactor<>(fixed_target_pose, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedGICPFactor(fixed_target_pose, source_key, target, source));
     } else if (method == "VGICP") {
-      factor.reset(new gtsam_ext::IntegratedVGICPFactor<>(fixed_target_pose, source_key, target, source));
+      factor.reset(new gtsam_ext::IntegratedVGICPFactor(fixed_target_pose, source_key, target, source));
     } else if (method == "VGICP_CUDA") {
 #ifdef BUILD_GTSAM_EXT_GPU
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();

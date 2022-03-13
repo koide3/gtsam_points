@@ -8,14 +8,14 @@
 
 namespace gtsam_ext {
 
-template <typename Frame>
-IntegratedCT_GICPFactor<Frame>::IntegratedCT_GICPFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_GICPFactor_(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source,
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<NearestNeighborSearch>& target_tree)
-: IntegratedCT_ICPFactor<Frame>(source_t0_key, source_t1_key, target, source, target_tree),
+: IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>(source_t0_key, source_t1_key, target, source, target_tree),
   num_threads(1) {
   //
   if (!frame::has_points(*target) || !frame::has_covs(*target)) {
@@ -29,19 +29,19 @@ IntegratedCT_GICPFactor<Frame>::IntegratedCT_GICPFactor(
   }
 }
 
-template <typename Frame>
-IntegratedCT_GICPFactor<Frame>::IntegratedCT_GICPFactor(
+template <typename TargetFrame, typename SourceFrame>
+IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_GICPFactor_(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,
-  const std::shared_ptr<const Frame>& target,
-  const std::shared_ptr<const Frame>& source)
-: IntegratedCT_GICPFactor(source_t0_key, source_t1_key, target, source, nullptr) {}
+  const std::shared_ptr<const TargetFrame>& target,
+  const std::shared_ptr<const SourceFrame>& source)
+: IntegratedCT_GICPFactor_(source_t0_key, source_t1_key, target, source, nullptr) {}
 
-template <typename Frame>
-IntegratedCT_GICPFactor<Frame>::~IntegratedCT_GICPFactor() {}
+template <typename TargetFrame, typename SourceFrame>
+IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::~IntegratedCT_GICPFactor_() {}
 
-template <typename Frame>
-double IntegratedCT_GICPFactor<Frame>::error(const gtsam::Values& values) const {
+template <typename TargetFrame, typename SourceFrame>
+double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Values& values) const {
   this->update_poses(values);
   if (this->correspondences.size() != frame::size(*this->source)) {
     this->update_correspondences();
@@ -71,8 +71,8 @@ double IntegratedCT_GICPFactor<Frame>::error(const gtsam::Values& values) const 
   return sum_errors;
 }
 
-template <typename Frame>
-boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor<Frame>::linearize(const gtsam::Values& values) const {
+template <typename TargetFrame, typename SourceFrame>
+boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::linearize(const gtsam::Values& values) const {
   this->update_poses(values);
   this->update_correspondences();
 
@@ -147,8 +147,8 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor<Frame>::lineari
   return factor;
 }
 
-template <typename Frame>
-void IntegratedCT_GICPFactor<Frame>::update_correspondences() const {
+template <typename TargetFrame, typename SourceFrame>
+void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences() const {
   this->correspondences.resize(frame::size(*this->source));
   this->mahalanobis.resize(frame::size(*this->source));
 

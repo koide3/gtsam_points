@@ -17,39 +17,39 @@ struct NearestNeighborSearch;
  * @brief Generalized ICP matching cost factor
  * @ref Segal et al., "Generalized-ICP", RSS2005
  */
-template <typename Frame = gtsam_ext::Frame>
-class IntegratedGICPFactor : public gtsam_ext::IntegratedMatchingCostFactor {
+template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+class IntegratedGICPFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedGICPFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedGICPFactor_>;
 
-  IntegratedGICPFactor(
+  IntegratedGICPFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source);
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source);
 
-  IntegratedGICPFactor(
+  IntegratedGICPFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
-  IntegratedGICPFactor(
+  IntegratedGICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source);
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source);
 
-  IntegratedGICPFactor(
+  IntegratedGICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
-  virtual ~IntegratedGICPFactor() override;
+  virtual ~IntegratedGICPFactor_() override;
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
   //     : and setting n>1 can rather affect the processing speed
@@ -90,8 +90,10 @@ private:
   mutable std::vector<int> correspondences;
   mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
 
-  std::shared_ptr<const Frame> target;
-  std::shared_ptr<const Frame> source;
+  std::shared_ptr<const TargetFrame> target;
+  std::shared_ptr<const SourceFrame> source;
 };
+
+using IntegratedGICPFactor = IntegratedGICPFactor_<>;
 
 }  // namespace gtsam_ext

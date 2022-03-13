@@ -143,11 +143,11 @@ public:
     // Create continuous time ICP factor
     gtsam::NonlinearFactor::shared_ptr factor;
     if (factor_types[factor_type] == std::string("CT-ICP")) {
-      auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_ICPFactor<>>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+      auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
       f->set_max_corresponding_distance(max_corresponding_distance);
       factor = f;
     } else if (factor_types[factor_type] == std::string("CT-GICP")) {
-      auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_GICPFactor<>>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+      auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
       f->set_max_corresponding_distance(max_corresponding_distance);
       factor = f;
     } else if (factor_types[factor_type] == std::string("CT-ICP-EXPR")) {
@@ -167,7 +167,7 @@ public:
 
       // Calculate deskewed source points
       std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points;
-      auto cticp_factor = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCT_ICPFactor<>>(factor);
+      auto cticp_factor = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCT_ICPFactor>(factor);
       if (cticp_factor) {
         points = cticp_factor->deskewed_source_points(values);
       } else {

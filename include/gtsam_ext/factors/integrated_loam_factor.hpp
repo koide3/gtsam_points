@@ -13,10 +13,10 @@ namespace gtsam_ext {
 
 struct NearestNeighborSearch;
 
-template <typename Frame>
-class IntegratedPointToPlaneFactor;
-template <typename Frame>
-class IntegratedPointToEdgeFactor;
+template <typename TargetFrame, typename SourceFrame>
+class IntegratedPointToPlaneFactor_;
+template <typename TargetFrame, typename SourceFrame>
+class IntegratedPointToEdgeFactor_;
 
 /**
  * @brief Scan matching factor based on the combination of point-to-plane and point-to-edge distances
@@ -25,31 +25,31 @@ class IntegratedPointToEdgeFactor;
  * @ref Zhang and Singh, "LOAM: LiDAR Odometry and Mapping in Real-time", RSS2014
  * @ref Tixiao and Brendan, "LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain", IROS2018
  */
-template <typename Frame = gtsam_ext::Frame>
-class IntegratedLOAMFactor : public gtsam_ext::IntegratedMatchingCostFactor {
+template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+class IntegratedLOAMFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedLOAMFactor>;
+  using shared_ptr = boost::shared_ptr<IntegratedLOAMFactor_<TargetFrame, SourceFrame>>;
 
-  IntegratedLOAMFactor(
+  IntegratedLOAMFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target_edges,
-    const std::shared_ptr<const Frame>& target_planes,
-    const std::shared_ptr<const Frame>& source_edges,
-    const std::shared_ptr<const Frame>& source_planes,
+    const std::shared_ptr<const TargetFrame>& target_edges,
+    const std::shared_ptr<const TargetFrame>& target_planes,
+    const std::shared_ptr<const SourceFrame>& source_edges,
+    const std::shared_ptr<const SourceFrame>& source_planes,
     const std::shared_ptr<NearestNeighborSearch>& target_edges_tree,
     const std::shared_ptr<NearestNeighborSearch>& target_planes_tree);
 
-  IntegratedLOAMFactor(
+  IntegratedLOAMFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target_edges,
-    const std::shared_ptr<const Frame>& target_planes,
-    const std::shared_ptr<const Frame>& source_edges,
-    const std::shared_ptr<const Frame>& source_planes);
+    const std::shared_ptr<const TargetFrame>& target_edges,
+    const std::shared_ptr<const TargetFrame>& target_planes,
+    const std::shared_ptr<const SourceFrame>& source_edges,
+    const std::shared_ptr<const SourceFrame>& source_planes);
 
-  ~IntegratedLOAMFactor();
+  ~IntegratedLOAMFactor_();
 
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
   //     : and setting n>1 can rather affect the processing speed
@@ -77,33 +77,33 @@ protected:
 
 private:
   bool enable_correspondence_validation;
-  std::unique_ptr<IntegratedPointToEdgeFactor<Frame>> edge_factor;
-  std::unique_ptr<IntegratedPointToPlaneFactor<Frame>> plane_factor;
+  std::unique_ptr<IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>> edge_factor;
+  std::unique_ptr<IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>> plane_factor;
 };
 
 // Point-to-plane distance
-template <typename Frame = gtsam_ext::Frame>
-class IntegratedPointToPlaneFactor : public gtsam_ext::IntegratedMatchingCostFactor {
+template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+class IntegratedPointToPlaneFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneFactor<Frame>>;
+  using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>>;
 
-  friend class IntegratedLOAMFactor<Frame>;
+  friend class IntegratedLOAMFactor_<TargetFrame, SourceFrame>;
 
-  IntegratedPointToPlaneFactor(
+  IntegratedPointToPlaneFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
-  IntegratedPointToPlaneFactor(
+  IntegratedPointToPlaneFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source);
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source);
 
-  ~IntegratedPointToPlaneFactor();
+  ~IntegratedPointToPlaneFactor_();
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
@@ -135,33 +135,33 @@ private:
   mutable Eigen::Isometry3d last_correspondence_point;
   mutable std::vector<std::tuple<int, int, int>> correspondences;
 
-  std::shared_ptr<const Frame> target;
-  std::shared_ptr<const Frame> source;
+  std::shared_ptr<const TargetFrame> target;
+  std::shared_ptr<const SourceFrame> source;
 };
 
 // Point-to-edge distance
-template <typename Frame = gtsam_ext::Frame>
-class IntegratedPointToEdgeFactor : public gtsam_ext::IntegratedMatchingCostFactor {
+template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+class IntegratedPointToEdgeFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedPointToEdgeFactor<Frame>>;
+  using shared_ptr = boost::shared_ptr<IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>>;
 
-  friend class IntegratedLOAMFactor<Frame>;
+  friend class IntegratedLOAMFactor_<TargetFrame, SourceFrame>;
 
-  IntegratedPointToEdgeFactor(
+  IntegratedPointToEdgeFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source,
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<NearestNeighborSearch>& target_tree);
 
-  IntegratedPointToEdgeFactor(
+  IntegratedPointToEdgeFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
-    const std::shared_ptr<const Frame>& source);
+    const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source);
 
-  ~IntegratedPointToEdgeFactor();
+  ~IntegratedPointToEdgeFactor_();
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
@@ -193,8 +193,12 @@ private:
   mutable Eigen::Isometry3d last_correspondence_point;
   mutable std::vector<std::tuple<int, int>> correspondences;
 
-  std::shared_ptr<const Frame> target;
-  std::shared_ptr<const Frame> source;
+  std::shared_ptr<const TargetFrame> target;
+  std::shared_ptr<const SourceFrame> source;
 };
+
+using IntegratedLOAMFactor = gtsam_ext::IntegratedLOAMFactor_<>;
+using IntegratedPointToPlaneFactor = gtsam_ext::IntegratedPointToPlaneFactor_<>;
+using IntegratedPointToEdgeFactor = gtsam_ext::IntegratedPointToEdgeFactor_<>;
 
 }  // namespace gtsam_ext

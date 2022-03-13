@@ -78,11 +78,11 @@ public:
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "LOAM") {
-      factor.reset(new gtsam_ext::IntegratedLOAMFactor<>(target_key, source_key, target_edges, target_planes, source_edges, source_planes));
+      factor.reset(new gtsam_ext::IntegratedLOAMFactor(target_key, source_key, target_edges, target_planes, source_edges, source_planes));
     } else if (method == "EDGE") {
-      factor.reset(new gtsam_ext::IntegratedPointToEdgeFactor<>(target_key, source_key, target_edges, source_edges));
+      factor.reset(new gtsam_ext::IntegratedPointToEdgeFactor(target_key, source_key, target_edges, source_edges));
     } else if (method == "PLANE") {
-      factor.reset(new gtsam_ext::IntegratedPointToPlaneFactor<>(target_key, source_key, target_planes, source_planes));
+      factor.reset(new gtsam_ext::IntegratedPointToPlaneFactor(target_key, source_key, target_planes, source_planes));
     }
 
     return factor;
