@@ -27,7 +27,8 @@ public:
   virtual size_t evaluation_output_size() const = 0;
 
   virtual void set_linearization_point(const gtsam::Values& values, void* lin_input_cpu) = 0;
-  virtual void issue_linearize(const void* lin_input_cpu, const thrust::device_ptr<const void>& lin_input_gpu, const thrust::device_ptr<void>& lin_output_gpu) = 0;
+  virtual void
+  issue_linearize(const void* lin_input_cpu, const thrust::device_ptr<const void>& lin_input_gpu, const thrust::device_ptr<void>& lin_output_gpu) = 0;
   virtual void store_linearized(const void* lin_output_cpu) = 0;
 
   virtual void set_evaluation_point(const gtsam::Values& values, void* eval_input_cpu) = 0;
@@ -42,4 +43,4 @@ public:
   virtual void sync() = 0;
 };
 
-}
+}  // namespace gtsam_ext

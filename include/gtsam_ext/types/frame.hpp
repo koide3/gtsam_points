@@ -91,11 +91,11 @@ struct traits<Frame> {
   static bool has_covs(const Frame& frame) { return frame.has_covs(); }
   static bool has_intensities(const Frame& frame) { return frame.has_intensities(); }
 
-  static double time(const Frame& frame, int i) { return frame.times[i]; }
-  static const Eigen::Vector4d& point(const Frame& frame, int i) { return frame.points[i]; }
-  static const Eigen::Vector4d& normal(const Frame& frame, int i) { return frame.normals[i]; }
-  static const Eigen::Matrix4d& cov(const Frame& frame, int i) { return frame.covs[i]; }
-  static double intensity(const Frame& frame, int i) { return frame.intensities[i]; }
+  static double time(const Frame& frame, size_t i) { return frame.times[i]; }
+  static const Eigen::Vector4d& point(const Frame& frame, size_t i) { return frame.points[i]; }
+  static const Eigen::Vector4d& normal(const Frame& frame, size_t i) { return frame.normals[i]; }
+  static const Eigen::Matrix4d& cov(const Frame& frame, size_t i) { return frame.covs[i]; }
+  static double intensity(const Frame& frame, size_t i) { return frame.intensities[i]; }
 
   static const Eigen::Vector4d* points_ptr(const Frame& frame) { return frame.points; }
 };

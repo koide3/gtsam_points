@@ -25,7 +25,6 @@ Tested on Ubuntu 20.04 and CUDA 11.1.
 
 - **IntegratedColorConsistencyFactor**  
     Photometric ICP error [[7]](#COLORED)
-
 - **IntegratedColoredGICPFactor**  
     Photometric ICP error + GICP geometric error [[2]](#GICP)[[7]](#COLORED)
 
@@ -58,11 +57,13 @@ All the following optimizers were derived from the implementations in GTSAM
 ## Nearest Neighbor Search
 - **KdTree**
     Standard KdTree-based nearest neighbor search using [nanoflann](https://github.com/jlblancoc/nanoflann)
+- **iVox**
+    Incremental voxel-based nearest neighbor search [[11]](#IVOX)
 
 
 ## Continuous-Time Trajectory
 - **B-Spline**
-    Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[11]](#BSPLINE_D)
+    Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[12]](#BSPLINE_D)
 - **ContinuousTrajectory**
     Cubic B-Spline-based continuous trajectory representation for offline batch optimization
 
@@ -146,4 +147,5 @@ The test data in ```data``` directory are generated from [The KITTI Vision Bench
 <a name="CTICP"></a> [8] Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021  
 <a name="BA_EVM"></a> [9] Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021  
 <a name="BA_LSQ"></a> [10] Huang et al, "On Bundle Adjustment for Multiview Point Cloud Registration", IEEE RA-L, 2021  
-<a name="BSPLINE_D"></a> [11] Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
+<a name="IVOX"></a> [11] Bai et al., "Faster-LIO: Lightweight Tightly Coupled Lidar-Inertial Odometry Using Parallel Sparse Incremental Voxels", IEEE RA-L, 2022  
+<a name="BSPLINE_D"></a> [12] Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020

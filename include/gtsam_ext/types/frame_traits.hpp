@@ -70,52 +70,52 @@ inline auto has_intensities(...) {
 
 // Point accessors
 template <typename T>
-double time(const T& t, int i) {
+double time(const T& t, size_t i) {
   return traits<T>::time(t, i);
 }
 
 template <typename T>
-auto point(const T& t, int i) {
+auto point(const T& t, size_t i) {
   return traits<T>::point(t, i);
 }
 
 template <typename T>
-auto normal(const T& t, int i) {
+auto normal(const T& t, size_t i) {
   return traits<T>::normal(t, i);
 }
 
 template <typename T>
-auto cov(const T& t, int i) {
+auto cov(const T& t, size_t i) {
   return traits<T>::cov(t, i);
 }
 
 template <typename T>
-auto intensity(const T& t, int i) {
+auto intensity(const T& t, size_t i) {
   return traits<T>::intensity(t, i);
 }
 
 template <typename T>
-auto time_gpu(const T& t, int i) {
+auto time_gpu(const T& t, size_t i) {
   return traits<T>::time_gpu(t, i);
 }
 
 template <typename T>
-auto point_gpu(const T& t, int i) {
+auto point_gpu(const T& t, size_t i) {
   return traits<T>::point_gpu(t, i);
 }
 
 template <typename T>
-auto normal_gpu(const T& t, int i) {
+auto normal_gpu(const T& t, size_t i) {
   return traits<T>::normal_gpu(t, i);
 }
 
 template <typename T>
-auto cov_gpu(const T& t, int i) {
+auto cov_gpu(const T& t, size_t i) {
   return traits<T>::cov_gpu(t, i);
 }
 
 template <typename T>
-auto intensity_gpu(const T& t, int i) {
+auto intensity_gpu(const T& t, size_t i) {
   return traits<T>::intensity_gpu(t, i);
 }
 
