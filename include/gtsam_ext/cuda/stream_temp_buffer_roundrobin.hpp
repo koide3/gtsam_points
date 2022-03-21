@@ -22,6 +22,11 @@ class device_vector;
 
 namespace gtsam_ext {
 
+/**
+ * @brief Temporary buffer manager
+ * @note  This class allocates a new buffer only when a buffer larger than the largest one among allocated buffers
+ * @note  This is useful for managing temporary buffers when using CUB's reduce function several times on a single CUDA stream
+ */
 class TempBufferManager {
 public:
   using Ptr = std::shared_ptr<TempBufferManager>;
@@ -38,6 +43,9 @@ private:
   std::vector<std::shared_ptr<thrust::device_vector<char, thrust::device_allocator<char>>>> buffers;
 };
 
+/**
+ * @brief Roundrobin for pairs of CUDA stream and temporary buffer manager
+ */
 class StreamTempBufferRoundRobin {
 public:
   StreamTempBufferRoundRobin(int num_streams = 32, size_t init_buffer_size = 512 * 1024);
@@ -56,4 +64,4 @@ private:
   std::unordered_map<CUstream_st*, TempBufferManager::Ptr> buffer_map;
 };
 
-}  // namespace gtsam
+}  // namespace gtsam_ext

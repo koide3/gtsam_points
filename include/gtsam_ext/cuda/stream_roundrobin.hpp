@@ -10,6 +10,9 @@ struct CUstream_st;
 
 namespace gtsam_ext {
 
+/**
+ * @brief Roundrobin for CUDA streams
+ */
 class StreamRoundRobin {
 public:
   using cudaStream_t = CUstream_st*;

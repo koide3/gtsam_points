@@ -42,16 +42,54 @@ public:
    */
   void clear_counts();
 
+  /**
+   * @brief Number of issued linearization tasks
+   * @return int
+   */
   int linearization_count() const { return num_linearizations; }
+
+  /**
+   * @brief Number of issued cost evaluation tasks
+   * @return int
+   */
   int evaluation_count() const { return num_evaluations; }
 
+  /**
+   * @brief Add a factor to the GPU factor set if it is a GPU-based one
+   * @param factor    Nonlinear factor
+   * @return          True if the factor is GPU-based one and added to the set
+   */
   bool add(boost::shared_ptr<gtsam::NonlinearFactor> factor);
+
+  /**
+   * @brief Add all GPU-based factors in a factor graph to the GPU factor set
+   * @param factors   Factor graph
+   */
   void add(const gtsam::NonlinearFactorGraph& factors);
+
+  /**
+   * @brief Add a GPU-based factor to the GPU factor set
+   * @param factor  GPU-based factor
+   */
   void add(boost::shared_ptr<NonlinearFactorGPU> factor);
 
+  /**
+   * @brief Compute all GPU-based linearization tasks
+   * @param linearization_point   Current estimate
+   */
   void linearize(const gtsam::Values& linearization_point);
+
+  /**
+   * @brief Compute all GPU-based cost evaluation tasks
+   * @param values    Current estimate
+   */
   void error(const gtsam::Values& values);
 
+  /**
+   * @brief Calculate linearized factors
+   * @param linearization_point   Current estimated
+   * @return Linearized factors
+   */
   std::vector<gtsam::GaussianFactor::shared_ptr> calc_linear_factors(const gtsam::Values& linearization_point);
 
 private:
@@ -103,7 +141,9 @@ public:
   void linearize(const gtsam::Values& linearization_point) {}
   void error(const gtsam::Values& values) {}
 
-  std::vector<gtsam::GaussianFactor::shared_ptr> calc_linear_factors(const gtsam::Values& linearization_point) { return std::vector<gtsam::GaussianFactor::shared_ptr>(); }
+  std::vector<gtsam::GaussianFactor::shared_ptr> calc_linear_factors(const gtsam::Values& linearization_point) {
+    return std::vector<gtsam::GaussianFactor::shared_ptr>();
+  }
 };
 
 }  // namespace gtsam_ext
