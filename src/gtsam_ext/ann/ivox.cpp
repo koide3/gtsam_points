@@ -8,6 +8,10 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Spatial hash function
+ * @ref   Teschner et al., "Optimized Spatial Hashing for Collision Detection of Deformable Objects", VMV2003
+ */
 size_t XORVector3iHash::operator()(const Eigen::Vector3i& x) const {
   const size_t p1 = 73856093;
   const size_t p2 = 19349669;  // 19349663 was not a prime number
@@ -15,6 +19,10 @@ size_t XORVector3iHash::operator()(const Eigen::Vector3i& x) const {
   return static_cast<size_t>((x[0] * p1) ^ (x[1] * p2) ^ (x[2] * p3));
 }
 
+/**
+ * @brief Construct a linear points container
+ * @param lru_count  Current LRU count
+ */
 LinearContainer::LinearContainer(const int lru_count) : last_lru_count(lru_count), serial_id(0) {}
 
 LinearContainer::~LinearContainer() {}
@@ -126,6 +134,7 @@ void iVox::insert(const Eigen::Vector4d* points, int num_points) {
 
   lru_count++;
 
+  // Insert points into corresponding voxels
   for (int i = 0; i < num_points; i++) {
     const auto& point = points[i];
     const Eigen::Vector3i coord = voxel_coord(point);
@@ -146,6 +155,17 @@ void iVox::insert(const Eigen::Vector4d* points, int num_points) {
     found->second->insert(point, insertion_dist_sq_thresh);
   }
 
+  // Remove voxels that are not used recently
+  const int lru_horizon = lru_count - lru_thresh;
+  for (auto voxel = voxelmap.begin(); voxel != voxelmap.end();) {
+    if (voxel->second->last_lru_count < lru_horizon) {
+      voxel = voxelmap.erase(voxel);
+    } else {
+      voxel++;
+    }
+  }
+
+  // Drop old voxels if too many voxels exist
   if (voxelmap.size() >= (1 << voxel_id_bits) - 1) {
     std::cerr << "warning: too many voxels!!" << std::endl;
     std::cerr << "       : drop old voxels" << std::endl;
@@ -162,6 +182,7 @@ void iVox::insert(const Eigen::Vector4d* points, int num_points) {
     voxelmap.insert(voxels.begin(), voxels.begin() + (1 << voxel_id_bits) - 1);
   }
 
+  // Created flattened voxel list
   voxels.clear();
   for (auto& voxel : voxelmap) {
     voxel.second->serial_id = voxels.size();
@@ -193,7 +214,7 @@ void iVox::insert(const Frame& frame) {
 
   lru_count++;
 
-  // Insert points
+  // Insert points into corresponding voxels
   for (int i = 0; i < frame.size(); i++) {
     const auto& point = frame.points[i];
     const Eigen::Vector3i coord = voxel_coord(point);
@@ -224,6 +245,7 @@ void iVox::insert(const Frame& frame) {
     }
   }
 
+  // Drop old voxels if too many voxels exist
   if (voxelmap.size() >= (1 << voxel_id_bits) - 1) {
     std::cerr << "warning: too many voxels!!" << std::endl;
     std::cerr << "       : drop old voxels" << std::endl;
@@ -240,7 +262,7 @@ void iVox::insert(const Frame& frame) {
     voxelmap.insert(voxels.begin(), voxels.begin() + (1 << voxel_id_bits) - 1);
   }
 
-  // Create lat voxel list
+  // Create flattened voxel list
   voxels.clear();
   for (auto& voxel : voxelmap) {
     voxel.second->serial_id = voxels.size();
@@ -255,6 +277,7 @@ size_t iVox::nearest_neighbor_search(const double* pt, size_t* k_indices, double
   size_t index = 0;
   double min_dist = std::numeric_limits<double>::max();
 
+  // Find the closest point from neighboring voxels
   for (const auto& offset : offsets) {
     const Eigen::Vector3i coord = center + offset;
     const auto found = voxelmap.find(coord);
@@ -262,8 +285,10 @@ size_t iVox::nearest_neighbor_search(const double* pt, size_t* k_indices, double
       continue;
     }
 
+    // Update LRU count of the voxel
     found->second->last_lru_count = lru_count;
 
+    // For each point in the voxel
     for (int i = 0; i < found->second->size(); i++) {
       const double dist = (point - found->second->points[i]).squaredNorm();
       if (dist > min_dist) {
@@ -275,6 +300,7 @@ size_t iVox::nearest_neighbor_search(const double* pt, size_t* k_indices, double
     }
   }
 
+  // No points in the neighboring voxels
   if (min_dist >= std::numeric_limits<double>::max()) {
     return 0;
   }
@@ -292,7 +318,7 @@ size_t iVox::knn_search(const double* pt, size_t k, size_t* k_indices, double* k
   const Eigen::Vector4d point(pt[0], pt[1], pt[2], 1.0);
   const Eigen::Vector3i center = voxel_coord(point);
 
-  // Find neighbor points
+  // Find neighbor points from neighboring voxels
   std::vector<std::pair<size_t, double>> neighbors;
   for (const auto& offset : offsets) {
     const Eigen::Vector3i coord = center + offset;

@@ -57,32 +57,73 @@ public:
   using Ptr = std::shared_ptr<iVox>;
   using ConstPtr = std::shared_ptr<const iVox>;
 
+  /**
+   * @brief Construct a new iVox
+   *
+   * @param voxel_resolution       Voxel resolution
+   * @param insertion_dist_thresh  Minimum distance between points
+   * @param lru_thresh             LRC caching threshold
+   */
   iVox(const double voxel_resolution = 0.5, const double insertion_dist_thresh = 0.05, const int lru_thresh = 10);
   virtual ~iVox() override;
 
+  /**
+   * @brief Insert points into the iVox
+   * @param points      Input points
+   * @param num_points  Number of points
+   */
+  void insert(const Eigen::Vector4d* points, int num_points);
+
+  /**
+   * @brief Insert points and all available attributes into the iVox
+   * @param frame   Input frame
+   */
+  void insert(const Frame& frame);
+
+  /**
+   * @brief Find the closest point
+   * @param pt          Query point
+   * @param k_indices   Index output
+   * @param k_sq_dists  Distance output
+   * @return Number of found neighbors (0 or 1)
+   */
+  size_t nearest_neighbor_search(const double* pt, size_t* k_indices, double* k_sq_dists) const;
+
+  /**
+   * @brief Find k-nearest neighbors
+   * @note  Indices encode voxel and point IDs of neighbor points
+   *        First "voxel_id_bits" of an index indicates a sequential voxel ID
+   *        Last "point_id_bits" of an index indicates a point ID in the voxel
+   * @param pt          Query point
+   * @param k           Number of neighbors
+   * @param k_indices   Indices output
+   * @param k_sq_dists  Distances output
+   * @return Number of found neighbors
+   */
+  virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const override;
+
+  // Parameter setters
   void set_voxel_resolution(const double resolution) { voxel_resolution = resolution; }
   void set_insertion_dist_thresh(const double dist) { insertion_dist_sq_thresh = dist * dist; }
   void set_lru_thresh(const int lru_thresh) { this->lru_thresh = lru_thresh; }
   void set_neighbor_voxel_mode(const int mode) { offsets = neighbor_offsets(mode); }
 
-  void insert(const Eigen::Vector4d* points, int num_points);
-  void insert(const Frame& frame);
-
-  size_t nearest_neighbor_search(const double* pt, size_t* k_indices, double* k_sq_dists) const;
-  virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const override;
-
+  // Attribute check
   bool has_points() const { return points_available; }
   bool has_normals() const { return normals_available; }
   bool has_covs() const { return covs_available; }
   bool has_intensities() const { return intensities_available; }
 
+  // Point attribute accessors
   const Eigen::Vector4d& point(const size_t i) const;
   const Eigen::Vector4d& normal(const size_t i) const;
   const Eigen::Matrix4d& cov(const size_t i) const;
   double intensity(const size_t i) const;
 
+  // Number of voxels
   int num_voxels() const { return voxelmap.size(); }
 
+  // Extract all points in iVox
   std::vector<Eigen::Vector4d> voxel_points() const;
 
 private:
@@ -98,18 +139,16 @@ private:
   bool covs_available;
   bool intensities_available;
 
-  double voxel_resolution;
-  double insertion_dist_sq_thresh;
-  int lru_thresh;
-
-  std::vector<Eigen::Vector3i> offsets;
+  double voxel_resolution;               // Voxel resolution
+  double insertion_dist_sq_thresh;       // Minimum distance between points in a voxel
+  int lru_thresh;                        // LRU caching threshold
+  std::vector<Eigen::Vector3i> offsets;  // Neighbor voxel offsets
 
   int lru_count;  // Counter to manage LRU voxel deletion
 
   using VoxelMap = std::unordered_map<Eigen::Vector3i, LinearContainer::Ptr, XORVector3iHash>;
-  VoxelMap voxelmap;
-
-  std::vector<LinearContainer::Ptr> voxels;  // Flattened voxelmap for indexing
+  VoxelMap voxelmap;                         // Voxelmap
+  std::vector<LinearContainer::Ptr> voxels;  // Flattened voxelmap for linear indexing
 };
 
 namespace frame {

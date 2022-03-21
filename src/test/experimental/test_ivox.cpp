@@ -26,7 +26,7 @@ gtsam_ext::ScanLineInformation estimate_scan_lines() {
 }
 
 int main(int argc, char** argv) {
-  const std::string seq_path = "/home/koide/datasets/kitti/dataset/sequences/01/velodyne";
+  const std::string seq_path = "/home/koide/datasets/kitti/dataset/sequences/00/velodyne";
 
   auto viewer = guik::LightViewer::instance();
 
@@ -36,7 +36,6 @@ int main(int argc, char** argv) {
   gtsam_ext::ScanLineInformation scan_lines = estimate_scan_lines();
 
   gtsam::Pose3 T_world_lidar;
-  gtsam::Pose3 T_last_current;
 
   for (int i = 0; i < 4500; i++) {
     const std::string path = (boost::format("%s/%06d.bin") % seq_path % i).str();
@@ -51,7 +50,7 @@ int main(int argc, char** argv) {
     if (i != 0) {
       gtsam::Values values;
       values.insert(0, gtsam::Pose3());
-      values.insert(1, T_world_lidar * T_last_current);
+      values.insert(1, T_world_lidar);
 
       gtsam::NonlinearFactorGraph graph;
       graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
@@ -76,7 +75,6 @@ int main(int argc, char** argv) {
       gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
       values = optimizer.optimize();
 
-      T_last_current = T_world_lidar.inverse() * values.at<gtsam::Pose3>(1);
       T_world_lidar = values.at<gtsam::Pose3>(1);
     }
 
@@ -93,9 +91,10 @@ int main(int argc, char** argv) {
     const auto plane_points = ivox_planes->voxel_points();
     const auto edge_points = ivox_edges->voxel_points();
 
-    viewer->update_drawable("current_coord", glk::Primitives::coordinate_system(), guik::VertexColor(T_world_lidar.matrix().cast<float>()));
+    viewer->update_drawable(guik::anon(), glk::Primitives::coordinate_system(), guik::VertexColor(T_world_lidar.matrix().cast<float>()));
     viewer->update_drawable("plane_points", std::make_shared<glk::PointCloudBuffer>(plane_points), guik::Rainbow());
     viewer->update_drawable("edge_points", std::make_shared<glk::PointCloudBuffer>(edge_points), guik::FlatRed());
+    viewer->lookat(T_world_lidar.translation().cast<float>());
 
     viewer->spin_until_click();
   }
