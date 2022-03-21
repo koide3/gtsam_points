@@ -36,8 +36,9 @@ ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_p
     const double tilt = std::atan2(pt.z(), pt.head<2>().norm());
 
     // TODO: do binary search
-    const auto closest =
-      std::min_element(scan_lines.begin(), scan_lines.end(), [=](const ScanLine& lhs, const ScanLine& rhs) { return std::abs(lhs.angle() - tilt) < std::abs(rhs.angle() - tilt); });
+    const auto closest = std::min_element(scan_lines.begin(), scan_lines.end(), [=](const ScanLine& lhs, const ScanLine& rhs) {
+      return std::abs(lhs.angle() - tilt) < std::abs(rhs.angle() - tilt);
+    });
 
     if (std::abs(closest->angle() - tilt) < angle_eps) {
       closest->add(tilt);
@@ -64,7 +65,9 @@ ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_p
     });
 
     // Sort them in increasing order by tilt angles
-    std::sort(scan_lines.begin(), scan_lines.begin() + num_scan_lines, [](const ScanLine& lhs, const ScanLine& rhs) { return lhs.angle() < rhs.angle(); });
+    std::sort(scan_lines.begin(), scan_lines.begin() + num_scan_lines, [](const ScanLine& lhs, const ScanLine& rhs) {
+      return lhs.angle() < rhs.angle();
+    });
 
     for (int i = 0; i < num_scan_lines; i++) {
       scan_line_info.point_counts.push_back(scan_lines[i].num_points);
@@ -72,7 +75,9 @@ ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_p
     }
   } else {
     // Find the line with the largest number of points
-    const auto max_line = std::max_element(scan_lines.begin(), scan_lines.end(), [](const ScanLine& lhs, const ScanLine& rhs) { return lhs.num_points < rhs.num_points; });
+    const auto max_line = std::max_element(scan_lines.begin(), scan_lines.end(), [](const ScanLine& lhs, const ScanLine& rhs) {
+      return lhs.num_points < rhs.num_points;
+    });
     const int thresh = max_line->num_points * 0.3;
 
     // Remove lines with few points
@@ -91,7 +96,10 @@ ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_p
   return scan_line_info;
 }
 
-void extract_edge_plane_points_line(const std::vector<Eigen::Vector4d>& points, std::vector<Eigen::Vector4d>& plane_points, std::vector<Eigen::Vector4d>& edge_points) {
+void extract_edge_plane_points_line(
+  const std::vector<Eigen::Vector4d>& points,
+  std::vector<Eigen::Vector4d>& plane_points,
+  std::vector<Eigen::Vector4d>& edge_points) {
   // TODO: remove hardcoded parameters!!
   const int half_curvature_window = 15;
   const double edge_thresh = 0.35;
@@ -133,11 +141,15 @@ void extract_edge_plane_points_line(const std::vector<Eigen::Vector4d>& points, 
   }
 
   // Sort points in increasing order by curvatures
-  std::sort(curvatures.begin(), curvatures.end(), [](const std::pair<double, int>& lhs, const std::pair<double, int>& rhs) { return lhs.first < rhs.first; });
+  std::sort(curvatures.begin(), curvatures.end(), [](const std::pair<double, int>& lhs, const std::pair<double, int>& rhs) {
+    return lhs.first < rhs.first;
+  });
 
   // Extract plane points
   const auto partition_plane =
-    std::lower_bound(curvatures.begin(), curvatures.end(), plane_thresh, [](const std::pair<double, int>& c, const double thresh) { return c.first < thresh; });
+    std::lower_bound(curvatures.begin(), curvatures.end(), plane_thresh, [](const std::pair<double, int>& c, const double thresh) {
+      return c.first < thresh;
+    });
 
   std::vector<int> num_selected_planes(points.size(), 0);
   for (auto c_point = curvatures.begin(); c_point != partition_plane; c_point++) {
@@ -163,7 +175,9 @@ void extract_edge_plane_points_line(const std::vector<Eigen::Vector4d>& points, 
 
   // Extract edge points
   const auto partition_edge =
-    std::lower_bound(curvatures.rbegin(), curvatures.rend(), edge_thresh, [](const std::pair<double, int>& c, const double thresh) { return c.first > thresh; });
+    std::lower_bound(curvatures.rbegin(), curvatures.rend(), edge_thresh, [](const std::pair<double, int>& c, const double thresh) {
+      return c.first > thresh;
+    });
 
   std::vector<int> num_selected_edges(points.size(), 0);
   for (auto c_point = curvatures.rbegin(); c_point != partition_edge; c_point++) {
@@ -188,7 +202,8 @@ void extract_edge_plane_points_line(const std::vector<Eigen::Vector4d>& points, 
   }
 }
 
-std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points) {
+std::pair<FrameCPU::Ptr, FrameCPU::Ptr>
+extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points) {
   // Estimate tilt and heading angles of each point
   std::vector<std::tuple<double, double, int>> tilt_heading_points(num_points);
   for (int i = 0; i < num_points; i++) {
@@ -198,9 +213,10 @@ std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLine
   }
 
   // Sort by tilt angles and partition points in each scan line
-  std::sort(tilt_heading_points.begin(), tilt_heading_points.end(), [](const std::tuple<double, double, int>& lhs, const std::tuple<double, double, int>& rhs) {
-    return std::get<0>(lhs) < std::get<0>(rhs);
-  });
+  std::sort(
+    tilt_heading_points.begin(),
+    tilt_heading_points.end(),
+    [](const std::tuple<double, double, int>& lhs, const std::tuple<double, double, int>& rhs) { return std::get<0>(lhs) < std::get<0>(rhs); });
 
   std::vector<std::vector<std::tuple<double, double, int>>> lines(scan_lines.size());
   for (auto& line : lines) {
@@ -210,7 +226,8 @@ std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLine
   int tilt_cursor = 0;
   for (const auto& tilt_heading_point : tilt_heading_points) {
     const double tilt = std::get<0>(tilt_heading_point);
-    while (tilt_cursor < scan_lines.size() - 1 && std::abs(scan_lines.angle(tilt_cursor + 1) - tilt) < std::abs(scan_lines.angle(tilt_cursor) - tilt)) {
+    while (tilt_cursor < scan_lines.size() - 1 &&
+           std::abs(scan_lines.angle(tilt_cursor + 1) - tilt) < std::abs(scan_lines.angle(tilt_cursor) - tilt)) {
       tilt_cursor++;
     }
     lines[tilt_cursor].push_back(tilt_heading_point);
@@ -221,7 +238,9 @@ std::pair<FrameCPU::Ptr, FrameCPU::Ptr> extract_edge_plane_points(const ScanLine
 
   for (int i = 0; i < scan_lines.size(); i++) {
     auto& line = lines[i];
-    std::sort(line.begin(), line.end(), [](const std::tuple<double, double, int>& lhs, const std::tuple<double, double, int>& rhs) { return std::get<1>(lhs) < std::get<1>(rhs); });
+    std::sort(line.begin(), line.end(), [](const std::tuple<double, double, int>& lhs, const std::tuple<double, double, int>& rhs) {
+      return std::get<1>(lhs) < std::get<1>(rhs);
+    });
 
     std::vector<Eigen::Vector4d> line_points(line.size());
     std::transform(line.begin(), line.end(), line_points.begin(), [&](const std::tuple<double, double, int>& x) { return points[std::get<2>(x)]; });

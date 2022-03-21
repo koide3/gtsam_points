@@ -65,6 +65,7 @@ add_library(gtsam_ext SHARED
   # ann
   src/gtsam_ext/ann/kdtree.cpp
   src/gtsam_ext/ann/intensity_kdtree.cpp
+  src/gtsam_ext/ann/ivox.cpp
   # types
   src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/frame_cpu.cpp
