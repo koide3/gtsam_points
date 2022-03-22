@@ -60,7 +60,20 @@ const gtsam::Vector6 ContinuousTrajectory::imu(const gtsam::Values& values, cons
   return imu_.value(values);
 }
 
-gtsam::Values ContinuousTrajectory::fit_knots(const std::vector<double>& stamps, const std::vector<gtsam::Pose3>& poses, double smoothness) const {
+gtsam::Values
+ContinuousTrajectory::fit_knots(const std::vector<double>& stamps, const std::vector<gtsam::Pose3>& poses, double smoothness, bool verbose) const {
+  gtsam::LevenbergMarquardtParams lm_params;
+  if (verbose) {
+    lm_params.setVerbosityLM("SUMMARY");
+  }
+  return fit_knots(stamps, poses, smoothness, lm_params);
+}
+
+gtsam::Values ContinuousTrajectory::fit_knots(
+  const std::vector<double>& stamps,
+  const std::vector<gtsam::Pose3>& poses,
+  double smoothness,
+  const gtsam::LevenbergMarquardtParams& lm_params) const {
   gtsam::Values values;
   gtsam::NonlinearFactorGraph graph;
 
@@ -97,8 +110,6 @@ gtsam::Values ContinuousTrajectory::fit_knots(const std::vector<double>& stamps,
   }
 
   // Optimize knot poses
-  gtsam::LevenbergMarquardtParams lm_params;
-  // lm_params.setVerbosityLM("SUMMARY");
   gtsam::LevenbergMarquardtOptimizer optimizer(graph, values, lm_params);
   values = optimizer.optimize();
 

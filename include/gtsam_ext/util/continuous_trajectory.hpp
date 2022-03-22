@@ -8,6 +8,10 @@
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam/slam/expressions.h>
 
+namespace gtsam {
+class LevenbergMarquardtParams;
+}
+
 namespace gtsam_ext {
 
 /**
@@ -75,7 +79,14 @@ public:
    * @param smoothness  Smoothness regularization to prevent underconstrained system (If smoothness <= 0.0, regularization will be disabled)
    * @return            Knots of B-spline fitted to the target poses
    */
-  gtsam::Values fit_knots(const std::vector<double>& stamps, const std::vector<gtsam::Pose3>& poses, double smoothness = 1e-3) const;
+  gtsam::Values fit_knots(
+    const std::vector<double>& stamps,
+    const std::vector<gtsam::Pose3>& poses,
+    double smoothness,
+    const gtsam::LevenbergMarquardtParams& lm_params) const;
+
+  gtsam::Values fit_knots(const std::vector<double>& stamps, const std::vector<gtsam::Pose3>& poses, double smoothness = 1e-3, bool verbose = false)
+    const;
 
 public:
   const char symbol;
