@@ -11,6 +11,7 @@ endif()
 
 option(BUILD_TESTS "Build test" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
+option(BUILD_EXAMPLE "Build example programs" OFF)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" OFF)
@@ -152,6 +153,20 @@ if(BUILD_DEMO)
     add_executable(${demo_name} ${demo_src})
     target_include_directories(${demo_name} PUBLIC ${Iridescence_INCLUDE_DIRS})
     target_link_libraries(${demo_name} gtsam_ext ${Iridescence_LIBRARIES})
+  endforeach()
+endif()
+
+#Example
+if(BUILD_EXAMPLE)
+  find_package(Iridescence REQUIRED)
+
+  file(GLOB example_sources "src/example/*.cpp")
+  foreach(example_src IN LISTS example_sources)
+    get_filename_component(example_name ${example_src} NAME_WE)
+
+    add_executable(${example_name} ${example_src})
+    target_include_directories(${example_name} PUBLIC ${Iridescence_INCLUDE_DIRS})
+    target_link_libraries(${example_name} gtsam_ext ${Iridescence_LIBRARIES})
   endforeach()
 endif()
 

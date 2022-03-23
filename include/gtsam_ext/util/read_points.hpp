@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <fstream>
+#include <iostream>
 #include <Eigen/Core>
 
 namespace gtsam_ext {
