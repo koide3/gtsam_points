@@ -23,7 +23,8 @@ class KDTreeSingleIndexAdaptor;
 namespace gtsam_ext {
 
 /**
- * @brief Wrapper for nanoflann
+ * @brief KdTree-based nearest neighbor search
+ * @note  This is just a thin wrapper for nanoflann
  */
 struct KdTree : public NearestNeighborSearch {
 public:

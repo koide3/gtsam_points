@@ -36,6 +36,21 @@ struct vector_traits {
     }
     return s * v;
   }
+
+  static Eigen::Matrix<double, N, 1> Product(
+    const Eigen::Matrix<double, N, 1>& v1,
+    const Eigen::Matrix<double, N, 1>& v2,
+    gtsam::OptionalJacobian<N, N> H1,
+    gtsam::OptionalJacobian<N, N> H2) {
+    if (H1) {
+      *H1 = v2.asDiagonal();
+    }
+    if (H2) {
+      *H2 = v1.asDiagonal();
+    }
+
+    return v1.array() * v2.array();
+  }
 };
 
 template <int N, int M>
@@ -59,6 +74,13 @@ struct vector2_traits {
 
 inline gtsam::Vector3_ translation(const gtsam::Pose3_& x) {
   return gtsam::Vector3_(&internal::translation, x);
+}
+
+template <int N>
+gtsam::Expression<Eigen::Matrix<double, N, 1>> product(
+  const gtsam::Expression<Eigen::Matrix<double, N, 1>>& v1,
+  const gtsam::Expression<Eigen::Matrix<double, N, 1>>& v2) {
+  return gtsam::Expression<Eigen::Matrix<double, N, 1>>(&internal::vector_traits<N>::Product, v1, v2);
 }
 
 template <int N>

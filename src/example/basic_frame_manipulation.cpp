@@ -3,7 +3,7 @@
 
 /**
  * @file  basic_frame_manipulation.cpp
- * @brief This example code demonstrates how to create and manipulate gtsam_ext::Frame class to manage point clouds.
+ * @brief This example demonstrates how to create and manipulate gtsam_ext::Frame class to manage point clouds.
  */
 
 #include <gtsam_ext/util/read_points.hpp>
@@ -15,7 +15,7 @@ int main(int argc, char** argv) {
 
   // gtsam_ext::FrameCPU can be created from a vector of Eigen::Vector3f, 4f, 3d or 4d.
   // Input points are converted and held as Eigen::Vector4d internally.
-  // Note that if you feed 4D vectors, the last element (w) must be 1.
+  // Note that if you feed 4D vectors, their last elements (w) must be 1.
   std::vector<Eigen::Vector3f> points_3f(num_points);
   const auto frame_3f = std::make_shared<gtsam_ext::FrameCPU>(points_3f);
 
@@ -30,7 +30,7 @@ int main(int argc, char** argv) {
 
   // Is it also possible to create FrameCPU from a raw Eigen::Vector pointer.
   const auto frame = std::make_shared<gtsam_ext::FrameCPU>(points_4d.data(), points_4d.size());
-  
+
   // You can add point attributes by calling FrameCPU::add_*.
   std::vector<double> times(num_points);
   std::vector<Eigen::Vector4d> normals(num_points);
@@ -40,7 +40,7 @@ int main(int argc, char** argv) {
   frame->add_normals(normals);                        // Add point normals
   frame->add_covs(covs);                              // Add point covariances
   frame->add_intensities(intensities);                // Add point intensities
-  
+
   // gtsam_ext::FrameCPU is derived from gtsam_ext::Frame that holds only pointers to point attributes.
   gtsam_ext::Frame::Ptr base_frame = frame;
   int frame_size = base_frame->num_points;            // Number of points
@@ -52,8 +52,8 @@ int main(int argc, char** argv) {
   double* intensities_ptr = base_frame->intensities;  // Pointer to point intensities
 
   // If you don't want to let gtsam_ext::FrameCPU hold point data but want to manage points by yourself,
-  // you can just pass point pointers to gtsam_ext::Frame.
-  // Note that you need to carefully take care of the ownership of point data in this case.
+  // you can just give gtsam_ext::Frame pointers to point attributes.
+  // Note that you need to take care of the ownership of point data in this case.
   gtsam_ext::Frame::Ptr base_frame2(new gtsam_ext::Frame);
   base_frame2->num_points = points_4d.size();
   base_frame2->points = points_4d.data();

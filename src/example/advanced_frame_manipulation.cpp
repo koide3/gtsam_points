@@ -18,11 +18,11 @@
 #include <guik/viewer/light_viewer.hpp>
 
 namespace gtsam_ext {
-  namespace frame {
+namespace frame {
 
-// In this example, we show how to directly feed a custom class (in this case, std::vector<Eigen::Vector4d>) to the ICP factor
+// In this example, we show how to directly feed a custom class (in this case, std::vector<Eigen::Vector4d>) to the ICP factor.
 // You need to first define methods to access the point data in your custom class by specializing gtsam_ext::frame::traits<>
-template<>
+template <>
 struct traits<std::vector<Eigen::Vector4d>> {
   using T = std::vector<Eigen::Vector4d>;
 
@@ -35,8 +35,8 @@ struct traits<std::vector<Eigen::Vector4d>> {
   static const Eigen::Vector4d& point(const T& points, size_t i) { return points[i]; }
 };
 
-  }
-}
+}  // namespace frame
+}  // namespace gtsam_ext
 
 int main(int argc, char** argv) {
   // Read target and source point clouds and transform them into std::shared_ptr<std::vector<Eigen::Vector4d>>
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
 
   // Optimize
   values = optimizer.optimize();
-  
+
   // Visualization
   auto viewer = guik::LightViewer::instance();
   viewer->update_drawable("target", std::make_shared<glk::PointCloudBuffer>(*target), guik::FlatRed());

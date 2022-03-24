@@ -3,7 +3,7 @@
 
 /**
  * @file  basic_scan_matching.cpp
- * @brief This example code demonstrates how to perform simple frame-to-frame ICP scan matching with gtsam_ext.
+ * @brief This example demonstrates how to perform simple frame-to-frame ICP scan matching with gtsam_ext.
  */
 
 #include <gtsam_ext/util/read_points.hpp>
@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
   values.insert(1, gtsam::Pose3());   // Source pose initial guess
 
   gtsam::NonlinearFactorGraph graph;
+
   // Fix the target pose at the origin
   auto prior_factor = gtsam::make_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
   graph.add(prior_factor);

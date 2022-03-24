@@ -8,8 +8,11 @@
 
 namespace gtsam_ext {
 
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate_normals(const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points) {
+std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>
+estimate_normals(const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points, int num_threads) {
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals(num_points, Eigen::Vector4d::Zero());
+
+#pragma omp parallel for
   for (int i = 0; i < num_points; i++) {
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig;
     eig.computeDirect(covs[i].block<3, 3>(0, 0));
@@ -23,10 +26,10 @@ std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate
   return normals;
 }
 
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> estimate_normals(const Eigen::Vector4d* points, int num_points, int k_neighbors) {
-  auto covs = estimate_covariances(points, num_points, k_neighbors);
+std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>
+estimate_normals(const Eigen::Vector4d* points, int num_points, int k_neighbors, int num_threads) {
+  auto covs = estimate_covariances(points, num_points, k_neighbors, num_threads);
   return estimate_normals(points, covs.data(), num_points);
 }
-
 
 }  // namespace gtsam_ext
