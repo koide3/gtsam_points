@@ -128,7 +128,6 @@ auto point(const T& t, size_t i) {
   return traits<T>::point(t, i);
 }
 
-
 // Normal
 template <typename T, typename = void>
 struct normal_defined : std::false_type {};
@@ -136,18 +135,17 @@ struct normal_defined : std::false_type {};
 template <typename T>
 struct normal_defined<T, std::enable_if_t<std::is_invocable_v<decltype(&traits<T>::normal), const T&, size_t>>> : std::true_type {};
 
-template<typename T, typename std::enable_if_t<normal_defined<T>::value>* = nullptr>
+template <typename T, typename std::enable_if_t<normal_defined<T>::value>* = nullptr>
 auto normal(const T& t, size_t i) {
   return traits<T>::normal(t, i);
 }
 
-template<typename T, typename std::enable_if_t<!normal_defined<T>::value>* = nullptr>
+template <typename T, typename std::enable_if_t<!normal_defined<T>::value>* = nullptr>
 Eigen::Vector4d normal(const T& t, size_t i) {
   std::cerr << "error: undefined point attribute access (normal)!!" << std::endl;
   abort();
   return Eigen::Vector4d(0, 0, 0, 0);
 }
-
 
 template <typename T>
 auto cov(const T& t, size_t i) {
@@ -157,6 +155,11 @@ auto cov(const T& t, size_t i) {
 template <typename T>
 auto intensity(const T& t, size_t i) {
   return traits<T>::intensity(t, i);
+}
+
+template <typename T>
+auto intensity_gradient(const T& t, size_t i) {
+  return traits<T>::intensity_gradient(t, i);
 }
 
 template <typename T>

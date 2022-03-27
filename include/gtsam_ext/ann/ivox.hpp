@@ -72,13 +72,13 @@ public:
    * @param points      Input points
    * @param num_points  Number of points
    */
-  void insert(const Eigen::Vector4d* points, int num_points);
+  virtual void insert(const Eigen::Vector4d* points, int num_points);
 
   /**
    * @brief Insert points and all available attributes into the iVox
    * @param frame   Input frame
    */
-  void insert(const Frame& frame);
+  virtual void insert(const Frame& frame);
 
   /**
    * @brief Find the closest point
@@ -126,11 +126,14 @@ public:
   // Extract all points in iVox
   std::vector<Eigen::Vector4d> voxel_points() const;
 
-private:
+protected:
+  inline size_t voxel_id(const size_t i) const { return i >> point_id_bits; }
+  inline size_t point_id(const size_t i) const { return i & ((1 << point_id_bits) - 1); }
+
   const Eigen::Vector3i voxel_coord(const Eigen::Vector4d& point) const;
   std::vector<Eigen::Vector3i> neighbor_offsets(const int neighbor_voxel_mode) const;
 
-private:
+protected:
   static constexpr int point_id_bits = 12;
   static constexpr int voxel_id_bits = 32 - point_id_bits;
 
