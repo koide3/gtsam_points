@@ -311,7 +311,7 @@ size_t iVox::nearest_neighbor_search(const double* pt, size_t* k_indices, double
 }
 
 size_t iVox::knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const {
-  if (k == 0) {
+  if (k == 1) {
     return nearest_neighbor_search(pt, k_indices, k_sq_dists);
   }
 
