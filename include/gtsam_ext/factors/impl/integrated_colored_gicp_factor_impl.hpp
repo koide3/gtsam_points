@@ -9,14 +9,14 @@
 
 namespace gtsam_ext {
 
-template <typename TargetFrame, typename SourceFrame>
-IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::IntegratedColoredGICPFactor_(
+template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>
+IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients>::IntegratedColoredGICPFactor_(
   gtsam::Key target_key,
   gtsam::Key source_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<const NearestNeighborSearch>& target_tree,
-  const IntensityGradients::ConstPtr& target_gradients)
+  const std::shared_ptr<const IntensityGradients>& target_gradients)
 : IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -39,14 +39,14 @@ IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::IntegratedColoredGICPFac
   }
 }
 
-template <typename TargetFrame, typename SourceFrame>
-IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::IntegratedColoredGICPFactor_(
+template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>
+IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients>::IntegratedColoredGICPFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<const NearestNeighborSearch>& target_tree,
-  const IntensityGradients::ConstPtr& target_gradients)
+  const std::shared_ptr<const IntensityGradients>& target_gradients)
 : IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -69,11 +69,11 @@ IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::IntegratedColoredGICPFac
   }
 }
 
-template <typename TargetFrame, typename SourceFrame>
-IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::~IntegratedColoredGICPFactor_() {}
+template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>
+IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients>::~IntegratedColoredGICPFactor_() {}
 
-template <typename TargetFrame, typename SourceFrame>
-void IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>
+void IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients>::update_correspondences(const Eigen::Isometry3d& delta) const {
   bool do_update = true;
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
@@ -114,8 +114,8 @@ void IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::update_corresponden
   last_correspondence_point = delta;
 }
 
-template <typename TargetFrame, typename SourceFrame>
-double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::evaluate(
+template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>
+double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients>::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
   Eigen::Matrix<double, 6, 6>* H_source,
@@ -162,7 +162,7 @@ double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>::evaluate(
     const auto& mean_B = frame::point(*target, target_index);
     const auto& cov_B = frame::cov(*target, target_index);
     const auto& normal_B = frame::normal(*target, target_index);
-    const auto& gradient_B = target_gradients->intensity_gradients[target_index];
+    const auto& gradient_B = frame::intensity_gradient(*target_gradients, target_index);
     const double intensity_B = frame::intensity(*target, target_index);
 
     const Eigen::Vector4d transed_A = delta * mean_A;

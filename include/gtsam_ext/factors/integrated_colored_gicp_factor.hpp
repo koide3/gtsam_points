@@ -27,7 +27,10 @@ struct NearestNeighborSearch;
  * @ref Segal et al., "Generalized-ICP", RSS2005
  * @ref Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
  */
-template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+template <
+  typename TargetFrame = gtsam_ext::Frame,
+  typename SourceFrame = gtsam_ext::Frame,
+  typename IntensityGradients = gtsam_ext::IntensityGradients>
 class IntegratedColoredGICPFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -39,7 +42,7 @@ public:
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<const NearestNeighborSearch>& target_tree,
-    const IntensityGradients::ConstPtr& target_gradients);
+    const std::shared_ptr<const IntensityGradients>& target_gradients);
 
   IntegratedColoredGICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
@@ -47,7 +50,7 @@ public:
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
     const std::shared_ptr<const NearestNeighborSearch>& target_tree,
-    const IntensityGradients::ConstPtr& target_gradients);
+    const std::shared_ptr<const IntensityGradients>& target_gradients);
 
   virtual ~IntegratedColoredGICPFactor_() override;
 

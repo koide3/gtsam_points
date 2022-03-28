@@ -9,6 +9,7 @@
 
 #include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/frame_traits.hpp>
 
 namespace gtsam_ext {
 
@@ -46,5 +47,14 @@ public:
 public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> intensity_gradients;
 };
+
+namespace frame {
+
+template <>
+struct traits<IntensityGradients> {
+  static const Eigen::Vector4d& intensity_gradient(const IntensityGradients& grads, size_t i) { return grads.intensity_gradients[i]; }
+};
+
+}  // namespace frame
 
 }  // namespace gtsam_ext

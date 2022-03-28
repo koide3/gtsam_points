@@ -12,7 +12,7 @@ std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>
 estimate_normals(const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points, int num_threads) {
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals(num_points, Eigen::Vector4d::Zero());
 
-#pragma omp parallel for
+#pragma omp parallel for num_threads(num_threads)
   for (int i = 0; i < num_points; i++) {
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig;
     eig.computeDirect(covs[i].block<3, 3>(0, 0));
