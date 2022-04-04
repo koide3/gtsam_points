@@ -316,7 +316,7 @@ size_t iVox::nearest_neighbor_search(const double* pt, size_t* k_indices, double
 }
 
 size_t iVox::knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const {
-  if (k == 0) {
+  if (k == 1) {
     return nearest_neighbor_search(pt, k_indices, k_sq_dists);
   }
 
@@ -368,27 +368,19 @@ size_t iVox::knn_search(const double* pt, size_t k, size_t* k_indices, double* k
 }
 
 const Eigen::Vector4d& iVox::point(const size_t i) const {
-  const size_t voxel_id = i >> point_id_bits;
-  const size_t point_id = i & ((1 << point_id_bits) - 1);
-  return voxels[voxel_id]->points[point_id];
+  return voxels[voxel_id(i)]->points[point_id(i)];
 }
 
 const Eigen::Vector4d& iVox::normal(const size_t i) const {
-  const size_t voxel_id = i >> point_id_bits;
-  const size_t point_id = i & ((1 << point_id_bits) - 1);
-  return voxels[voxel_id]->normals[point_id];
+  return voxels[voxel_id(i)]->normals[point_id(i)];
 }
 
 const Eigen::Matrix4d& iVox::cov(const size_t i) const {
-  const size_t voxel_id = i >> point_id_bits;
-  const size_t point_id = i & ((1 << point_id_bits) - 1);
-  return voxels[voxel_id]->covs[point_id];
+  return voxels[voxel_id(i)]->covs[point_id(i)];
 }
 
 double iVox::intensity(const size_t i) const {
-  const size_t voxel_id = i >> point_id_bits;
-  const size_t point_id = i & ((1 << point_id_bits) - 1);
-  return voxels[voxel_id]->intensities[point_id];
+  return voxels[voxel_id(i)]->intensities[point_id(i)];
 }
 
 std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVox::voxel_points() const {
