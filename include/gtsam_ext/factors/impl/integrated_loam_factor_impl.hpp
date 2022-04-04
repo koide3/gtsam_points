@@ -307,7 +307,7 @@ double IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::evaluate(
 
     Eigen::Vector4d error = Eigen::Vector4d::Zero();
     error.head<3>() = x_ij.head<3>().cross(x_il.head<3>()) * c_inv;
-    sum_errors += 0.5 * error.transpose() * error;
+    sum_errors += 0.5 * error.dot(error);
 
     if (Hs_target.empty()) {
       continue;

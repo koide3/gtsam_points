@@ -15,7 +15,7 @@ namespace gtsam_ext {
  */
 class IntegratedMatchingCostFactor : public gtsam::NonlinearFactor {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  GTSAM_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedMatchingCostFactor>;
 
   IntegratedMatchingCostFactor(gtsam::Key target_key, gtsam::Key source_key);

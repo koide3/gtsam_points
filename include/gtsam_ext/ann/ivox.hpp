@@ -28,7 +28,10 @@ public:
  */
 struct LinearContainer {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   using Ptr = std::shared_ptr<LinearContainer>;
+  using ConstPtr = std::shared_ptr<const LinearContainer>;
 
   LinearContainer(const int lru_count);
   ~LinearContainer();
@@ -54,6 +57,8 @@ public:
  */
 struct iVox : public NearestNeighborSearch {
 public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+
   using Ptr = std::shared_ptr<iVox>;
   using ConstPtr = std::shared_ptr<const iVox>;
 
@@ -124,11 +129,11 @@ public:
   int num_voxels() const { return voxelmap.size(); }
 
   // Extract all points in iVox
-  std::vector<Eigen::Vector4d> voxel_points() const;
+  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_points() const;
 
 private:
   const Eigen::Vector3i voxel_coord(const Eigen::Vector4d& point) const;
-  std::vector<Eigen::Vector3i> neighbor_offsets(const int neighbor_voxel_mode) const;
+  std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> neighbor_offsets(const int neighbor_voxel_mode) const;
 
 private:
   static constexpr int point_id_bits = 12;
@@ -142,11 +147,16 @@ private:
   double voxel_resolution;               // Voxel resolution
   double insertion_dist_sq_thresh;       // Minimum distance between points in a voxel
   int lru_thresh;                        // LRU caching threshold
-  std::vector<Eigen::Vector3i> offsets;  // Neighbor voxel offsets
+  std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> offsets;  // Neighbor voxel offsets
 
   int lru_count;  // Counter to manage LRU voxel deletion
 
-  using VoxelMap = std::unordered_map<Eigen::Vector3i, LinearContainer::Ptr, XORVector3iHash>;
+  using VoxelMap = std::unordered_map<
+    Eigen::Vector3i,
+    LinearContainer::Ptr,
+    XORVector3iHash,
+    std::equal_to<Eigen::Vector3i>,
+    Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, LinearContainer::Ptr>>>;
   VoxelMap voxelmap;                         // Voxelmap
   std::vector<LinearContainer::Ptr> voxels;  // Flattened voxelmap for linear indexing
 };

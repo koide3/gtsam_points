@@ -162,7 +162,7 @@ void FrameGPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points
 
 template <typename T, int D>
 void FrameGPU::add_normals_gpu(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
-  assert(normals.size() == size());
+  assert(num_points == this->size());
 
   thrust::host_vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_h(num_points);
   for (int i = 0; i < num_points; i++) {
@@ -192,7 +192,7 @@ void FrameGPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points) {
 
 template <typename T, int D>
 void FrameGPU::add_covs_gpu(const Eigen::Matrix<T, D, D>* covs, int num_points) {
-  assert(covs.size() == size());
+  assert(num_points == size());
   thrust::host_vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs_h(num_points);
   for (int i = 0; i < num_points; i++) {
     covs_h[i] = covs[i].template block<3, 3>(0, 0).template cast<float>();

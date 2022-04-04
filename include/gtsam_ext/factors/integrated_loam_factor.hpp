@@ -28,7 +28,7 @@ class IntegratedPointToEdgeFactor_;
 template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
 class IntegratedLOAMFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  GTSAM_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedLOAMFactor_<TargetFrame, SourceFrame>>;
 
   IntegratedLOAMFactor_(

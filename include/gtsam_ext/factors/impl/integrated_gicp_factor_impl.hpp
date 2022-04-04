@@ -3,7 +3,6 @@
 
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
 
-#include <nanoflann.hpp>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/HessianFactor.h>
 #include <gtsam_ext/ann/kdtree.hpp>
