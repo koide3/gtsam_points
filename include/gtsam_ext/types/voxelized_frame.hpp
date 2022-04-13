@@ -57,4 +57,26 @@ VoxelizedFrame::Ptr merge_voxelized_frames_auto(
   double downsample_resolution,
   double voxel_resolution);
 
+// Calculate the fraction of points fell in target's voxels
+// (evaluate if delta * this->points fall in target->voxels)
+double overlap(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+double overlap(
+  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
+
+double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu);
+double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+double overlap_gpu(
+  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
+
+// Automatically select CPU or GPU method
+double overlap_auto(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+double overlap_auto(
+  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
+
 }  // namespace gtsam_ext

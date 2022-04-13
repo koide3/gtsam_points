@@ -13,6 +13,10 @@ namespace gtsam_ext {
 
 struct VoxelizedFrame;
 
+/**
+ * @brief Standard Frame class that holds only pointers to point attributes
+ * @note  If you don't want to manage the lifetime of point data by yourself, use gtsam_ext::FrameCPU.
+ */
 struct Frame {
 public:
   using Ptr = std::shared_ptr<Frame>;
@@ -41,30 +45,11 @@ public:
   bool has_covs() const;
   bool has_intensities() const;
 
-  // Calculate the fraction of points fell in target's voxels
-  // (evaluate if delta * this->points fall in target->voxels)
-  double overlap(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
-  double overlap(
-    const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
-    const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
-
-  double overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3f* delta_gpu) const;
-  double overlap_gpu(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
-  double overlap_gpu(
-    const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
-    const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
-
-  // Automatically select CPU or GPU method
-  double overlap_auto(const std::shared_ptr<const VoxelizedFrame>& target, const Eigen::Isometry3d& delta) const;
-  double overlap_auto(
-    const std::vector<std::shared_ptr<const VoxelizedFrame>>& targets,
-    const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) const;
-
   void save(const std::string& path) const;
   void save_compact(const std::string& path) const;
 
 public:
-  size_t num_points;
+  size_t num_points;  // Number of points
 
   double* times;             // Time w.r.t. the first point (sorted)
   Eigen::Vector4d* points;   // Point coordinates (x, y, z, 1)

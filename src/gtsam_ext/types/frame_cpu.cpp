@@ -9,6 +9,8 @@
 #include <boost/filesystem.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 
+#include <gtsam_ext/util/vector3i_hash.hpp>
+
 namespace gtsam_ext {
 
 // constructors & deconstructor
@@ -120,62 +122,7 @@ void FrameCPU::add_intensities(const T* intensities, int num_points) {
 template void FrameCPU::add_intensities(const float* intensities, int num_points);
 template void FrameCPU::add_intensities(const double* intensities, int num_points);
 
-FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
-  if (sampling_rate >= 0.99) {
-    return FrameCPU::Ptr(new FrameCPU(*frame));
-  }
-
-  const int num_samples = frame->size() * sampling_rate;
-
-  std::vector<int> sample_indices(num_samples);
-  std::iota(sample_indices.begin(), sample_indices.end(), 0);
-  std::sample(boost::counting_iterator<int>(0), boost::counting_iterator<int>(frame->size()), sample_indices.begin(), num_samples, mt);
-  std::sort(sample_indices.begin(), sample_indices.end());
-
-  FrameCPU::Ptr sampled(new FrameCPU);
-  sampled->num_points = num_samples;
-
-  sampled->points_storage.resize(num_samples);
-  sampled->points = sampled->points_storage.data();
-  for (int i = 0; i < num_samples; i++) {
-    sampled->points[i] = frame->points[sample_indices[i]];
-  }
-
-  if (frame->times) {
-    sampled->times_storage.resize(num_samples);
-    sampled->times = sampled->times_storage.data();
-    for (int i = 0; i < num_samples; i++) {
-      sampled->times[i] = frame->times[sample_indices[i]];
-    }
-  }
-
-  if (frame->covs) {
-    sampled->covs_storage.resize(num_samples);
-    sampled->covs = sampled->covs_storage.data();
-    for (int i = 0; i < num_samples; i++) {
-      sampled->covs[i] = frame->covs[sample_indices[i]];
-    }
-  }
-
-  if (frame->normals) {
-    sampled->normals_storage.resize(num_samples);
-    sampled->normals = sampled->normals_storage.data();
-    for (int i = 0; i < num_samples; i++) {
-      sampled->normals[i] = frame->normals[sample_indices[i]];
-    }
-  }
-
-  if (frame->intensities) {
-    sampled->intensities_storage.resize(num_samples);
-    sampled->intensities = sampled->intensities_storage.data();
-    for (int i = 0; i < num_samples; i++) {
-      sampled->intensities[i] = frame->intensities[sample_indices[i]];
-    }
-  }
-
-  return sampled;
-}
-
+// FrameCPU::load
 FrameCPU::Ptr FrameCPU::load(const std::string& path) {
   FrameCPU::Ptr frame(new FrameCPU);
 
@@ -289,6 +236,197 @@ FrameCPU::Ptr FrameCPU::load(const std::string& path) {
   }
 
   return frame;
+}
+
+// sample
+FrameCPU::Ptr sample(const Frame::ConstPtr& frame, const std::vector<int>& indices) {
+  FrameCPU::Ptr sampled(new FrameCPU);
+  sampled->num_points = indices.size();
+  sampled->points_storage.resize(indices.size());
+  sampled->points = sampled->points_storage.data();
+  std::transform(indices.begin(), indices.end(), sampled->points, [&](const int i) { return frame->points[i]; });
+
+  if (frame->times) {
+    sampled->times_storage.resize(indices.size());
+    sampled->times = sampled->times_storage.data();
+    std::transform(indices.begin(), indices.end(), sampled->times, [&](const int i) { return frame->times[i]; });
+  }
+
+  if (frame->normals) {
+    sampled->normals_storage.resize(indices.size());
+    sampled->normals = sampled->normals_storage.data();
+    std::transform(indices.begin(), indices.end(), sampled->normals, [&](const int i) { return frame->normals[i]; });
+  }
+
+  if (frame->covs) {
+    sampled->covs_storage.resize(indices.size());
+    sampled->covs = sampled->covs_storage.data();
+    std::transform(indices.begin(), indices.end(), sampled->covs, [&](const int i) { return frame->covs[i]; });
+  }
+
+  if (frame->intensities) {
+    sampled->intensities_storage.resize(indices.size());
+    sampled->intensities = sampled->intensities_storage.data();
+    std::transform(indices.begin(), indices.end(), sampled->intensities, [&](const int i) { return frame->intensities[i]; });
+  }
+
+  return sampled;
+}
+
+// random_sampling
+FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
+  if (sampling_rate >= 0.99) {
+    // No need to do sampling
+    return FrameCPU::Ptr(new FrameCPU(*frame));
+  }
+
+  const int num_samples = frame->size() * sampling_rate;
+
+  std::vector<int> sample_indices(num_samples);
+  std::iota(sample_indices.begin(), sample_indices.end(), 0);
+  std::sample(boost::counting_iterator<int>(0), boost::counting_iterator<int>(frame->size()), sample_indices.begin(), num_samples, mt);
+  std::sort(sample_indices.begin(), sample_indices.end());
+
+  return sample(frame, sample_indices);
+}
+
+// voxelgrid_sampling
+FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution) {
+  using Indices = std::shared_ptr<std::vector<int>>;
+  using VoxelMap = std::unordered_map<
+    Eigen::Vector3i,
+    Indices,
+    Vector3iHash,
+    std::equal_to<Eigen::Vector3i>,
+    Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, Indices>>>;
+
+  VoxelMap voxelmap;
+
+  // Insert point indices to corresponding voxels
+  for (int i = 0; i < frame->size(); i++) {
+    const Eigen::Vector3i coord = (frame->points[i].array() / voxel_resolution).floor().cast<int>().head<3>();
+    auto found = voxelmap.find(coord);
+    if (found == voxelmap.end()) {
+      found = voxelmap.insert(found, std::make_pair(coord, std::make_shared<std::vector<int>>()));
+      found->second->reserve(32);
+    }
+    found->second->push_back(i);
+  }
+
+  std::vector<Indices> voxels(voxelmap.size());
+  std::transform(voxelmap.begin(), voxelmap.end(), voxels.begin(), [](const std::pair<Eigen::Vector3i, Indices>& x) { return x.second; });
+
+  // Take the average of point attributes of each voxel
+  FrameCPU::Ptr downsampled(new FrameCPU);
+  downsampled->num_points = voxels.size();
+  downsampled->points_storage.resize(voxels.size());
+  downsampled->points = downsampled->points_storage.data();
+  std::transform(voxels.begin(), voxels.end(), downsampled->points, [&](const Indices& indices) {
+    Eigen::Vector4d sum = Eigen::Vector4d::Zero();
+    for (const auto i : *indices) {
+      sum += frame->points[i];
+    }
+    return sum / indices->size();
+  });
+
+  if (frame->times) {
+    downsampled->times_storage.resize(voxels.size());
+    downsampled->times = downsampled->times_storage.data();
+    std::transform(voxels.begin(), voxels.end(), downsampled->times, [&](const Indices& indices) {
+      double sum = 0.0;
+      for (const auto i : *indices) {
+        sum += frame->times[i];
+      }
+      return sum / indices->size();
+    });
+  }
+
+  if (frame->normals) {
+    downsampled->normals_storage.resize(voxels.size());
+    downsampled->normals = downsampled->normals_storage.data();
+    std::transform(voxels.begin(), voxels.end(), downsampled->normals, [&](const Indices& indices) {
+      Eigen::Vector4d sum = Eigen::Vector4d::Zero();
+      for (const auto i : *indices) {
+        sum += frame->normals[i];
+      }
+      return sum / indices->size();
+    });
+  }
+
+  if (frame->covs) {
+    downsampled->covs_storage.resize(voxels.size());
+    downsampled->covs = downsampled->covs_storage.data();
+    std::transform(voxels.begin(), voxels.end(), downsampled->covs, [&](const Indices& indices) {
+      Eigen::Matrix4d sum = Eigen::Matrix4d::Zero();
+      for (const auto i : *indices) {
+        sum += frame->covs[i];
+      }
+      return sum / indices->size();
+    });
+  }
+
+  if (frame->intensities) {
+    downsampled->intensities_storage.resize(voxels.size());
+    downsampled->intensities = downsampled->intensities_storage.data();
+    std::transform(voxels.begin(), voxels.end(), downsampled->intensities, [&](const Indices& indices) {
+      double sum = 0.0;
+      for (const auto i : *indices) {
+        sum += frame->intensities[i];
+      }
+      return sum / indices->size();
+    });
+  }
+
+  return downsampled;
+}
+
+// randomgrid_sampling
+FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt) {
+  if (sampling_rate >= 0.99) {
+    // No need to do sampling
+    return FrameCPU::Ptr(new FrameCPU(*frame));
+  }
+
+  using Indices = std::shared_ptr<std::vector<int>>;
+  using VoxelMap = std::unordered_map<
+    Eigen::Vector3i,
+    Indices,
+    Vector3iHash,
+    std::equal_to<Eigen::Vector3i>,
+    Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, Indices>>>;
+  VoxelMap voxelmap;
+
+  // Insert point indices to corresponding voxels
+  for (int i = 0; i < frame->size(); i++) {
+    const Eigen::Vector3i coord = (frame->points[i].array() / voxel_resolution).floor().cast<int>().head<3>();
+    auto found = voxelmap.find(coord);
+    if (found == voxelmap.end()) {
+      found = voxelmap.insert(found, std::make_pair(coord, std::make_shared<std::vector<int>>()));
+      found->second->reserve(32);
+    }
+    found->second->push_back(i);
+  }
+
+  const int points_per_voxel = std::ceil((sampling_rate * frame->size()) / voxelmap.size());
+  const int expected_num_points = frame->size() * sampling_rate * 1.5;
+
+  // Sample points from voxels
+  std::vector<int> indices;
+  indices.reserve(expected_num_points);
+  for (const auto& voxel : voxelmap) {
+    const auto& voxel_indices = *voxel.second;
+    if (voxel_indices.size() <= points_per_voxel) {
+      indices.insert(indices.end(), voxel_indices.begin(), voxel_indices.end());
+    } else {
+      std::sample(voxel_indices.begin(), voxel_indices.end(), std::back_insert_iterator(indices), points_per_voxel, mt);
+    }
+  }
+
+  // Sort indices to keep points ordered (and for better memory accessing)
+  std::sort(indices.begin(), indices.end());
+
+  // Sample points and return it
+  return sample(frame, indices);
 }
 
 }  // namespace gtsam_ext

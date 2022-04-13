@@ -9,17 +9,6 @@
 namespace gtsam_ext {
 
 /**
- * @brief Spatial hash function
- * @ref   Teschner et al., "Optimized Spatial Hashing for Collision Detection of Deformable Objects", VMV2003
- */
-size_t XORVector3iHash::operator()(const Eigen::Vector3i& x) const {
-  const size_t p1 = 73856093;
-  const size_t p2 = 19349669;  // 19349663 was not a prime number
-  const size_t p3 = 83492791;
-  return static_cast<size_t>((x[0] * p1) ^ (x[1] * p2) ^ (x[2] * p3));
-}
-
-/**
  * @brief Construct a linear points container
  * @param lru_count  Current LRU count
  */

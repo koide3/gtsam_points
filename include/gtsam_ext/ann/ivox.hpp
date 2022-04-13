@@ -11,17 +11,9 @@
 #include <gtsam_ext/types/frame.hpp>
 #include <gtsam_ext/types/frame_traits.hpp>
 #include <gtsam_ext/ann/nearest_neighbor_search.hpp>
+#include <gtsam_ext/util/vector3i_hash.hpp>
 
 namespace gtsam_ext {
-
-/**
- * @brief Spatial hash function
- * @ref   Teschner et al., "Optimized Spatial Hashing for Collision Detection of Deformable Objects", VMV2003
- */
-class XORVector3iHash {
-public:
-  size_t operator()(const Eigen::Vector3i& x) const;
-};
 
 /**
  * @brief Container to hold points in a voxel

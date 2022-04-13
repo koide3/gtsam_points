@@ -7,14 +7,10 @@
 #include <unordered_map>
 
 #include <Eigen/Core>
+#include <gtsam_ext/util/vector3i_hash.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap.hpp>
 
 namespace gtsam_ext {
-
-class Vector3iHash {
-public:
-  size_t operator()(const Eigen::Vector3i& x) const;
-};
 
 struct GaussianVoxel {
 public:

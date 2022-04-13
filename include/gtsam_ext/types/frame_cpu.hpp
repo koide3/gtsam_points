@@ -73,6 +73,43 @@ public:
   std::vector<double> intensities_storage;
 };
 
+/**
+ * @brief Sample points
+ * @param frame    Input points
+ * @param indices  Point indices
+ */
+FrameCPU::Ptr sample(const Frame::ConstPtr& frame, const std::vector<int>& indices);
+
+/**
+ * @brief Naive random sampling
+ * @param frame          Input points
+ * @param sampling_rate  Random sampling rate in [0, 1]
+ * @param mt             RNG
+ * @return               Downsampled points
+ */
 FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt);
+
+/**
+ * @brief Voxel grid downsampling
+ * @note  This algorithm takes the average of point attributes (whatever it is) of each voxel
+ *
+ * @param frame             Input points
+ * @param voxel_resolution  Voxel resolution
+ */
+FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution);
+
+/**
+ * @brief Voxel grid random sampling
+ * @note  This algorithm randomly samples points such that the number of sampled points of each voxel becomes (more or less) the same.
+ *        This algorithm avoids mixing point attributes (unlike the standard voxelgrid downsampling), and thus can provide spatially
+ *        well-distibuted point samples with several attributes (e.g., normals and covs).
+ *
+ * @param frame             Input points
+ * @param voxel_resolution  Voxel resolution
+ * @param sampling_rate     Random sampling rate in [0, 1]
+ * @param mt                RNG
+ * @return                  Downsampled points
+ */
+FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt);
 
 }  // namespace gtsam_ext

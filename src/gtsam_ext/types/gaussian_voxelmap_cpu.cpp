@@ -7,17 +7,8 @@
 #include <iostream>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <boost/functional/hash.hpp>
 
 namespace gtsam_ext {
-
-size_t Vector3iHash::operator()(const Eigen::Vector3i& x) const {
-  size_t seed = 0;
-  boost::hash_combine(seed, x[0]);
-  boost::hash_combine(seed, x[1]);
-  boost::hash_combine(seed, x[2]);
-  return seed;
-}
 
 GaussianVoxel::GaussianVoxel() {
   num_points = 0;

@@ -211,4 +211,71 @@ VoxelizedFrame::Ptr merge_voxelized_frames_auto(
   return merge_voxelized_frames(poses, frames, downsample_resolution, voxel_resolution);
 }
 
+double overlap(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+  if (target->voxels == nullptr) {
+    std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;
+    abort();
+  }
+
+  int num_overlap = 0;
+  for (int i = 0; i < source->size(); i++) {
+    Eigen::Vector4d pt = delta * source->points[i];
+    Eigen::Vector3i coord = target->voxels->voxel_coord(pt);
+    if (target->voxels->lookup_voxel(coord)) {
+      num_overlap++;
+    }
+  }
+
+  return static_cast<double>(num_overlap) / source->size();
+}
+
+double overlap(
+  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
+  //
+  if (std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {
+    std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;
+    abort();
+  }
+
+  int num_overlap = 0;
+  for (int i = 0; i < source->size(); i++) {
+    for (int j = 0; j < targets.size(); j++) {
+      const auto& target = targets[j];
+      const auto& delta = deltas[j];
+
+      Eigen::Vector4d pt = delta * source->points[i];
+      Eigen::Vector3i coord = target->voxels->voxel_coord(pt);
+      if (target->voxels->lookup_voxel(coord)) {
+        num_overlap++;
+        break;
+      }
+    }
+  }
+
+  return static_cast<double>(num_overlap) / source->size();
+}
+
+double overlap_auto(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+#ifdef BUILD_GTSAM_EXT_GPU
+  if (source->points_gpu && target->voxels_gpu) {
+    return overlap_gpu(target, source, delta);
+  }
+#endif
+  return overlap(target, source, delta);
+}
+
+double overlap_auto(
+  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
+#ifdef BUILD_GTSAM_EXT_GPU
+  if (source->points_gpu && !targets.empty() && targets[0]->voxels_gpu) {
+    return overlap_gpu(targets, source, deltas);
+  }
+#endif
+  return overlap(targets, source, deltas);
+}
+
 }  // namespace gtsam_ext
