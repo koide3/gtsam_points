@@ -102,7 +102,7 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
  * @brief Voxel grid random sampling
  * @note  This algorithm randomly samples points such that the number of sampled points of each voxel becomes (more or less) the same.
  *        This algorithm avoids mixing point attributes (unlike the standard voxelgrid downsampling), and thus can provide spatially
- *        well-distibuted point samples with several attributes (e.g., normals and covs).
+ *        well-distributed point samples with several attributes (e.g., normals and covs).
  *
  * @param frame             Input points
  * @param voxel_resolution  Voxel resolution

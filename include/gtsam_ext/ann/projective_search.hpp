@@ -17,6 +17,7 @@ struct OmniProjectiveSearchParams {
   double v_angle_max;
 };
 
+// WIP
 struct OmniProjectiveSearch : public NearestNeighborSearch {
 public:
   OmniProjectiveSearch(const Eigen::Vector4d* points, int num_points) : OmniProjectiveSearch(points, num_points, auto_param(points, num_points)) {}

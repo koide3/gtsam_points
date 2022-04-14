@@ -38,6 +38,15 @@ public:
   std::shared_ptr<GaussianVoxelMapGPU> voxels_gpu;
 };
 
+/**
+ * @brief Merge a set of voxelized frames into one frame
+ * @note  This function only merges points and covs and discard other point attributes.
+ * @param poses                  Poses of input frames
+ * @param frames                 Input frames
+ * @param downsample_resolution  Downsampling resolution
+ * @param voxel_resolution       Voxel resolution
+ * @return                       Merged frame
+ */
 VoxelizedFrame::Ptr merge_voxelized_frames(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
   const std::vector<Frame::ConstPtr>& frames,
@@ -57,16 +66,55 @@ VoxelizedFrame::Ptr merge_voxelized_frames_auto(
   double downsample_resolution,
   double voxel_resolution);
 
-// Calculate the fraction of points fell in target's voxels
-// (evaluate if delta * this->points fall in target->voxels)
+/**
+ * @brief Calculate the fraction of points fell in target's voxels
+ * @param target   Target voxelized frame
+ * @param source   Source frame
+ * @param delta    T_target_source
+ * @return         Overlap rate
+ */
 double overlap(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+
+/**
+ * @brief Calculate the fraction of points fell in targets' voxels
+ * @param target   Set of target voxelized frames
+ * @param source   Source frame
+ * @param delta    Set of T_target_source
+ * @return         Overlap rate
+ */
 double overlap(
   const std::vector<VoxelizedFrame::ConstPtr>& targets,
   const Frame::ConstPtr& source,
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
 
+/**
+ * @brief Calculate the fraction of points fell in target voxels on GPU
+ * @note  Source points and target voxelmap must be pre-allocated on GPU.
+ * @param target     Target voxelized frame
+ * @param source     Source frame
+ * @param delta_gpu  T_target_source (on GPU memory)
+ * @return         Overlap rate
+ */
 double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu);
+
+/**
+ * @brief Calculate the fraction of points fell in target voxels on GPU
+ * @note  Source points and target voxelmap must be pre-allocated on GPU.
+ * @param target  Target voxelized frame
+ * @param source  Source frame
+ * @param delta   T_target_source
+ * @return         Overlap rate
+ */
 double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+
+/**
+ * @brief Calculate the fraction of points fell in targets' voxels on GPU
+ * @note  Source points and targets' voxelmap must be pre-allocated on GPU.
+ * @param targets Set of target voxelized frames
+ * @param source  Source frame
+ * @param deltas  Set of T_target_source
+ * @return         Overlap rate
+ */
 double overlap_gpu(
   const std::vector<VoxelizedFrame::ConstPtr>& targets,
   const Frame::ConstPtr& source,
