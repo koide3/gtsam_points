@@ -7,7 +7,6 @@
 #include <vector>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <gtsam_ext/types/frame_traits.hpp>
 
 namespace gtsam_ext {
 
@@ -63,7 +62,12 @@ public:
   Eigen::Matrix3f* covs_gpu;
   float* intensities_gpu;
 };
+}  // namespace gtsam_ext
 
+#ifndef DONT_DEFINE_FRAME_TRAITS
+#include <gtsam_ext/types/frame_traits.hpp>
+
+namespace gtsam_ext {
 namespace frame {
 
 template <>
@@ -87,3 +91,4 @@ struct traits<Frame> {
 
 }  // namespace frame
 }  // namespace gtsam_ext
+#endif
