@@ -1,7 +1,6 @@
-FROM ubuntu:focal
+FROM nvidia/cuda:11.6.2-devel-ubuntu20.04
 
 ENV DEBIAN_FRONTEND=noninteractive
-ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
 RUN apt-get update \
   && apt-get upgrade -y \
@@ -14,7 +13,7 @@ RUN apt-get update \
     wget nano build-essential clang lld \
     git cmake libeigen3-dev ca-certificates \
     libtbb-dev libboost-all-dev libgtest-dev libmetis-dev \
-    libpthread-stubs0-dev libgtsam-dev libgtsam-unstable-dev \
+    libgtsam-dev libgtsam-unstable-dev \
     libglm-dev libglfw3-dev libpng-dev libjpeg-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
@@ -24,19 +23,18 @@ RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 50
 WORKDIR /root
 RUN git clone https://github.com/koide3/iridescence.git --recursive
 WORKDIR /root/iridescence/build
-RUN cmake ..
+RUN CC=clang CXX=clang++ cmake ..
 RUN make -j$(nproc) && make install
 
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build
 RUN CC=clang CXX=clang++ \
   cmake .. \
-  -DBUILD_DEMO=ON \
-  -DBUILD_TESTS=ON \
-  -DBUILD_WITH_CUDA=OFF \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DBUILD_WITH_SYSTEM_EIGEN=OFF
+  -DBUILD_DEMO=OFF \
+  -DBUILD_TESTS=OFF \
+  -DBUILD_WITH_CUDA=ON \
+  -DBUILD_WITH_SYSTEM_EIGEN=OFF \
+  -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
-RUN make test
 
 CMD ["bash"]

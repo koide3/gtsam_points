@@ -2,6 +2,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <boost/format.hpp>
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/PriorFactor.h>

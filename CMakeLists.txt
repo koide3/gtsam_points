@@ -44,6 +44,7 @@ if(BUILD_WITH_CUDA)
 
   # set(CUDA_HOST_COMPILER gcc)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
+  set(CUDA_STANDARD 17)
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++17 --expt-relaxed-constexpr")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_75")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -gencode=arch=compute_75,code=sm_75")
@@ -173,8 +174,15 @@ endif()
 
 # Test
 if(BUILD_TESTS)
+  include(FetchContent)
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/609281088cfefc76f9d0ce82e1ff6c30cc3591e5.zip
+  )
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+
   enable_testing()
-  find_package(GTest REQUIRED)
   include(GoogleTest)
 
   file(GLOB test_sources "src/test/*.cpp")
@@ -182,7 +190,8 @@ if(BUILD_TESTS)
     get_filename_component(test_name ${test_src} NAME_WE)
 
     add_executable(${test_name} ${test_src})
-    target_link_libraries(${test_name} gtsam_ext ${GTEST_LIBRARIES})
+    target_link_libraries(${test_name} gtsam_ext gtest_main)
+    target_include_directories(${test_name} PRIVATE ${Boost_INCLUDE_DIRS})
     gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endforeach()
 endif()

@@ -14,7 +14,7 @@ RUN apt-get update \
     git cmake libeigen3-dev ca-certificates \
     libtbb-dev libboost-all-dev libgtest-dev libmetis-dev \
     libgtsam-dev libgtsam-unstable-dev \
-    libglm-dev libglfw3-dev libpng-dev \
+    libglm-dev libglfw3-dev libpng-dev libjpeg-dev \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
 

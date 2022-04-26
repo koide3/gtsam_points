@@ -93,7 +93,7 @@ double IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Val
     const auto& target_pt = frame::point(*target, target_index);
     const auto& target_normal = frame::normal(*target, i);
 
-    gtsam::Point3 transed_source_pt = pose.transformFrom(source_pt.template head<3>());
+    gtsam::Point3 transed_source_pt = pose.transformFrom(source_pt.template head<3>().eval());
     gtsam::Point3 residual = transed_source_pt - target_pt.template head<3>();
     double error = gtsam::dot(residual, target_normal.template head<3>());
 
