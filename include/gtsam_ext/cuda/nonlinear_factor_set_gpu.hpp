@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 
+#include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
 #include <boost/utility/in_place_factory.hpp>

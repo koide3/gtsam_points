@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.0.2)
 project(gtsam_ext)
 
-add_compile_options(-std=c++17)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -42,7 +42,7 @@ if(BUILD_WITH_CUDA)
   find_package(CUDA REQUIRED)
   add_definitions(-DBUILD_GTSAM_EXT_GPU)
 
-  # set(CUDA_HOST_COMPILER clang++)
+  # set(CUDA_HOST_COMPILER gcc)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++17 --expt-relaxed-constexpr")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_75")

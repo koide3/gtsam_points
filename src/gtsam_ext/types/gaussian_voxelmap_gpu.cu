@@ -4,6 +4,7 @@
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 
 #include <thrust/pair.h>
+#include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 
 #include <set>
