@@ -138,7 +138,10 @@ struct accumulate_points_kernel {
 };
 
 struct finalize_voxels_kernel {
-  finalize_voxels_kernel(thrust::device_vector<int>& num_points, thrust::device_vector<Eigen::Vector3f>& voxel_means, thrust::device_vector<Eigen::Matrix3f>& voxel_covs)
+  finalize_voxels_kernel(
+    thrust::device_vector<int>& num_points,
+    thrust::device_vector<Eigen::Vector3f>& voxel_means,
+    thrust::device_vector<Eigen::Matrix3f>& voxel_covs)
   : num_points_ptr(num_points.data()),
     voxel_means_ptr(voxel_means.data()),
     voxel_covs_ptr(voxel_covs.data()) {}
@@ -178,7 +181,7 @@ GaussianVoxelMapGPU::GaussianVoxelMapGPU(float resolution, int init_num_buckets,
 
 GaussianVoxelMapGPU::~GaussianVoxelMapGPU() {}
 
-void GaussianVoxelMapGPU::create_voxelmap(const Frame& frame) {
+void GaussianVoxelMapGPU::insert(const Frame& frame) {
   if (!frame.points_gpu || !frame.covs_gpu) {
     std::cerr << "error: GPU points/covs not allocated!!" << std::endl;
     abort();
@@ -207,7 +210,10 @@ void GaussianVoxelMapGPU::create_voxelmap(const Frame& frame) {
     thrust::make_zip_iterator(thrust::make_tuple(points_ptr + frame.size(), covs_ptr + frame.size())),
     accumulate_points_kernel(voxelmap_info_ptr->data(), *buckets, *num_points, *voxel_means, *voxel_covs));
 
-  thrust::for_each(thrust::counting_iterator<int>(0), thrust::counting_iterator<int>(voxelmap_info.num_voxels), finalize_voxels_kernel(*num_points, *voxel_means, *voxel_covs));
+  thrust::for_each(
+    thrust::counting_iterator<int>(0),
+    thrust::counting_iterator<int>(voxelmap_info.num_voxels),
+    finalize_voxels_kernel(*num_points, *voxel_means, *voxel_covs));
 
   cudaStreamSynchronize(stream);
   cudaStreamDestroy(stream);

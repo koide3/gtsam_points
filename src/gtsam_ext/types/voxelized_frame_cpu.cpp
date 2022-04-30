@@ -9,16 +9,36 @@ namespace gtsam_ext {
 
 // constructors & destructor
 template <typename T, int D>
-VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Eigen::Matrix<T, D, 1>* points, const Eigen::Matrix<T, D, D>* covs, int num_points) {
+VoxelizedFrameCPU::VoxelizedFrameCPU(
+  double voxel_resolution,
+  const Eigen::Matrix<T, D, 1>* points,
+  const Eigen::Matrix<T, D, D>* covs,
+  int num_points) {
   add_points(points, num_points);
   add_covs(covs, num_points);
   create_voxelmap(voxel_resolution);
 }
 
-template VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Eigen::Matrix<float, 3, 1>* points, const Eigen::Matrix<float, 3, 3>* covs, int num_points);
-template VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Eigen::Matrix<float, 4, 1>* points, const Eigen::Matrix<float, 4, 4>* covs, int num_points);
-template VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Eigen::Matrix<double, 3, 1>* points, const Eigen::Matrix<double, 3, 3>* covs, int num_points);
-template VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Eigen::Matrix<double, 4, 1>* points, const Eigen::Matrix<double, 4, 4>* covs, int num_points);
+template VoxelizedFrameCPU::VoxelizedFrameCPU(
+  double voxel_resolution,
+  const Eigen::Matrix<float, 3, 1>* points,
+  const Eigen::Matrix<float, 3, 3>* covs,
+  int num_points);
+template VoxelizedFrameCPU::VoxelizedFrameCPU(
+  double voxel_resolution,
+  const Eigen::Matrix<float, 4, 1>* points,
+  const Eigen::Matrix<float, 4, 4>* covs,
+  int num_points);
+template VoxelizedFrameCPU::VoxelizedFrameCPU(
+  double voxel_resolution,
+  const Eigen::Matrix<double, 3, 1>* points,
+  const Eigen::Matrix<double, 3, 3>* covs,
+  int num_points);
+template VoxelizedFrameCPU::VoxelizedFrameCPU(
+  double voxel_resolution,
+  const Eigen::Matrix<double, 4, 1>* points,
+  const Eigen::Matrix<double, 4, 4>* covs,
+  int num_points);
 
 VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Frame& frame) {
   if (!frame.points) {
@@ -64,10 +84,9 @@ void VoxelizedFrameCPU::create_voxelmap(double voxel_resolution) {
   }
 
   voxels_storage.reset(new GaussianVoxelMapCPU(voxel_resolution));
-  voxels_storage->create_voxelmap(*this);
+  voxels_storage->insert(*this);
   voxels = voxels_storage;
 }
-
 
 // add_times
 template <typename T>
@@ -80,7 +99,6 @@ void VoxelizedFrameCPU::add_times(const T* times, int num_points) {
 
 template void VoxelizedFrameCPU::add_times(const float* times, int num_points);
 template void VoxelizedFrameCPU::add_times(const double* times, int num_points);
-
 
 // add_points
 template <typename T, int D>
@@ -98,7 +116,6 @@ template void VoxelizedFrameCPU::add_points(const Eigen::Matrix<float, 4, 1>* po
 template void VoxelizedFrameCPU::add_points(const Eigen::Matrix<double, 3, 1>* points, int num_points);
 template void VoxelizedFrameCPU::add_points(const Eigen::Matrix<double, 4, 1>* points, int num_points);
 
-
 // add_normals
 template <typename T, int D>
 void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
@@ -114,7 +131,6 @@ template void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<float, 3, 1>* n
 template void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<float, 4, 1>* normals, int num_points);
 template void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<double, 3, 1>* normals, int num_points);
 template void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<double, 4, 1>* normals, int num_points);
-
 
 // add_covs
 template <typename T, int D>
@@ -132,7 +148,6 @@ template void VoxelizedFrameCPU::add_covs(const Eigen::Matrix<float, 4, 4>* covs
 template void VoxelizedFrameCPU::add_covs(const Eigen::Matrix<double, 3, 3>* covs, int num_points);
 template void VoxelizedFrameCPU::add_covs(const Eigen::Matrix<double, 4, 4>* covs, int num_points);
 
-
 // add_intensities
 template <typename T>
 void VoxelizedFrameCPU::add_intensities(const T* intensities, int num_points) {
@@ -144,7 +159,6 @@ void VoxelizedFrameCPU::add_intensities(const T* intensities, int num_points) {
 
 template void VoxelizedFrameCPU::add_intensities(const float* intensities, int num_points);
 template void VoxelizedFrameCPU::add_intensities(const double* intensities, int num_points);
-
 
 VoxelizedFrame::Ptr merge_voxelized_frames(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
@@ -181,7 +195,7 @@ VoxelizedFrame::Ptr merge_voxelized_frames(
   all_frames.covs = all_covs.data();
 
   GaussianVoxelMapCPU downsampling(downsample_resolution);
-  downsampling.create_voxelmap(all_frames);
+  downsampling.insert(all_frames);
 
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> downsampled_points;
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> downsampled_covs;

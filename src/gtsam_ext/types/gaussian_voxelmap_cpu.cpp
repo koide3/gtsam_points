@@ -11,23 +11,34 @@
 namespace gtsam_ext {
 
 GaussianVoxel::GaussianVoxel() {
+  last_lru_count = 0;
+  finalized = false;
   num_points = 0;
   mean.setZero();
   cov.setZero();
 }
 
 void GaussianVoxel::append(const Eigen::Vector4d& mean_, const Eigen::Matrix4d& cov_) {
+  if (finalized) {
+    mean = num_points * mean;
+    cov = num_points * cov;
+    finalized = false;
+  }
+
   num_points++;
   mean += mean_;
   cov += cov_;
 }
 
 void GaussianVoxel::finalize() {
-  mean /= num_points;
-  cov /= num_points;
+  if (!finalized) {
+    mean /= num_points;
+    cov /= num_points;
+  }
+  finalized = true;
 }
 
-GaussianVoxelMapCPU::GaussianVoxelMapCPU(double resolution) : resolution(resolution) {}
+GaussianVoxelMapCPU::GaussianVoxelMapCPU(double resolution) : lru_count(0), lru_thresh(10), resolution(resolution) {}
 
 GaussianVoxelMapCPU::~GaussianVoxelMapCPU() {}
 
@@ -41,16 +52,17 @@ GaussianVoxel::Ptr GaussianVoxelMapCPU::lookup_voxel(const Eigen::Vector3i& coor
     return nullptr;
   }
 
+  found->second->last_lru_count = lru_count;
   return found->second;
 }
 
-void GaussianVoxelMapCPU::create_voxelmap(const Frame& frame) {
+void GaussianVoxelMapCPU::insert(const Frame& frame) {
   if (!frame::has_points(frame) || !frame::has_covs(frame)) {
     std::cerr << "error: points/covs not allocated!!" << std::endl;
     abort();
   }
 
-  voxels.clear();
+  lru_count++;
 
   for (int i = 0; i < frame::size(frame); i++) {
     Eigen::Vector3i coord = voxel_coord(frame::point(frame, i));
@@ -62,9 +74,21 @@ void GaussianVoxelMapCPU::create_voxelmap(const Frame& frame) {
     }
 
     auto& voxel = found->second;
+    voxel->last_lru_count = lru_count;
     voxel->append(frame::point(frame, i), frame::cov(frame, i));
   }
 
+  // Remove voxels that are not used recently
+  const int lru_horizon = lru_count - lru_thresh;
+  for (auto voxel = voxels.begin(); voxel != voxels.end();) {
+    if (voxel->second->last_lru_count < lru_horizon) {
+      voxel = voxels.erase(voxel);
+    } else {
+      voxel++;
+    }
+  }
+
+  // Finalize voxel means and covs
   for (auto& voxel : voxels) {
     voxel.second->finalize();
   }

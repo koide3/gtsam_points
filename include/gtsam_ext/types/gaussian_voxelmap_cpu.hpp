@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <unordered_map>
 
@@ -24,6 +25,9 @@ public:
   void finalize();
 
 public:
+  bool finalized;
+  mutable std::atomic_int last_lru_count;
+
   int num_points;
   Eigen::Vector4d mean;
   Eigen::Matrix4d cov;
@@ -38,7 +42,7 @@ public:
   virtual ~GaussianVoxelMapCPU();
 
   virtual double voxel_resolution() const override { return resolution; }
-  virtual void create_voxelmap(const Frame& frame) override;
+  virtual void insert(const Frame& frame) override;
 
   Eigen::Vector3i voxel_coord(const Eigen::Vector4d& x) const;
   GaussianVoxel::Ptr lookup_voxel(const Eigen::Vector3i& coord) const;
@@ -50,6 +54,9 @@ public:
     Vector3iHash,
     std::equal_to<Eigen::Vector3i>,
     Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, GaussianVoxel::Ptr>>>;
+
+  int lru_count;
+  int lru_thresh;
 
   double resolution;
   VoxelMap voxels;
