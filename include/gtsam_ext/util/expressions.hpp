@@ -114,6 +114,10 @@ inline gtsam::Rot3_ expmap(const gtsam::Vector3_& x) {
   return gtsam::Rot3_(&gtsam::Rot3::Expmap, x);
 }
 
+inline gtsam::Vector3_ logmap(const gtsam::Rot3_& x) {
+  return gtsam::Vector3_(&gtsam::Rot3::Logmap, x);
+}
+
 inline gtsam::Pose3_ inverse(const gtsam::Pose3_& x) {
   auto f = [](const gtsam::Pose3& x, gtsam::OptionalJacobian<6, 6> H) { return x.inverse(H); };
   return gtsam::Pose3_(f, x);
