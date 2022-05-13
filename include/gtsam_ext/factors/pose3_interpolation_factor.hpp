@@ -73,10 +73,14 @@ public:
     return (gtsam::Vector6() << re, te).finished();
   }
 
+  static gtsam::Pose3 initial_guess(const gtsam::Pose3& xi, const gtsam::Pose3& xj, const double t) {
+    const gtsam::Rot3 Rint = gtsam::interpolate(xi.rotation(), xj.rotation(), t);
+    const gtsam::Vector3 tint = (1.0 - t) * xi.translation() + t * xj.translation();
+    return gtsam::Pose3(Rint, tint);
+  }
+
 private:
   const double t;
 };
-
-
 
 }  // namespace gtsam_ext
