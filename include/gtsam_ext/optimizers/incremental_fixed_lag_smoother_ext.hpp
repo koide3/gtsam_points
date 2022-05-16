@@ -68,6 +68,8 @@ public:
    */
   Values calculateEstimate() const override { return isam_.calculateEstimate(); }
 
+  const Value& calculateEstimate(Key key) const { return isam_.calculateEstimate(key); }
+
   /** Compute an estimate for a single variable using its incomplete linear delta computed
    * during the last update.  This is faster than calling the no-argument version of
    * calculateEstimate, which operates on all variables.

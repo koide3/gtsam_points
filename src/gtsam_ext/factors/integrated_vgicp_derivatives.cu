@@ -26,8 +26,8 @@ IntegratedVGICPDerivatives::IntegratedVGICPDerivatives(
   const Frame::ConstPtr& source,
   CUstream_st* ext_stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
-: inlier_update_thresh_trans(1e-3),
-  inlier_update_thresh_angle(1e-3),
+: inlier_update_thresh_trans(1e-6),
+  inlier_update_thresh_angle(1e-6),
   target(target),
   source(source),
   external_stream(true),

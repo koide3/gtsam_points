@@ -21,6 +21,7 @@
 
 #include <gtsam_ext/optimizers/incremental_fixed_lag_smoother_ext.hpp>
 #include <gtsam/base/debug.h>
+#include <gtsam/inference/Symbol.h>
 
 namespace gtsam_ext {
 

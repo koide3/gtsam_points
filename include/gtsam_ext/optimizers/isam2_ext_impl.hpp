@@ -419,6 +419,15 @@ struct GTSAM_EXPORT UpdateImpl {
     const FactorIndices& newFactorsIndices,
     GaussianFactorGraph* linearFactors) const {
     gttic(linearizeNewFactors);
+
+    for(const auto& factor: newFactors) {
+      for(const auto key: factor->keys()) {
+        if(!theta.exists(key)) {
+          std::cerr << "warning: requesting a non-existing value!!" << std::endl;
+        }
+      }
+    }
+
     auto linearized = newFactors.linearize(theta);
     if (params_.findUnusedFactorSlots) {
       linearFactors->resize(numNonlinearFactors);

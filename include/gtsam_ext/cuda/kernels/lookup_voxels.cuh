@@ -18,7 +18,10 @@ namespace gtsam_ext {
 struct lookup_voxels_kernel {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
-  lookup_voxels_kernel(const GaussianVoxelMapGPU& voxelmap, const thrust::device_ptr<const Eigen::Vector3f>& points, const thrust::device_ptr<const Eigen::Isometry3f>& x_ptr)
+  lookup_voxels_kernel(
+    const GaussianVoxelMapGPU& voxelmap,
+    const thrust::device_ptr<const Eigen::Vector3f>& points,
+    const thrust::device_ptr<const Eigen::Isometry3f>& x_ptr)
   : x_ptr(x_ptr),
     voxelmap_info_ptr(voxelmap.voxelmap_info_ptr->data()),
     buckets_ptr(voxelmap.buckets->data()),
@@ -29,8 +32,13 @@ struct lookup_voxels_kernel {
 
     const Eigen::Isometry3f& trans = *thrust::raw_pointer_cast(x_ptr);
     const Eigen::Vector3f& x = thrust::raw_pointer_cast(points_ptr)[point_idx];
-    const int voxel_idx = lookup_voxel(info.max_bucket_scan_count, info.num_buckets, buckets_ptr, info.voxel_resolution, trans.linear() * x + trans.translation());
+    const Eigen::Vector3f transed_x = trans.linear() * x + trans.translation();
 
+    if (transed_x.dot(trans.translation()) < 0.0) {
+      return thrust::make_pair(-1, -1);
+    }
+
+    const int voxel_idx = lookup_voxel(info.max_bucket_scan_count, info.num_buckets, buckets_ptr, info.voxel_resolution, transed_x);
     if (voxel_idx < 0) {
       return thrust::make_pair(-1, -1);
     }
@@ -46,7 +54,13 @@ struct lookup_voxels_kernel {
 
     const Eigen::Isometry3f& trans = *thrust::raw_pointer_cast(x_ptr);
     const Eigen::Vector3f& x = thrust::raw_pointer_cast(points_ptr)[point_idx];
-    voxel_idx = lookup_voxel(info.max_bucket_scan_count, info.num_buckets, buckets_ptr, info.voxel_resolution, trans.linear() * x + trans.translation());
+    const Eigen::Vector3f transed_x = trans.linear() * x + trans.translation();
+
+    if (transed_x.dot(trans.translation()) < 0.0) {
+      voxel_idx = -1;
+    } else {
+      voxel_idx = lookup_voxel(info.max_bucket_scan_count, info.num_buckets, buckets_ptr, info.voxel_resolution, transed_x);
+    }
   }
 
   thrust::device_ptr<const Eigen::Isometry3f> x_ptr;

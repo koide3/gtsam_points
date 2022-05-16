@@ -100,6 +100,7 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/optimizers/isam2_ext.cpp
   src/gtsam_ext/optimizers/isam2_ext_impl.cpp
   src/gtsam_ext/optimizers/incremental_fixed_lag_smoother_ext.cpp
+  src/gtsam_ext/optimizers/incremental_fixed_lag_smoother_ext_with_fallback.cpp
   # src/gtsam_ext/optimizers/dogleg_optimizer_ext.cpp
   src/gtsam_ext/optimizers/dogleg_optimizer_ext_impl.cpp
 )
