@@ -32,8 +32,11 @@ struct VoxelMapInfo {
   float voxel_resolution;
 };
 
-class GaussianVoxelMapGPU : GaussianVoxelMap {
+class GaussianVoxelMapGPU : public GaussianVoxelMap {
 public:
+  using Ptr = std::shared_ptr<GaussianVoxelMapGPU>;
+  using ConstPtr = std::shared_ptr<const GaussianVoxelMapGPU>;
+
   /**
    * @param resolution               Voxel resolution
    * @param init_num_buckets         Initial buckets size
@@ -68,6 +71,7 @@ public:
   // voxel data
   std::unique_ptr<Indices> num_points;
   std::unique_ptr<Points> voxel_means;
+  std::unique_ptr<Points> voxel_normals;
   std::unique_ptr<Matrices> voxel_covs;
 };
 

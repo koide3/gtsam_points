@@ -43,6 +43,14 @@ public:
     std::shared_ptr<TempBufferManager> temp_buffer);
 
   IntegratedVGICPFactorGPU(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const GaussianVoxelMap::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    CUstream_st* stream,
+    std::shared_ptr<TempBufferManager> temp_buffer);
+
+  IntegratedVGICPFactorGPU(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
     const VoxelizedFrame::ConstPtr& target,
@@ -56,7 +64,17 @@ public:
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
 
+  IntegratedVGICPFactorGPU(
+    const gtsam::Pose3& fixed_target_pose,
+    gtsam::Key source_key,
+    const GaussianVoxelMap::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    CUstream_st* stream,
+    std::shared_ptr<TempBufferManager> temp_buffer);
+
   virtual ~IntegratedVGICPFactorGPU() override;
+
+  void set_enable_surface_validation(bool enable);
 
   void set_inlier_update_thresh(double trans, double angle);
 
@@ -100,7 +118,7 @@ private:
   bool is_binary;
   Eigen::Isometry3f fixed_target_pose;
 
-  VoxelizedFrame::ConstPtr target;
+  GaussianVoxelMapGPU::ConstPtr target;
   Frame::ConstPtr source;
 
   std::unique_ptr<IntegratedVGICPDerivatives> derivatives;

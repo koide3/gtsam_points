@@ -28,8 +28,14 @@ public:
   using ConstPtr = std::shared_ptr<const VoxelizedFrameGPU>;
 
   template <typename T, int D>
-  VoxelizedFrameGPU(double voxel_resolution, const Eigen::Matrix<T, D, 1>* points, const Eigen::Matrix<T, D, D>* covs, int num_points, bool allocate_cpu = true);
-  template <typename T, int D, template<typename> typename Alloc>
+  VoxelizedFrameGPU(
+    double voxel_resolution,
+    const Eigen::Matrix<T, D, 1>* points,
+    const Eigen::Matrix<T, D, D>* covs,
+    int num_points,
+    bool allocate_cpu = true);
+
+  template <typename T, int D, template <typename> typename Alloc>
   VoxelizedFrameGPU(
     double voxel_resolution,
     const std::vector<Eigen::Matrix<T, D, 1>, Alloc<Eigen::Matrix<T, D, 1>>>& points,

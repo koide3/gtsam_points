@@ -9,6 +9,9 @@ namespace gtsam_ext {
 
 class GaussianVoxelMap {
 public:
+  using Ptr = std::shared_ptr<GaussianVoxelMap>;
+  using ConstPtr = std::shared_ptr<const GaussianVoxelMap>;
+
   GaussianVoxelMap() {}
   virtual ~GaussianVoxelMap() {}
 

@@ -132,6 +132,9 @@ if(BUILD_WITH_CUDA)
     src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
     # factors
     src/gtsam_ext/factors/integrated_vgicp_derivatives.cu
+    src/gtsam_ext/factors/integrated_vgicp_derivatives_inliers.cu
+    src/gtsam_ext/factors/integrated_vgicp_derivatives_compute.cu
+    src/gtsam_ext/factors/integrated_vgicp_derivatives_linearize.cu
     src/gtsam_ext/factors/integrated_vgicp_factor_gpu.cu
   )
   target_include_directories(gtsam_ext_cuda PUBLIC

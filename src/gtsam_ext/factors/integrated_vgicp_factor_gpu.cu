@@ -26,12 +26,21 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   const Frame::ConstPtr& source,
   CUstream_st* stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
+: IntegratedVGICPFactorGPU(target_key, source_key, target->voxels_gpu, source, stream, temp_buffer) {}
+
+IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
+  gtsam::Key target_key,
+  gtsam::Key source_key,
+  const GaussianVoxelMap::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  CUstream_st* stream,
+  std::shared_ptr<TempBufferManager> temp_buffer)
 : gtsam_ext::NonlinearFactorGPU(gtsam::cref_list_of<2>(target_key)(source_key)),
   is_binary(true),
   fixed_target_pose(Eigen::Isometry3f::Identity()),
-  target(target),
+  target(std::dynamic_pointer_cast<const gtsam_ext::GaussianVoxelMapGPU>(target)),
   source(source),
-  derivatives(new IntegratedVGICPDerivatives(target, source, stream, temp_buffer)),
+  derivatives(new IntegratedVGICPDerivatives(this->target, source, stream, temp_buffer)),
   linearized(false),
   linearization_point(Eigen::Isometry3f::Identity()) {
   //
@@ -45,7 +54,7 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
     abort();
   }
 
-  if (!target->voxels_gpu) {
+  if (!this->target) {
     std::cerr << "error: GPU target voxels have not been created!!" << std::endl;
     abort();
   }
@@ -65,12 +74,21 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   const Frame::ConstPtr& source,
   CUstream_st* stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
+: IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target->voxels_gpu, source, stream, temp_buffer) {}
+
+IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const GaussianVoxelMap::ConstPtr& target,
+  const Frame::ConstPtr& source,
+  CUstream_st* stream,
+  std::shared_ptr<TempBufferManager> temp_buffer)
 : gtsam_ext::NonlinearFactorGPU(gtsam::cref_list_of<1>(source_key)),
   is_binary(false),
   fixed_target_pose(fixed_target_pose.matrix().cast<float>()),
-  target(target),
+  target(std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(target)),
   source(source),
-  derivatives(new IntegratedVGICPDerivatives(target, source, stream, temp_buffer)),
+  derivatives(new IntegratedVGICPDerivatives(this->target, source, stream, temp_buffer)),
   linearized(false),
   linearization_point(Eigen::Isometry3f::Identity()) {
   //
@@ -84,7 +102,7 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
     abort();
   }
 
-  if (!target->voxels_gpu) {
+  if (!this->target) {
     std::cerr << "error: GPU target voxels have not been created!!" << std::endl;
     abort();
   }
@@ -92,16 +110,20 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
 
 IntegratedVGICPFactorGPU::~IntegratedVGICPFactorGPU() {}
 
+void IntegratedVGICPFactorGPU::set_enable_surface_validation(bool enable) {
+  derivatives->set_enable_surface_validation(enable);
+}
+
 void IntegratedVGICPFactorGPU::set_inlier_update_thresh(double trans, double angle) {
   derivatives->set_inlier_update_thresh(trans, angle);
 }
 
 gtsam::NonlinearFactor::shared_ptr IntegratedVGICPFactorGPU::clone() const {
   if (is_binary) {
-    return gtsam::make_shared<IntegratedVGICPFactorGPU>(keys()[0], keys()[1], target, source);
+    return gtsam::make_shared<IntegratedVGICPFactorGPU>(keys()[0], keys()[1], target, source, nullptr, nullptr);
   }
 
-  return gtsam::make_shared<IntegratedVGICPFactorGPU>(gtsam::Pose3(fixed_target_pose.cast<double>().matrix()), keys()[0], target, source);
+  return gtsam::make_shared<IntegratedVGICPFactorGPU>(gtsam::Pose3(fixed_target_pose.cast<double>().matrix()), keys()[0], target, source, nullptr, nullptr);
 }
 
 size_t IntegratedVGICPFactorGPU::linearization_input_size() const {
