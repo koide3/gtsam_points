@@ -10,6 +10,7 @@ namespace gtsam_ext {
 
 // This factor "loosely" fixes a variable at the current estimate point
 // This can be used to fix the gauge freedom (there should be a better way though...)
+// Note: Consider using LinearDampingFactor instead of this
 template <class VALUE>
 class LoosePriorFactor : public gtsam::NonlinearFactor {
 public:
