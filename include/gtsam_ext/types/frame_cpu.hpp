@@ -63,6 +63,17 @@ public:
     add_intensities(intensities.data(), intensities.size());
   }
 
+  template <typename T>
+  void add_aux_attribute(const std::string& attrib_name, const T* values, int num_points) {
+    auto attributes = std::make_shared<std::vector<T>>(values, values + num_points);
+    aux_attributes_storage[attrib_name] = attributes;
+    aux_attributes[attrib_name] = std::make_pair(sizeof(T), attributes->data());
+  }
+  template <typename T, typename Alloc>
+  void add_aux_attribute(const std::string& attrib_name, const std::vector<T, Alloc>& values) {
+    add_aux_attribute(attrib_name, values.data(), values.size());
+  }
+
   static FrameCPU::Ptr load(const std::string& path);
 
 public:
@@ -71,6 +82,8 @@ public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals_storage;
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
   std::vector<double> intensities_storage;
+
+  std::unordered_map<std::string, std::shared_ptr<void>> aux_attributes_storage;
 };
 
 /**

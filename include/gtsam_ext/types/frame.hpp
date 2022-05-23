@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <vector>
+#include <iostream>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -44,6 +45,21 @@ public:
   bool has_covs() const;
   bool has_intensities() const;
 
+  template<typename T>
+  const T* aux_attribute(const std::string& attrib) const {
+    const auto found = aux_attributes.find(attrib);
+    if(found == aux_attributes.end()) {
+      std::cerr << "warning: attribute " << attrib << " not found!!" << std::endl;
+      return nullptr;
+    }
+
+    if (sizeof(T) != found->second.first) {
+      std::cerr << "warning: attribute element size mismatch!! attrib:" << attrib << " size:" << found->second.first << " requested:" << sizeof(T) << std::endl;
+    }
+
+    return static_cast<const T*>(found->second.second);
+  }
+
   void save(const std::string& path) const;
   void save_compact(const std::string& path) const;
 
@@ -55,6 +71,8 @@ public:
   Eigen::Vector4d* normals;  // Point normals (nx, ny, nz, 0)
   Eigen::Matrix4d* covs;     // Point covariances cov(3, 3) = 0
   double* intensities;       // Point intensities
+
+  std::unordered_map<std::string, std::pair<size_t, void*>> aux_attributes;
 
   float* times_gpu;
   Eigen::Vector3f* points_gpu;

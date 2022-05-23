@@ -270,6 +270,22 @@ FrameCPU::Ptr sample(const Frame::ConstPtr& frame, const std::vector<int>& indic
     std::transform(indices.begin(), indices.end(), sampled->intensities, [&](const int i) { return frame->intensities[i]; });
   }
 
+  for (const auto& attrib : frame->aux_attributes) {
+    const auto& name = attrib.first;
+    const size_t elem_size = attrib.second.first;
+    const unsigned char* data_ptr = static_cast<const unsigned char*>(attrib.second.second);
+
+    auto storage = std::make_shared<std::vector<unsigned char>>(indices.size() * elem_size);
+    for (int i = 0; i < indices.size(); i++) {
+      const auto src = data_ptr + elem_size * indices[i];
+      auto dst = storage->data() + elem_size * i;
+      memcpy(dst, src, elem_size);
+    }
+
+    sampled->aux_attributes_storage[name] = storage;
+    sampled->aux_attributes[name] = std::make_pair(elem_size, storage->data());
+  }
+
   return sampled;
 }
 
