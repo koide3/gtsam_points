@@ -15,7 +15,7 @@ namespace gtsam_ext {
  * @note  This factor requires a better initial guess compared to EVM-based one
  *        because the global normal not included in the optimization
  *
- * @ref   Huang et al, "On Bundle Adjustment for Multiview Point Cloud Registration", IEEE RA-L, 2021
+ *        Huang et al, "On Bundle Adjustment for Multiview Point Cloud Registration", IEEE RA-L, 2021
  */
 class LsqBundleAdjustmentFactor : public BundleAdjustmentFactorBase {
 public:

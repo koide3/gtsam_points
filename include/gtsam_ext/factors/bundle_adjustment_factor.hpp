@@ -8,6 +8,9 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Base class of range-based bundle adjustment factors
+ */
 class BundleAdjustmentFactorBase : public gtsam::NonlinearFactor {
 public:
   using shared_ptr = boost::shared_ptr<BundleAdjustmentFactorBase>;

@@ -15,7 +15,7 @@ struct NearestNeighborSearch;
 
 /**
  * @brief Naive point-to-point ICP matching cost factor
- * @ref Zhang, "Iterative Point Matching for Registration of Free-Form Curve", IJCV1994
+ *        Zhang, "Iterative Point Matching for Registration of Free-Form Curve", IJCV1994
  */
 template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
 class IntegratedICPFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
@@ -23,6 +23,15 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedICPFactor_<Frame>>;
 
+  /**
+   * @brief Create a binary ICP factor between two poses.
+   * @param target_key          Target key
+   * @param source_key          Source key
+   * @param target              Target point cloud frame
+   * @param source              Source point cloud frame
+   * @param target_tree         Target nearest neighbor search
+   * @param use_point_to_plane  If true, use point-to-plane distance instead of point-to-point distance
+   */
   IntegratedICPFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
@@ -31,6 +40,7 @@ public:
     const std::shared_ptr<NearestNeighborSearch>& target_tree,
     bool use_point_to_plane = false);
 
+  /// Create a binary ICP factor between two poses.
   IntegratedICPFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
@@ -38,6 +48,14 @@ public:
     const std::shared_ptr<const SourceFrame>& source,
     bool use_point_to_plane = false);
 
+  /**
+   * @brief Create a unary ICP factor between a fixed target pose and an active source pose.
+   * @param fixed_target_pose   Fixed target pose
+   * @param source_key          Source key
+   * @param target              Target point cloud frame
+   * @param source              Source point cloud frame
+   * @param target_tree         Target nearest neighbor search
+   * @param use_point_to_plane  If true, use point-to-plane distance instead of point-to-point distance   */
   IntegratedICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
@@ -46,6 +64,7 @@ public:
     const std::shared_ptr<NearestNeighborSearch>& target_tree,
     bool use_point_to_plane = false);
 
+  /// Create a unary ICP factor between a fixed target pose and an active source pose.
   IntegratedICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
@@ -55,11 +74,20 @@ public:
 
   virtual ~IntegratedICPFactor_() override;
 
-  // note: If your GTSAM is built with TBB, linearization is already multi-threaded
-  //     : and setting n>1 can rather affect the processing speed
+  /// @brief Set the number of thread used for linearization of this factor.
+  /// @note If your GTSAM is built with TBB, linearization is already multi-threaded
+  ///       and setting n>1 can rather affect the processing speed.
   void set_num_threads(int n) { num_threads = n; }
+
+  /// @brief Set the maximum distance between corresponding points.
+  ///        Correspondences with distances larger than this will be rejected (i.e., correspondence trimming).
   void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+
+  /// @brief Enable or disable point-to-plane distance computation.
   void set_point_to_plane_distance(bool use) { use_point_to_plane = use; }
+
+  /// @brief Correspondences are updated only when the displacement from the last update point is larger than these threshold values.
+  /// @note  Default values are angle=trans=0 and correspondences are updated every linearization call.
   void set_correspondence_update_tolerance(double angle, double trans) {
     correspondence_update_tolerance_rot = angle;
     correspondence_update_tolerance_trans = trans;
@@ -93,6 +121,9 @@ private:
   std::shared_ptr<const SourceFrame> source;
 };
 
+/**
+ * @brief Point-to-plane ICP factor
+ */
 template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
 class IntegratedPointToPlaneICPFactor_ : public gtsam_ext::IntegratedICPFactor_<TargetFrame, SourceFrame> {
 public:

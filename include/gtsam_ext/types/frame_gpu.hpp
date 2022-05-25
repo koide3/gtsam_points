@@ -21,6 +21,9 @@ class device_vector;
 
 namespace gtsam_ext {
 
+/**
+ * @brief Point cloud frame on GPU memory
+ */
 struct FrameGPU : public Frame {
 public:
   using Ptr = std::shared_ptr<FrameGPU>;

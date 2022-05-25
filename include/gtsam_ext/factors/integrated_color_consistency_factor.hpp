@@ -24,7 +24,7 @@ struct NearestNeighborSearch;
  * @note  While the use of IntensityKdTree significantly improves the convergence speed,
  *        it can affect optimization stability in some cases
  *
- * @ref Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
+ *        Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
  */
 template <
   typename TargetFrame = gtsam_ext::Frame,

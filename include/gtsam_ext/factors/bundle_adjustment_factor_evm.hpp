@@ -20,7 +20,7 @@ struct BALMFeature;
  * @note  The computation cost grows as the number of points increases
  *        Consider averaging points in a same scan in advance (see [Liu 2021])
  *
- * @ref   Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021
+ *        Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021
  */
 class EVMBundleAdjustmentFactorBase : public BundleAdjustmentFactorBase {
 public:

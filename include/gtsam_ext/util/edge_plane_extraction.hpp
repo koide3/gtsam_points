@@ -33,7 +33,7 @@ estimate_scan_lines(const Eigen::Vector4d* points, int num_points, int num_scan_
 
 /**
  * @brief Extract edge and plane points
- * @ref   Zhang and Singh, "LOAM: Lidar Odometry and Mapping in Real-time", RSS2014
+ *        Zhang and Singh, "LOAM: Lidar Odometry and Mapping in Real-time", RSS2014
  *
  * @param scan_lines    Scan line information
  * @param points        Points

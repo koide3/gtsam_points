@@ -15,7 +15,7 @@ struct NearestNeighborSearch;
 
 /**
  * @brief Generalized ICP matching cost factor
- * @ref Segal et al., "Generalized-ICP", RSS2005
+ *        Segal et al., "Generalized-ICP", RSS2005
  */
 template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
 class IntegratedGICPFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {

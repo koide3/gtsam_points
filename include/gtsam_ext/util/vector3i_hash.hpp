@@ -24,7 +24,7 @@ public:
 
 /**
  * @brief Spatial hashing function
- * @ref   Teschner et al., "Optimized Spatial Hashing for Collision Detection of Deformable Objects", VMV2003
+ *        Teschner et al., "Optimized Spatial Hashing for Collision Detection of Deformable Objects", VMV2003
  */
 class XORVector3iHash {
 public:

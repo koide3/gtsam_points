@@ -9,8 +9,8 @@ namespace gtsam_ext {
 
 /**
  * @brief Continuous Time ICP with GICP's D2D cost
- * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
- * @ref Segal et al., "Generalized-ICP", RSS2005
+ *        Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
+ *        Segal et al., "Generalized-ICP", RSS2005
  */
 template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
 class IntegratedCT_GICPFactor_ : public IntegratedCT_ICPFactor_<TargetFrame, SourceFrame> {

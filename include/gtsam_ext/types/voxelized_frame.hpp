@@ -14,6 +14,9 @@ namespace gtsam_ext {
 // class GaussianVoxelMapCPU;
 // class GaussianVoxelMapGPU;
 
+/**
+ * @brief Voxelized point cloud frame
+ */
 struct VoxelizedFrame : public Frame {
 public:
   using Ptr = std::shared_ptr<VoxelizedFrame>;
@@ -22,6 +25,7 @@ public:
   VoxelizedFrame() : voxels(nullptr), voxels_gpu(nullptr) {}
   virtual ~VoxelizedFrame() {}
 
+  /// Voxel resolution
   double voxel_resolution() const {
     if (voxels) {
       return voxels->voxel_resolution();
@@ -34,8 +38,8 @@ public:
   }
 
 public:
-  std::shared_ptr<GaussianVoxelMapCPU> voxels;
-  std::shared_ptr<GaussianVoxelMapGPU> voxels_gpu;
+  std::shared_ptr<GaussianVoxelMapCPU> voxels;      ///< Voxelmap on CPU
+  std::shared_ptr<GaussianVoxelMapGPU> voxels_gpu;  ///< Voxelmap on GPU
 };
 
 /**

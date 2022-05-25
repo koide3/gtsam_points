@@ -45,7 +45,7 @@ public:
 
 /**
  * @brief Voxel-based incremental nearest neighbor search
- * @ref   Bai et al., "Faster-LIO: Lightweight Tightly Coupled Lidar-Inertial Odometry Using Parallel Sparse Incremental Voxels", IEEE RA-L, 2022
+ *        Bai et al., "Faster-LIO: Lightweight Tightly Coupled Lidar-Inertial Odometry Using Parallel Sparse Incremental Voxels", IEEE RA-L, 2022
  * @note  Only the linear iVox is implemented
  */
 struct iVox : public NearestNeighborSearch {

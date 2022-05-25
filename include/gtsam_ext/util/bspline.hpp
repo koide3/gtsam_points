@@ -11,7 +11,7 @@ namespace gtsam_ext {
  * @brief B-Spline pose interpolation
  *        Rotation and translation are independently interpolated
  * @note  Requirement: t0 < t1 < t2 < t3 and t is the normalized time between t1 and t2 in [0, 1]
- * @ref   Sec. 2.2 in https://www.robots.ox.ac.uk/~mobile/Theses/StewartThesis.pdf
+ *        Sec. 2.2 in https://www.robots.ox.ac.uk/~mobile/Theses/StewartThesis.pdf
  * @param pose0 Pose at t0
  * @param pose1 Pose at t1
  * @param pose2 Pose at t2
@@ -26,7 +26,7 @@ gtsam::Pose3_ bspline(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, co
  *        Rotation and translation are jointly interpolated
  *        This would be suitable for interpolating twist motion (e.g., vehicle motion)
  * @note  Requirement: t0 < t1 < t2 < t3 and t is the normalized time between t1 and t2 in [0, 1]
- * @ref   Sec. 2.2 in https://www.robots.ox.ac.uk/~mobile/Theses/StewartThesis.pdf
+ *        Sec. 2.2 in https://www.robots.ox.ac.uk/~mobile/Theses/StewartThesis.pdf
  * @param pose0 Pose at t0
  * @param pose1 Pose at t1
  * @param pose2 Pose at t2
@@ -39,7 +39,7 @@ gtsam::Pose3_ bspline_se3(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1
 /**
  * @brief B-Spline rotation interpolation
  * @note  Requirement: t0 < t1 < t2 < t3 and t is the normalized time between t1 and t2 in [0, 1]
- * @ref   Sec. 2.2 in https://www.robots.ox.ac.uk/~mobile/Theses/StewartThesis.pdf
+ *        Sec. 2.2 in https://www.robots.ox.ac.uk/~mobile/Theses/StewartThesis.pdf
  * @param rot0  Rotation at t0
  * @param rot1  Rotation at t1
  * @param rot2  Rotation at t2
@@ -52,7 +52,7 @@ gtsam::Rot3_ bspline_so3(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, con
 /**
  * @brief B-Spline translation interpolation
  * @note  Requirement: t0 < t1 < t2 < t3 and t is the normalized time between t1 and t2 in [0, 1]
- * @ref   Sec. 2.2 in https://www.robots.ox.ac.uk/~mobile/Theses/StewartThesis.pdf
+ *        Sec. 2.2 in https://www.robots.ox.ac.uk/~mobile/Theses/StewartThesis.pdf
  * @param trans0  Translation at t0
  * @param trans1  Translation at t1
  * @param trans2  Translation at t2
@@ -64,7 +64,7 @@ gtsam::Vector3_ bspline_trans(const gtsam::Vector3_& trans0, const gtsam::Vector
 
 /**
  * @brief Calculate global angular velocity of B-spline interpolated trajectory
- * @ref   Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
+ *        Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
  * @param rot0          Rotation at t0
  * @param rot1          Rotation at t1
  * @param rot2          Rotation at t2
@@ -78,7 +78,7 @@ bspline_angular_vel(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, const gt
 
 /**
  * @brief Calculate global linear velocity of B-spline interpolated trajectory
- * @ref   Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
+ *        Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
  * @param trans0        Translation at t0
  * @param trans1        Translation at t1
  * @param trans2        Translation at t2
@@ -97,7 +97,7 @@ gtsam::Vector3_ bspline_linear_vel(
 
 /**
  * @brief Calculate global linear acceleration of B-spline interpolated trajectory
- * @ref   Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
+ *        Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
  * @param trans0        Translation at t0
  * @param trans1        Translation at t1
  * @param trans2        Translation at t2

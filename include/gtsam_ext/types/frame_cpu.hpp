@@ -11,18 +11,30 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Point cloud frame on CPU memory
+ */
 struct FrameCPU : public Frame {
 public:
   using Ptr = std::shared_ptr<FrameCPU>;
   using ConstPtr = std::shared_ptr<const FrameCPU>;
 
+  /**
+   * @brief Constructor
+   * @param points     Pointer to point data
+   * @param num_points Number of points
+   */
   template <typename T, int D>
   FrameCPU(const Eigen::Matrix<T, D, 1>* points, int num_points);
 
+  /**
+   * @brief Constructor
+   * @param points  Points
+   */
   template <typename T, int D, typename Alloc>
   FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : FrameCPU(points.data(), points.size()) {}
 
-  // deep copy
+  /// deep copy constructor
   FrameCPU(const Frame& frame);
 
   FrameCPU();

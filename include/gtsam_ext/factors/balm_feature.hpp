@@ -9,7 +9,7 @@ namespace gtsam_ext {
 
 /**
  * @brief Utility class to calculate eigenvalues and derivatives of those
- * @ref   Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021
+ *        Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021
  */
 struct BALMFeature {
 public:

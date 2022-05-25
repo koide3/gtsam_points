@@ -60,7 +60,7 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    *
    * The update is computed using a quadratic approximation \f$ M(\delta x) \f$
    * of an original nonlinear error function (a NonlinearFactorGraph) \f$ f(x) \f$.
-   * The quadratic approximation is represented as a GaussianBayesNet \f$ \bayesNet \f$, which is
+   * The quadratic approximation is represented as a GaussianBayesNet \f$ bayesNet \f$, which is
    * obtained by eliminating a GaussianFactorGraph resulting from linearizing
    * the nonlinear factor graph \f$ f(x) \f$.  Thus, \f$ M(\delta x) \f$ is
    * \f[
@@ -81,8 +81,8 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    * @param Rd The Bayes' net or tree as described above.
    * @param f The original nonlinear factor graph with which to evaluate the
    * accuracy of \f$ M(\delta x) \f$ to adjust \f$ \delta \f$.
-   * @param x0 The linearization point about which \f$ \bayesNet \f$ was created
-   * @param ordering The variable ordering used to create\f$ \bayesNet \f$
+   * @param x0 The linearization point about which \f$ bayesNet \f$ was created
+   * @param ordering The variable ordering used to create\f$ bayesNet \f$
    * @param f_error The result of <tt>f.error(x0)</tt>.
    * @return A DoglegIterationResult containing the new \c delta, the linear
    * update \c dx_d, and the resulting nonlinear error \c f_error.
@@ -107,7 +107,7 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    *
    * The update is computed using a quadratic approximation \f$ M(\delta x) \f$
    * of an original nonlinear error function (a NonlinearFactorGraph) \f$ f(x) \f$.
-   * The quadratic approximation is represented as a GaussianBayesNet \f$ \bayesNet \f$, which is
+   * The quadratic approximation is represented as a GaussianBayesNet \f$ bayesNet \f$, which is
    * obtained by eliminating a GaussianFactorGraph resulting from linearizing
    * the nonlinear factor graph \f$ f(x) \f$.  Thus, \f$ M(\delta x) \f$ is
    * \f[

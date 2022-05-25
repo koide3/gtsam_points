@@ -7,6 +7,9 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief Gaussian distribution voxelmap
+ */
 class GaussianVoxelMap {
 public:
   using Ptr = std::shared_ptr<GaussianVoxelMap>;
@@ -15,7 +18,10 @@ public:
   GaussianVoxelMap() {}
   virtual ~GaussianVoxelMap() {}
 
+  /// Voxel resolution
   virtual double voxel_resolution() const = 0;
+
+  /// Insert a point cloud frame into the voxelmap
   virtual void insert(const Frame& frame) = 0;
 };
 

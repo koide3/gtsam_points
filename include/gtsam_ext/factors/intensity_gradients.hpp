@@ -15,7 +15,7 @@ namespace gtsam_ext {
 
 /**
  * @brief Intensity gradients for colored ICP
- * @ref Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
+ *        Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
  */
 class IntensityGradients {
 public:

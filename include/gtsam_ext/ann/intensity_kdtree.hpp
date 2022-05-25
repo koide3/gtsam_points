@@ -8,10 +8,21 @@
 
 namespace gtsam_ext {
 
+/**
+ * @brief KdTree on intensity augmented coordinates.
+ *        This class concatenates point coordinates (x, y, z) and intensity (i) and finds nearest neighbors on the XYZI space.
+ */
 struct IntensityKdTree : public NearestNeighborSearch {
 public:
   using Index = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, IntensityKdTree, double>, IntensityKdTree, 4, size_t>;
 
+  /**
+   * @brief Constructor
+   * @param points          Input points
+   * @param intensities     Input point intensities
+   * @param num_points      Number of points
+   * @param intensity_scale Scaling parameter to balance Euclidean coordinates and intensities
+   */
   IntensityKdTree(const Eigen::Vector4d* points, const double* intensities, int num_points, double intensity_scale = 1.0);
   virtual ~IntensityKdTree() override;
 

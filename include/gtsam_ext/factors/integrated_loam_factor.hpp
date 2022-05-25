@@ -21,9 +21,9 @@ class IntegratedPointToEdgeFactor_;
 /**
  * @brief Scan matching factor based on the combination of point-to-plane and point-to-edge distances
  *
- * @ref Zhang and Singh, "Low-drift and real-time lidar odometry and mapping", Autonomous Robots, 2017
- * @ref Zhang and Singh, "LOAM: LiDAR Odometry and Mapping in Real-time", RSS2014
- * @ref Tixiao and Brendan, "LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain", IROS2018
+ * Zhang and Singh, "Low-drift and real-time lidar odometry and mapping", Autonomous Robots, 2017
+ * Zhang and Singh, "LOAM: LiDAR Odometry and Mapping in Real-time", RSS2014
+ * Tixiao and Brendan, "LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain", IROS2018
  */
 template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
 class IntegratedLOAMFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {

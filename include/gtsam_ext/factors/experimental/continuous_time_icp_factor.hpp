@@ -22,7 +22,7 @@ gtsam::Pose3 interpolate_pose(const gtsam::Pose3& pose0, const gtsam::Pose3& pos
 /**
  * @brief Continuous Time ICP Factor
  * @note  This implementation is really slow and not well tested
- * @ref Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
+ *        Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
  */
 class CTICPFactorExpr : public gtsam::NoiseModelFactor {
 public:

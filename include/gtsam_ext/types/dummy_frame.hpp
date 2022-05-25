@@ -2,7 +2,7 @@
 
 namespace gtsam_ext {
 
-// Dummy frame class for build test
+/// Dummy frame class for build test
 struct DummyFrame {};
 
 namespace frame {

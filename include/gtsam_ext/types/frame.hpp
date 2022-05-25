@@ -36,15 +36,25 @@ public:
     intensities_gpu(nullptr) {}
   virtual ~Frame() {}
 
+  /// Number of points
   size_t size() const { return num_points; }
 
-  // Check if the frame has attributes
+  /// Check if the frame has per-point timestamps
   bool has_times() const;
+  /// Check if the frame has points
   bool has_points() const;
+  /// Check if the frame has point normals
   bool has_normals() const;
+  /// Check if the frame has point covariances
   bool has_covs() const;
+  /// Check if the frame has point intensities
   bool has_intensities() const;
 
+  /**
+   * @brief Get the pointer to an aux attribute
+   * @param  attrib Attribute name
+   * @return If the attribute exists, returns the pointer to it. Otherwise, returns nullptr.
+   */  
   template<typename T>
   const T* aux_attribute(const std::string& attrib) const {
     const auto found = aux_attributes.find(attrib);
@@ -60,24 +70,45 @@ public:
     return static_cast<const T*>(found->second.second);
   }
 
+  /**
+   * @brief Save the frame data
+   * @param path Destination path
+   */
   void save(const std::string& path) const;
+
+  /**
+   * @brief Save the frame data with a compact representation without unnecessary fields (e.g., the last element of homogeneous coordinates).
+   * @param path
+   */
   void save_compact(const std::string& path) const;
 
 public:
-  size_t num_points;  // Number of points
+  /// Number of points
+  size_t num_points;
 
-  double* times;             // Time w.r.t. the first point (sorted)
-  Eigen::Vector4d* points;   // Point coordinates (x, y, z, 1)
-  Eigen::Vector4d* normals;  // Point normals (nx, ny, nz, 0)
-  Eigen::Matrix4d* covs;     // Point covariances cov(3, 3) = 0
-  double* intensities;       // Point intensities
+  /// Per-point timestamp w.r.t. the first point (should be sorted)
+  double* times;
+  /// Point coordinates (x, y, z, 1)
+  Eigen::Vector4d* points;
+  /// Point normals (nx, ny, nz, 0)
+  Eigen::Vector4d* normals;
+  /// Point covariances cov(3, 3) = 0
+  Eigen::Matrix4d* covs;
+  /// Point intensities
+  double* intensities;
 
+  /// Aux attributes
   std::unordered_map<std::string, std::pair<size_t, void*>> aux_attributes;
 
+  /// Per-point timestamp on GPU
   float* times_gpu;
+  /// Point coordinates on GPU
   Eigen::Vector3f* points_gpu;
+  /// Point normals on GPU
   Eigen::Vector3f* normals_gpu;
+  /// Point covariances on GPU
   Eigen::Matrix3f* covs_gpu;
+  /// Point intensities on GPU
   float* intensities_gpu;
 };
 }  // namespace gtsam_ext
