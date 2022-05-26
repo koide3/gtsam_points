@@ -48,11 +48,11 @@ template <typename SourceFrame>
 IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
-  const VoxelizedFrame::ConstPtr& target,
+  const GaussianVoxelMapCPU::ConstPtr& target_voxels,
   const std::shared_ptr<const SourceFrame>& source)
 : gtsam_ext::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
-  target_voxels(target->voxels),
+  target_voxels(target_voxels),
   source(source) {
   //
   if (!frame::has_points(*source)) {
@@ -70,6 +70,14 @@ IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
     abort();
   }
 }
+
+template <typename SourceFrame>
+IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const VoxelizedFrame::ConstPtr& target,
+  const std::shared_ptr<const SourceFrame>& source)
+: IntegratedVGICPFactor_(fixed_target_pose, source_key, target->voxels, source) {}
 
 template <typename SourceFrame>
 IntegratedVGICPFactor_<SourceFrame>::~IntegratedVGICPFactor_() {}

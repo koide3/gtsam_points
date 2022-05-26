@@ -27,11 +27,11 @@ void IntegratedVGICPDerivatives::update_inliers(
   const thrust::device_ptr<const Eigen::Isometry3f>& x_ptr,
   bool force_update) {
   if (
-    force_update || source_inliears.empty() ||
+    force_update || source_inliers.empty() ||
     large_displacement(inlier_evaluation_point, x, inlier_update_thresh_trans, inlier_update_thresh_angle)) {
     inlier_evaluation_point = x;
 
-    source_inliears.resize(source->size());
+    source_inliers.resize(source->size());
 
     if (enable_surface_validation) {
       lookup_voxels_kernel<true> kernel(
@@ -41,7 +41,7 @@ void IntegratedVGICPDerivatives::update_inliers(
         x_ptr);
       auto corr_first = thrust::make_transform_iterator(thrust::counting_iterator<int>(0), kernel);
       auto corr_last = thrust::make_transform_iterator(thrust::counting_iterator<int>(source->size()), kernel);
-      thrust::transform(thrust::cuda::par.on(stream), corr_first, corr_last, source_inliears.begin(), untie_pair_first<int, int>());
+      thrust::transform(thrust::cuda::par.on(stream), corr_first, corr_last, source_inliers.begin(), untie_pair_first<int, int>());
     } else {
       lookup_voxels_kernel<false> kernel(
         *target,
@@ -50,12 +50,12 @@ void IntegratedVGICPDerivatives::update_inliers(
         x_ptr);
       auto corr_first = thrust::make_transform_iterator(thrust::counting_iterator<int>(0), kernel);
       auto corr_last = thrust::make_transform_iterator(thrust::counting_iterator<int>(source->size()), kernel);
-      thrust::transform(thrust::cuda::par.on(stream), corr_first, corr_last, source_inliears.begin(), untie_pair_first<int, int>());
+      thrust::transform(thrust::cuda::par.on(stream), corr_first, corr_last, source_inliers.begin(), untie_pair_first<int, int>());
     }
 
-    auto remove_loc = thrust::remove(source_inliears.begin(), source_inliears.end(), -1);
-    source_inliears.erase(remove_loc, source_inliears.end());
-    source_inliears.shrink_to_fit();
+    auto remove_loc = thrust::remove(source_inliers.begin(), source_inliers.end(), -1);
+    source_inliers.erase(remove_loc, source_inliers.end());
+    source_inliers.shrink_to_fit();
   }
 }
 

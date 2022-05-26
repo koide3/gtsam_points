@@ -55,7 +55,8 @@ public:
    * @param target              Target point cloud frame
    * @param source              Source point cloud frame
    * @param target_tree         Target nearest neighbor search
-   * @param use_point_to_plane  If true, use point-to-plane distance instead of point-to-point distance   */
+   * @param use_point_to_plane  If true, use point-to-plane distance instead of point-to-point distance
+   */
   IntegratedICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,

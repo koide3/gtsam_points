@@ -28,12 +28,31 @@ public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = boost::shared_ptr<IntegratedVGICPFactorGPU>;
 
+  /**
+   * @brief Create a binary VGICP_GPU factor between target and source poses.
+   * @param target_key    Target key
+   * @param source_key    Source key
+   * @param target        Target voxelmap
+   * @param source        Source frame
+   * @param stream        CUDA stream
+   * @param temp_buffer   CUDA temporary buffer manager
+   */
+  IntegratedVGICPFactorGPU(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const GaussianVoxelMap::ConstPtr& target,
+    const Frame::ConstPtr& source,
+    CUstream_st* stream,
+    std::shared_ptr<TempBufferManager> temp_buffer);
+
+  /// Create a binary VGICP_GPU factor between target and source poses.
   IntegratedVGICPFactorGPU(
     gtsam::Key target_key,
     gtsam::Key source_key,
     const VoxelizedFrame::ConstPtr& target,
     const std::shared_ptr<const Frame>& source);
 
+  /// Create a binary VGICP_GPU factor between target and source poses.
   IntegratedVGICPFactorGPU(
     gtsam::Key target_key,
     gtsam::Key source_key,
@@ -42,20 +61,31 @@ public:
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
 
+  /**
+   * @brief Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
+   * @param targfixed_target_pose  Fixed target pose
+   * @param source_key             Source key
+   * @param target                 Target voxelmap
+   * @param source                 Source frame
+   * @param stream                 CUDA stream
+   * @param temp_buffer            CUDA temporary buffer manager
+   */
   IntegratedVGICPFactorGPU(
-    gtsam::Key target_key,
+    const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
     const GaussianVoxelMap::ConstPtr& target,
     const Frame::ConstPtr& source,
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
 
+  /// Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
   IntegratedVGICPFactorGPU(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
     const VoxelizedFrame::ConstPtr& target,
     const Frame::ConstPtr& source);
 
+  /// Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
   IntegratedVGICPFactorGPU(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
@@ -64,18 +94,14 @@ public:
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
 
-  IntegratedVGICPFactorGPU(
-    const gtsam::Pose3& fixed_target_pose,
-    gtsam::Key source_key,
-    const GaussianVoxelMap::ConstPtr& target,
-    const Frame::ConstPtr& source,
-    CUstream_st* stream,
-    std::shared_ptr<TempBufferManager> temp_buffer);
-
   virtual ~IntegratedVGICPFactorGPU() override;
 
+  /// @brief Enable or disable surface orientation validation for correspondence search
+  /// @note  To enable surface orientation validation, source frame must have point normals
   void set_enable_surface_validation(bool enable);
 
+  /// @brief Set the threshold values to trigger inlier points update.
+  ///        Setting larger values reduces GPU sync but may affect the registration accuracy.
   void set_inlier_update_thresh(double trans, double angle);
 
   // forbid copy

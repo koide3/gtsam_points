@@ -71,6 +71,6 @@ private:
   Frame::ConstPtr source;
 
   Eigen::Isometry3f inlier_evaluation_point;
-  thrust::device_vector<int> source_inliears;
+  thrust::device_vector<int> source_inliers;
 };
 }

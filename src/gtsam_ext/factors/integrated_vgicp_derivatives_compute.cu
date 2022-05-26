@@ -33,7 +33,7 @@ void IntegratedVGICPDerivatives::issue_compute_error_impl(
     thrust::device_ptr<const Eigen::Vector3f>(source->normals_gpu),
     xl);
   cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel<enable_surface_validation_>, int*> corr_first(
-    thrust::raw_pointer_cast(source_inliears.data()),
+    thrust::raw_pointer_cast(source_inliers.data()),
     corr_kernel);
 
   vgicp_error_kernel error_kernel(
@@ -52,7 +52,7 @@ void IntegratedVGICPDerivatives::issue_compute_error_impl(
     temp_storage_bytes,
     first,
     thrust::raw_pointer_cast(output),
-    source_inliears.size(),
+    source_inliers.size(),
     thrust::plus<float>(),
     0.0f,
     stream);
@@ -64,7 +64,7 @@ void IntegratedVGICPDerivatives::issue_compute_error_impl(
     temp_storage_bytes,
     first,
     thrust::raw_pointer_cast(output),
-    source_inliears.size(),
+    source_inliers.size(),
     thrust::plus<float>(),
     0.0f,
     stream);
