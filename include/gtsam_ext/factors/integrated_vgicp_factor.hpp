@@ -35,7 +35,7 @@ public:
   IntegratedVGICPFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const GaussianVoxelMapCPU::ConstPtr& target_voxels,
+    const GaussianVoxelMap::ConstPtr& target_voxels,
     const std::shared_ptr<const SourceFrame>& source);
 
   ///< Create a binary VGICP factor between target and source poses.
@@ -55,7 +55,7 @@ public:
   IntegratedVGICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const GaussianVoxelMapCPU::ConstPtr& target_voxels,
+    const GaussianVoxelMap::ConstPtr& target_voxels,
     const std::shared_ptr<const SourceFrame>& source);
 
   ///< Create a unary VGICP factor between a fixed target pose and an active source pose.

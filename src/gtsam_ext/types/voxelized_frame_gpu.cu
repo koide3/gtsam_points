@@ -496,14 +496,15 @@ struct cast_kernel {
 };
 }  // namespace
 
-double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu) {
+double overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu) {
   if (!source->points_gpu) {
     std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
     abort();
   }
 
-  if (!target->voxels_gpu) {
-    std::cerr << "error:  GPU target voxels have not been created!!" << std::endl;
+  auto target = std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(target_);
+  if (!target) {
+    std::cerr << "error: Failed to cast target voxelmap to GaussianVoxelMapGPU!!" << std::endl;
     abort();
   }
 
@@ -512,7 +513,7 @@ double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr
     thrust::device_ptr<Eigen::Vector3f>(source->points_gpu),
     thrust::device_ptr<Eigen::Vector3f>(source->points_gpu) + source->size(),
     overlap.begin(),
-    overlap_count_kernel(*target->voxels_gpu, thrust::device_ptr<const Eigen::Isometry3f>(delta_gpu)));
+    overlap_count_kernel(*target, thrust::device_ptr<const Eigen::Isometry3f>(delta_gpu)));
   auto reduce_result = thrust::async::reduce(
     thrust::cuda::par.after(trans_result),
     thrust::make_transform_iterator(overlap.begin(), cast_kernel<int>()),
@@ -524,14 +525,19 @@ double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr
   return static_cast<double>(num_inliers) / source->size();
 }
 
-double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu) {
+  return overlap_gpu(target->voxels_gpu, source, delta_gpu);
+}
+
+double overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
   if (!source->points_gpu) {
     std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
     abort();
   }
 
-  if (!target->voxels_gpu) {
-    std::cerr << "error:  GPU target voxels have not been created!!" << std::endl;
+  auto target = std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(target_);
+  if (!target) {
+    std::cerr << "error: Failed to cast target voxelmap to GaussianVoxelMapGPU!!" << std::endl;
     abort();
   }
 
@@ -542,8 +548,12 @@ double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr
   return overlap_gpu(target, source, thrust::raw_pointer_cast(delta_ptr.data()));
 }
 
+double overlap_gpu(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+  return overlap_gpu(target->voxels_gpu, source, delta);
+}
+
 double overlap_gpu(
-  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const std::vector<GaussianVoxelMap::ConstPtr>& targets_,
   const Frame::ConstPtr& source,
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_) {
   if (!source->points_gpu) {
@@ -551,9 +561,12 @@ double overlap_gpu(
     abort();
   }
 
-  if (std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {
-    std::cerr << "error:  GPU target voxels have not been created!!" << std::endl;
-    abort();
+  std::vector<GaussianVoxelMapGPU::ConstPtr> targets(targets_.size());
+  for (int i = 0; i < targets_.size(); i++) {
+    targets[i] = std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(targets_[i]);
+    if (!targets[i]) {
+      std::cerr << "error: Failed to cast target voxelmap to GaussianVoxelMapGPU!!" << std::endl;
+    }
   }
 
   thrust::host_vector<Eigen::Isometry3f, Eigen::aligned_allocator<Eigen::Isometry3f>> deltas(deltas_.size());
@@ -564,7 +577,7 @@ double overlap_gpu(
   std::vector<thrust::system::cuda::unique_eager_event> results(targets.size());
 
   for (int i = 0; i < targets.size(); i++) {
-    overlap_count_kernel overlap_kernel(*targets[i]->voxels_gpu, deltas_ptr.data() + i);
+    overlap_count_kernel overlap_kernel(*targets[i], deltas_ptr.data() + i);
     auto first = thrust::make_transform_iterator(thrust::device_ptr<Eigen::Vector3f>(source->points_gpu), overlap_kernel);
     auto last = thrust::make_transform_iterator(thrust::device_ptr<Eigen::Vector3f>(source->points_gpu) + source->size(), overlap_kernel);
 
@@ -596,6 +609,15 @@ double overlap_gpu(
   int num_inliers = result.get();
 
   return static_cast<double>(num_inliers) / source->size();
+}
+
+double overlap_gpu(
+  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_) {
+  std::vector<GaussianVoxelMap::ConstPtr> target_voxelmaps(targets.size());
+  std::transform(targets.begin(), targets.end(), target_voxelmaps.begin(), [](const VoxelizedFrame::ConstPtr& frame) { return frame->voxels_gpu; });
+  return overlap_gpu(target_voxelmaps, source, deltas_);
 }
 
 }  // namespace gtsam_ext

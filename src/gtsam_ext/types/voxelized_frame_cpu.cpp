@@ -225,8 +225,9 @@ VoxelizedFrame::Ptr merge_voxelized_frames_auto(
   return merge_voxelized_frames(poses, frames, downsample_resolution, voxel_resolution);
 }
 
-double overlap(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
-  if (target->voxels == nullptr) {
+double overlap(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+  auto target = std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(target_);
+  if (target == nullptr) {
     std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;
     abort();
   }
@@ -234,8 +235,8 @@ double overlap(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& so
   int num_overlap = 0;
   for (int i = 0; i < source->size(); i++) {
     Eigen::Vector4d pt = delta * source->points[i];
-    Eigen::Vector3i coord = target->voxels->voxel_coord(pt);
-    if (target->voxels->lookup_voxel(coord)) {
+    Eigen::Vector3i coord = target->voxel_coord(pt);
+    if (target->lookup_voxel(coord)) {
       num_overlap++;
     }
   }
@@ -243,14 +244,20 @@ double overlap(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& so
   return static_cast<double>(num_overlap) / source->size();
 }
 
+double overlap(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+  return overlap(target->voxels, source, delta);
+}
+
 double overlap(
-  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const std::vector<GaussianVoxelMap::ConstPtr>& targets_,
   const Frame::ConstPtr& source,
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
-  //
-  if (std::find_if(targets.begin(), targets.end(), [](const auto& target) { return target == nullptr; }) != targets.end()) {
-    std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;
-    abort();
+  std::vector<GaussianVoxelMapCPU::ConstPtr> targets(targets_.size());
+  for (int i = 0; i < targets_.size(); i++) {
+    targets[i] = std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(targets_[i]);
+    if (!targets[i]) {
+      std::cerr << "error: target CPU voxelmap has not been created!!" << std::endl;
+    }
   }
 
   int num_overlap = 0;
@@ -260,8 +267,8 @@ double overlap(
       const auto& delta = deltas[j];
 
       Eigen::Vector4d pt = delta * source->points[i];
-      Eigen::Vector3i coord = target->voxels->voxel_coord(pt);
-      if (target->voxels->lookup_voxel(coord)) {
+      Eigen::Vector3i coord = target->voxel_coord(pt);
+      if (target->lookup_voxel(coord)) {
         num_overlap++;
         break;
       }
@@ -270,6 +277,40 @@ double overlap(
 
   return static_cast<double>(num_overlap) / source->size();
 }
+
+double overlap(
+  const std::vector<VoxelizedFrame::ConstPtr>& targets_,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
+  std::vector<GaussianVoxelMap::ConstPtr> targets(targets_.size());
+  for (int i = 0; i < targets_.size(); i++) {
+    targets[i] = targets_[i]->voxels;
+  }
+
+  return overlap(targets, source, deltas);
+}
+
+double overlap_auto(const GaussianVoxelMap::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+#ifdef BUILD_GTSAM_EXT_GPU
+  if (source->points_gpu && std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(target)) {
+    return overlap_gpu(target, source, delta);
+  }
+#endif
+  return overlap(target, source, delta);
+}
+
+double overlap_auto(
+  const std::vector<GaussianVoxelMap::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
+#ifdef BUILD_GTSAM_EXT_GPU
+  if (source->points_gpu && !targets.empty() && std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(targets[0])) {
+    return overlap_gpu(targets, source, deltas);
+  }
+#endif
+  return overlap(targets, source, deltas);
+}
+
 
 double overlap_auto(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
 #ifdef BUILD_GTSAM_EXT_GPU

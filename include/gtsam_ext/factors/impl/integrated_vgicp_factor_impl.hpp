@@ -13,11 +13,11 @@ template <typename SourceFrame>
 IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const GaussianVoxelMapCPU::ConstPtr& target_voxels,
+  const GaussianVoxelMap::ConstPtr& target_voxels,
   const std::shared_ptr<const SourceFrame>& source)
 : gtsam_ext::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
-  target_voxels(target_voxels),
+  target_voxels(std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(target_voxels)),
   source(source) {
   //
   if (!frame::has_points(*source)) {
@@ -30,7 +30,7 @@ IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
     abort();
   }
 
-  if (!target_voxels) {
+  if (!this->target_voxels) {
     std::cerr << "error: target voxelmap has not been created!!" << std::endl;
     abort();
   }
@@ -48,11 +48,11 @@ template <typename SourceFrame>
 IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
-  const GaussianVoxelMapCPU::ConstPtr& target_voxels,
+  const GaussianVoxelMap::ConstPtr& target_voxels,
   const std::shared_ptr<const SourceFrame>& source)
 : gtsam_ext::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
-  target_voxels(target_voxels),
+  target_voxels(std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(target_voxels)),
   source(source) {
   //
   if (!frame::has_points(*source)) {
@@ -65,7 +65,7 @@ IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
     abort();
   }
 
-  if (!target_voxels) {
+  if (!this->target_voxels) {
     std::cerr << "error: target voxelmap has not been created!!" << std::endl;
     abort();
   }
