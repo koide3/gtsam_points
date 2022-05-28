@@ -5,6 +5,8 @@
 
 #include <memory>
 #include <iostream>
+#include <unordered_set>
+
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -17,6 +19,8 @@ GaussianVoxel::GaussianVoxel() {
   mean.setZero();
   cov.setZero();
 }
+
+GaussianVoxel::~GaussianVoxel() {}
 
 void GaussianVoxel::append(const Eigen::Vector4d& mean_, const Eigen::Matrix4d& cov_) {
   if (finalized) {
@@ -32,13 +36,15 @@ void GaussianVoxel::append(const Eigen::Vector4d& mean_, const Eigen::Matrix4d& 
 
 void GaussianVoxel::finalize() {
   if (!finalized) {
-    mean /= num_points;
-    cov /= num_points;
+    const double s = 1.0 / num_points;
+    mean *= s;
+    cov *= s;
+
+    finalized = true;
   }
-  finalized = true;
 }
 
-GaussianVoxelMapCPU::GaussianVoxelMapCPU(double resolution) : lru_count(0), lru_thresh(10), resolution(resolution) {}
+GaussianVoxelMapCPU::GaussianVoxelMapCPU(double resolution) : lru_count(0), lru_cycle(10), lru_thresh(10), resolution(resolution) {}
 
 GaussianVoxelMapCPU::~GaussianVoxelMapCPU() {}
 
@@ -64,6 +70,7 @@ void GaussianVoxelMapCPU::insert(const Frame& frame) {
 
   lru_count++;
 
+  std::unordered_set<GaussianVoxel*> updated_voxels;
   for (int i = 0; i < frame::size(frame); i++) {
     Eigen::Vector3i coord = voxel_coord(frame::point(frame, i));
 
@@ -76,21 +83,24 @@ void GaussianVoxelMapCPU::insert(const Frame& frame) {
     auto& voxel = found->second;
     voxel->last_lru_count = lru_count;
     voxel->append(frame::point(frame, i), frame::cov(frame, i));
+
+    updated_voxels.insert(voxel.get());
   }
 
   // Remove voxels that are not used recently
   const int lru_horizon = lru_count - lru_thresh;
-  for (auto voxel = voxels.begin(); voxel != voxels.end();) {
-    if (voxel->second->last_lru_count < lru_horizon) {
-      voxel = voxels.erase(voxel);
-    } else {
-      voxel++;
+  if (lru_horizon > 0 && (lru_horizon % lru_cycle) == 0) {
+    for (auto voxel = voxels.begin(), last = voxels.end(); voxel != last;) {
+      if (voxel->second->last_lru_count < lru_horizon) {
+        voxel = voxels.erase(voxel);
+      } else {
+        ++voxel;
+      }
     }
   }
 
-  // Finalize voxel means and covs
-  for (auto& voxel : voxels) {
-    voxel.second->finalize();
+  for (const auto& voxel : updated_voxels) {
+    voxel->finalize();
   }
 }
 

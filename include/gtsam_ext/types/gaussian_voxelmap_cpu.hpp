@@ -23,6 +23,7 @@ public:
   using ConstPtr = std::shared_ptr<const GaussianVoxel>;
 
   GaussianVoxel();
+  ~GaussianVoxel();
 
   /**
    * @brief Add a point to the voxel distribution.
@@ -60,6 +61,12 @@ public:
   GaussianVoxelMapCPU(double resolution);
   virtual ~GaussianVoxelMapCPU();
 
+  /// LRU clearing check cycle
+  void set_lru_cycle(const int cycle) { lru_cycle = cycle; }
+
+  /// LRU cache threshold
+  void set_lru_thresh(const int thresh) { lru_thresh = thresh; }
+
   /// Voxel resolution
   virtual double voxel_resolution() const override { return resolution; }
 
@@ -85,15 +92,16 @@ public:
   using VoxelMap = std::unordered_map<
     Eigen::Vector3i,
     GaussianVoxel::Ptr,
-    Vector3iHash,
+    XORVector3iHash,
     std::equal_to<Eigen::Vector3i>,
     Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, GaussianVoxel::Ptr>>>;
 
-  int lru_count;    ///< LRU count
-  int lru_thresh;   ///< LRU threshold. Voxels that are not observed longer than this are removed from the voxelmap.
+  int lru_count;   ///< LRU count
+  int lru_cycle;   ///< LRU check cycle
+  int lru_thresh;  ///< LRU threshold. Voxels that are not observed longer than this are removed from the voxelmap.
 
-  double resolution;   ///< Voxel resolution
-  VoxelMap voxels;     ///< Voxelmap
+  double resolution;  ///< Voxel resolution
+  VoxelMap voxels;    ///< Voxelmap
 };
 
 }  // namespace gtsam_ext

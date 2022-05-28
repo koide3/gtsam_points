@@ -48,7 +48,8 @@ public:
  *        Bai et al., "Faster-LIO: Lightweight Tightly Coupled Lidar-Inertial Odometry Using Parallel Sparse Incremental Voxels", IEEE RA-L, 2022
  * @note  Only the linear iVox is implemented
  * @note  To the compatibility with other nearest neighbor search methods, this implementation returns indices that encode the voxel and point IDs.
- *        The first ```point_id_bits``` (e.g., 12) bits of a point index represent the point ID, and the rest ```voxel_id_bits``` (e.g., 24) bits represent the voxel ID that contains the point.
+ *        The first ```point_id_bits``` (e.g., 12) bits of a point index represent the point ID, and the rest ```voxel_id_bits``` (e.g., 24) bits
+ * represent the voxel ID that contains the point.
  */
 struct iVox : public NearestNeighborSearch {
 public:
@@ -103,10 +104,11 @@ public:
   virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const override;
 
   // Parameter setters
-  void set_voxel_resolution(const double resolution) { voxel_resolution = resolution; }           ///< Voxel resolution
-  void set_insertion_dist_thresh(const double dist) { insertion_dist_sq_thresh = dist * dist; }   ///< Minimum distance between points in a cell
-  void set_lru_thresh(const int lru_thresh) { this->lru_thresh = lru_thresh; }                    ///< LRC cache threshold (larger keeps more voxels)
-  void set_neighbor_voxel_mode(const int mode) { offsets = neighbor_offsets(mode); }              ///< Neighboring voxel search mode (1/7/19/27)
+  void set_voxel_resolution(const double resolution) { voxel_resolution = resolution; }          ///< Voxel resolution
+  void set_insertion_dist_thresh(const double dist) { insertion_dist_sq_thresh = dist * dist; }  ///< Minimum distance between points in a cell
+  void set_lru_cycle(const int lru_cycle) { this->lru_cycle = lru_cycle; }                       ///< LRU clearing cycle
+  void set_lru_thresh(const int lru_thresh) { this->lru_thresh = lru_thresh; }                   ///< LRU cache threshold (larger keeps more voxels)
+  void set_neighbor_voxel_mode(const int mode) { offsets = neighbor_offsets(mode); }             ///< Neighboring voxel search mode (1/7/19/27)
 
   // Attribute check
   bool has_points() const { return points_available; }            ///< Check if the iVox has points
@@ -127,24 +129,25 @@ public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_points() const;
 
 protected:
-  inline size_t voxel_id(const size_t i) const { return i >> point_id_bits; }               ///< Extract the point ID from an index
-  inline size_t point_id(const size_t i) const { return i & ((1 << point_id_bits) - 1); }   ///< Extract the voxel ID from an index
+  inline size_t voxel_id(const size_t i) const { return i >> point_id_bits; }              ///< Extract the point ID from an index
+  inline size_t point_id(const size_t i) const { return i & ((1 << point_id_bits) - 1); }  ///< Extract the voxel ID from an index
 
   const Eigen::Vector3i voxel_coord(const Eigen::Vector4d& point) const;
   std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> neighbor_offsets(const int neighbor_voxel_mode) const;
 
 protected:
-  static constexpr int point_id_bits = 12;                    ///< Use the first 12 bits of point index to represent point ID
-  static constexpr int voxel_id_bits = 32 - point_id_bits;    ///< Use the rest bits to represent voxel ID
+  static constexpr int point_id_bits = 12;                  ///< Use the first 12 bits of point index to represent point ID
+  static constexpr int voxel_id_bits = 32 - point_id_bits;  ///< Use the rest bits to represent voxel ID
 
   bool points_available;
   bool normals_available;
   bool covs_available;
   bool intensities_available;
 
-  double voxel_resolution;               ///< Voxel resolution
-  double insertion_dist_sq_thresh;       ///< Minimum distance between points in a voxel
-  int lru_thresh;                        ///< LRU caching threshold
+  double voxel_resolution;                                                          ///< Voxel resolution
+  double insertion_dist_sq_thresh;                                                  ///< Minimum distance between points in a voxel
+  int lru_cycle;                                                                    ///< LRU clearing check cycle
+  int lru_thresh;                                                                   ///< LRU caching threshold
   std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> offsets;  ///< Neighbor voxel offsets
 
   int lru_count;  ///< Counter to manage LRU voxel deletion

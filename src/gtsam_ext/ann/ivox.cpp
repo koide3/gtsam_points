@@ -3,6 +3,7 @@
 
 #include <gtsam_ext/ann/ivox.hpp>
 
+#include <chrono>
 #include <random>
 #include <iostream>
 
@@ -53,6 +54,7 @@ void LinearContainer::insert(const Frame& frame, const int i, const double inser
 iVox::iVox(const double voxel_resolution, const double insertion_dist_thresh, const int lru_thresh)
 : voxel_resolution(voxel_resolution),
   insertion_dist_sq_thresh(insertion_dist_thresh * insertion_dist_thresh),
+  lru_cycle(10),
   lru_thresh(lru_thresh) {
   lru_count = 0;
 
@@ -147,11 +149,13 @@ void iVox::insert(const Eigen::Vector4d* points, int num_points) {
 
   // Remove voxels that are not used recently
   const int lru_horizon = lru_count - lru_thresh;
-  for (auto voxel = voxelmap.begin(); voxel != voxelmap.end();) {
-    if (voxel->second->last_lru_count < lru_horizon) {
-      voxel = voxelmap.erase(voxel);
-    } else {
-      voxel++;
+  if (lru_horizon > 0 && (lru_count % lru_cycle) == 0) {
+    for (auto voxel = voxelmap.begin(); voxel != voxelmap.end();) {
+      if (voxel->second->last_lru_count < lru_horizon) {
+        voxel = voxelmap.erase(voxel);
+      } else {
+        voxel++;
+      }
     }
   }
 
@@ -229,11 +233,13 @@ void iVox::insert(const Frame& frame) {
 
   // Remove voxels that are not used recently
   const int lru_horizon = lru_count - lru_thresh;
-  for (auto voxel = voxelmap.begin(); voxel != voxelmap.end();) {
-    if (voxel->second->last_lru_count < lru_horizon) {
-      voxel = voxelmap.erase(voxel);
-    } else {
-      voxel++;
+  if (lru_horizon > 0 && (lru_count % lru_cycle) == 0) {
+    for (auto voxel = voxelmap.begin(); voxel != voxelmap.end();) {
+      if (voxel->second->last_lru_count < lru_horizon) {
+        voxel = voxelmap.erase(voxel);
+      } else {
+        voxel++;
+      }
     }
   }
 
@@ -258,9 +264,9 @@ void iVox::insert(const Frame& frame) {
 
   // Create flattened voxel list
   voxels.clear();
-  for (auto& voxel : voxelmap) {
-    voxel.second->serial_id = voxels.size();
-    voxels.push_back(voxel.second);
+  for (auto voxel = voxelmap.begin(); voxel != voxelmap.end(); voxel++) {
+    voxel->second->serial_id = voxels.size();
+    voxels.push_back(voxel->second);
   }
 }
 
@@ -374,6 +380,7 @@ double iVox::intensity(const size_t i) const {
 
 std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVox::voxel_points() const {
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points;
+  points.reserve(voxels.size() * 10);
   for (const auto& voxel : voxels) {
     points.insert(points.end(), voxel->points.begin(), voxel->points.end());
   }
