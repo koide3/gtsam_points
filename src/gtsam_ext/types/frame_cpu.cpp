@@ -3,6 +3,7 @@
 
 #include <gtsam_ext/types/frame_cpu.hpp>
 
+#include <numeric>
 #include <fstream>
 #include <iostream>
 
@@ -411,24 +412,27 @@ FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double vox
     std::equal_to<Eigen::Vector3i>,
     Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, Indices>>>;
   VoxelMap voxelmap;
+  voxelmap.rehash(frame->size() * sampling_rate);
 
   // Insert point indices to corresponding voxels
   for (int i = 0; i < frame->size(); i++) {
     const Eigen::Vector3i coord = (frame->points[i].array() / voxel_resolution).floor().cast<int>().head<3>();
     auto found = voxelmap.find(coord);
     if (found == voxelmap.end()) {
-      found = voxelmap.insert(found, std::make_pair(coord, std::make_shared<std::vector<int>>()));
-      found->second->reserve(32);
+      // found = voxelmap.insert(found, std::make_pair(coord, std::make_shared<std::vector<int>>()));
+      found = voxelmap.emplace_hint(found, coord, std::make_shared<std::vector<int>>());
+      found->second->reserve(8);
     }
     found->second->push_back(i);
   }
 
   const int points_per_voxel = std::ceil((sampling_rate * frame->size()) / voxelmap.size());
-  const int expected_num_points = frame->size() * sampling_rate * 1.5;
+  const int max_num_points = frame->size() * sampling_rate * 1.2;
 
   // Sample points from voxels
   std::vector<int> indices;
-  indices.reserve(expected_num_points);
+  indices.reserve(max_num_points);
+
   for (const auto& voxel : voxelmap) {
     const auto& voxel_indices = *voxel.second;
     if (voxel_indices.size() <= points_per_voxel) {
@@ -436,6 +440,12 @@ FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double vox
     } else {
       std::sample(voxel_indices.begin(), voxel_indices.end(), std::back_insert_iterator(indices), points_per_voxel, mt);
     }
+  }
+
+  if (indices.size() > max_num_points) {
+    std::vector<int> sub_indices(max_num_points);
+    std::sample(indices.begin(), indices.end(), sub_indices.begin(), max_num_points, mt);
+    indices = std::move(sub_indices);
   }
 
   // Sort indices to keep points ordered (and for better memory accessing)

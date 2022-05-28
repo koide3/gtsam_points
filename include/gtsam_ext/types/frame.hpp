@@ -54,17 +54,18 @@ public:
    * @brief Get the pointer to an aux attribute
    * @param  attrib Attribute name
    * @return If the attribute exists, returns the pointer to it. Otherwise, returns nullptr.
-   */  
-  template<typename T>
+   */
+  template <typename T>
   const T* aux_attribute(const std::string& attrib) const {
     const auto found = aux_attributes.find(attrib);
-    if(found == aux_attributes.end()) {
+    if (found == aux_attributes.end()) {
       std::cerr << "warning: attribute " << attrib << " not found!!" << std::endl;
       return nullptr;
     }
 
     if (sizeof(T) != found->second.first) {
-      std::cerr << "warning: attribute element size mismatch!! attrib:" << attrib << " size:" << found->second.first << " requested:" << sizeof(T) << std::endl;
+      std::cerr << "warning: attribute element size mismatch!! attrib:" << attrib << " size:" << found->second.first << " requested:" << sizeof(T)
+                << std::endl;
     }
 
     return static_cast<const T*>(found->second.second);
