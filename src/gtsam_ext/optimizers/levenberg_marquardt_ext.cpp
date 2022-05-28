@@ -49,7 +49,9 @@ LevenbergMarquardtOptimizerExt::LevenbergMarquardtOptimizerExt(
   const gtsam::NonlinearFactorGraph& graph,
   const gtsam::Values& initialValues,
   const LevenbergMarquardtExtParams& params)
-: gtsam::NonlinearOptimizer(graph, std::unique_ptr<State>(new State(initialValues, std::numeric_limits<double>::max(), params.lambdaInitial, params.lambdaFactor))),
+: gtsam::NonlinearOptimizer(
+    graph,
+    std::unique_ptr<State>(new State(initialValues, std::numeric_limits<double>::max(), params.lambdaInitial, params.lambdaFactor))),
   params_(params.ensureHasOrdering(graph)) {
   // find gpu factors
   gpu_factors.reset(new NonlinearFactorSetGPU());
@@ -58,7 +60,9 @@ LevenbergMarquardtOptimizerExt::LevenbergMarquardtOptimizerExt(
 
 LevenbergMarquardtOptimizerExt::~LevenbergMarquardtOptimizerExt() {}
 
-gtsam::GaussianFactorGraph LevenbergMarquardtOptimizerExt::buildDampedSystem(const gtsam::GaussianFactorGraph& linear, const gtsam::VectorValues& sqrtHessianDiagonal) const {
+gtsam::GaussianFactorGraph LevenbergMarquardtOptimizerExt::buildDampedSystem(
+  const gtsam::GaussianFactorGraph& linear,
+  const gtsam::VectorValues& sqrtHessianDiagonal) const {
   auto currentState = static_cast<const State*>(state_.get());
   if (params_.diagonalDamping) {
     return currentState->buildDampedSystem(linear, sqrtHessianDiagonal);
@@ -67,7 +71,10 @@ gtsam::GaussianFactorGraph LevenbergMarquardtOptimizerExt::buildDampedSystem(con
   }
 }
 
-bool LevenbergMarquardtOptimizerExt::tryLambda(const gtsam::GaussianFactorGraph& linear, const gtsam::VectorValues& sqrtHessianDiagonal, double oldError) {
+bool LevenbergMarquardtOptimizerExt::tryLambda(
+  const gtsam::GaussianFactorGraph& linear,
+  const gtsam::VectorValues& sqrtHessianDiagonal,
+  double oldError) {
   auto lambda_iteration_start_time = std::chrono::high_resolution_clock::now();
 
   auto currentState = static_cast<const State*>(state_.get());
@@ -200,18 +207,19 @@ const gtsam::Values& LevenbergMarquardtOptimizerExt::optimize() {
   double currentError = state_->error;
 
   do {
-    iterate();
+    linearized = iterate();
     double newError = state_->error;
 
     terminate |= iterations() > params.maxIterations;
     terminate |= !std::isfinite(newError);
 
     // error can increase due to data association changes
-    // terminate |= gtsam::checkConvergence(params.relativeErrorTol, params.absoluteErrorTol, params.errorTol, currentError, newError, params.verbosity);
+    // terminate |= gtsam::checkConvergence(params.relativeErrorTol, params.absoluteErrorTol, params.errorTol, currentError, newError,
+    // params.verbosity);
 
     double delta_error = std::abs(currentError - newError);
     terminate |= delta_error < params.absoluteErrorTol;
-    terminate |= delta_error / currentError < params.relativeErrorTol;
+    terminate |= delta_error / newError < params.relativeErrorTol;
     terminate |= newError < params.errorTol;
 
     if (params_.termination_criteria) {

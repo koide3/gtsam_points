@@ -167,11 +167,14 @@ double IntegratedVGICPFactor_<SourceFrame>::evaluate(
     thread_num = omp_get_thread_num();
 #endif
 
-    Hs_target[thread_num] += J_target.transpose() * mahalanobis[i] * J_target;
-    Hs_source[thread_num] += J_source.transpose() * mahalanobis[i] * J_source;
-    Hs_target_source[thread_num] += J_target.transpose() * mahalanobis[i] * J_source;
-    bs_target[thread_num] += J_target.transpose() * mahalanobis[i] * error;
-    bs_source[thread_num] += J_source.transpose() * mahalanobis[i] * error;
+    Eigen::Matrix<double, 6, 4> J_target_mahalanobis = J_target.transpose() * mahalanobis[i];
+    Eigen::Matrix<double, 6, 4> J_source_mahalanobis = J_source.transpose() * mahalanobis[i];
+
+    Hs_target[thread_num] += J_target_mahalanobis * J_target;
+    Hs_source[thread_num] += J_source_mahalanobis * J_source;
+    Hs_target_source[thread_num] += J_target_mahalanobis * J_source;
+    bs_target[thread_num] += J_target_mahalanobis * error;
+    bs_source[thread_num] += J_source_mahalanobis * error;
   }
 
   if (H_target && H_source && H_target_source && b_target && b_source) {

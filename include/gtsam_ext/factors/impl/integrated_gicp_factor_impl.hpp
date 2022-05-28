@@ -126,14 +126,15 @@ void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(con
       size_t k_index = -1;
       double k_sq_dist = -1;
       size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
-      correspondences[i] = k_sq_dist < max_correspondence_distance_sq ? k_index : -1;
+      correspondences[i] = (num_found && k_sq_dist < max_correspondence_distance_sq) ? k_index : -1;
     }
 
     if (correspondences[i] < 0) {
-      mahalanobis[i].setIdentity();
+      mahalanobis[i].setZero();
     } else {
       const auto& target_cov = frame::cov(*target, correspondences[i]);
       Eigen::Matrix4d RCR = (target_cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
+
       RCR(3, 3) = 1.0;
       mahalanobis[i] = RCR.inverse();
       mahalanobis[i](3, 3) = 0.0;
@@ -208,11 +209,14 @@ double IntegratedGICPFactor_<TargetFrame, SourceFrame>::evaluate(
     thread_num = omp_get_thread_num();
 #endif
 
-    Hs_target[thread_num] += J_target.transpose() * mahalanobis[i] * J_target;
-    Hs_source[thread_num] += J_source.transpose() * mahalanobis[i] * J_source;
-    Hs_target_source[thread_num] += J_target.transpose() * mahalanobis[i] * J_source;
-    bs_target[thread_num] += J_target.transpose() * mahalanobis[i] * error;
-    bs_source[thread_num] += J_source.transpose() * mahalanobis[i] * error;
+    Eigen::Matrix<double, 6, 4> J_target_mahalanobis = J_target.transpose() * mahalanobis[i];
+    Eigen::Matrix<double, 6, 4> J_source_mahalanobis = J_source.transpose() * mahalanobis[i];
+
+    Hs_target[thread_num] += J_target_mahalanobis * J_target;
+    Hs_source[thread_num] += J_source_mahalanobis * J_source;
+    Hs_target_source[thread_num] += J_target_mahalanobis * J_source;
+    bs_target[thread_num] += J_target_mahalanobis * error;
+    bs_source[thread_num] += J_source_mahalanobis * error;
   }
 
   if (H_target && H_source && H_target_source && b_target && b_source) {

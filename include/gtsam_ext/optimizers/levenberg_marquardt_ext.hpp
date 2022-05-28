@@ -60,6 +60,8 @@ public:
 
   virtual const gtsam::Values& optimize() override;
 
+  const gtsam::GaussianFactorGraph::shared_ptr& last_linearized() const { return linearized; }
+
 private:
   gtsam::GaussianFactorGraph buildDampedSystem(const gtsam::GaussianFactorGraph& linear, const gtsam::VectorValues& sqrtHessianDiagonal) const;
   bool tryLambda(const gtsam::GaussianFactorGraph& linear, const gtsam::VectorValues& sqrtHessianDiagonal, double error);
@@ -70,5 +72,7 @@ private:
   std::chrono::high_resolution_clock::time_point optimization_start_time;
   std::unique_ptr<NonlinearFactorSetGPU> gpu_factors;
   const LevenbergMarquardtExtParams params_;
+
+  gtsam::GaussianFactorGraph::shared_ptr linearized;
 };
 }  // namespace gtsam_ext

@@ -217,8 +217,7 @@ void iVox::insert(const Frame& frame) {
 
     auto found = voxelmap.find(coord);
     if (found == voxelmap.end()) {
-      LinearContainer::Ptr new_voxel(new LinearContainer(lru_count));
-      found = voxelmap.insert(found, std::make_pair(coord, new_voxel));
+      found = voxelmap.emplace_hint(found, coord, new LinearContainer(lru_count));
     }
 
     if (found->second->size() >= (1 << point_id_bits) - 1) {
