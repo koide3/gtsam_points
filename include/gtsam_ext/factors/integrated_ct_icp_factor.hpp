@@ -83,7 +83,7 @@ protected:
   mutable std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> pose_derivatives_t1;
 
   std::vector<int> time_indices;
-  mutable std::vector<int> correspondences;
+  mutable std::vector<long> correspondences;
 
   std::shared_ptr<const TargetFrame> target;
   std::shared_ptr<const SourceFrame> source;

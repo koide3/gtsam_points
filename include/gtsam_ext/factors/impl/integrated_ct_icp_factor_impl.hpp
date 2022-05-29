@@ -81,7 +81,7 @@ double IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Val
 
   double sum_errors = 0.0;
   for (int i = 0; i < frame::size(*source); i++) {
-    const int target_index = correspondences[i];
+    const long target_index = correspondences[i];
     if (target_index < 0) {
       continue;
     }
@@ -91,7 +91,7 @@ double IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Val
 
     const auto& source_pt = frame::point(*source, i);
     const auto& target_pt = frame::point(*target, target_index);
-    const auto& target_normal = frame::normal(*target, i);
+    const auto& target_normal = frame::normal(*target, target_index);
 
     gtsam::Point3 transed_source_pt = pose.transformFrom(source_pt.template head<3>().eval());
     gtsam::Point3 residual = transed_source_pt - target_pt.template head<3>();
@@ -121,7 +121,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor_<TargetFrame, So
   gtsam::Vector6 b_1 = gtsam::Vector6::Zero();
 
   for (int i = 0; i < frame::size(*source); i++) {
-    const int target_index = correspondences[i];
+    const long target_index = correspondences[i];
     if (target_index < 0) {
       continue;
     }
@@ -201,8 +201,8 @@ void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::update_correspondences()
     const auto& pt = frame::point(*source, i);
     gtsam::Point3 transed_pt = source_poses[time_index] * pt.template head<3>();
 
-    size_t k_index;
-    double k_sq_dist;
+    size_t k_index = -1;
+    double k_sq_dist = -1;
     size_t num_found = target_tree->knn_search(transed_pt.data(), 1, &k_index, &k_sq_dist);
 
     if (num_found == 0 || k_sq_dist > max_correspondence_distance_sq) {

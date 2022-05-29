@@ -176,7 +176,7 @@ double IntegratedGICPFactor_<TargetFrame, SourceFrame>::evaluate(
 
 #pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors) schedule(guided, 8)
   for (int i = 0; i < frame::size(*source); i++) {
-    const int target_index = correspondences[i];
+    const long target_index = correspondences[i];
     if (target_index < 0) {
       continue;
     }

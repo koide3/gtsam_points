@@ -6,6 +6,7 @@
 #include <chrono>
 #include <random>
 #include <iostream>
+#include <type_traits>
 
 namespace gtsam_ext {
 
@@ -155,11 +156,13 @@ void iVox::insert(const Frame& frame) {
       found = voxelmap.emplace_hint(found, coord, new LinearContainer(lru_count));
     }
 
-    if (found->second->size() >= (1 << point_id_bits) - 1) {
+    /*
+    if (found->second->size() >= (1ul << point_id_bits) - 1) {
       std::cerr << "warning: too many points in voxel!!" << std::endl;
       std::cerr << "       : skip point insertion!!" << std::endl;
       continue;
     }
+    */
 
     found->second->last_lru_count = lru_count;
     found->second->insert(frame, i, insertion_dist_sq_thresh);
@@ -178,7 +181,7 @@ void iVox::insert(const Frame& frame) {
   }
 
   // Drop old voxels if too many voxels exist
-  if (voxelmap.size() >= (1 << voxel_id_bits) - 1) {
+  if (voxelmap.size() >= (1ul << voxel_id_bits) - 1) {
     std::cerr << "warning: too many voxels!!" << std::endl;
     std::cerr << "       : drop old voxels" << std::endl;
 
@@ -193,7 +196,7 @@ void iVox::insert(const Frame& frame) {
       });
 
     voxelmap.clear();
-    voxelmap.insert(voxels.begin(), voxels.begin() + (1 << voxel_id_bits) - 1);
+    voxelmap.insert(voxels.begin(), voxels.begin() + (1ul << voxel_id_bits) - 1);
   }
 
   // Create flattened voxel list
@@ -229,7 +232,7 @@ size_t iVox::nearest_neighbor_search(const double* pt, size_t* k_indices, double
         continue;
       }
 
-      index = (found->second->serial_id << point_id_bits) | i;
+      index = calc_index(found->second->serial_id, i);
       min_dist = dist;
     }
   }
@@ -265,9 +268,9 @@ size_t iVox::knn_search(const double* pt, size_t k, size_t* k_indices, double* k
     found->second->last_lru_count = lru_count;
 
     for (int i = 0; i < found->second->size(); i++) {
-      const size_t point_id = (found->second->serial_id << point_id_bits) | i;
+      const size_t index = calc_index(found->second->serial_id, i);
       const double dist = (point - found->second->points[i]).squaredNorm();
-      neighbors.push_back(std::make_pair(point_id, dist));
+      neighbors.emplace_back(index, dist);
     }
   }
 

@@ -87,7 +87,7 @@ private:
   double correspondence_update_tolerance_rot;
   double correspondence_update_tolerance_trans;
   mutable Eigen::Isometry3d last_correspondence_point;
-  mutable std::vector<int> correspondences;
+  mutable std::vector<long> correspondences;
   mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
 };
 

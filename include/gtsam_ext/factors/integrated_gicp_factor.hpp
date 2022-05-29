@@ -67,7 +67,6 @@ public:
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source);
 
-
   virtual ~IntegratedGICPFactor_() override;
 
   /// @brief Set the number of thread used for linearization of this factor.
@@ -114,7 +113,7 @@ private:
   double correspondence_update_tolerance_rot;
   double correspondence_update_tolerance_trans;
   mutable Eigen::Isometry3d last_correspondence_point;
-  mutable std::vector<int> correspondences;
+  mutable std::vector<long> correspondences;
   mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
 
   std::shared_ptr<const TargetFrame> target;

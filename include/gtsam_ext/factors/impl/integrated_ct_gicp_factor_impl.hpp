@@ -50,7 +50,7 @@ double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Va
   double sum_errors = 0.0;
 #pragma omp parallel for reduction(+ : sum_errors) schedule(guided, 8) num_threads(num_threads)
   for (int i = 0; i < frame::size(*this->source); i++) {
-    const int target_index = this->correspondences[i];
+    const long target_index = this->correspondences[i];
     if (target_index < 0) {
       continue;
     }
@@ -91,7 +91,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
 
 #pragma omp parallel for reduction(+ : sum_errors) schedule(guided, 8) num_threads(num_threads)
   for (int i = 0; i < frame::size(*this->source); i++) {
-    const int target_index = this->correspondences[i];
+    const long target_index = this->correspondences[i];
     if (target_index < 0) {
       continue;
     }
@@ -160,8 +160,8 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
     const auto& pt = frame::point(*this->source, i);
     const Eigen::Vector4d transed_pt = pose * pt;
 
-    size_t k_index;
-    double k_sq_dist;
+    size_t k_index = -1;
+    double k_sq_dist = std::numeric_limits<double>::max();
     size_t num_found = this->target_tree->knn_search(transed_pt.data(), 1, &k_index, &k_sq_dist);
 
     if (num_found == 0 || k_sq_dist > this->max_correspondence_distance_sq) {
@@ -170,7 +170,7 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
     } else {
       this->correspondences[i] = k_index;
 
-      const int target_index = this->correspondences[i];
+      const long target_index = this->correspondences[i];
       const auto& cov_A = frame::cov(*this->source, i);
       const auto& cov_B = frame::cov(*this->target, target_index);
       Eigen::Matrix4d RCR = (cov_B + pose * cov_A * pose.transpose());

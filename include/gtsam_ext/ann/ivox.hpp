@@ -49,7 +49,7 @@ public:
  *        Bai et al., "Faster-LIO: Lightweight Tightly Coupled Lidar-Inertial Odometry Using Parallel Sparse Incremental Voxels", IEEE RA-L, 2022
  * @note  Only the linear iVox is implemented
  * @note  To the compatibility with other nearest neighbor search methods, this implementation returns indices that encode the voxel and point IDs.
- *        The first ```point_id_bits``` (e.g., 12) bits of a point index represent the point ID, and the rest ```voxel_id_bits``` (e.g., 24) bits
+ *        The first ```point_id_bits``` (e.g., 32) bits of a point index represent the point ID, and the rest ```voxel_id_bits``` (e.g., 32) bits
  * represent the voxel ID that contains the point.
  */
 struct iVox : public NearestNeighborSearch {
@@ -123,15 +123,17 @@ public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_points() const;
 
 protected:
-  inline size_t voxel_id(const size_t i) const { return i >> point_id_bits; }              ///< Extract the point ID from an index
-  inline size_t point_id(const size_t i) const { return i & ((1 << point_id_bits) - 1); }  ///< Extract the voxel ID from an index
+  inline size_t calc_index(const size_t voxel_id, const size_t point_id) const { return (voxel_id << point_id_bits) | point_id; }
+  inline size_t voxel_id(const size_t i) const { return i >> point_id_bits; }                ///< Extract the point ID from an index
+  inline size_t point_id(const size_t i) const { return i & ((1ul << point_id_bits) - 1); }  ///< Extract the voxel ID from an index
 
   const Eigen::Vector3i voxel_coord(const Eigen::Vector4d& point) const;
   std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> neighbor_offsets(const int neighbor_voxel_mode) const;
 
 protected:
-  static constexpr int point_id_bits = 12;                  ///< Use the first 12 bits of point index to represent point ID
-  static constexpr int voxel_id_bits = 32 - point_id_bits;  ///< Use the rest bits to represent voxel ID
+  static constexpr int point_id_bits = 32;                  ///< Use the first 32 bits of point index to represent point ID
+  static constexpr int voxel_id_bits = 64 - point_id_bits;  ///< Use the rest bits to represent voxel ID
+  static_assert(sizeof(size_t) == 8, "size_t is not 8 bytes!! point_id_bits and voxel_id_bits should be tuned accordingly!!");
 
   bool points_available;
   bool normals_available;

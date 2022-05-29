@@ -96,7 +96,7 @@ void IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGradie
       double k_sq_dist = -1;
 
       size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
-      correspondences[i] = k_sq_dist < max_correspondence_distance_sq ? k_index : -1;
+      correspondences[i] = (num_found && k_sq_dist < max_correspondence_distance_sq) ? k_index : -1;
     }
   }
 
@@ -134,7 +134,7 @@ double IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGrad
 
 #pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors_photo) schedule(guided, 8)
   for (int i = 0; i < frame::size(*source); i++) {
-    const int target_index = correspondences[i];
+    const long target_index = correspondences[i];
     if (target_index < 0) {
       continue;
     }
