@@ -121,71 +121,6 @@ std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> iVox::ne
   }
 }
 
-void iVox::insert(const Eigen::Vector4d* points, int num_points) {
-  points_available = true;
-
-  lru_count++;
-
-  // Insert points into corresponding voxels
-  for (int i = 0; i < num_points; i++) {
-    const auto& point = points[i];
-    const Eigen::Vector3i coord = voxel_coord(point);
-
-    auto found = voxelmap.find(coord);
-    if (found == voxelmap.end()) {
-      LinearContainer::Ptr new_voxel(new LinearContainer(lru_count));
-      found = voxelmap.insert(found, std::make_pair(coord, new_voxel));
-    }
-
-    if (found->second->size() >= (1 << point_id_bits) - 1) {
-      std::cerr << "warning: too many points in voxel!!" << std::endl;
-      std::cerr << "       : skip point insertion!!" << std::endl;
-      continue;
-    }
-
-    found->second->last_lru_count = lru_count;
-    found->second->insert(point, insertion_dist_sq_thresh);
-  }
-
-  // Remove voxels that are not used recently
-  const int lru_horizon = lru_count - lru_thresh;
-  if (lru_horizon > 0 && (lru_count % lru_cycle) == 0) {
-    for (auto voxel = voxelmap.begin(); voxel != voxelmap.end();) {
-      if (voxel->second->last_lru_count < lru_horizon) {
-        voxel = voxelmap.erase(voxel);
-      } else {
-        voxel++;
-      }
-    }
-  }
-
-  // Drop old voxels if too many voxels exist
-  if (voxelmap.size() >= (1 << voxel_id_bits) - 1) {
-    std::cerr << "warning: too many voxels!!" << std::endl;
-    std::cerr << "       : drop old voxels" << std::endl;
-
-    std::vector<std::pair<Eigen::Vector3i, LinearContainer::Ptr>, Eigen::aligned_allocator<std::pair<Eigen::Vector3i, LinearContainer::Ptr>>> voxels(
-      voxelmap.begin(),
-      voxelmap.end());
-    std::sort(
-      voxels.begin(),
-      voxels.end(),
-      [](const std::pair<Eigen::Vector3i, LinearContainer::Ptr>& lhs, const std::pair<Eigen::Vector3i, LinearContainer::Ptr>& rhs) {
-        return lhs.second->last_lru_count > rhs.second->last_lru_count;
-      });
-
-    voxelmap.clear();
-    voxelmap.insert(voxels.begin(), voxels.begin() + (1 << voxel_id_bits) - 1);
-  }
-
-  // Created flattened voxel list
-  voxels.clear();
-  for (auto& voxel : voxelmap) {
-    voxel.second->serial_id = voxels.size();
-    voxels.push_back(voxel.second);
-  }
-}
-
 void iVox::insert(const Frame& frame) {
   // Attribute check
   if (!points_available) {
@@ -265,7 +200,7 @@ void iVox::insert(const Frame& frame) {
   voxels.clear();
   for (auto voxel = voxelmap.begin(); voxel != voxelmap.end(); voxel++) {
     voxel->second->serial_id = voxels.size();
-    voxels.push_back(voxel->second);
+    voxels.push_back(voxel->second.get());
   }
 }
 

@@ -97,7 +97,7 @@ void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Is
       correspondences[i] = nullptr;
       mahalanobis[i].setIdentity();
     } else {
-      correspondences[i] = voxel;
+      correspondences[i] = voxel.get();
 
       Eigen::Matrix4d RCR = (voxel->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
       RCR(3, 3) = 1.0;

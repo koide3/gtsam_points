@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <atomic>
+#include <unordered_set>
 #include <unordered_map>
 
 #include <Eigen/Core>
@@ -67,13 +68,6 @@ public:
    */
   iVox(const double voxel_resolution = 0.5, const double insertion_dist_thresh = 0.05, const int lru_thresh = 10);
   virtual ~iVox() override;
-
-  /**
-   * @brief Insert points into the iVox
-   * @param points      Input points
-   * @param num_points  Number of points
-   */
-  virtual void insert(const Eigen::Vector4d* points, int num_points);
 
   /**
    * @brief Insert points and all available attributes into the iVox
@@ -158,8 +152,9 @@ protected:
     XORVector3iHash,
     std::equal_to<Eigen::Vector3i>,
     Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, LinearContainer::Ptr>>>;
-  VoxelMap voxelmap;                         ///< Voxelmap
-  std::vector<LinearContainer::Ptr> voxels;  ///< Flattened voxelmap for linear indexing
+
+  VoxelMap voxelmap;                     ///< Voxelmap
+  std::vector<LinearContainer*> voxels;  ///< Flattened voxelmap for linear indexing
 };
 
 namespace frame {
