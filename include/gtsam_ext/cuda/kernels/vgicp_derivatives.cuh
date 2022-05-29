@@ -57,13 +57,16 @@ struct vgicp_derivatives_kernel {
     J_source.block<3, 3>(0, 0) = R * skew_symmetric(mean_A);
     J_source.block<3, 3>(0, 3) = -R;
 
+    Eigen::Matrix<float, 6, 3> J_target_RCR_inv = J_target.transpose() * RCR_inv;
+    Eigen::Matrix<float, 6, 3> J_source_RCR_inv = J_source.transpose() * RCR_inv;
+
     LinearizedSystem6 linearized;
     linearized.error = 0.5f * error.transpose() * RCR_inv * error;
-    linearized.H_target = J_target.transpose() * RCR_inv * J_target;
-    linearized.H_source = J_source.transpose() * RCR_inv * J_source;
-    linearized.H_target_source = J_target.transpose() * RCR_inv * J_source;
-    linearized.b_target = J_target.transpose() * RCR_inv * error;
-    linearized.b_source = J_source.transpose() * RCR_inv * error;
+    linearized.H_target = J_target_RCR_inv * J_target;
+    linearized.H_source = J_source_RCR_inv * J_source;
+    linearized.H_target_source = J_target_RCR_inv * J_source;
+    linearized.b_target = J_target_RCR_inv * error;
+    linearized.b_source = J_source_RCR_inv * error;
 
     return linearized;
   }
