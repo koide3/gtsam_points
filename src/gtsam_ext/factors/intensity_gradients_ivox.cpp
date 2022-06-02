@@ -147,6 +147,15 @@ std::vector<Eigen::Vector4d> IntensityGradientsiVox::voxel_normals() const {
   return normals;
 }
 
+std::vector<double> IntensityGradientsiVox::voxel_intensities() const {
+  std::vector<double> intensities;
+  for (const auto& voxel : voxels) {
+    intensities.insert(intensities.end(), voxel->intensities.begin(), voxel->intensities.end());
+  }
+
+  return intensities;
+}
+
 std::vector<Eigen::Vector4d> IntensityGradientsiVox::voxel_intensity_gradients() const {
   std::vector<Eigen::Vector4d> gradients;
   for (const auto& grad : grads) {

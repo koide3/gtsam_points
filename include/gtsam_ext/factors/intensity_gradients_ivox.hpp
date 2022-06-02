@@ -23,6 +23,7 @@ public:
   const Eigen::Vector4d& intensity_gradient(const size_t i) const;
 
   std::vector<Eigen::Vector4d> voxel_normals() const;
+  std::vector<double> voxel_intensities() const;
   std::vector<Eigen::Vector4d> voxel_intensity_gradients() const;
 
 private:
