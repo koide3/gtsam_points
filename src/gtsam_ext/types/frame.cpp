@@ -2,10 +2,10 @@
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
 #include <gtsam_ext/types/frame.hpp>
-#include <gtsam_ext/types/voxelized_frame.hpp>
 
 #include <fstream>
 #include <iostream>
+#include <boost/filesystem.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 
@@ -47,13 +47,15 @@ bool Frame::has_intensities() const {
 }
 
 namespace {
-void write_binary(const std::string& filename, void* data, size_t size) {
+void write_binary(const std::string& filename, const void* data, size_t size) {
   std::ofstream ofs(filename, std::ios::binary);
-  ofs.write(reinterpret_cast<char*>(data), size);
+  ofs.write(reinterpret_cast<const char*>(data), size);
 }
 }  // namespace
 
 void Frame::save(const std::string& path) const {
+  boost::filesystem::create_directories(path);
+
   if (times) {
     write_binary(path + "/times.bin", times, sizeof(double) * num_points);
   }
@@ -73,9 +75,20 @@ void Frame::save(const std::string& path) const {
   if (intensities) {
     write_binary(path + "/intensities.bin", intensities, sizeof(double) * num_points);
   }
+
+  for (const auto& attrib : aux_attributes) {
+    const auto& name = attrib.first;
+    const size_t elem_size = attrib.second.first;
+    const void* data_ptr = attrib.second.second;
+    std::cout << "write:" << name << std::endl;
+
+    write_binary(path + "/aux_" + name + ".bin", data_ptr, elem_size * num_points);
+  }
 }
 
 void Frame::save_compact(const std::string& path) const {
+  boost::filesystem::create_directories(path);
+
   if (times) {
     std::vector<float> times_f(num_points);
     std::copy(times, times + num_points, times_f.begin());
@@ -106,6 +119,14 @@ void Frame::save_compact(const std::string& path) const {
     std::vector<float> intensities_f(num_points);
     std::copy(intensities, intensities + num_points, intensities_f.begin());
     write_binary(path + "/intensities_compact.bin", intensities_f.data(), sizeof(float) * num_points);
+  }
+
+  for (const auto& attrib : aux_attributes) {
+    const auto& name = attrib.first;
+    const size_t elem_size = attrib.second.first;
+    const void* data_ptr = attrib.second.second;
+
+    write_binary(path + "/aux_" + name + ".bin", data_ptr, elem_size * num_points);
   }
 }
 

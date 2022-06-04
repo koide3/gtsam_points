@@ -4,6 +4,7 @@
 #include <gtsam_ext/types/voxelized_frame_cpu.hpp>
 
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 
 namespace gtsam_ext {
 
@@ -40,7 +41,7 @@ template VoxelizedFrameCPU::VoxelizedFrameCPU(
   const Eigen::Matrix<double, 4, 4>* covs,
   int num_points);
 
-VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Frame& frame) {
+VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Frame& frame) : FrameCPU(frame) {
   if (!frame.points) {
     std::cerr << "error: input frame doesn't have points!!" << std::endl;
     abort();
@@ -51,21 +52,7 @@ VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Frame& frame
     abort();
   }
 
-  add_points(frame.points, frame.size());
-  add_covs(frame.covs, frame.size());
   create_voxelmap(voxel_resolution);
-
-  if (frame.times) {
-    add_times(frame.times, frame.size());
-  }
-
-  if (frame.normals) {
-    add_normals(frame.normals, frame.size());
-  }
-
-  if (frame.intensities) {
-    add_intensities(frame.intensities, frame.size());
-  }
 }
 
 VoxelizedFrameCPU::VoxelizedFrameCPU() {}
@@ -83,84 +70,12 @@ void VoxelizedFrameCPU::create_voxelmap(double voxel_resolution) {
     abort();
   }
 
-  voxels_storage.reset(new GaussianVoxelMapCPU(voxel_resolution));
-  voxels_storage->insert(*this);
-  voxels = voxels_storage;
+  voxels.reset(new GaussianVoxelMapCPU(voxel_resolution));
+  voxels->insert(*this);
 }
 
-// add_times
-template <typename T>
-void VoxelizedFrameCPU::add_times(const T* times, int num_points) {
-  assert(num_points == size());
-  times_storage.resize(num_points);
-  std::copy(times, times + num_points, times_storage.begin());
-  this->times = this->times_storage.data();
-}
-
-template void VoxelizedFrameCPU::add_times(const float* times, int num_points);
-template void VoxelizedFrameCPU::add_times(const double* times, int num_points);
-
-// add_points
-template <typename T, int D>
-void VoxelizedFrameCPU::add_points(const Eigen::Matrix<T, D, 1>* points, int num_points) {
-  points_storage.resize(num_points, Eigen::Vector4d(0.0, 0.0, 0.0, 1.0));
-  for (int i = 0; i < num_points; i++) {
-    points_storage[i].head<D>() = points[i].template head<D>().template cast<double>();
-  }
-  this->points = points_storage.data();
-  this->num_points = num_points;
-}
-
-template void VoxelizedFrameCPU::add_points(const Eigen::Matrix<float, 3, 1>* points, int num_points);
-template void VoxelizedFrameCPU::add_points(const Eigen::Matrix<float, 4, 1>* points, int num_points);
-template void VoxelizedFrameCPU::add_points(const Eigen::Matrix<double, 3, 1>* points, int num_points);
-template void VoxelizedFrameCPU::add_points(const Eigen::Matrix<double, 4, 1>* points, int num_points);
-
-// add_normals
-template <typename T, int D>
-void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
-  assert(num_points == size());
-  normals_storage.resize(num_points, Eigen::Vector4d::Zero());
-  for (int i = 0; i < num_points; i++) {
-    normals_storage[i].head<D>() = normals[i].template head<D>().template cast<double>();
-  }
-  this->normals = normals_storage.data();
-}
-
-template void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<float, 3, 1>* normals, int num_points);
-template void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<float, 4, 1>* normals, int num_points);
-template void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<double, 3, 1>* normals, int num_points);
-template void VoxelizedFrameCPU::add_normals(const Eigen::Matrix<double, 4, 1>* normals, int num_points);
-
-// add_covs
-template <typename T, int D>
-void VoxelizedFrameCPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points) {
-  assert(num_points == size());
-  covs_storage.resize(num_points, Eigen::Matrix4d::Zero());
-  for (int i = 0; i < num_points; i++) {
-    covs_storage[i].block<D, D>(0, 0) = covs[i].template block<D, D>(0, 0).template cast<double>();
-  }
-  this->covs = covs_storage.data();
-}
-
-template void VoxelizedFrameCPU::add_covs(const Eigen::Matrix<float, 3, 3>* covs, int num_points);
-template void VoxelizedFrameCPU::add_covs(const Eigen::Matrix<float, 4, 4>* covs, int num_points);
-template void VoxelizedFrameCPU::add_covs(const Eigen::Matrix<double, 3, 3>* covs, int num_points);
-template void VoxelizedFrameCPU::add_covs(const Eigen::Matrix<double, 4, 4>* covs, int num_points);
-
-// add_intensities
-template <typename T>
-void VoxelizedFrameCPU::add_intensities(const T* intensities, int num_points) {
-  assert(num_points == size());
-  intensities_storage.resize(num_points);
-  std::copy(intensities, intensities + num_points, intensities_storage.begin());
-  this->intensities = this->intensities_storage.data();
-}
-
-template void VoxelizedFrameCPU::add_intensities(const float* intensities, int num_points);
-template void VoxelizedFrameCPU::add_intensities(const double* intensities, int num_points);
-
-VoxelizedFrame::Ptr merge_voxelized_frames(
+// merge_frames
+Frame::Ptr merge_frames(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
   const std::vector<Frame::ConstPtr>& frames,
   double downsample_resolution,
@@ -178,12 +93,9 @@ VoxelizedFrame::Ptr merge_voxelized_frames(
   for (int i = 0; i < frames.size(); i++) {
     const auto& frame = frames[i];
     const auto& pose = poses[i];
-    Eigen::Matrix4d R = Eigen::Matrix4d::Zero();
-    R.block<3, 3>(0, 0) = pose.linear();
-
     for (int j = 0; j < frame->size(); j++) {
       all_points[j + begin] = pose * frame->points[j];
-      all_covs[j + begin] = R * frame->covs[j] * R.transpose();
+      all_covs[j + begin] = pose.matrix() * frame->covs[j] * pose.matrix().transpose();
     }
 
     begin += frame->size();
@@ -207,22 +119,22 @@ VoxelizedFrame::Ptr merge_voxelized_frames(
     downsampled_covs.push_back(voxel.second->cov);
   }
 
-  return VoxelizedFrame::Ptr(new VoxelizedFrameCPU(voxel_resolution, downsampled_points, downsampled_covs));
+  return std::make_shared<VoxelizedFrameCPU>(voxel_resolution, downsampled_points, downsampled_covs);
 }
 
-VoxelizedFrame::Ptr merge_voxelized_frames_auto(
+Frame::Ptr merge_frames_auto(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
   const std::vector<Frame::ConstPtr>& frames,
   double downsample_resolution,
   double voxel_resolution) {
 //
 #ifdef BUILD_GTSAM_EXT_GPU
-  if (frames[0]->points_gpu) {
-    return merge_voxelized_frames_gpu(poses, frames, downsample_resolution, voxel_resolution, true);
+  if (frames[0]->points_gpu && frames[0]->covs_gpu) {
+    return merge_frames_gpu(poses, frames, downsample_resolution, voxel_resolution);
   }
 #endif
 
-  return merge_voxelized_frames(poses, frames, downsample_resolution, voxel_resolution);
+  return merge_frames(poses, frames, downsample_resolution, voxel_resolution);
 }
 
 double overlap(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
@@ -244,7 +156,7 @@ double overlap(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr&
   return static_cast<double>(num_overlap) / source->size();
 }
 
-double overlap(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+double overlap(const Frame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
   return overlap(target->voxels, source, delta);
 }
 
@@ -279,7 +191,7 @@ double overlap(
 }
 
 double overlap(
-  const std::vector<VoxelizedFrame::ConstPtr>& targets_,
+  const std::vector<Frame::ConstPtr>& targets_,
   const Frame::ConstPtr& source,
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
   std::vector<GaussianVoxelMap::ConstPtr> targets(targets_.size());
@@ -311,8 +223,7 @@ double overlap_auto(
   return overlap(targets, source, deltas);
 }
 
-
-double overlap_auto(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
+double overlap_auto(const Frame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {
 #ifdef BUILD_GTSAM_EXT_GPU
   if (source->points_gpu && target->voxels_gpu) {
     return overlap_gpu(target, source, delta);
@@ -322,7 +233,7 @@ double overlap_auto(const VoxelizedFrame::ConstPtr& target, const Frame::ConstPt
 }
 
 double overlap_auto(
-  const std::vector<VoxelizedFrame::ConstPtr>& targets,
+  const std::vector<Frame::ConstPtr>& targets,
   const Frame::ConstPtr& source,
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
 #ifdef BUILD_GTSAM_EXT_GPU

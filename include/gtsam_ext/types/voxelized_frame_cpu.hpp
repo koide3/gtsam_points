@@ -3,13 +3,14 @@
 
 #pragma once
 
-#include <gtsam_ext/types/voxelized_frame.hpp>
+#include <gtsam_ext/types/frame_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
-#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
+
+struct CUstream_st;
 
 namespace gtsam_ext {
 
-struct VoxelizedFrameCPU : public VoxelizedFrame {
+struct VoxelizedFrameCPU : public FrameCPU {
 public:
   using Ptr = std::shared_ptr<VoxelizedFrameCPU>;
   using ConstPtr = std::shared_ptr<const VoxelizedFrameCPU>;
@@ -30,49 +31,97 @@ public:
   ~VoxelizedFrameCPU();
 
   void create_voxelmap(double voxel_resolution);
-
-  template <typename T>
-  void add_times(const T* times, int num_points);
-  template <typename T>
-  void add_times(const std::vector<T>& times) {
-    add_times(times.data(), times.size());
-  }
-
-  template <typename T, int D>
-  void add_points(const Eigen::Matrix<T, D, 1>* points, int num_points);
-  template <typename T, int D, typename Alloc>
-  void add_points(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) {
-    add_points(points.data(), points.size());
-  }
-
-  template <typename T, int D>
-  void add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points);
-  template <typename T, int D, typename Alloc>
-  void add_normals(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& normals) {
-    add_normals(normals.data(), normals.size());
-  }
-
-  template <typename T, int D>
-  void add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points);
-  template <typename T, int D, typename Alloc>
-  void add_covs(const std::vector<Eigen::Matrix<T, D, D>, Alloc>& covs) {
-    add_covs(covs.data(), covs.size());
-  }
-
-  template <typename T>
-  void add_intensities(const T* intensities, int num_points);
-  template <typename T>
-  void add_intensities(const std::vector<T>& intensities) {
-    add_intensities(intensities.data(), intensities.size());
-  }
-
-public:
-  std::shared_ptr<GaussianVoxelMapCPU> voxels_storage;
-  std::vector<double> times_storage;
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals_storage;
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
-  std::vector<double> intensities_storage;
 };
+
+/**
+ * @brief Calculate the fraction of points fell in target's voxels
+ * @param target   Target voxelized frame
+ * @param source   Source frame
+ * @param delta    T_target_source
+ * @return         Overlap rate
+ */
+double overlap(const GaussianVoxelMap::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+
+double overlap(const Frame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+
+/**
+ * @brief Calculate the fraction of points fell in targets' voxels
+ * @param target   Set of target voxelized frames
+ * @param source   Source frame
+ * @param delta    Set of T_target_source
+ * @return         Overlap rate
+ */
+double overlap(
+  const std::vector<GaussianVoxelMap::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
+
+double overlap(
+  const std::vector<Frame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
+
+/**
+ * @brief Calculate the fraction of points fell in target voxels on GPU
+ * @note  Source points and target voxelmap must be pre-allocated on GPU.
+ * @param target     Target voxelmap
+ * @param source     Source frame
+ * @param delta_gpu  T_target_source (on GPU memory)
+ * @return         Overlap rate
+ */
+double
+overlap_gpu(const GaussianVoxelMap::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu, CUstream_st* stream = 0);
+
+/// @brief Calculate the fraction of points fell in target voxels on GPU
+double overlap_gpu(const Frame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu, CUstream_st* stream = 0);
+
+/**
+ * @brief Calculate the fraction of points fell in target voxels on GPU
+ * @note  Source points and target voxelmap must be pre-allocated on GPU.
+ * @param target  Target voxelized frame
+ * @param source  Source frame
+ * @param delta   T_target_source
+ * @return         Overlap rate
+ */
+double overlap_gpu(const GaussianVoxelMap::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta, CUstream_st* stream = 0);
+
+/// @brief Calculate the fraction of points fell in target voxels on GPU
+double overlap_gpu(const Frame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta, CUstream_st* stream = 0);
+
+/**
+ * @brief Calculate the fraction of points fell in targets' voxels on GPU
+ * @note  Source points and targets' voxelmap must be pre-allocated on GPU.
+ * @param targets Set of target voxelized frames
+ * @param source  Source frame
+ * @param deltas  Set of T_target_source
+ * @return         Overlap rate
+ */
+double overlap_gpu(
+  const std::vector<GaussianVoxelMap::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas,
+  CUstream_st* stream = 0);
+
+/// @brief Calculate the fraction of points fell in targets' voxels on GPU
+double overlap_gpu(
+  const std::vector<Frame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas,
+  CUstream_st* stream = 0);
+
+// Automatically select CPU or GPU method
+double overlap_auto(const GaussianVoxelMap::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+
+double overlap_auto(const Frame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta);
+
+double overlap_auto(
+  const std::vector<GaussianVoxelMap::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
+
+double overlap_auto(
+  const std::vector<Frame::ConstPtr>& targets,
+  const Frame::ConstPtr& source,
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
 
 }  // namespace gtsam_ext

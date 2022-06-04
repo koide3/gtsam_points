@@ -7,7 +7,7 @@
 
 #include <memory>
 #include <gtsam_ext/types/frame.hpp>
-#include <gtsam_ext/types/voxelized_frame.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 
 namespace gtsam_ext {
@@ -42,7 +42,7 @@ public:
   IntegratedVGICPFactor_(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const VoxelizedFrame::ConstPtr& target,
+    const Frame::ConstPtr& target,
     const std::shared_ptr<const SourceFrame>& source);
 
   /**
@@ -62,7 +62,7 @@ public:
   IntegratedVGICPFactor_(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const VoxelizedFrame::ConstPtr& target,
+    const Frame::ConstPtr& target,
     const std::shared_ptr<const SourceFrame>& source);
 
   virtual ~IntegratedVGICPFactor_() override;

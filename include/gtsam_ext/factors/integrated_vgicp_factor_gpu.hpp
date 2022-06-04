@@ -3,7 +3,8 @@
 
 #pragma once
 
-#include <gtsam_ext/types/voxelized_frame.hpp>
+#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 #include <gtsam_ext/factors/nonlinear_factor_gpu.hpp>
 
 struct CUstream_st;
@@ -46,17 +47,13 @@ public:
     std::shared_ptr<TempBufferManager> temp_buffer);
 
   /// Create a binary VGICP_GPU factor between target and source poses.
-  IntegratedVGICPFactorGPU(
-    gtsam::Key target_key,
-    gtsam::Key source_key,
-    const VoxelizedFrame::ConstPtr& target,
-    const std::shared_ptr<const Frame>& source);
+  IntegratedVGICPFactorGPU(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const std::shared_ptr<const Frame>& source);
 
   /// Create a binary VGICP_GPU factor between target and source poses.
   IntegratedVGICPFactorGPU(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const VoxelizedFrame::ConstPtr& target,
+    const Frame::ConstPtr& target,
     const Frame::ConstPtr& source,
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
@@ -82,14 +79,14 @@ public:
   IntegratedVGICPFactorGPU(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const VoxelizedFrame::ConstPtr& target,
+    const Frame::ConstPtr& target,
     const Frame::ConstPtr& source);
 
   /// Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
   IntegratedVGICPFactorGPU(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const VoxelizedFrame::ConstPtr& target,
+    const Frame::ConstPtr& target,
     const Frame::ConstPtr& source,
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
