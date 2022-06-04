@@ -46,6 +46,24 @@ public:
   bool has_covs() const;         ///< Check if the frame has point covariances
   bool has_intensities() const;  ///< Check if the frame has point intensities
 
+  bool check_times() const;        ///< Warn if the frame doesn't have times
+  bool check_points() const;       ///< Warn if the frame doesn't have points
+  bool check_normals() const;      ///< Warn if the frame doesn't have normals
+  bool check_covs() const;         ///< Warn if the frame doesn't have covs
+  bool check_intensities() const;  ///< Warn if the frame doesn't have intensities
+
+  bool has_times_gpu() const;        ///< Check if the frame has per-point timestamps on GPU
+  bool has_points_gpu() const;       ///< Check if the frame has points on GPU
+  bool has_normals_gpu() const;      ///< Check if the frame has point normals on GPU
+  bool has_covs_gpu() const;         ///< Check if the frame has point covariances on GPU
+  bool has_intensities_gpu() const;  ///< Check if the frame has point intensities on GPU
+
+  bool check_times_gpu() const;        ///< Warn if the frame doesn't have times on GPU
+  bool check_points_gpu() const;       ///< Warn if the frame doesn't have points on GPU
+  bool check_normals_gpu() const;      ///< Warn if the frame doesn't have normals on GPU
+  bool check_covs_gpu() const;         ///< Warn if the frame doesn't have covs on GPU
+  bool check_intensities_gpu() const;  ///< Warn if the frame doesn't have intensities on GPU
+
   /**
    * @brief Get the pointer to an aux attribute
    * @param  attrib Attribute name

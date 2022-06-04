@@ -4,6 +4,7 @@
 #pragma once
 
 #include <gtsam_ext/types/frame_gpu.hpp>
+#include <gtsam_ext/types/voxelized_frame_cpu.hpp>
 
 namespace gtsam_ext {
 

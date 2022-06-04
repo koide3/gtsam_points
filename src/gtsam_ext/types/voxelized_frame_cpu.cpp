@@ -42,13 +42,8 @@ template VoxelizedFrameCPU::VoxelizedFrameCPU(
   int num_points);
 
 VoxelizedFrameCPU::VoxelizedFrameCPU(double voxel_resolution, const Frame& frame) : FrameCPU(frame) {
-  if (!frame.points) {
-    std::cerr << "error: input frame doesn't have points!!" << std::endl;
-    abort();
-  }
-
-  if (!frame.covs) {
-    std::cerr << "error: input frame doesn't have covs!!" << std::endl;
+  if (!frame.check_points() || !frame.check_covs()) {
+    std::cerr << "error: input frame doesn't have points or covs!!" << std::endl;
     abort();
   }
 
@@ -60,13 +55,8 @@ VoxelizedFrameCPU::VoxelizedFrameCPU() {}
 VoxelizedFrameCPU::~VoxelizedFrameCPU() {}
 
 void VoxelizedFrameCPU::create_voxelmap(double voxel_resolution) {
-  if (!points) {
-    std::cerr << "error: frame doesn't have points!!" << std::endl;
-    abort();
-  }
-
-  if (!covs) {
-    std::cerr << "error: frame doesn't have covs!!" << std::endl;
+  if (!check_points() || !check_covs()) {
+    std::cerr << "error: frame doesn't have points or covs!!" << std::endl;
     abort();
   }
 

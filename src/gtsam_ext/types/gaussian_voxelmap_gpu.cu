@@ -10,6 +10,7 @@
 #include <set>
 #include <chrono>
 #include <device_atomic_functions.h>
+#include <gtsam_ext/cuda/check_error.cuh>
 #include <gtsam_ext/cuda/kernels/vector3_hash.cuh>
 
 namespace gtsam_ext {
@@ -160,8 +161,14 @@ struct finalize_voxels_kernel {
   thrust::device_ptr<Eigen::Matrix3f> voxel_covs_ptr;
 };
 
-GaussianVoxelMapGPU::GaussianVoxelMapGPU(float resolution, int init_num_buckets, int max_bucket_scan_count, double target_points_drop_rate)
-: init_num_buckets(init_num_buckets),
+GaussianVoxelMapGPU::GaussianVoxelMapGPU(
+  float resolution,
+  int init_num_buckets,
+  int max_bucket_scan_count,
+  double target_points_drop_rate,
+  CUstream_st* stream)
+: stream(stream),
+  init_num_buckets(init_num_buckets),
   target_points_drop_rate(target_points_drop_rate) {
   voxelmap_info.num_voxels = 0;
   voxelmap_info.num_buckets = init_num_buckets;
@@ -182,13 +189,10 @@ GaussianVoxelMapGPU::GaussianVoxelMapGPU(float resolution, int init_num_buckets,
 GaussianVoxelMapGPU::~GaussianVoxelMapGPU() {}
 
 void GaussianVoxelMapGPU::insert(const Frame& frame) {
-  if (!frame.points_gpu || !frame.covs_gpu) {
+  if (!frame.check_points_gpu() || !frame.check_covs_gpu()) {
     std::cerr << "error: GPU points/covs not allocated!!" << std::endl;
     abort();
   }
-
-  cudaStream_t stream;
-  cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
 
   create_bucket_table(stream, frame);
 
@@ -216,7 +220,6 @@ void GaussianVoxelMapGPU::insert(const Frame& frame) {
     finalize_voxels_kernel(*num_points, *voxel_means, *voxel_covs));
 
   cudaStreamSynchronize(stream);
-  cudaStreamDestroy(stream);
 }
 
 void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const Frame& frame) {

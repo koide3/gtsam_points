@@ -13,6 +13,7 @@
 #include <gtsam_ext/types/voxelized_frame_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
+#include <gtsam_ext/cuda/check_error.cuh>
 #include <gtsam_ext/cuda/kernels/vector3_hash.cuh>
 
 namespace gtsam_ext {
@@ -61,7 +62,7 @@ VoxelizedFrameGPU::VoxelizedFrameGPU() {}
 VoxelizedFrameGPU::~VoxelizedFrameGPU() {}
 
 void VoxelizedFrameGPU::create_voxelmap(double voxel_resolution) {
-  if (!has_points() || !has_covs()) {
+  if (!check_points() || !check_covs()) {
     std::cerr << "error: frame does not have points or covs!!" << std::endl;
   }
 
@@ -72,8 +73,8 @@ void VoxelizedFrameGPU::create_voxelmap(double voxel_resolution) {
 }
 
 void VoxelizedFrameGPU::create_voxelmap_gpu(double voxel_resolution) {
-  if (!points_gpu || !covs_gpu) {
-    std::cerr << "error: frame does not have points or covs!!" << std::endl;
+  if (!check_points_gpu() || !check_covs_gpu()) {
+    std::cerr << "error: frame does not have points or covs on GPU!!" << std::endl;
   }
 
   voxels_gpu.reset(new GaussianVoxelMapGPU(voxel_resolution));
@@ -84,7 +85,7 @@ void VoxelizedFrameGPU::create_voxelmap_gpu(double voxel_resolution) {
 std::vector<std::pair<Eigen::Vector3i, int>> VoxelizedFrameGPU::get_voxel_buckets_gpu() const {
   const auto& buckets_storage = *(voxels_gpu->buckets);
   std::vector<std::pair<Eigen::Vector3i, int>> buffer(buckets_storage.size());
-  cudaMemcpy(
+  check_error << cudaMemcpy(
     buffer.data(),
     thrust::raw_pointer_cast(buckets_storage.data()),
     sizeof(thrust::pair<Eigen::Vector3i, int>) * buckets_storage.size(),
@@ -95,21 +96,33 @@ std::vector<std::pair<Eigen::Vector3i, int>> VoxelizedFrameGPU::get_voxel_bucket
 std::vector<int> VoxelizedFrameGPU::get_voxel_num_points_gpu() const {
   const auto& num_points_storage = *(voxels_gpu->num_points);
   std::vector<int> buffer(num_points_storage.size());
-  cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(num_points_storage.data()), sizeof(int) * num_points_storage.size(), cudaMemcpyDeviceToHost);
+  check_error << cudaMemcpy(
+    buffer.data(),
+    thrust::raw_pointer_cast(num_points_storage.data()),
+    sizeof(int) * num_points_storage.size(),
+    cudaMemcpyDeviceToHost);
   return buffer;
 }
 
 std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> VoxelizedFrameGPU::get_voxel_means_gpu() const {
   const auto& means_storage = *(voxels_gpu->voxel_means);
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> buffer(means_storage.size());
-  cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(means_storage.data()), sizeof(Eigen::Vector3f) * means_storage.size(), cudaMemcpyDeviceToHost);
+  check_error << cudaMemcpy(
+    buffer.data(),
+    thrust::raw_pointer_cast(means_storage.data()),
+    sizeof(Eigen::Vector3f) * means_storage.size(),
+    cudaMemcpyDeviceToHost);
   return buffer;
 }
 
 std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> VoxelizedFrameGPU::get_voxel_covs_gpu() const {
   const auto& covs_storage = *(voxels_gpu->voxel_covs);
   std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> buffer(covs_storage.size());
-  cudaMemcpy(buffer.data(), thrust::raw_pointer_cast(covs_storage.data()), sizeof(Eigen::Matrix3f) * covs_storage.size(), cudaMemcpyDeviceToHost);
+  check_error << cudaMemcpy(
+    buffer.data(),
+    thrust::raw_pointer_cast(covs_storage.data()),
+    sizeof(Eigen::Matrix3f) * covs_storage.size(),
+    cudaMemcpyDeviceToHost);
   return buffer;
 }
 
@@ -153,13 +166,13 @@ Frame::Ptr merge_frames_gpu(
   }
 
   Eigen::Isometry3f* d_poses;
-  cudaMallocAsync(&d_poses, sizeof(Eigen::Isometry3f) * poses.size(), stream);
-  cudaMemcpyAsync(d_poses, h_poses.data(), sizeof(Eigen::Isometry3f) * poses.size(), cudaMemcpyHostToDevice, stream);
+  check_error << cudaMallocAsync(&d_poses, sizeof(Eigen::Isometry3f) * poses.size(), stream);
+  check_error << cudaMemcpyAsync(d_poses, h_poses.data(), sizeof(Eigen::Isometry3f) * poses.size(), cudaMemcpyHostToDevice, stream);
 
   Eigen::Vector3f* all_points;
   Eigen::Matrix3f* all_covs;
-  cudaMallocAsync(&all_points, sizeof(Eigen::Vector3f) * num_all_points, stream);
-  cudaMallocAsync(&all_covs, sizeof(Eigen::Matrix3f) * num_all_points, stream);
+  check_error << cudaMallocAsync(&all_points, sizeof(Eigen::Vector3f) * num_all_points, stream);
+  check_error << cudaMallocAsync(&all_covs, sizeof(Eigen::Matrix3f) * num_all_points, stream);
 
   const thrust::device_ptr<Eigen::Vector3f> all_points_ptr(all_points);
   const thrust::device_ptr<Eigen::Matrix3f> all_covs_ptr(all_covs);
@@ -183,7 +196,8 @@ Frame::Ptr merge_frames_gpu(
     begin += frame->size();
   }
 
-  cudaStreamSynchronize(stream);
+  check_error << cudaStreamSynchronize(stream);
+
   for (auto& result : results) {
     result.wait();
   }
@@ -203,13 +217,13 @@ Frame::Ptr merge_frames_gpu(
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> means(num_voxels);
   std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs(num_voxels);
 
-  cudaMemcpyAsync(means.data(), voxel_means, sizeof(Eigen::Vector3f) * num_voxels, cudaMemcpyDeviceToHost, stream);
-  cudaMemcpyAsync(covs.data(), voxel_covs, sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyDeviceToHost, stream);
-  cudaStreamSynchronize(stream);
+  check_error << cudaMemcpyAsync(means.data(), voxel_means, sizeof(Eigen::Vector3f) * num_voxels, cudaMemcpyDeviceToHost, stream);
+  check_error << cudaMemcpyAsync(covs.data(), voxel_covs, sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyDeviceToHost, stream);
+  check_error << cudaStreamSynchronize(stream);
 
-  cudaFreeHost(d_poses);
-  cudaFreeHost(all_points);
-  cudaFreeHost(all_covs);
+  check_error << cudaFreeAsync(d_poses, stream);
+  check_error << cudaFreeAsync(all_points, stream);
+  check_error << cudaFreeAsync(all_covs, stream);
 
   return std::make_shared<VoxelizedFrameGPU>(voxel_resolution, means, covs);
 }
@@ -254,7 +268,7 @@ struct cast_kernel {
 
 double
 overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu, CUstream_st* stream) {
-  if (!source->points_gpu) {
+  if (!source->check_points_gpu()) {
     std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
     abort();
   }
@@ -266,7 +280,7 @@ overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& so
   }
 
   bool* overlap;
-  cudaMallocAsync(&overlap, sizeof(bool) * source->size(), stream);
+  check_error << cudaMallocAsync(&overlap, sizeof(bool) * source->size(), stream);
   thrust::device_ptr<bool> overlap_ptr(overlap);
 
   auto trans_result = thrust::async::transform(
@@ -275,15 +289,11 @@ overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& so
     thrust::device_ptr<Eigen::Vector3f>(source->points_gpu) + source->size(),
     overlap_ptr,
     overlap_count_kernel(*target, thrust::device_ptr<const Eigen::Isometry3f>(delta_gpu)));
-  auto reduce_result = thrust::async::reduce(
-    thrust::cuda::par.after(trans_result),
-    thrust::make_transform_iterator(overlap_ptr, cast_kernel<int>()),
-    thrust::make_transform_iterator(overlap_ptr, cast_kernel<int>()),
-    0);
+  auto reduce_result = thrust::async::reduce(thrust::cuda::par.after(trans_result), overlap_ptr, overlap_ptr + source->size(), 0);
 
   int num_inliers = reduce_result.get();
 
-  cudaFreeAsync(&overlap, stream);
+  check_error << cudaFreeAsync(overlap, stream);
 
   return static_cast<double>(num_inliers) / source->size();
 }
@@ -306,12 +316,11 @@ double overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::Const
 
   Eigen::Isometry3f h_delta = delta.cast<float>();
   Eigen::Isometry3f* d_delta;
-  cudaMallocAsync(&d_delta, sizeof(Eigen::Isometry3f), stream);
-  cudaMemcpyAsync(d_delta, h_delta.data(), sizeof(Eigen::Isometry3f), cudaMemcpyHostToDevice, stream);
+  check_error << cudaMallocAsync(&d_delta, sizeof(Eigen::Isometry3f), stream);
+  check_error << cudaMemcpyAsync(d_delta, h_delta.data(), sizeof(Eigen::Isometry3f), cudaMemcpyHostToDevice, stream);
 
   double overlap = overlap_gpu(target, source, d_delta, stream);
-
-  cudaFreeAsync(d_delta, stream);
+  check_error << cudaFreeAsync(d_delta, stream);
 
   return overlap;
 }
@@ -325,6 +334,7 @@ double overlap_gpu(
   const Frame::ConstPtr& source,
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_,
   CUstream_st* stream) {
+  std::cout << "f3" << std::endl;
   if (!source->points_gpu) {
     std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
     abort();
@@ -341,14 +351,16 @@ double overlap_gpu(
   std::vector<Eigen::Isometry3f, Eigen::aligned_allocator<Eigen::Isometry3f>> deltas(deltas_.size());
   std::transform(deltas_.begin(), deltas_.end(), deltas.begin(), [](const Eigen::Isometry3d& delta) { return delta.cast<float>(); });
 
+  std::cout << "step!" << std::endl;
+
   Eigen::Isometry3f* d_deltas;
-  cudaMallocAsync(&d_deltas, sizeof(Eigen::Isometry3f) * deltas.size(), stream);
-  cudaMemcpyAsync(d_deltas, deltas.data(), sizeof(Eigen::Isometry3f) * deltas.size(), cudaMemcpyHostToDevice, stream);
+  check_error << cudaMallocAsync(&d_deltas, sizeof(Eigen::Isometry3f) * deltas.size(), stream);
+  check_error << cudaMemcpyAsync(d_deltas, deltas.data(), sizeof(Eigen::Isometry3f) * deltas.size(), cudaMemcpyHostToDevice, stream);
   thrust::device_ptr<Eigen::Isometry3f> deltas_ptr(d_deltas);
 
   bool* d_overlap;
-  cudaMallocAsync(&d_overlap, sizeof(bool) * source->size(), stream);
-  cudaMemsetAsync(d_overlap, 0, sizeof(bool) * source->size(), stream);
+  check_error << cudaMallocAsync(&d_overlap, sizeof(bool) * source->size(), stream);
+  check_error << cudaMemsetAsync(d_overlap, 0, sizeof(bool) * source->size(), stream);
   thrust::device_ptr<bool> overlap_ptr(d_overlap);
 
   std::vector<thrust::system::cuda::unique_eager_event> results(targets.size());
@@ -385,8 +397,8 @@ double overlap_gpu(
     0);
   int num_inliers = result.get();
 
-  cudaFreeAsync(d_deltas, stream);
-  cudaFreeAsync(d_overlap, stream);
+  check_error << cudaFreeAsync(d_deltas, stream);
+  check_error << cudaFreeAsync(d_overlap, stream);
 
   return static_cast<double>(num_inliers) / source->size();
 }
