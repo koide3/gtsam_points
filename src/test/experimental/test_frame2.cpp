@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <boost/format.hpp>
 
+#include <gtsam_ext/cuda/cuda_stream.hpp>
 #include <gtsam_ext/cuda/cuda_device_sync.hpp>
 
 #include <gtsam_ext/types/frame_gpu.hpp>
@@ -43,23 +44,41 @@ int main(int argc, char** argv) {
     frames.push_back(frame);
   }
 
-  for (int i = 0; i < 5; i++) {
-    for (int j = i; j < 5; j++) {
-      Eigen::Isometry3d delta = poses[i].inverse() * poses[j];
-      std::cout << i << " vs " << j << " " << gtsam_ext::overlap(frames[i], frames[j], delta) << std::endl;
-      std::cout << i << " vs " << j << " " << gtsam_ext::overlap_gpu(frames[i], frames[j], delta) << std::endl;
-    }
-  }
+  gtsam_ext::CUDAStream stream;
 
-  auto viewer = guik::LightViewer::instance();
+  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> deltas;
+  std::vector<gtsam_ext::Frame::ConstPtr> others;
+  for (int i = 1; i < 5; i++) {
+    Eigen::Isometry3d delta = poses[i].inverse() * poses[0];
+    deltas.push_back(delta);
+    others.push_back(frames[i]);
+  }
 
   auto t1 = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < 100; i++) {
-    auto merged = gtsam_ext::merge_frames_gpu(poses, frames, 0.5, 0.1);
+
+  for (int i = 0; i < 10000; i++) {
+    double overlap = gtsam_ext::overlap_gpu(others, frames[0], deltas, stream);
   }
+
   auto t2 = std::chrono::high_resolution_clock::now();
   std::cout << "d:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6 << "[msec]" << std::endl;
 
+  std::cout << "overlap:" << gtsam_ext::overlap(others, frames[0], deltas) << std::endl;
+  std::cout << "overlap_gpu:" << gtsam_ext::overlap_gpu(others, frames[0], deltas) << std::endl;
+
+  return 0;
+
+  auto viewer = guik::LightViewer::instance();
+
+  for (int i = 0; i < 100; i++) {
+    auto merged = gtsam_ext::merge_frames_gpu(poses, frames, 0.5, stream);
+  }
+
+  return 0;
+
+  gtsam_ext::Frame::Ptr merged = gtsam_ext::merge_frames_gpu(poses, frames, 0.5);
+
+  viewer->update_drawable("frame", std::make_shared<glk::NormalDistributions>(merged->points, merged->covs, merged->size()), guik::Rainbow());
   // viewer->spin();
 
   return 0;

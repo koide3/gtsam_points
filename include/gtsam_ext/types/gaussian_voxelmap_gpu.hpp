@@ -15,12 +15,6 @@ namespace thrust {
 template <typename T1, typename T2>
 class pair;
 
-template <typename T>
-class device_allocator;
-
-template <typename T, typename Alloc>
-class device_vector;
-
 }  // namespace thrust
 
 namespace gtsam_ext {
@@ -70,26 +64,19 @@ private:
   void create_bucket_table(CUstream_st* stream, const Frame& frame);
 
 public:
-  using Indices = thrust::device_vector<int, thrust::device_allocator<int>>;
-  using Points = thrust::device_vector<Eigen::Vector3f, thrust::device_allocator<Eigen::Vector3f>>;
-  using Matrices = thrust::device_vector<Eigen::Matrix3f, thrust::device_allocator<Eigen::Matrix3f>>;
-  using Buckets = thrust::device_vector<thrust::pair<Eigen::Vector3i, int>, thrust::device_allocator<thrust::pair<Eigen::Vector3i, int>>>;
-  using VoxelMapInfoVec = thrust::device_vector<VoxelMapInfo, thrust::device_allocator<VoxelMapInfo>>;
-
   CUstream_st* stream;
 
-  const int init_num_buckets;                          ///< Initial number of buckets
-  const double target_points_drop_rate;                ///< Allowable points drop rate
-  VoxelMapInfo voxelmap_info;                          ///< Voxelmap information
-  std::unique_ptr<VoxelMapInfoVec> voxelmap_info_ptr;  ///< Voxelmap information on GPU memory
+  const int init_num_buckets;            ///< Initial number of buckets
+  const double target_points_drop_rate;  ///< Allowable points drop rate
+  VoxelMapInfo voxelmap_info;            ///< Voxelmap information
+  VoxelMapInfo* voxelmap_info_ptr;       ///< Voxelmap information on GPU memory
 
-  std::unique_ptr<Buckets> buckets;  ///< Voxel buckets for hashing
+  thrust::pair<Eigen::Vector3i, int>* buckets;  ///< Voxel buckets for hashing
 
   // voxel data
-  std::unique_ptr<Indices> num_points;    ///< Number of points in eac voxel
-  std::unique_ptr<Points> voxel_means;    ///< Voxel means
-  std::unique_ptr<Points> voxel_normals;  ///< Voxel normals
-  std::unique_ptr<Matrices> voxel_covs;   ///< Voxel covariances
+  int* num_points;               ///< Number of points in eac voxel
+  Eigen::Vector3f* voxel_means;  ///< Voxel means
+  Eigen::Matrix3f* voxel_covs;   ///< Voxel covariances
 };
 
 }  // namespace gtsam_ext

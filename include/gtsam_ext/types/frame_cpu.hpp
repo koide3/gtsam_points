@@ -145,26 +145,22 @@ FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double vox
  * @param poses                  Poses of input frames
  * @param frames                 Input frames
  * @param downsample_resolution  Downsampling resolution
- * @param voxel_resolution       Voxel resolution
  * @return                       Merged frame
  */
 Frame::Ptr merge_frames(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
   const std::vector<Frame::ConstPtr>& frames,
-  double downsample_resolution,
-  double voxel_resolution);
+  double downsample_resolution);
 
 Frame::Ptr merge_frames_gpu(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
   const std::vector<Frame::ConstPtr>& frames,
   double downsample_resolution,
-  double voxel_resolution,
   CUstream_st* stream = 0);
 
 Frame::Ptr merge_frames_auto(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
   const std::vector<Frame::ConstPtr>& frames,
-  double downsample_resolution,
-  double voxel_resolution);
+  double downsample_resolution);
 
 }  // namespace gtsam_ext

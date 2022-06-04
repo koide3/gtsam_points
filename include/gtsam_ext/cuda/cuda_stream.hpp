@@ -9,13 +9,13 @@ struct CUstream_st;
 
 namespace gtsam_ext {
 
-struct AsyncStream {
+struct CUDAStream {
 public:
-  AsyncStream();
-  ~AsyncStream();
+  CUDAStream();
+  ~CUDAStream();
 
-  AsyncStream(const AsyncStream&) = delete;
-  AsyncStream& operator=(const AsyncStream&) = delete;
+  CUDAStream(const CUDAStream&) = delete;
+  CUDAStream& operator=(const CUDAStream&) = delete;
 
   operator CUstream_st*() const { return stream; }
 

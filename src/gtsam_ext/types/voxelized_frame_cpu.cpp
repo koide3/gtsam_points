@@ -68,8 +68,7 @@ void VoxelizedFrameCPU::create_voxelmap(double voxel_resolution) {
 Frame::Ptr merge_frames(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
   const std::vector<Frame::ConstPtr>& frames,
-  double downsample_resolution,
-  double voxel_resolution) {
+  double downsample_resolution) {
   //
   int num_all_points = 0;
   for (const auto& frame : frames) {
@@ -109,22 +108,25 @@ Frame::Ptr merge_frames(
     downsampled_covs.push_back(voxel.second->cov);
   }
 
-  return std::make_shared<VoxelizedFrameCPU>(voxel_resolution, downsampled_points, downsampled_covs);
+  auto merged = std::make_shared<FrameCPU>();
+  merged->add_points(downsampled_points);
+  merged->add_covs(downsampled_covs);
+
+  return merged;
 }
 
 Frame::Ptr merge_frames_auto(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
   const std::vector<Frame::ConstPtr>& frames,
-  double downsample_resolution,
-  double voxel_resolution) {
+  double downsample_resolution) {
 //
 #ifdef BUILD_GTSAM_EXT_GPU
   if (frames[0]->points_gpu && frames[0]->covs_gpu) {
-    return merge_frames_gpu(poses, frames, downsample_resolution, voxel_resolution);
+    return merge_frames_gpu(poses, frames, downsample_resolution);
   }
 #endif
 
-  return merge_frames(poses, frames, downsample_resolution, voxel_resolution);
+  return merge_frames(poses, frames, downsample_resolution);
 }
 
 double overlap(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta) {

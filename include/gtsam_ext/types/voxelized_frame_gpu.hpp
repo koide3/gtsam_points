@@ -27,8 +27,8 @@ public:
   VoxelizedFrameGPU();
   ~VoxelizedFrameGPU();
 
-  void create_voxelmap(double voxel_resolution);
-  void create_voxelmap_gpu(double voxel_resolution);
+  void create_voxelmap(double voxel_resolution, CUstream_st* stream = 0);
+  void create_voxelmap_gpu(double voxel_resolution, CUstream_st* stream = 0);
 
   // copy data from GPU to CPU
   std::vector<std::pair<Eigen::Vector3i, int>> get_voxel_buckets_gpu() const;
