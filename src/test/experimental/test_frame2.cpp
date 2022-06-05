@@ -3,11 +3,17 @@
 #include <filesystem>
 #include <boost/format.hpp>
 
-#include <gtsam_ext/cuda/cuda_stream.hpp>
-#include <gtsam_ext/cuda/cuda_device_sync.hpp>
+#include <gtsam/geometry/Pose3.h>
+#include <gtsam/slam/PriorFactor.h>
 
 #include <gtsam_ext/types/frame_gpu.hpp>
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
+#include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
+#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
+#include <gtsam_ext/cuda/cuda_device_sync.hpp>
+#include <gtsam_ext/cuda/nonlinear_factor_set_gpu.hpp>
+
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>
 
@@ -32,53 +38,77 @@ int main(int argc, char** argv) {
     poses[i].translation() = trans;
   }
 
-  std::vector<gtsam_ext::Frame::ConstPtr> frames;
+  std::vector<gtsam_ext::Frame::ConstPtr> frames(5);
+  std::vector<std::vector<gtsam_ext::GaussianVoxelMapGPU::ConstPtr>> voxelmaps(5);
+
+  double voxel_resolution = 0.1;
+  int voxelmap_levels = 8;
+
   for (int i = 0; i < 5; i++) {
     auto points = gtsam_ext::read_points((boost::format("%s/%06d/points.bin") % data_path % i).str());
 
-    auto frame = std::make_shared<gtsam_ext::VoxelizedFrameGPU>();
+    auto frame = std::make_shared<gtsam_ext::FrameGPU>();
     frame->add_points(points);
     frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size()));
+    frames[i] = frame;
 
-    frame->create_voxelmap(0.5);
-    frames.push_back(frame);
+    for (int j = 0; j < voxelmap_levels; j++) {
+      double resolution = voxel_resolution * std::pow(2.0, j);
+      auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(resolution);
+      voxelmap->insert(*frame);
+      voxelmaps[i].push_back(voxelmap);
+    }
   }
 
-  gtsam_ext::CUDAStream stream;
+  gtsam_ext::StreamTempBufferRoundRobin stream_buffer_roundrobin(16);
 
-  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> deltas;
-  std::vector<gtsam_ext::Frame::ConstPtr> others;
-  for (int i = 1; i < 5; i++) {
-    Eigen::Isometry3d delta = poses[i].inverse() * poses[0];
-    deltas.push_back(delta);
-    others.push_back(frames[i]);
+  gtsam::NonlinearFactorGraph graph;
+  gtsam::Values values;
+
+  for (int i = 0; i < 5; i++) {
+    gtsam::Pose3 noise = gtsam::Pose3::Expmap(gtsam::Vector6::Random() * 0.1);
+    values.insert(i, gtsam::Pose3(poses[i].matrix()) * noise);
   }
 
-  auto t1 = std::chrono::high_resolution_clock::now();
-
-  for (int i = 0; i < 10000; i++) {
-    double overlap = gtsam_ext::overlap_gpu(others, frames[0], deltas, stream);
+  graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, values.at<gtsam::Pose3>(0), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+  for (int i = 0; i < 5; i++) {
+    for (int j = 1; j < 5; j++) {
+      for (auto& voxelmap : voxelmaps[i]) {
+        auto stream_buffer = stream_buffer_roundrobin.get_stream_buffer();
+        auto& stream = stream_buffer.first;
+        auto& buffer = stream_buffer.second;
+        graph.emplace_shared<gtsam_ext::IntegratedVGICPFactorGPU>(i, j, voxelmap, frames[j], stream, buffer);
+      }
+    }
   }
-
-  auto t2 = std::chrono::high_resolution_clock::now();
-  std::cout << "d:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6 << "[msec]" << std::endl;
-
-  std::cout << "overlap:" << gtsam_ext::overlap(others, frames[0], deltas) << std::endl;
-  std::cout << "overlap_gpu:" << gtsam_ext::overlap_gpu(others, frames[0], deltas) << std::endl;
-
-  return 0;
 
   auto viewer = guik::LightViewer::instance();
 
-  for (int i = 0; i < 100; i++) {
-    auto merged = gtsam_ext::merge_frames_gpu(poses, frames, 0.5, stream);
-  }
+  auto visualize = [&](const gtsam::Values& values) {
+    for (int i = 0; i < 5; i++) {
+      viewer->update_drawable(
+        "frame_" + std::to_string(i),
+        std::make_shared<glk::PointCloudBuffer>(frames[i]->points, frames[i]->size()),
+        guik::Rainbow(values.at<gtsam::Pose3>(i).matrix().cast<float>()));
+    }
+  };
 
-  return 0;
+  gtsam_ext::LevenbergMarquardtExtParams lm_params;
+  lm_params.setDiagonalDamping(false);
+  lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+    return;
+    std::cout << status.to_string() << std::endl;
+    visualize(values);
+    viewer->spin_once();
+  };
 
-  gtsam_ext::Frame::Ptr merged = gtsam_ext::merge_frames_gpu(poses, frames, 0.5);
+  auto t1 = std::chrono::high_resolution_clock::now();
+  gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+  values = optimizer.optimize();
+  auto t2 = std::chrono::high_resolution_clock::now();
 
-  viewer->update_drawable("frame", std::make_shared<glk::NormalDistributions>(merged->points, merged->covs, merged->size()), guik::Rainbow());
+  std::cout << "d:" << std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count() / 1e6 << "[msec]" << std::endl;
+
   // viewer->spin();
 
   return 0;

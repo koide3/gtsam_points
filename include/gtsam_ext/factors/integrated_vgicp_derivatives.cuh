@@ -73,6 +73,9 @@ private:
   Frame::ConstPtr source;
 
   Eigen::Isometry3f inlier_evaluation_point;
-  thrust::device_vector<int> source_inliers;
+
+  int num_inliers;
+  int* num_inliers_gpu;
+  int* source_inliers;
 };
 }  // namespace gtsam_ext

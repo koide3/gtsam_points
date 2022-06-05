@@ -17,6 +17,8 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam_ext/factors/nonlinear_factor_gpu.hpp>
 
+struct CUstream_st;
+
 namespace gtsam_ext {
 
 /**
@@ -94,6 +96,8 @@ public:
   std::vector<gtsam::GaussianFactor::shared_ptr> calc_linear_factors(const gtsam::Values& linearization_point);
 
 private:
+  CUstream_st* stream;
+
   int num_linearizations;
   int num_evaluations;
 
