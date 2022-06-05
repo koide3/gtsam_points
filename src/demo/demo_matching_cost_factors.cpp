@@ -220,7 +220,8 @@ public:
     else if (optimizer_types[optimizer_type] == std::string("ISAM2")) {
       gtsam::ISAM2Params isam2_params;
       // isam2_params.setRelinearizeSkip(1);
-      isam2_params.setRelinearizeThreshold(0.01);
+      isam2_params.relinearizeSkip = 1;
+      isam2_params.setRelinearizeThreshold(0.0);
       gtsam_ext::ISAM2Ext isam2(isam2_params);
 
       auto t1 = std::chrono::high_resolution_clock::now();
@@ -228,7 +229,7 @@ public:
       update_viewer(isam2.calculateEstimate());
       guik::LightViewer::instance()->append_text(status.to_string());
 
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 5; i++) {
         auto status = isam2.update();
         update_viewer(isam2.calculateEstimate());
         guik::LightViewer::instance()->append_text(status.to_string());
