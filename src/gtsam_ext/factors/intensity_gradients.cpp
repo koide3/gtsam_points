@@ -6,7 +6,7 @@
 #include <Eigen/Eigen>
 
 #include <iostream>
-#include <gtsam_ext/ann/kdtree.hpp>
+#include <gtsam_ext/ann/kdtree2.hpp>
 
 namespace gtsam_ext {
 
@@ -67,13 +67,7 @@ IntensityGradients::Ptr IntensityGradients::estimate(const Frame::ConstPtr& fram
     abort();
   }
 
-  const Eigen::Vector4d* points_ptr = frame::points_ptr(*frame);
-  if (points_ptr == nullptr) {
-    std::cerr << "error: failed to obtain a pointer to points!!" << std::endl;
-    abort();
-  }
-
-  gtsam_ext::KdTree kdtree(points_ptr, frame::size(*frame));
+  gtsam_ext::KdTree2<Frame> kdtree(frame);
 
   IntensityGradients::Ptr gradients(new IntensityGradients);
   gradients->intensity_gradients.resize(frame::size(*frame));
@@ -116,13 +110,7 @@ IntensityGradients::Ptr IntensityGradients::estimate(const Frame::ConstPtr& fram
 
 IntensityGradients::Ptr
 IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads) {
-  const Eigen::Vector4d* points_ptr = frame::points_ptr<Frame>(*frame);
-  if (points_ptr == nullptr) {
-    std::cerr << "error: failed to obtain a pointer to points!!" << std::endl;
-    abort();
-  }
-
-  gtsam_ext::KdTree kdtree(points_ptr, frame::size<Frame>(*frame));
+  gtsam_ext::KdTree2<Frame> kdtree(frame);
 
   bool estimate_normals = frame->normals == nullptr;
   bool estimate_covs = frame->covs == nullptr;

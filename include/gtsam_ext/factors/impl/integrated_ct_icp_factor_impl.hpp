@@ -4,7 +4,7 @@
 #include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
 
 #include <gtsam/linear/HessianFactor.h>
-#include <gtsam_ext/ann/kdtree.hpp>
+#include <gtsam_ext/ann/kdtree2.hpp>
 
 #include <gtsam_ext/util/expressions.hpp>
 
@@ -52,12 +52,7 @@ IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_ICPFactor_(
   if (target_tree) {
     this->target_tree = target_tree;
   } else {
-    const Eigen::Vector4d* target_points = frame::points_ptr(*target);
-    if (!target_points) {
-      std::cerr << "error: failed to create target kdtree because the target frame doesn't provide points ptr!!" << std::endl;
-      abort();
-    }
-    this->target_tree.reset(new KdTree(target_points, frame::size(*target)));
+    this->target_tree.reset(new KdTree2<TargetFrame>(target));
   }
 }
 

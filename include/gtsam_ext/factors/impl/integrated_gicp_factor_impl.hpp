@@ -5,7 +5,7 @@
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/HessianFactor.h>
-#include <gtsam_ext/ann/kdtree.hpp>
+#include <gtsam_ext/ann/kdtree2.hpp>
 #include <gtsam_ext/types/frame_traits.hpp>
 
 namespace gtsam_ext {
@@ -38,12 +38,7 @@ IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
   if (target_tree) {
     this->target_tree = target_tree;
   } else {
-    const Eigen::Vector4d* target_points = frame::points_ptr(*target);
-    if (!target_points) {
-      std::cerr << "error: failed to create target kdtree because the target frame doesn't provide points ptr!!" << std::endl;
-      abort();
-    }
-    this->target_tree.reset(new KdTree(target_points, frame::size(*target)));
+    this->target_tree.reset(new KdTree2<TargetFrame>(target));
   }
 }
 
@@ -83,12 +78,7 @@ IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
   if (target_tree) {
     this->target_tree = target_tree;
   } else {
-    const Eigen::Vector4d* target_points = frame::points_ptr(*target);
-    if (!target_points) {
-      std::cerr << "error: failed to create target kdtree because the target frame doesn't provide points ptr!!" << std::endl;
-      abort();
-    }
-    this->target_tree.reset(new KdTree(target_points, frame::size(*target)));
+    this->target_tree.reset(new KdTree2<TargetFrame>(target));
   }
 }
 

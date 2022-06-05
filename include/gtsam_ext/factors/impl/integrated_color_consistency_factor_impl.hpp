@@ -4,7 +4,6 @@
 #include <gtsam_ext/factors/integrated_color_consistency_factor.hpp>
 
 #include <vector>
-#include <gtsam_ext/ann/kdtree.hpp>
 #include <gtsam_ext/ann/nearest_neighbor_search.hpp>
 
 namespace gtsam_ext {
