@@ -28,7 +28,7 @@ public:
   template <typename T, int D, typename Alloc>
   FrameGPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : FrameGPU(points.data(), points.size()) {}
 
-  FrameGPU(const Frame& frame);
+  FrameGPU(const Frame& frame, CUstream_st* stream = 0);
 
   FrameGPU();
   ~FrameGPU();

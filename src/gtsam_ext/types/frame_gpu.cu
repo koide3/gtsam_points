@@ -23,26 +23,26 @@ template FrameGPU::FrameGPU(const Eigen::Matrix<double, 3, 1>*, int);
 template FrameGPU::FrameGPU(const Eigen::Matrix<double, 4, 1>*, int);
 
 // deep copy constructor
-FrameGPU::FrameGPU(const Frame& frame) : FrameCPU(frame) {
+FrameGPU::FrameGPU(const Frame& frame, CUstream_st* stream) : FrameCPU(frame) {
   // TODO: GPU-to-GPU copy for efficiency
   if (frame.points) {
-    add_points_gpu(frame.points, frame.size());
+    add_points_gpu(frame.points, frame.size(), stream);
   }
 
   if (frame.times) {
-    add_times_gpu(frame.times, frame.size());
+    add_times_gpu(frame.times, frame.size(), stream);
   }
 
   if (frame.normals) {
-    add_normals_gpu(frame.normals, frame.size());
+    add_normals_gpu(frame.normals, frame.size(), stream);
   }
 
   if (frame.covs) {
-    add_covs_gpu(frame.covs, frame.size());
+    add_covs_gpu(frame.covs, frame.size(), stream);
   }
 
   if (frame.intensities) {
-    add_intensities_gpu(frame.intensities, frame.size());
+    add_intensities_gpu(frame.intensities, frame.size(), stream);
   }
 }
 
