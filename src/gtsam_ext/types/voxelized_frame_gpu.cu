@@ -380,7 +380,7 @@ double overlap_gpu(
       results[i] = std::move(result);
     } else {
       auto result = thrust::async::transform(
-        thrust::cuda::par.after(results[i - 1]),
+        thrust::cuda::par.on(stream),
         thrust::make_zip_iterator(thrust::make_tuple(overlap_ptr, first)),
         thrust::make_zip_iterator(thrust::make_tuple(overlap_ptr + source->size(), last)),
         overlap_ptr,
