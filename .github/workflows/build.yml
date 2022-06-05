@@ -19,7 +19,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          submodule: true
+          submodules: true
 
       - name: Docker login
         continue-on-error: true
