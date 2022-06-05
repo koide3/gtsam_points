@@ -44,13 +44,13 @@ IntegratedVGICPDerivatives::IntegratedVGICPDerivatives(
 }
 
 IntegratedVGICPDerivatives::~IntegratedVGICPDerivatives() {
-  if (!external_stream) {
-    cudaStreamDestroy(stream);
-  }
-
   check_error << cudaFreeAsync(source_inliers, stream);
   check_error << cudaFreeAsync(num_inliers_gpu, stream);
   // check_error << cudaHostUnregister(&num_inliers);
+
+  if (!external_stream) {
+    cudaStreamDestroy(stream);
+  }
 }
 
 void IntegratedVGICPDerivatives::sync_stream() {
