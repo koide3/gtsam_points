@@ -15,14 +15,14 @@ namespace gtsam_ext {
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const VoxelizedFrame::ConstPtr& target,
+  const Frame::ConstPtr& target,
   const Frame::ConstPtr& source)
 : IntegratedVGICPFactorGPU(target_key, source_key, target, source, nullptr, nullptr) {}
 
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const VoxelizedFrame::ConstPtr& target,
+  const Frame::ConstPtr& target,
   const Frame::ConstPtr& source,
   CUstream_st* stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
@@ -63,14 +63,14 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
-  const VoxelizedFrame::ConstPtr& target,
+  const Frame::ConstPtr& target,
   const Frame::ConstPtr& source)
 : IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target, source, nullptr, nullptr) {}
 
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
-  const VoxelizedFrame::ConstPtr& target,
+  const Frame::ConstPtr& target,
   const Frame::ConstPtr& source,
   CUstream_st* stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
@@ -123,7 +123,13 @@ gtsam::NonlinearFactor::shared_ptr IntegratedVGICPFactorGPU::clone() const {
     return gtsam::make_shared<IntegratedVGICPFactorGPU>(keys()[0], keys()[1], target, source, nullptr, nullptr);
   }
 
-  return gtsam::make_shared<IntegratedVGICPFactorGPU>(gtsam::Pose3(fixed_target_pose.cast<double>().matrix()), keys()[0], target, source, nullptr, nullptr);
+  return gtsam::make_shared<IntegratedVGICPFactorGPU>(
+    gtsam::Pose3(fixed_target_pose.cast<double>().matrix()),
+    keys()[0],
+    target,
+    source,
+    nullptr,
+    nullptr);
 }
 
 size_t IntegratedVGICPFactorGPU::linearization_input_size() const {

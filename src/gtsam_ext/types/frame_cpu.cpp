@@ -3,6 +3,7 @@
 
 #include <gtsam_ext/types/frame_cpu.hpp>
 
+#include <regex>
 #include <numeric>
 #include <fstream>
 #include <iostream>
@@ -44,6 +45,18 @@ FrameCPU::FrameCPU(const Frame& frame) {
 
   if (frame.intensities) {
     add_intensities(frame.intensities, frame.size());
+  }
+
+  for (const auto& attrib : frame.aux_attributes) {
+    const auto& name = attrib.first;
+    const size_t elem_size = attrib.second.first;
+    const unsigned char* data_ptr = static_cast<const unsigned char*>(attrib.second.second);
+
+    auto storage = std::make_shared<std::vector<unsigned char>>(frame.size() * elem_size);
+    memcpy(storage->data(), data_ptr, elem_size * frame.size());
+
+    aux_attributes_storage[name] = storage;
+    aux_attributes[name] = std::make_pair(elem_size, storage->data());
   }
 }
 
@@ -236,6 +249,33 @@ FrameCPU::Ptr FrameCPU::load(const std::string& path) {
     return nullptr;
   }
 
+  boost::filesystem::directory_iterator itr(path);
+  boost::filesystem::directory_iterator end;
+  const std::regex aux_name_regex("/aux_([^_]+).bin");
+  for (; itr != end; itr++) {
+    std::smatch matched;
+    if (!std::regex_search(itr->path().string(), matched, aux_name_regex)) {
+      continue;
+    }
+    const std::string name = matched.str(1);
+
+    std::ifstream ifs(itr->path().string(), std::ios::ate | std::ios::binary);
+    const size_t bytes = ifs.tellg();
+    ifs.seekg(0);
+
+    const int elem_size = bytes / frame->size();
+    if (elem_size * frame->size() != bytes) {
+      std::cerr << "warning: elem_size=" << elem_size << " num_points=" << frame->size() << " bytes=" << bytes << std::endl;
+      std::cerr << "       : bytes != elem_size * num_points" << std::endl;
+    }
+
+    auto storage = std::make_shared<std::vector<char>>(bytes);
+    ifs.read(storage->data(), bytes);
+
+    frame->aux_attributes_storage[name] = storage;
+    frame->aux_attributes[name] = std::make_pair(elem_size, storage->data());
+  }
+
   return frame;
 }
 
@@ -392,6 +432,10 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
       }
       return sum / indices->size();
     });
+  }
+
+  if (!frame->aux_attributes.empty()) {
+    std::cout << "warning: voxelgrid_sampling does not support aux attributes!!" << std::endl;
   }
 
   return downsampled;

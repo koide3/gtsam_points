@@ -9,6 +9,8 @@
 
 #include <gtsam_ext/types/frame.hpp>
 
+struct CUstream_st;
+
 namespace gtsam_ext {
 
 /**
@@ -136,5 +138,29 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
  * @return                  Downsampled points
  */
 FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt);
+
+/**
+ * @brief Merge a set of voxelized frames into one frame
+ * @note  This function only merges points and covs and discard other point attributes.
+ * @param poses                  Poses of input frames
+ * @param frames                 Input frames
+ * @param downsample_resolution  Downsampling resolution
+ * @return                       Merged frame
+ */
+Frame::Ptr merge_frames(
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
+  const std::vector<Frame::ConstPtr>& frames,
+  double downsample_resolution);
+
+Frame::Ptr merge_frames_gpu(
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
+  const std::vector<Frame::ConstPtr>& frames,
+  double downsample_resolution,
+  CUstream_st* stream = 0);
+
+Frame::Ptr merge_frames_auto(
+  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
+  const std::vector<Frame::ConstPtr>& frames,
+  double downsample_resolution);
 
 }  // namespace gtsam_ext

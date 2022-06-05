@@ -11,7 +11,7 @@
 #include <thrust/device_vector.h>
 #include <thrust/system/cuda/future.h>
 
-#include <gtsam_ext/types/voxelized_frame.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 
 struct CUstream_st;
 
@@ -23,7 +23,6 @@ class TempBufferManager;
 class IntegratedVGICPDerivatives {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-
 
   IntegratedVGICPDerivatives(
     const GaussianVoxelMapGPU::ConstPtr& target,
@@ -47,7 +46,10 @@ public:
   // async interface
   void sync_stream();
   void issue_linearize(const thrust::device_ptr<const Eigen::Isometry3f>& x, const thrust::device_ptr<LinearizedSystem6>& output);
-  void issue_compute_error(const thrust::device_ptr<const Eigen::Isometry3f>& xl, const thrust::device_ptr<const Eigen::Isometry3f>& xe, const thrust::device_ptr<float>& output);
+  void issue_compute_error(
+    const thrust::device_ptr<const Eigen::Isometry3f>& xl,
+    const thrust::device_ptr<const Eigen::Isometry3f>& xe,
+    const thrust::device_ptr<float>& output);
 
   template <bool enable_surface_validation>
   void issue_linearize_impl(const thrust::device_ptr<const Eigen::Isometry3f>& x, const thrust::device_ptr<LinearizedSystem6>& output);
@@ -71,6 +73,9 @@ private:
   Frame::ConstPtr source;
 
   Eigen::Isometry3f inlier_evaluation_point;
-  thrust::device_vector<int> source_inliers;
+
+  int num_inliers;
+  int* num_inliers_gpu;
+  int* source_inliers;
 };
-}
+}  // namespace gtsam_ext

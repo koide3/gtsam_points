@@ -12,7 +12,6 @@
 #include <gtsam_ext/util/normal_estimation.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>
 
-#include <gtsam_ext/types/voxelized_frame.hpp>
 #include <gtsam_ext/types/voxelized_frame_cpu.hpp>
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 
@@ -166,11 +165,8 @@ public:
     });
   }
 
-  gtsam::NonlinearFactor::shared_ptr create_factor(
-    gtsam::Key target_key,
-    gtsam::Key source_key,
-    const gtsam_ext::VoxelizedFrame::ConstPtr& target,
-    const gtsam_ext::VoxelizedFrame::ConstPtr& source) {
+  gtsam::NonlinearFactor::shared_ptr
+  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::Frame::ConstPtr& target, const gtsam_ext::Frame::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
       auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
@@ -224,7 +220,8 @@ public:
     else if (optimizer_types[optimizer_type] == std::string("ISAM2")) {
       gtsam::ISAM2Params isam2_params;
       // isam2_params.setRelinearizeSkip(1);
-      isam2_params.setRelinearizeThreshold(0.01);
+      isam2_params.relinearizeSkip = 1;
+      isam2_params.setRelinearizeThreshold(0.0);
       gtsam_ext::ISAM2Ext isam2(isam2_params);
 
       auto t1 = std::chrono::high_resolution_clock::now();
@@ -232,7 +229,7 @@ public:
       update_viewer(isam2.calculateEstimate());
       guik::LightViewer::instance()->append_text(status.to_string());
 
-      for (int i = 0; i < 10; i++) {
+      for (int i = 0; i < 5; i++) {
         auto status = isam2.update();
         update_viewer(isam2.calculateEstimate());
         guik::LightViewer::instance()->append_text(status.to_string());
@@ -261,7 +258,7 @@ private:
 
   gtsam::Values poses;
   gtsam::Values poses_gt;
-  std::vector<gtsam_ext::VoxelizedFrame::Ptr> frames;
+  std::vector<gtsam_ext::Frame::Ptr> frames;
 };
 
 int main(int argc, char** argv) {

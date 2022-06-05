@@ -5,6 +5,7 @@
 
 #include <iostream>
 
+#include <gtsam_ext/cuda/check_error.cuh>
 #include <gtsam_ext/cuda/kernels/linearized_system.cuh>
 #include <gtsam_ext/cuda/kernels/vgicp_derivatives.cuh>
 #include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
@@ -25,7 +26,9 @@ IntegratedVGICPDerivatives::IntegratedVGICPDerivatives(
   source(source),
   external_stream(true),
   stream(ext_stream),
-  temp_buffer(temp_buffer) {
+  temp_buffer(temp_buffer),
+  num_inliers(0),
+  source_inliers(nullptr) {
   //
   if (stream == nullptr) {
     external_stream = false;
@@ -35,16 +38,23 @@ IntegratedVGICPDerivatives::IntegratedVGICPDerivatives(
   if (this->temp_buffer == nullptr) {
     this->temp_buffer.reset(new TempBufferManager());
   }
+
+  check_error << cudaMallocAsync(&num_inliers_gpu, sizeof(int), stream);
+  // check_error << cudaHostRegister(&num_inliers, sizeof(int), cudaHostRegisterDefault);
 }
 
 IntegratedVGICPDerivatives::~IntegratedVGICPDerivatives() {
+  check_error << cudaFreeAsync(source_inliers, stream);
+  check_error << cudaFreeAsync(num_inliers_gpu, stream);
+  // check_error << cudaHostUnregister(&num_inliers);
+
   if (!external_stream) {
     cudaStreamDestroy(stream);
   }
 }
 
 void IntegratedVGICPDerivatives::sync_stream() {
-  cudaStreamSynchronize(stream);
+  check_error << cudaStreamSynchronize(stream);
 }
 
 LinearizedSystem6 IntegratedVGICPDerivatives::linearize(const Eigen::Isometry3f& x) {
@@ -84,7 +94,6 @@ void IntegratedVGICPDerivatives::issue_linearize(
     issue_linearize_impl<false>(x, output);
   }
 }
-
 
 void IntegratedVGICPDerivatives::issue_compute_error(
   const thrust::device_ptr<const Eigen::Isometry3f>& xl,

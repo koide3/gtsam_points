@@ -29,10 +29,12 @@ RUN make -j$(nproc) && make install
 
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build
+RUN rm -rf *
 RUN CC=clang CXX=clang++ \
   cmake .. \
   -DBUILD_DEMO=ON \
   -DBUILD_TESTS=ON \
+  -DBUILD_EXAMPLE=ON \
   -DBUILD_WITH_CUDA=OFF \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_WITH_SYSTEM_EIGEN=OFF

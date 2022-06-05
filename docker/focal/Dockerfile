@@ -20,6 +20,7 @@ RUN apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /root
+RUN ls
 RUN git clone https://github.com/koide3/iridescence.git --recursive
 WORKDIR /root/iridescence/build
 RUN cmake ..
@@ -27,9 +28,11 @@ RUN make -j$(nproc) && make install
 
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build
+RUN rm -rf *
 RUN cmake .. \
   -DBUILD_DEMO=ON \
   -DBUILD_TESTS=ON \
+  -DBUILD_EXAMPLE=ON \
   -DBUILD_WITH_CUDA=OFF \
   -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)

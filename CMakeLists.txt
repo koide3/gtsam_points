@@ -82,7 +82,6 @@ add_library(gtsam_ext SHARED
   # types
   src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/frame_cpu.cpp
-  src/gtsam_ext/types/voxelized_frame.cpp
   src/gtsam_ext/types/voxelized_frame_cpu.cpp
   src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
   # factors
@@ -128,6 +127,8 @@ target_link_libraries(gtsam_ext
 if(BUILD_WITH_CUDA)
   cuda_add_library(gtsam_ext_cuda SHARED
     # cuda-related
+    src/gtsam_ext/cuda/check_error.cu
+    src/gtsam_ext/cuda/cuda_stream.cu
     src/gtsam_ext/cuda/cuda_device_sync.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu

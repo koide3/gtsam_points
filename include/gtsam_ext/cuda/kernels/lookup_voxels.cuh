@@ -15,7 +15,7 @@
 
 namespace gtsam_ext {
 
-template<bool enable_surface_validation>
+template <bool enable_surface_validation>
 struct lookup_voxels_kernel {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
@@ -25,14 +25,12 @@ struct lookup_voxels_kernel {
     const thrust::device_ptr<const Eigen::Vector3f>& normals,
     const thrust::device_ptr<const Eigen::Isometry3f>& x_ptr)
   : x_ptr(x_ptr),
-    voxelmap_info_ptr(voxelmap.voxelmap_info_ptr->data()),
-    buckets_ptr(voxelmap.buckets->data()),
+    voxelmap_info_ptr(voxelmap.voxelmap_info_ptr),
+    buckets_ptr(voxelmap.buckets),
     points_ptr(points),
-    normals_ptr(normals){
-  }
+    normals_ptr(normals) {}
 
-  __host__ __device__ thrust::pair<int, int>
-    operator()(int point_idx) const {
+  __host__ __device__ thrust::pair<int, int> operator()(int point_idx) const {
     const auto& info = *thrust::raw_pointer_cast(voxelmap_info_ptr);
 
     const Eigen::Isometry3f& trans = *thrust::raw_pointer_cast(x_ptr);

@@ -32,9 +32,7 @@ void IntegratedVGICPDerivatives::issue_compute_error_impl(
     thrust::device_ptr<const Eigen::Vector3f>(source->points_gpu),
     thrust::device_ptr<const Eigen::Vector3f>(source->normals_gpu),
     xl);
-  cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel<enable_surface_validation_>, int*> corr_first(
-    thrust::raw_pointer_cast(source_inliers.data()),
-    corr_kernel);
+  cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel<enable_surface_validation_>, int*> corr_first(source_inliers, corr_kernel);
 
   vgicp_error_kernel error_kernel(
     xl,
@@ -52,7 +50,7 @@ void IntegratedVGICPDerivatives::issue_compute_error_impl(
     temp_storage_bytes,
     first,
     thrust::raw_pointer_cast(output),
-    source_inliers.size(),
+    num_inliers,
     thrust::plus<float>(),
     0.0f,
     stream);
@@ -64,7 +62,7 @@ void IntegratedVGICPDerivatives::issue_compute_error_impl(
     temp_storage_bytes,
     first,
     thrust::raw_pointer_cast(output),
-    source_inliers.size(),
+    num_inliers,
     thrust::plus<float>(),
     0.0f,
     stream);
@@ -79,4 +77,4 @@ template void IntegratedVGICPDerivatives::issue_compute_error_impl<false>(
   const thrust::device_ptr<const Eigen::Isometry3f>&,
   const thrust::device_ptr<float>&);
 
-}
+}  // namespace gtsam_ext

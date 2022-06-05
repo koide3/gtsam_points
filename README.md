@@ -4,6 +4,8 @@ This is a collection of GTSAM factors and optimizers for range-based SLAM.
 
 Tested on Ubuntu 20.04 and CUDA 11.6 / NVIDIA Jetson Xavier (JetPack 5.0.1).
 
+[![Build](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml)
+
 ## Factors
 
 ### Scan Matching Factors

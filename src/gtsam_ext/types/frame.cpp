@@ -2,58 +2,135 @@
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
 #include <gtsam_ext/types/frame.hpp>
-#include <gtsam_ext/types/voxelized_frame.hpp>
 
 #include <fstream>
 #include <iostream>
+#include <boost/filesystem.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 
 namespace gtsam_ext {
 
 bool Frame::has_times() const {
+  return times;
+}
+
+bool Frame::has_points() const {
+  return points;
+}
+
+bool Frame::has_normals() const {
+  return normals;
+}
+
+bool Frame::has_covs() const {
+  return covs;
+}
+
+bool Frame::has_intensities() const {
+  return intensities;
+}
+
+bool Frame::has_times_gpu() const {
+  return times_gpu;
+}
+
+bool Frame::has_points_gpu() const {
+  return points_gpu;
+}
+
+bool Frame::has_normals_gpu() const {
+  return normals_gpu;
+}
+
+bool Frame::has_covs_gpu() const {
+  return covs_gpu;
+}
+
+bool Frame::has_intensities_gpu() const {
+  return intensities_gpu;
+}
+
+bool Frame::check_times() const {
   if (!times) {
     std::cerr << "warning: frame doesn't have times" << std::endl;
   }
   return times;
 }
 
-bool Frame::has_points() const {
+bool Frame::check_points() const {
   if (!points) {
     std::cerr << "warning: frame doesn't have points" << std::endl;
   }
   return points;
 }
 
-bool Frame::has_normals() const {
+bool Frame::check_normals() const {
   if (!normals) {
     std::cerr << "warning: frame doesn't have normals" << std::endl;
   }
   return normals;
 }
 
-bool Frame::has_covs() const {
+bool Frame::check_covs() const {
   if (!covs) {
     std::cerr << "warning: frame doesn't have covs" << std::endl;
   }
   return covs;
 }
 
-bool Frame::has_intensities() const {
+bool Frame::check_intensities() const {
   if (!intensities) {
     std::cerr << "warning: frame doesn't have intensities" << std::endl;
   }
   return intensities;
 }
 
+bool Frame::check_times_gpu() const {
+  if (!times_gpu) {
+    std::cerr << "warning: frame doesn't have times on GPU" << std::endl;
+  }
+  return times_gpu;
+}
+
+bool Frame::check_points_gpu() const {
+  if (!points_gpu) {
+    std::cerr << "warning: frame doesn't have points on GPU" << std::endl;
+  }
+  return points_gpu;
+}
+
+bool Frame::check_normals_gpu() const {
+  if (!normals_gpu) {
+    std::cerr << "warning: frame doesn't have normals on GPU" << std::endl;
+  }
+  return normals_gpu;
+}
+
+bool Frame::check_covs_gpu() const {
+  if (!covs_gpu) {
+    std::cerr << "warning: frame doesn't have covs on GPU" << std::endl;
+  }
+  return covs_gpu;
+}
+
+bool Frame::check_intensities_gpu() const {
+  if (!intensities_gpu) {
+    std::cerr << "warning: frame doesn't have intensities on GPU" << std::endl;
+  }
+  return intensities_gpu;
+}
+
 namespace {
-void write_binary(const std::string& filename, void* data, size_t size) {
+void write_binary(const std::string& filename, const void* data, size_t size) {
   std::ofstream ofs(filename, std::ios::binary);
-  ofs.write(reinterpret_cast<char*>(data), size);
+  ofs.write(reinterpret_cast<const char*>(data), size);
 }
 }  // namespace
 
 void Frame::save(const std::string& path) const {
+  boost::filesystem::create_directories(path);
+
   if (times) {
     write_binary(path + "/times.bin", times, sizeof(double) * num_points);
   }
@@ -73,9 +150,20 @@ void Frame::save(const std::string& path) const {
   if (intensities) {
     write_binary(path + "/intensities.bin", intensities, sizeof(double) * num_points);
   }
+
+  for (const auto& attrib : aux_attributes) {
+    const auto& name = attrib.first;
+    const size_t elem_size = attrib.second.first;
+    const void* data_ptr = attrib.second.second;
+    std::cout << "write:" << name << std::endl;
+
+    write_binary(path + "/aux_" + name + ".bin", data_ptr, elem_size * num_points);
+  }
 }
 
 void Frame::save_compact(const std::string& path) const {
+  boost::filesystem::create_directories(path);
+
   if (times) {
     std::vector<float> times_f(num_points);
     std::copy(times, times + num_points, times_f.begin());
@@ -106,6 +194,14 @@ void Frame::save_compact(const std::string& path) const {
     std::vector<float> intensities_f(num_points);
     std::copy(intensities, intensities + num_points, intensities_f.begin());
     write_binary(path + "/intensities_compact.bin", intensities_f.data(), sizeof(float) * num_points);
+  }
+
+  for (const auto& attrib : aux_attributes) {
+    const auto& name = attrib.first;
+    const size_t elem_size = attrib.second.first;
+    const void* data_ptr = attrib.second.second;
+
+    write_binary(path + "/aux_" + name + ".bin", data_ptr, elem_size * num_points);
   }
 }
 

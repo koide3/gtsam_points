@@ -4,12 +4,17 @@
 #include <gtsam_ext/cuda/nonlinear_factor_set_gpu.hpp>
 
 #include <thrust/device_vector.h>
+#include <gtsam_ext/cuda/check_error.cuh>
 
 namespace gtsam_ext {
 
-NonlinearFactorSetGPU::NonlinearFactorSetGPU() {}
+NonlinearFactorSetGPU::NonlinearFactorSetGPU() {
+  check_error << cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
+}
 
-NonlinearFactorSetGPU::~NonlinearFactorSetGPU() {}
+NonlinearFactorSetGPU::~NonlinearFactorSetGPU() {
+  check_error << cudaStreamDestroy(stream);
+}
 
 void NonlinearFactorSetGPU::clear_counts() {
   num_linearizations = 0;
@@ -48,6 +53,7 @@ void NonlinearFactorSetGPU::linearize(const gtsam::Values& linearization_point) 
     input_buffer_size += factor->linearization_input_size();
     output_buffer_size += factor->linearization_output_size();
   }
+
   linearization_input_buffer_cpu.resize(input_buffer_size);
   linearization_input_buffer_gpu.resize(input_buffer_size);
   linearization_output_buffer_cpu.resize(output_buffer_size);
@@ -63,8 +69,13 @@ void NonlinearFactorSetGPU::linearize(const gtsam::Values& linearization_point) 
   }
 
   // copy input buffer from cpu to gpu
-  cudaMemcpy(thrust::raw_pointer_cast(linearization_input_buffer_gpu.data()), linearization_input_buffer_cpu.data(), input_buffer_size, cudaMemcpyHostToDevice);
-  // linearization_input_buffer_gpu = linearization_input_buffer_cpu;
+  check_error << cudaMemcpyAsync(
+    thrust::raw_pointer_cast(linearization_input_buffer_gpu.data()),
+    linearization_input_buffer_cpu.data(),
+    input_buffer_size,
+    cudaMemcpyHostToDevice,
+    stream);
+  check_error << cudaStreamSynchronize(stream);
 
   // issue linearization tasks
   input_cursor = 0;
@@ -84,8 +95,13 @@ void NonlinearFactorSetGPU::linearize(const gtsam::Values& linearization_point) 
   }
 
   // copy output buffer from gpu to cpu
-  cudaMemcpy(linearization_output_buffer_cpu.data(), thrust::raw_pointer_cast(linearization_output_buffer_gpu.data()), output_buffer_size, cudaMemcpyDeviceToHost);
-  // linearization_output_buffer_cpu = linearization_input_buffer_gpu;
+  check_error << cudaMemcpyAsync(
+    linearization_output_buffer_cpu.data(),
+    thrust::raw_pointer_cast(linearization_output_buffer_gpu.data()),
+    output_buffer_size,
+    cudaMemcpyDeviceToHost,
+    stream);
+  check_error << cudaStreamSynchronize(stream);
 
   // store calculated results
   input_cursor = 0;
@@ -127,8 +143,13 @@ void NonlinearFactorSetGPU::error(const gtsam::Values& values) {
   }
 
   // copy input buffer from cpu to gpu
-  cudaMemcpy(thrust::raw_pointer_cast(evaluation_input_buffer_gpu.data()), evaluation_input_buffer_cpu.data(), input_buffer_size, cudaMemcpyHostToDevice);
-  // evaluation_input_buffer_gpu = evaluation_input_buffer_cpu;
+  check_error << cudaMemcpyAsync(
+    thrust::raw_pointer_cast(evaluation_input_buffer_gpu.data()),
+    evaluation_input_buffer_cpu.data(),
+    input_buffer_size,
+    cudaMemcpyHostToDevice,
+    stream);
+  check_error << cudaStreamSynchronize(stream);
 
   // issue error computation
   lin_input_cursor = 0;
@@ -154,8 +175,13 @@ void NonlinearFactorSetGPU::error(const gtsam::Values& values) {
   }
 
   // copy output buffer from gpu to cpu
-  cudaMemcpy(evaluation_output_buffer_cpu.data(), thrust::raw_pointer_cast(evaluation_output_buffer_gpu.data()), output_buffer_size, cudaMemcpyDeviceToHost);
-  // evaluation_output_buffer_cpu = evaluation_output_buffer_gpu;
+  check_error << cudaMemcpyAsync(
+    evaluation_output_buffer_cpu.data(),
+    thrust::raw_pointer_cast(evaluation_output_buffer_gpu.data()),
+    output_buffer_size,
+    cudaMemcpyDeviceToHost,
+    stream);
+  check_error << cudaStreamSynchronize(stream);
 
   // store computed results
   lin_input_cursor = 0;

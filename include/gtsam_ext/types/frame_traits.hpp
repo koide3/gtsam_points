@@ -187,24 +187,6 @@ auto intensity_gpu(const T& t, size_t i) {
   return traits<T>::intensity_gpu(t, i);
 }
 
-// low-level interface
-template <typename T, typename = void>
-struct points_ptr_defined : std::false_type {};
-
-template <typename T>
-struct points_ptr_defined<T, std::enable_if_t<std::is_invocable_v<decltype(&traits<T>::points_ptr), const T&>>> : std::true_type {};
-
-template <typename T>
-std::enable_if_t<points_ptr_defined<T>::value, const Eigen::Vector4d*> points_ptr(const T& t) {
-  return traits<T>::points_ptr(t);
-}
-
-template <typename T>
-std::enable_if_t<!points_ptr_defined<T>::value, const Eigen::Vector4d*> points_ptr(const T& t) {
-  std::cerr << "warning: calling frame::points_ptr() for unsupported class" << std::endl;
-  return nullptr;
-}
-
 }  // namespace frame
 
 }  // namespace gtsam_ext

@@ -11,7 +11,8 @@
 
 namespace gtsam_ext {
 
-struct VoxelizedFrame;
+class GaussianVoxelMapCPU;
+class GaussianVoxelMapGPU;
 
 /**
  * @brief Standard Frame class that holds only pointers to point attributes
@@ -39,16 +40,29 @@ public:
   /// Number of points
   size_t size() const { return num_points; }
 
-  /// Check if the frame has per-point timestamps
-  bool has_times() const;
-  /// Check if the frame has points
-  bool has_points() const;
-  /// Check if the frame has point normals
-  bool has_normals() const;
-  /// Check if the frame has point covariances
-  bool has_covs() const;
-  /// Check if the frame has point intensities
-  bool has_intensities() const;
+  bool has_times() const;        ///< Check if the frame has per-point timestamps
+  bool has_points() const;       ///< Check if the frame has points
+  bool has_normals() const;      ///< Check if the frame has point normals
+  bool has_covs() const;         ///< Check if the frame has point covariances
+  bool has_intensities() const;  ///< Check if the frame has point intensities
+
+  bool check_times() const;        ///< Warn if the frame doesn't have times
+  bool check_points() const;       ///< Warn if the frame doesn't have points
+  bool check_normals() const;      ///< Warn if the frame doesn't have normals
+  bool check_covs() const;         ///< Warn if the frame doesn't have covs
+  bool check_intensities() const;  ///< Warn if the frame doesn't have intensities
+
+  bool has_times_gpu() const;        ///< Check if the frame has per-point timestamps on GPU
+  bool has_points_gpu() const;       ///< Check if the frame has points on GPU
+  bool has_normals_gpu() const;      ///< Check if the frame has point normals on GPU
+  bool has_covs_gpu() const;         ///< Check if the frame has point covariances on GPU
+  bool has_intensities_gpu() const;  ///< Check if the frame has point intensities on GPU
+
+  bool check_times_gpu() const;        ///< Warn if the frame doesn't have times on GPU
+  bool check_points_gpu() const;       ///< Warn if the frame doesn't have points on GPU
+  bool check_normals_gpu() const;      ///< Warn if the frame doesn't have normals on GPU
+  bool check_covs_gpu() const;         ///< Warn if the frame doesn't have covs on GPU
+  bool check_intensities_gpu() const;  ///< Warn if the frame doesn't have intensities on GPU
 
   /**
    * @brief Get the pointer to an aux attribute
@@ -84,33 +98,26 @@ public:
   void save_compact(const std::string& path) const;
 
 public:
-  /// Number of points
-  size_t num_points;
+  size_t num_points;  ///< Number of points
 
-  /// Per-point timestamp w.r.t. the first point (should be sorted)
-  double* times;
-  /// Point coordinates (x, y, z, 1)
-  Eigen::Vector4d* points;
-  /// Point normals (nx, ny, nz, 0)
-  Eigen::Vector4d* normals;
-  /// Point covariances cov(3, 3) = 0
-  Eigen::Matrix4d* covs;
-  /// Point intensities
-  double* intensities;
+  double* times;             ///< Per-point timestamp w.r.t. the first point (should be sorted)
+  Eigen::Vector4d* points;   ///< Point coordinates (x, y, z, 1)
+  Eigen::Vector4d* normals;  ///< Point normals (nx, ny, nz, 0)
+  Eigen::Matrix4d* covs;     ///< Point covariances cov(3, 3) = 0
+  double* intensities;       ///< Point intensities
 
-  /// Aux attributes
+  /// Aux attributes <attribute_name, pair<element_size, data_ptr>>
   std::unordered_map<std::string, std::pair<size_t, void*>> aux_attributes;
 
-  /// Per-point timestamp on GPU
-  float* times_gpu;
-  /// Point coordinates on GPU
-  Eigen::Vector3f* points_gpu;
-  /// Point normals on GPU
-  Eigen::Vector3f* normals_gpu;
-  /// Point covariances on GPU
-  Eigen::Matrix3f* covs_gpu;
-  /// Point intensities on GPU
-  float* intensities_gpu;
+  float* times_gpu;              ///< Per-point timestamp on GPU
+  Eigen::Vector3f* points_gpu;   ///< Point coordinates on GPU
+  Eigen::Vector3f* normals_gpu;  ///< Point normals on GPU
+  Eigen::Matrix3f* covs_gpu;     ///< Point covariances on GPU
+  float* intensities_gpu;        ///< Point intensities on GPU
+
+  // Voxelmaps
+  std::shared_ptr<GaussianVoxelMapCPU> voxels;      ///< Voxelmap on CPU
+  std::shared_ptr<GaussianVoxelMapGPU> voxels_gpu;  ///< Voxelmap on GPU
 };
 }  // namespace gtsam_ext
 
