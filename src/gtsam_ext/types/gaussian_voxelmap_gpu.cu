@@ -218,7 +218,7 @@ void GaussianVoxelMapGPU::insert(const Frame& frame) {
     accumulate_points_kernel(voxelmap_info_ptr, buckets, num_points, voxel_means, voxel_covs));
 
   auto finalize_result = thrust::async::for_each(
-    thrust::cuda::par.after(accum_result),
+    thrust::cuda::par.on(stream),
     thrust::counting_iterator<int>(0),
     thrust::counting_iterator<int>(voxelmap_info.num_voxels),
     finalize_voxels_kernel(num_points, voxel_means, voxel_covs));

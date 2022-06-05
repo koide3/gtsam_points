@@ -48,7 +48,7 @@ private:
  */
 class StreamTempBufferRoundRobin {
 public:
-  StreamTempBufferRoundRobin(int num_streams = 32, size_t init_buffer_size = 512 * 1024);
+  StreamTempBufferRoundRobin(int num_streams = 16, size_t init_buffer_size = 512 * 1024);
   ~StreamTempBufferRoundRobin();
 
   std::pair<CUstream_st*, TempBufferManager::Ptr> get_stream_buffer();
