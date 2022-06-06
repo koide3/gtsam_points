@@ -63,7 +63,7 @@ All the following optimizers were derived from the implementations in GTSAM
     Incremental voxel-based nearest neighbor search [[11]](#IVOX)
 
 
-## Continuous-Time Trajectory
+## Continuous-Time Trajectory (Under development)
 - **B-Spline**
     Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[12]](#BSPLINE_D)
 - **ContinuousTrajectory**
