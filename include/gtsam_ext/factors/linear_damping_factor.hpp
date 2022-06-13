@@ -30,7 +30,7 @@ private:
   template <class ARCHIVE>
   void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
     namespace bs = ::boost::serialization;
-    ar& boost::serialization::make_nvp("NonlinearFactor", boost::serialization::base_object<gtsam::NonlinearFactor>(*this));
+    ar& boost::serialization::make_nvp("LinearContainerFactor", boost::serialization::base_object<gtsam::LinearContainerFactor>(*this));
   }
 };
 
