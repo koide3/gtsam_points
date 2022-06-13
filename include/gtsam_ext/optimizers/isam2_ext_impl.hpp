@@ -127,7 +127,9 @@ struct GTSAM_EXPORT UpdateImpl {
 
   // Check relinearization if we're at the nth step, or we are using a looser
   // loop relinerization threshold.
-  bool relinarizationNeeded(size_t update_count) const { return updateParams_.force_relinearize || (params_.enableRelinearization && update_count % params_.relinearizeSkip == 0); }
+  bool relinarizationNeeded(size_t update_count) const {
+    return updateParams_.force_relinearize || (params_.enableRelinearization && update_count % params_.relinearizeSkip == 0);
+  }
 
   // Add any new factors \Factors:=\Factors\cup\Factors'.
   void pushBackFactors(
@@ -162,14 +164,23 @@ struct GTSAM_EXPORT UpdateImpl {
 
   // Get keys from removed factors and new factors, and compute unused keys,
   // i.e., keys that are empty now and do not appear in the new factors.
-  void computeUnusedKeys(const NonlinearFactorGraph& newFactors, const VariableIndex& variableIndex, const KeySet& keysWithRemovedFactors, KeySet* unusedKeys) const {
+  void computeUnusedKeys(
+    const NonlinearFactorGraph& newFactors,
+    const VariableIndex& variableIndex,
+    const KeySet& keysWithRemovedFactors,
+    KeySet* unusedKeys) const {
     gttic(computeUnusedKeys);
     KeySet removedAndEmpty;
     for (Key key : keysWithRemovedFactors) {
       if (variableIndex.empty(key)) removedAndEmpty.insert(removedAndEmpty.end(), key);
     }
     KeySet newFactorSymbKeys = newFactors.keys();
-    std::set_difference(removedAndEmpty.begin(), removedAndEmpty.end(), newFactorSymbKeys.begin(), newFactorSymbKeys.end(), std::inserter(*unusedKeys, unusedKeys->end()));
+    std::set_difference(
+      removedAndEmpty.begin(),
+      removedAndEmpty.end(),
+      newFactorSymbKeys.begin(),
+      newFactorSymbKeys.end(),
+      std::inserter(*unusedKeys, unusedKeys->end()));
   }
 
   // Calculate nonlinear error
@@ -179,7 +190,11 @@ struct GTSAM_EXPORT UpdateImpl {
   }
 
   // Mark linear update
-  void gatherInvolvedKeys(const NonlinearFactorGraph& newFactors, const NonlinearFactorGraph& nonlinearFactors, const KeySet& keysWithRemovedFactors, KeySet* markedKeys) const {
+  void gatherInvolvedKeys(
+    const NonlinearFactorGraph& newFactors,
+    const NonlinearFactorGraph& nonlinearFactors,
+    const KeySet& keysWithRemovedFactors,
+    KeySet* markedKeys) const {
     gttic(gatherInvolvedKeys);
     *markedKeys = newFactors.keys();  // Get keys from new factors
     // Also mark keys involved in removed factors
@@ -221,7 +236,11 @@ struct GTSAM_EXPORT UpdateImpl {
     }
   }
 
-  static void CheckRelinearizationRecursiveMap(const FastMap<char, Vector>& thresholds, const VectorValues& delta, const ISAM2Ext::sharedClique& clique, KeySet* relinKeys) {
+  static void CheckRelinearizationRecursiveMap(
+    const FastMap<char, Vector>& thresholds,
+    const VectorValues& delta,
+    const ISAM2Ext::sharedClique& clique,
+    KeySet* relinKeys) {
     // Check the current clique for relinearization
     bool relinearize = false;
     for (Key var : *clique->conditional()) {
@@ -252,7 +271,8 @@ struct GTSAM_EXPORT UpdateImpl {
     }
   }
 
-  static void CheckRelinearizationRecursiveDouble(double threshold, const VectorValues& delta, const ISAM2Ext::sharedClique& clique, KeySet* relinKeys) {
+  static void
+  CheckRelinearizationRecursiveDouble(double threshold, const VectorValues& delta, const ISAM2Ext::sharedClique& clique, KeySet* relinKeys) {
     // Check the current clique for relinearization
     bool relinearize = false;
     for (Key var : *clique->conditional()) {
@@ -284,7 +304,10 @@ struct GTSAM_EXPORT UpdateImpl {
    * @return The set of variable indices in delta whose magnitude is greater
    * than or equal to relinearizeThreshold
    */
-  static KeySet CheckRelinearizationPartial(const ISAM2Ext::Roots& roots, const VectorValues& delta, const ISAM2Params::RelinearizationThreshold& relinearizeThreshold) {
+  static KeySet CheckRelinearizationPartial(
+    const ISAM2Ext::Roots& roots,
+    const VectorValues& delta,
+    const ISAM2Params::RelinearizationThreshold& relinearizeThreshold) {
     KeySet relinKeys;
     for (const ISAM2Ext::sharedClique& root : roots) {
       if (relinearizeThreshold.type() == typeid(double))
@@ -420,9 +443,9 @@ struct GTSAM_EXPORT UpdateImpl {
     GaussianFactorGraph* linearFactors) const {
     gttic(linearizeNewFactors);
 
-    for(const auto& factor: newFactors) {
-      for(const auto key: factor->keys()) {
-        if(!theta.exists(key)) {
+    for (const auto& factor : newFactors) {
+      for (const auto key : factor->keys()) {
+        if (!theta.exists(key)) {
           std::cerr << "warning: requesting a non-existing value!!" << std::endl;
         }
       }

@@ -47,14 +47,16 @@ namespace gtsam_ext {
 
 /* ************************************************************************* */
 ISAM2Ext::ISAM2Ext(const ISAM2Params& params) : params_(params), update_count_(0) {
-  if (params_.optimizationParams.type() == typeid(ISAM2DoglegParams)) doglegDelta_ = boost::get<ISAM2DoglegParams>(params_.optimizationParams).initialDelta;
+  if (params_.optimizationParams.type() == typeid(ISAM2DoglegParams))
+    doglegDelta_ = boost::get<ISAM2DoglegParams>(params_.optimizationParams).initialDelta;
 
   gpu_factors.reset(new NonlinearFactorSetGPU());
 }
 
 /* ************************************************************************* */
 ISAM2Ext::ISAM2Ext() : update_count_(0) {
-  if (params_.optimizationParams.type() == typeid(ISAM2DoglegParams)) doglegDelta_ = boost::get<ISAM2DoglegParams>(params_.optimizationParams).initialDelta;
+  if (params_.optimizationParams.type() == typeid(ISAM2DoglegParams))
+    doglegDelta_ = boost::get<ISAM2DoglegParams>(params_.optimizationParams).initialDelta;
 
   gpu_factors.reset(new NonlinearFactorSetGPU());
 }
@@ -69,7 +71,8 @@ bool ISAM2Ext::equals(const ISAM2Ext& other, double tol) const {
 }
 
 /* ************************************************************************* */
-GaussianFactorGraph ISAM2Ext::relinearizeAffectedFactors(const ISAM2UpdateParams& updateParams, const FastList<Key>& affectedKeys, const KeySet& relinKeys) {
+GaussianFactorGraph
+ISAM2Ext::relinearizeAffectedFactors(const ISAM2UpdateParams& updateParams, const FastList<Key>& affectedKeys, const KeySet& relinKeys) {
   gttic(relinearizeAffectedFactors);
   FactorIndexSet candidates = UpdateImpl::GetAffectedFactors(affectedKeys, variableIndex_);
 
@@ -161,7 +164,8 @@ void ISAM2Ext::recalculate(const ISAM2UpdateParams& updateParams, const KeySet& 
     // because path to root included
     gttic(affectedKeys);
     FastList<Key> affectedKeys;
-    for (const auto& conditional : affectedBayesNet) affectedKeys.insert(affectedKeys.end(), conditional->beginFrontals(), conditional->endFrontals());
+    for (const auto& conditional : affectedBayesNet)
+      affectedKeys.insert(affectedKeys.end(), conditional->beginFrontals(), conditional->endFrontals());
     gttoc(affectedKeys);
 
     KeySet affectedKeysSet;
@@ -228,7 +232,8 @@ void ISAM2Ext::recalculateBatch(const ISAM2UpdateParams& updateParams, KeySet* a
   gttoc(linearize);
 
   gttic(eliminate);
-  ISAM2BayesTree::shared_ptr bayesTree = ISAM2JunctionTree(GaussianEliminationTree(*linearized, affectedFactorsVarIndex, order)).eliminate(params_.getEliminationFunction()).first;
+  ISAM2BayesTree::shared_ptr bayesTree =
+    ISAM2JunctionTree(GaussianEliminationTree(*linearized, affectedFactorsVarIndex, order)).eliminate(params_.getEliminationFunction()).first;
   gttoc(eliminate);
 
   gttic(insert);
@@ -460,6 +465,10 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
   }
 
   // 7. Linearize new factors
+  gpu_factors->clear();
+  gpu_factors->add(newFactors);
+  gpu_factors->linearize(theta_);
+
   update.linearizeNewFactors(newFactors, theta_, nonlinearFactors_.size(), result.newFactorsIndices, &linearFactors_);
   update.augmentVariableIndex(newFactors, result.newFactorsIndices, &variableIndex_);
 
@@ -482,7 +491,8 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
   result.delta = delta_.norm();
   result.gpu_evaluation_count = gpu_factors->evaluation_count();
   result.gpu_linearization_count = gpu_factors->linearization_count();
-  result.elapsed_time = std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - optimization_start_time).count() / 1e9;
+  result.elapsed_time =
+    std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - optimization_start_time).count() / 1e9;
 
   result.num_factors = this->nonlinearFactors_.size();
   result.num_values = this->theta_.size();
@@ -491,7 +501,10 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
 }
 
 /* ************************************************************************* */
-void ISAM2Ext::marginalizeLeaves(const FastList<Key>& leafKeysList, boost::optional<FactorIndices&> marginalFactorsIndices, boost::optional<FactorIndices&> deletedFactorsIndices) {
+void ISAM2Ext::marginalizeLeaves(
+  const FastList<Key>& leafKeysList,
+  boost::optional<FactorIndices&> marginalFactorsIndices,
+  boost::optional<FactorIndices&> deletedFactorsIndices) {
   // Convert to ordered set
   KeySet leafKeys(leafKeysList.begin(), leafKeysList.end());
 
@@ -633,7 +646,12 @@ void ISAM2Ext::marginalizeLeaves(const FastList<Key>& leafKeysList, boost::optio
         auto cg = clique->conditional();
         const KeySet cliqueFrontals(cg->beginFrontals(), cg->endFrontals());
         KeyVector cliqueFrontalsToEliminate;
-        std::set_intersection(cliqueFrontals.begin(), cliqueFrontals.end(), leafKeys.begin(), leafKeys.end(), std::back_inserter(cliqueFrontalsToEliminate));
+        std::set_intersection(
+          cliqueFrontals.begin(),
+          cliqueFrontals.end(),
+          leafKeys.begin(),
+          leafKeys.end(),
+          std::back_inserter(cliqueFrontalsToEliminate));
         auto eliminationResult1 = params_.getEliminationFunction()(graph, Ordering(cliqueFrontalsToEliminate));
 
         // Add the resulting marginal
@@ -746,11 +764,13 @@ void ISAM2Ext::updateDelta(bool forceFullSolve) const {
     gpu_factors->error(theta_);
 
     double error0 = nonlinearFactors_.error(theta_);
-    DoglegOptimizerImplExt::TrustRegionAdaptationMode adaptationMode = static_cast<DoglegOptimizerImplExt::TrustRegionAdaptationMode>(doglegParams.adaptationMode);
+    DoglegOptimizerImplExt::TrustRegionAdaptationMode adaptationMode =
+      static_cast<DoglegOptimizerImplExt::TrustRegionAdaptationMode>(doglegParams.adaptationMode);
 
     // Compute dogleg point
     DoglegOptimizerImplExt::IterationResult doglegResult(
-      DoglegOptimizerImplExt::Iterate(*doglegDelta_, adaptationMode, dx_u, deltaNewton_, *this, nonlinearFactors_, *gpu_factors, theta_, error0, doglegParams.verbose));
+      DoglegOptimizerImplExt::
+        Iterate(*doglegDelta_, adaptationMode, dx_u, deltaNewton_, *this, nonlinearFactors_, *gpu_factors, theta_, error0, doglegParams.verbose));
     gttoc(Dogleg_Iterate);
 
     gttic(Copy_dx_d);
