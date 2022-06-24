@@ -11,6 +11,7 @@
 #include <boost/filesystem.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 
+#include <gtsam_ext/ann/kdtree.hpp>
 #include <gtsam_ext/util/vector3i_hash.hpp>
 
 namespace gtsam_ext {
@@ -497,6 +498,69 @@ FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double vox
 
   // Sample points and return it
   return sample(frame, indices);
+}
+
+// statistical outlier removal
+std::vector<int> find_inlier_points(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh) {
+  std::vector<double> dists(frame->size());
+
+  for (int i = 0; i < frame->size(); i++) {
+    const auto& pt = frame->points[i];
+
+    double sum_dist = 0.0;
+    for (int j = 0; j < k; j++) {
+      const int index = neighbors[i * k + j];
+      sum_dist += (frame->points[index] - pt).norm();
+    }
+
+    dists[i] = sum_dist / k;
+  }
+
+
+  double sum_dists = 0.0;
+  double sum_sq_dists = 0.0;
+  for (int i = 0; i < dists.size(); i++) {
+    sum_dists += dists[i];
+    sum_sq_dists += dists[i] * dists[i];
+  }
+
+  const double mean = sum_dists / frame->size();
+  const double var = sum_sq_dists / frame->size() - mean * mean;
+  const double dist_thresh = mean + std::sqrt(var) * std_thresh;
+
+  std::vector<int> inliers;
+  inliers.reserve(frame->size());
+
+  for (int i = 0; i < frame->size(); i++) {
+    if (dists[i] < dist_thresh) {
+      inliers.emplace_back(i);
+    }
+  }
+
+  return inliers;
+}
+
+FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh) {
+  const auto inliers = find_inlier_points(frame, neighbors, k, std_thresh);
+  return sample(frame, inliers);
+}
+
+FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const int k, const double std_thresh, const int num_threads) {
+  KdTree kdtree(frame->points, frame->size());
+
+  std::vector<int> neighbors(frame->size() * k, -1);
+
+#pragma omp parallel for schedule(guided, 8)
+  for (int i = 0; i < frame->size(); i++) {
+    std::vector<size_t> k_neighbors(k);
+    std::vector<double> k_sq_dists(k);
+
+    kdtree.knn_search(frame->points[i].data(), k, k_neighbors.data(), k_sq_dists.data());
+
+    std::copy(k_neighbors.begin(), k_neighbors.end(), neighbors.begin() + i * k);
+  }
+
+  return remove_outliers(frame, neighbors, k, std_thresh);
 }
 
 }  // namespace gtsam_ext

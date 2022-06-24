@@ -140,6 +140,35 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
 FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt);
 
 /**
+ * @brief Statistical outlier removal
+ * @param frame       Input points
+ * @param neighbors   Neighbor indices
+ * @param k           Number of neighbors (neighbors.size() must be >= frame->size() * k)
+ * @param std_thresh  Standard deviation multiplication threshold
+ * @return            Inlier point indices
+ */
+std::vector<int> find_inlier_points(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh = 1.0);
+
+/**
+ * @brief Statistical outlier removal
+ * @param frame       Input points
+ * @param neighbors   Neighbor indices
+ * @param k           Number of neighbors (neighbors.size() must be >= frame->size() * k)
+ * @param std_thresh  Standard deviation multiplication threshold
+ * @return            Filtered point cloud
+ */
+FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh = 1.0);
+
+/**
+ * @brief Statistical outlier removal
+ * @param frame       Input points
+ * @param k           Number of neighbors (neighbors.size() must be >= frame->size() * k)
+ * @param std_thresh  Standard deviation multiplication threshold
+ * @return            Filtered point cloud
+ */
+FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const int k = 10, const double std_thresh = 1.0, const int num_threads = 1);
+
+/**
  * @brief Merge a set of voxelized frames into one frame
  * @note  This function only merges points and covs and discard other point attributes.
  * @param poses                  Poses of input frames
