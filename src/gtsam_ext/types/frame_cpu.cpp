@@ -550,7 +550,7 @@ FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const int k, const d
 
   std::vector<int> neighbors(frame->size() * k, -1);
 
-#pragma omp parallel for schedule(guided, 8)
+#pragma omp parallel for schedule(guided, 8) num_threads(num_threads)
   for (int i = 0; i < frame->size(); i++) {
     std::vector<size_t> k_neighbors(k);
     std::vector<double> k_sq_dists(k);
