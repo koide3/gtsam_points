@@ -31,7 +31,10 @@ public:
       }
 
       return value.cast<VALUE>();
-    } catch (...) {
+    } catch (std::exception& e) {
+      std::cerr << "warning: an exception was caught in fixed-lag smoother update!!" << std::endl;
+      std::cerr << "       : " << e.what() << std::endl;
+
       fallback_smoother();
 
       const auto& value = smoother->calculateEstimate(key);

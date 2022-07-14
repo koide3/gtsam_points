@@ -46,7 +46,7 @@ IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_ICPFactor_(
   }
 
   for (auto& t : time_table) {
-    t = t / time_table.back();
+    t = t / std::max(1e-9, time_table.back());
   }
 
   if (target_tree) {
