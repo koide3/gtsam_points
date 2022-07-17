@@ -324,4 +324,32 @@ std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVox::vo
   return points;
 }
 
+std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVox::voxel_normals() const {
+  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals;
+  if (!has_normals()) {
+    std::cerr << "warning: iVox doesn't have normals!!" << std::endl;
+    return normals;
+  }
+
+  normals.reserve(voxels.size() * 10);
+  for (const auto& voxel : voxels) {
+    normals.insert(normals.end(), voxel->normals.begin(), voxel->normals.end());
+  }
+  return normals;
+}
+
+std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> iVox::voxel_covs() const {
+  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs;
+  if (!has_covs()) {
+    std::cerr << "warning: iVox doesn't have covs!!" << std::endl;
+    return covs;
+  }
+
+  covs.reserve(voxels.size() * 10);
+  for (const auto& voxel : voxels) {
+    covs.insert(covs.end(), voxel->covs.begin(), voxel->covs.end());
+  }
+  return covs;
+}
+
 }  // namespace gtsam_ext

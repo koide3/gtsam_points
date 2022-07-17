@@ -60,7 +60,6 @@ double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Va
 
     const auto& source_pt = frame::point(*this->source, i);
     const auto& target_pt = frame::point(*this->target, target_index);
-    const auto& target_normal = frame::normal(*this->target, target_index);
 
     Eigen::Vector4d transed_source_pt = pose * source_pt;
     Eigen::Vector4d error = transed_source_pt - target_pt;
@@ -104,7 +103,6 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
 
     const auto& source_pt = frame::point(*this->source, i);
     const auto& target_pt = frame::point(*this->target, target_index);
-    const auto& target_normal = frame::normal(*this->target, target_index);
 
     gtsam::Matrix46 H_transed_pose = gtsam::Matrix46::Zero();
     H_transed_pose.block<3, 3>(0, 0) = pose.linear() * -gtsam::SO3::Hat(source_pt.template head<3>());

@@ -120,7 +120,9 @@ public:
   int num_voxels() const { return voxelmap.size(); }
 
   /// Extract all points in iVox
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_points() const;
+  virtual std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_points() const;
+  virtual std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_normals() const;
+  virtual std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> voxel_covs() const;
 
 protected:
   inline size_t calc_index(const size_t voxel_id, const size_t point_id) const { return (voxel_id << point_id_bits) | point_id; }

@@ -79,6 +79,7 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/ann/kdtree.cpp
   src/gtsam_ext/ann/intensity_kdtree.cpp
   src/gtsam_ext/ann/ivox.cpp
+  src/gtsam_ext/ann/ivox_covariance_estimation.cpp
   # types
   src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/frame_cpu.cpp

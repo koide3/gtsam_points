@@ -138,8 +138,8 @@ const Eigen::Vector4d& IntensityGradientsiVox::intensity_gradient(const size_t i
   return grads[voxel_id(i)]->points[point_id(i)];
 }
 
-std::vector<Eigen::Vector4d> IntensityGradientsiVox::voxel_normals() const {
-  std::vector<Eigen::Vector4d> normals;
+std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> IntensityGradientsiVox::voxel_normals() const {
+  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals;
   for (const auto& grad : grads) {
     normals.insert(normals.end(), grad->normals.begin(), grad->normals.end());
   }
