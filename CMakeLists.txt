@@ -170,9 +170,6 @@ if(BUILD_WITH_CUDA)
     ${GTSAM_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
   )
-  target_link_directories(gtsam_ext_cuda PUBLIC
-    ${CUDA_LIBRARY_DIRS}
-  )
   target_link_libraries(gtsam_ext
     gtsam_ext_cuda
   )
