@@ -13,6 +13,7 @@ option(BUILD_TESTS "Build test" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
 option(BUILD_EXAMPLE "Build example programs" OFF)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
+option(BUILD_WITH_CUDA_MULTIARCH "Build with GPU cross-platform support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" OFF)
 
@@ -43,13 +44,28 @@ if(BUILD_WITH_CUDA)
   add_definitions(-DBUILD_GTSAM_EXT_GPU)
 
   set(CUDA_STANDARD 17)
-  # set(CUDA_HOST_COMPILER gcc)
-
-  CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS Auto)
-  message("CUDA_SELECT_NVCC_ARCH_FLAGS:${ARCH_FLAGS}")
-
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
   set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++17 --expt-relaxed-constexpr")
+
+  if(BUILD_WITH_CUDA_MULTIARCH)
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_52")
+    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
+                        -gencode=arch=compute_52,code=sm_52 \
+                        -gencode=arch=compute_60,code=sm_60 \
+                        -gencode=arch=compute_61,code=sm_61 \
+                        -gencode=arch=compute_70,code=sm_70 \
+                        -gencode=arch=compute_75,code=sm_75 \
+                        -gencode=arch=compute_75,code=compute_75 \
+                        -gencode=arch=compute_80,code=sm_80 \
+                        -gencode=arch=compute_86,code=sm_86 \
+                        -gencode=arch=compute_87,code=sm_87 \
+                        -gencode=arch=compute_87,code=compute_87 \
+                        ")
+    message(STATUS "CUDA_MULTIARCH")
+  else()
+    CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS Auto)
+    message(STATUS "CUDA_SELECT_NVCC_ARCH_FLAGS:${ARCH_FLAGS}")
+  endif()
 
   if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
   else()
