@@ -5,7 +5,7 @@
 
 #include <iostream>
 #include <type_traits>
-#include <boost/callable_traits/is_invocable.hpp>
+#include <boost/poly_collection/detail/is_invocable.hpp>
 
 #include <Eigen/Core>
 
@@ -21,7 +21,8 @@ template <typename T, typename = void>
 struct size_defined : std::false_type {};
 
 template <typename T>
-struct size_defined<T, std::enable_if_t<boost::callable_traits::is_invocable<decltype(&traits<T>::size), const T&>::value>> : std::true_type {};
+struct size_defined<T, std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::size), const T&>::value>> : std::true_type {
+};
 
 template <typename T>
 std::enable_if_t<size_defined<T>::value, int> size(const T& t) {
@@ -39,7 +40,7 @@ template <typename T, typename = void>
 struct has_times_defined : std::false_type {};
 
 template <typename T>
-struct has_times_defined<T, std::enable_if_t<boost::callable_traits::is_invocable<decltype(&traits<T>::has_times), const T&>::value>> : std::true_type {};
+struct has_times_defined<T, std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::has_times), const T&>::value>> : std::true_type {};
 
 template <typename T>
 std::enable_if_t<has_times_defined<T>::value, bool> has_times(const T& t) {
@@ -56,8 +57,8 @@ template <typename T, typename = void>
 struct has_points_defined : std::false_type {};
 
 template <typename T>
-struct has_points_defined<T, std::enable_if_t<boost::callable_traits::is_invocable<decltype(&traits<T>::has_points), const T&>::value>> : std::true_type {
-};
+struct has_points_defined<T, std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::has_points), const T&>::value>>
+: std::true_type {};
 
 template <typename T>
 std::enable_if_t<has_points_defined<T>::value, bool> has_points(const T& t) {
@@ -74,7 +75,7 @@ template <typename T, typename = void>
 struct has_normals_defined : std::false_type {};
 
 template <typename T>
-struct has_normals_defined<T, std::enable_if_t<boost::callable_traits::is_invocable<decltype(&traits<T>::has_normals), const T&>::value>>
+struct has_normals_defined<T, std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::has_normals), const T&>::value>>
 : std::true_type {};
 
 template <typename T>
@@ -92,7 +93,8 @@ template <typename T, typename = void>
 struct has_covs_defined : std::false_type {};
 
 template <typename T>
-struct has_covs_defined<T, std::enable_if_t<boost::callable_traits::is_invocable<decltype(&traits<T>::has_covs), const T&>::value>> : std::true_type {};
+struct has_covs_defined<T, std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::has_covs), const T&>::value>>
+: std::true_type {};
 
 template <typename T>
 std::enable_if_t<has_covs_defined<T>::value, bool> has_covs(const T& t) {
@@ -109,8 +111,9 @@ template <typename T, typename = void>
 struct has_intensities_defined : std::false_type {};
 
 template <typename T>
-struct has_intensities_defined<T, std::enable_if_t<boost::callable_traits::is_invocable<decltype(&traits<T>::has_intensities), const T&>::value>>
-: std::true_type {};
+struct has_intensities_defined<
+  T,
+  std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::has_intensities), const T&>::value>> : std::true_type {};
 
 template <typename T>
 std::enable_if_t<has_intensities_defined<T>::value, bool> has_intensities(const T& t) {
@@ -138,8 +141,8 @@ template <typename T, typename = void>
 struct normal_defined : std::false_type {};
 
 template <typename T>
-struct normal_defined<T, std::enable_if_t<boost::callable_traits::is_invocable<decltype(&traits<T>::normal), const T&, size_t>::value>> : std::true_type {
-};
+struct normal_defined<T, std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::normal), const T&, size_t>::value>>
+: std::true_type {};
 
 template <typename T, typename std::enable_if_t<normal_defined<T>::value>* = nullptr>
 auto normal(const T& t, size_t i) {
