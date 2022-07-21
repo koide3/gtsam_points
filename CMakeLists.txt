@@ -43,10 +43,9 @@ if(BUILD_WITH_CUDA)
   find_package(CUDA REQUIRED)
   add_definitions(-DBUILD_GTSAM_EXT_GPU)
 
-  # Jetson Nano supports only CUDA 10 that does not allow C++17 :(
-  set(CUDA_STANDARD 14)
+  set(CUDA_STANDARD 17)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
-  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++14 --expt-relaxed-constexpr")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++17 --expt-relaxed-constexpr")
 
   if(BUILD_WITH_CUDA_MULTIARCH)
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_52")
@@ -75,7 +74,7 @@ if(BUILD_WITH_CUDA)
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=2739")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20011")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20014")
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20236")
+    # set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20236") # Not available on CUDA 11.4
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=set_but_not_used")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored")
   endif()
