@@ -5,6 +5,7 @@
 
 #include <memory>
 #include <vector>
+#include <unordered_map>
 #include <iostream>
 #include <Eigen/Core>
 #include <Eigen/Geometry>

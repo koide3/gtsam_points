@@ -7,7 +7,6 @@
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
 #include <gtsam_ext/cuda/check_error.cuh>
-#include <gtsam_ext/types/cpu_gpu_copy.hpp>
 
 namespace gtsam_ext {
 

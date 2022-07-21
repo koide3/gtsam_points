@@ -43,9 +43,10 @@ if(BUILD_WITH_CUDA)
   find_package(CUDA REQUIRED)
   add_definitions(-DBUILD_GTSAM_EXT_GPU)
 
-  set(CUDA_STANDARD 17)
+  # Jetson Nano supports only CUDA 10 that does not allow C++17 :(
+  set(CUDA_STANDARD 14)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
-  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++17 --expt-relaxed-constexpr")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++14 --expt-relaxed-constexpr")
 
   if(BUILD_WITH_CUDA_MULTIARCH)
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_52")
@@ -168,9 +169,6 @@ if(BUILD_WITH_CUDA)
     ${Boost_INCLUDE_DIRS}
     ${GTSAM_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
-  )
-  target_link_directories(gtsam_ext_cuda PUBLIC
-    ${CUDA_LIBRARY_DIRS}
   )
   target_link_libraries(gtsam_ext
     gtsam_ext_cuda
