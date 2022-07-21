@@ -55,11 +55,8 @@ if(BUILD_WITH_CUDA)
                         -gencode=arch=compute_61,code=sm_61 \
                         -gencode=arch=compute_70,code=sm_70 \
                         -gencode=arch=compute_75,code=sm_75 \
-                        -gencode=arch=compute_75,code=compute_75 \
                         -gencode=arch=compute_80,code=sm_80 \
-                        -gencode=arch=compute_86,code=sm_86 \
-                        -gencode=arch=compute_87,code=sm_87 \
-                        -gencode=arch=compute_87,code=compute_87 \
+                        -gencode=arch=compute_80,code=compute_80 \
                         ")
     message(STATUS "CUDA_MULTIARCH")
   else()
