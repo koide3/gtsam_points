@@ -108,6 +108,23 @@ public:
 FrameCPU::Ptr sample(const Frame::ConstPtr& frame, const std::vector<int>& indices);
 
 /**
+ * @brief Extract points for which pred returns true
+ * @param frame  Input points
+ * @param pred   Predicate function that takes Eigen::Vector4d and returns bool
+ */
+template<typename Func>
+FrameCPU::Ptr filter(const Frame::ConstPtr& frame, const Func& pred) {
+  std::vector<int> indices;
+  indices.reserve(frame->size());
+  for (int i = 0; i < frame->size(); i++) {
+    if (pred(frame->points[i])) {
+      indices.push_back(i);
+    }
+  }
+  return sample(frame, indices);
+}
+
+/**
  * @brief Naive random sampling
  * @param frame          Input points
  * @param sampling_rate  Random sampling rate in [0, 1]

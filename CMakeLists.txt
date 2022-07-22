@@ -66,14 +66,17 @@ if(BUILD_WITH_CUDA)
 
   if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
   else()
-    # Suppress Eigen-related CUDA warning
+    # Suppress Eigen-related CUDA warnings
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=177")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=2739")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20011")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20014")
-    # set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20236") # Not available on CUDA 11.4
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=set_but_not_used")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored")
+
+    if(${CUDA_VERSION} VERSION_GREATER_EQUAL 11.6)
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20236") # Not available on CUDA 11.4
+    endif()
   endif()
 endif()
 
