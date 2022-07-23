@@ -500,6 +500,114 @@ FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double vox
   return sample(frame, indices);
 }
 
+// transform
+template <>
+FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
+  auto transformed = std::make_shared<gtsam_ext::FrameCPU>(*frame);
+  for (int i = 0; i < frame->size(); i++) {
+    transformed->points[i] = transformation * frame->points[i];
+  }
+
+  if (frame->normals) {
+    for (int i = 0; i < frame->size(); i++) {
+      transformed->normals[i] = transformation.matrix() * frame->normals[i];
+    }
+  }
+
+  if (frame->covs) {
+    for (int i = 0; i < frame->size(); i++) {
+      transformed->covs[i] = transformation.matrix() * frame->covs[i] * transformation.matrix().transpose();
+    }
+  }
+
+  return transformed;
+}
+
+template <>
+FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<float, 3, Eigen::Isometry>& transformation) {
+  return transform<double, Eigen::Isometry>(frame, transformation.cast<double>());
+}
+
+template <>
+FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
+  auto transformed = std::make_shared<gtsam_ext::FrameCPU>(*frame);
+  for (int i = 0; i < frame->size(); i++) {
+    transformed->points[i] = transformation * frame->points[i];
+  }
+
+  if (frame->normals) {
+    Eigen::Matrix4d normal_matrix = Eigen::Matrix4d::Zero();
+    normal_matrix.block<3, 3>(0, 0) = transformation.linear().inverse().transpose();
+    for (int i = 0; i < frame->size(); i++) {
+      transformed->normals[i] = normal_matrix * frame->normals[i];
+    }
+  }
+
+  if (frame->covs) {
+    for (int i = 0; i < frame->size(); i++) {
+      transformed->covs[i] = transformation.matrix() * frame->covs[i] * transformation.matrix().transpose();
+    }
+  }
+
+  return transformed;
+}
+
+template <>
+FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<float, 3, Eigen::Affine>& transformation) {
+  return transform<double, Eigen::Affine>(frame, transformation.cast<double>());
+}
+
+// transform_inplace
+template <>
+void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
+  for (int i = 0; i < frame->size(); i++) {
+    frame->points[i] = transformation * frame->points[i];
+  }
+
+  if (frame->normals) {
+    for (int i = 0; i < frame->size(); i++) {
+      frame->normals[i] = transformation.matrix() * frame->normals[i];
+    }
+  }
+
+  if (frame->covs) {
+    for (int i = 0; i < frame->size(); i++) {
+      frame->covs[i] = transformation.matrix() * frame->covs[i] * transformation.matrix().transpose();
+    }
+  }
+}
+
+template <>
+void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<float, 3, Eigen::Isometry>& transformation) {
+  transform_inplace<float, Eigen::Isometry>(frame, transformation);
+}
+
+template <>
+void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
+  for (int i = 0; i < frame->size(); i++) {
+    frame->points[i] = transformation * frame->points[i];
+  }
+
+  if (frame->normals) {
+    for (int i = 0; i < frame->size(); i++) {
+      Eigen::Matrix4d normal_matrix = Eigen::Matrix4d::Zero();
+      normal_matrix.block<3, 3>(0, 0) = transformation.linear().inverse().transpose();
+      frame->normals[i] = normal_matrix * frame->normals[i];
+    }
+  }
+
+  if (frame->covs) {
+    for (int i = 0; i < frame->size(); i++) {
+      frame->covs[i] = transformation.matrix() * frame->covs[i] * transformation.matrix().transpose();
+    }
+  }
+}
+
+template <>
+void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<float, 3, Eigen::Affine>& transformation) {
+  return transform_inplace<double, Eigen::Affine>(frame, transformation.cast<double>());
+}
+
 // statistical outlier removal
 std::vector<int> find_inlier_points(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh) {
   std::vector<double> dists(frame->size());
@@ -515,7 +623,6 @@ std::vector<int> find_inlier_points(const Frame::ConstPtr& frame, const std::vec
 
     dists[i] = sum_dist / k;
   }
-
 
   double sum_dists = 0.0;
   double sum_sq_dists = 0.0;

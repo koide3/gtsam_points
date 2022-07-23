@@ -108,23 +108,6 @@ public:
 FrameCPU::Ptr sample(const Frame::ConstPtr& frame, const std::vector<int>& indices);
 
 /**
- * @brief Extract points for which pred returns true
- * @param frame  Input points
- * @param pred   Predicate function that takes Eigen::Vector4d and returns bool
- */
-template<typename Func>
-FrameCPU::Ptr filter(const Frame::ConstPtr& frame, const Func& pred) {
-  std::vector<int> indices;
-  indices.reserve(frame->size());
-  for (int i = 0; i < frame->size(); i++) {
-    if (pred(frame->points[i])) {
-      indices.push_back(i);
-    }
-  }
-  return sample(frame, indices);
-}
-
-/**
  * @brief Naive random sampling
  * @param frame          Input points
  * @param sampling_rate  Random sampling rate in [0, 1]
@@ -155,6 +138,58 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
  * @return                  Downsampled points
  */
 FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt);
+
+/**
+ * @brief Extract points for which pred returns true
+ * @param frame  Input points
+ * @param pred   Predicate function that takes Eigen::Vector4d and returns bool
+ */
+template <typename Func>
+FrameCPU::Ptr filter(const Frame::ConstPtr& frame, const Func& pred) {
+  std::vector<int> indices;
+  indices.reserve(frame->size());
+  for (int i = 0; i < frame->size(); i++) {
+    if (pred(frame->points[i])) {
+      indices.push_back(i);
+    }
+  }
+  return sample(frame, indices);
+}
+
+/**
+ * @brief Extract points for which pred returns true
+ * @param frame  Input points
+ * @param pred   Predicate function that takes a point index and returns bool
+ */
+template <typename Func>
+FrameCPU::Ptr filter_by_index(const Frame::ConstPtr& frame, const Func& pred) {
+  std::vector<int> indices;
+  indices.reserve(frame->size());
+  for (int i = 0; i < frame->size(); i++) {
+    if (pred(i)) {
+      indices.push_back(i);
+    }
+  }
+  return sample(frame, indices);
+}
+
+/**
+ * @brief Transform points, normals, and covariances
+ *
+ * @param frame            Input points
+ * @param transformation   Transformation
+ * @return Transformed points
+ */
+template <typename Scalar, int Mode>
+FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<Scalar, 3, Mode>& transformation);
+
+/**
+ * @brief Transform points, normals, and covariances inplace
+ * @param frame            [in/out] Points to be transformed
+ * @param transformation   Transformation
+ */
+template <typename Scalar, int Mode>
+void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<Scalar, 3, Mode>& transformation);
 
 /**
  * @brief Statistical outlier removal
