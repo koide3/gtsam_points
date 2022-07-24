@@ -24,7 +24,7 @@ char* TempBufferManager::get_buffer(size_t buffer_size) {
 }
 
 void TempBufferManager::clear() {
-  if (buffers.size() == 1) {
+  if (buffers.size() <= 1) {
     return;
   }
 
