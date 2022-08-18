@@ -49,15 +49,25 @@ if(BUILD_WITH_CUDA)
 
   if(BUILD_WITH_CUDA_MULTIARCH)
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_52")
+
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
                         -gencode=arch=compute_52,code=sm_52 \
                         -gencode=arch=compute_60,code=sm_60 \
                         -gencode=arch=compute_61,code=sm_61 \
                         -gencode=arch=compute_70,code=sm_70 \
                         -gencode=arch=compute_75,code=sm_75 \
-                        -gencode=arch=compute_80,code=sm_80 \
-                        -gencode=arch=compute_80,code=compute_80 \
                         ")
+
+    if(${CUDA_VERSION} VERSION_GREATER_EQUAL 11.2)
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
+                          -gencode=arch=compute_80,code=sm_80 \
+                          -gencode=arch=compute_80,code=compute_80 \
+                          ")
+    else()
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
+                          -gencode=arch=compute_75,code=compute_75 \
+                          ")
+    endif()
     message(STATUS "CUDA_MULTIARCH")
   else()
     CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS Auto)
