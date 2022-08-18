@@ -4,7 +4,7 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <boost/container_hash/hash.hpp>
+#include <boost/functional/hash/hash.hpp>
 
 namespace gtsam_ext {
 

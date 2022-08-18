@@ -14,6 +14,7 @@
 #include <device_atomic_functions.h>
 #include <gtsam_ext/cuda/check_error.cuh>
 #include <gtsam_ext/cuda/kernels/vector3_hash.cuh>
+#include <gtsam_ext/cuda/cuda_malloc_async.hpp>
 
 namespace gtsam_ext {
 

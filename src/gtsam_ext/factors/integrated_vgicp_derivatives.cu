@@ -9,6 +9,7 @@
 #include <gtsam_ext/cuda/kernels/linearized_system.cuh>
 #include <gtsam_ext/cuda/kernels/vgicp_derivatives.cuh>
 #include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
+#include <gtsam_ext/cuda/cuda_malloc_async.hpp>
 
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 
