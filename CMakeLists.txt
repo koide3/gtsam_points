@@ -45,19 +45,29 @@ if(BUILD_WITH_CUDA)
 
   set(CUDA_STANDARD 17)
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
-  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++17 --expt-relaxed-constexpr")
+  set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++14 --expt-relaxed-constexpr")
 
   if(BUILD_WITH_CUDA_MULTIARCH)
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -arch=sm_52")
+
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
                         -gencode=arch=compute_52,code=sm_52 \
                         -gencode=arch=compute_60,code=sm_60 \
                         -gencode=arch=compute_61,code=sm_61 \
                         -gencode=arch=compute_70,code=sm_70 \
                         -gencode=arch=compute_75,code=sm_75 \
-                        -gencode=arch=compute_80,code=sm_80 \
-                        -gencode=arch=compute_80,code=compute_80 \
                         ")
+
+    if(${CUDA_VERSION} VERSION_GREATER_EQUAL 11.2)
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
+                          -gencode=arch=compute_80,code=sm_80 \
+                          -gencode=arch=compute_80,code=compute_80 \
+                          ")
+    else()
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} \
+                          -gencode=arch=compute_75,code=compute_75 \
+                          ")
+    endif()
     message(STATUS "CUDA_MULTIARCH")
   else()
     CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS Auto)
@@ -69,13 +79,16 @@ if(BUILD_WITH_CUDA)
     # Suppress Eigen-related CUDA warnings
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=177")
     set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=2739")
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20011")
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20014")
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=set_but_not_used")
-    set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored")
+
+    if(${CUDA_VERSION} VERSION_GREATER_EQUAL 11.2)
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20011")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20014")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=set_but_not_used")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=esa_on_defaulted_function_ignored")
+    endif()
 
     if(${CUDA_VERSION} VERSION_GREATER_EQUAL 11.6)
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20236") # Not available on CUDA 11.4
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20236")
     endif()
   endif()
 endif()
