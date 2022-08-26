@@ -34,7 +34,7 @@ struct LOAMTestBase : public testing::Test {
       Eigen::Isometry3d pose = Eigen::Isometry3d::Identity();
       pose.translation() = trans;
       pose.linear() = quat.toRotationMatrix();
-      poses.insert(i, gtsam::Pose3::identity());
+      poses.insert(i, gtsam::Pose3::Identity());
       poses_gt.insert(i, gtsam::Pose3(pose.matrix()));
 
       // Load points

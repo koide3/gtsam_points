@@ -21,11 +21,11 @@ int main(int argc, char** argv) {
   gtsam_ext::Frame::Ptr frame2(new gtsam_ext::FrameCPU(points2));
 
   gtsam::Values values;
-  values.insert(0, gtsam::Pose3::identity());
-  values.insert(1, gtsam::Pose3::identity());
+  values.insert(0, gtsam::Pose3::Identity());
+  values.insert(1, gtsam::Pose3::Identity());
 
   gtsam::NonlinearFactorGraph graph;
-  graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
+  graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
 
   // *** IntegratedICPFactor ***
   // gtsam_ext::IntegratedICPFactor::shared_ptr factor(new gtsam_ext::IntegratedICPFactor(0, 1, frame1, frame2));

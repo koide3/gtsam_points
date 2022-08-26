@@ -97,11 +97,11 @@ int main(int argc, char** argv) {
   std::shared_ptr<gtsam_ext::IntensityKdTree> target_tree(new gtsam_ext::IntensityKdTree(target->points, target->intensities, target->size()));
 
   gtsam::Values values;
-  values.insert(0, gtsam::Pose3::identity());
-  values.insert(1, gtsam::Pose3::identity());
+  values.insert(0, gtsam::Pose3::Identity());
+  values.insert(1, gtsam::Pose3::Identity());
 
   gtsam::NonlinearFactorGraph graph;
-  graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+  graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
   auto f = gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
   f->set_photometric_term_weight(0.75);
@@ -141,11 +141,11 @@ int main(int argc, char** argv) {
   std::shared_ptr<gtsam_ext::KdTree> target_tree(new gtsam_ext::KdTree(target->points, target->size()));
 
   gtsam::Values values;
-  values.insert(0, gtsam::Pose3::identity());
-  values.insert(1, gtsam::Pose3::identity());
+  values.insert(0, gtsam::Pose3::Identity());
+  values.insert(1, gtsam::Pose3::Identity());
 
   gtsam::NonlinearFactorGraph graph;
-  graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+  graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
   auto f = gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
   f->set_num_threads(12);

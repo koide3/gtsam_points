@@ -63,7 +63,7 @@ public:
     }
 
     pose_noise_scale = 0.0f;
-    pose_noise = gtsam::Pose3::identity();
+    pose_noise = gtsam::Pose3::Identity();
 
     factor_types = std::vector<const char*>{"CT-ICP", "CT-GICP", "CT-ICP-EXPR"};
     factor_type = 0;
@@ -137,7 +137,7 @@ public:
     if (enable_pose_constraint) {
       gtsam::Vector6 noise_scales;
       noise_scales << gtsam::Vector3::Ones() * rot_noise_scale, gtsam::Vector3::Ones() * trans_noise_scale;
-      graph.add(gtsam::BetweenFactor(0, 1, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precisions(noise_scales)));
+      graph.add(gtsam::BetweenFactor(0, 1, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precisions(noise_scales)));
     }
 
     // Create continuous time ICP factor

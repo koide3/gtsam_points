@@ -90,7 +90,7 @@ struct BATestBase : public testing::Test {
     EXPECT_EQ(ifs.is_open(), true) << "Failed to open " << data_path << "/graph.txt";
 
     gtsam::Values pose_noises;
-    pose_noises.insert(0, gtsam::Pose3::identity());
+    pose_noises.insert(0, gtsam::Pose3::Identity());
     pose_noises.insert(1, gtsam::Pose3::Expmap((gtsam::Vector6() << 0.02, 0.02, 0.02, 0.2, 0.2, 0.2).finished()));
     pose_noises.insert(2, gtsam::Pose3::Expmap((gtsam::Vector6() << -0.02, 0.02, 0.02, -0.2, 0.2, 0.2).finished()));
     pose_noises.insert(3, gtsam::Pose3::Expmap((gtsam::Vector6() << 0.02, -0.02, 0.02, 0.2, -0.2, 0.2).finished()));
@@ -169,7 +169,7 @@ INSTANTIATE_TEST_SUITE_P(gtsam_ext, BAFactorTest, testing::Values("EVM", "LSQ"),
 TEST_P(BAFactorTest, AlignmentTest) {
   gtsam::Values values = poses;
   gtsam::NonlinearFactorGraph graph;
-  graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e3)));
+  graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e3)));
 
   std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> plane_centers;
   plane_centers.push_back(Eigen::Vector3d(3.16, 1.79, -1.30));

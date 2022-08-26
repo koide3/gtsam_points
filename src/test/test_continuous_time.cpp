@@ -77,8 +77,8 @@ INSTANTIATE_TEST_SUITE_P(gtsam_ext, ContinuousTimeFactorTest, testing::Values("C
 TEST_P(ContinuousTimeFactorTest, AlignmentTest) {
   for (int i = 0; i < 3; i++) {
     gtsam::Values values;
-    values.insert(0, gtsam::Pose3::identity());
-    values.insert(1, gtsam::Pose3::identity());
+    values.insert(0, gtsam::Pose3::Identity());
+    values.insert(1, gtsam::Pose3::Identity());
 
     const auto& target = deskewed_target_frames[i];
     const auto& source = raw_source_frames[i];
