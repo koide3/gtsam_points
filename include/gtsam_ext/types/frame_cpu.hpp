@@ -174,6 +174,25 @@ FrameCPU::Ptr filter_by_index(const Frame::ConstPtr& frame, const Func& pred) {
 }
 
 /**
+ * @brief Sort points
+ * @param frame  Input points
+ * @param pred   Comparison function that takes two point indices (lhs and rhs) and returns true if lhs < rhs
+ */
+template <typename Compare>
+FrameCPU::Ptr sort(const Frame::ConstPtr& frame, const Compare& comp) {
+  std::vector<int> indices(frame->size());
+  std::iota(indices.begin(), indices.end(), 0);
+  std::sort(indices.begin(), indices.end(), comp);
+  return gtsam_ext::sample(frame, indices);
+}
+
+/**
+ * @brief Sort points by time
+ * @param frame  Input points
+ */
+FrameCPU::Ptr sort_by_time(const Frame::ConstPtr& frame);
+
+/**
  * @brief Transform points, normals, and covariances
  *
  * @param frame            Input points

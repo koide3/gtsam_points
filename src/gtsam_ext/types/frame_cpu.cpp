@@ -501,6 +501,15 @@ FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double vox
 }
 
 // transform
+FrameCPU::Ptr sort_by_time(const Frame::ConstPtr& frame) {
+  if (!frame->has_times()) {
+    std::cerr << "warning: frame does not have per-point times" << std::endl;
+  }
+
+  return sort(frame, [&](const int lhs, const int rhs) { return frame->times[lhs] < frame->times[rhs]; });
+}
+
+// transform
 template <>
 FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
   auto transformed = std::make_shared<gtsam_ext::FrameCPU>(*frame);
