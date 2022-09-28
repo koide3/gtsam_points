@@ -15,8 +15,7 @@ IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_GICPFactor_(
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
   const std::shared_ptr<NearestNeighborSearch>& target_tree)
-: IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>(source_t0_key, source_t1_key, target, source, target_tree),
-  num_threads(1) {
+: IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>(source_t0_key, source_t1_key, target, source, target_tree) {
   //
   if (!frame::has_points(*target) || !frame::has_covs(*target)) {
     std::cerr << "error: target frame doesn't have required attributes for ct_gicp" << std::endl;
@@ -48,7 +47,7 @@ double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Va
   }
 
   double sum_errors = 0.0;
-#pragma omp parallel for reduction(+ : sum_errors) schedule(guided, 8) num_threads(num_threads)
+#pragma omp parallel for reduction(+ : sum_errors) schedule(guided, 8) num_threads(this->num_threads)
   for (int i = 0; i < frame::size(*this->source); i++) {
     const long target_index = this->correspondences[i];
     if (target_index < 0) {
@@ -76,11 +75,11 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
   this->update_correspondences();
 
   double sum_errors = 0.0;
-  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_00(num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_01(num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_11(num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Vector6, Eigen::aligned_allocator<gtsam::Vector6>> bs_0(num_threads, gtsam::Vector6::Zero());
-  std::vector<gtsam::Vector6, Eigen::aligned_allocator<gtsam::Vector6>> bs_1(num_threads, gtsam::Vector6::Zero());
+  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_00(this->num_threads, gtsam::Matrix6::Zero());
+  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_01(this->num_threads, gtsam::Matrix6::Zero());
+  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_11(this->num_threads, gtsam::Matrix6::Zero());
+  std::vector<gtsam::Vector6, Eigen::aligned_allocator<gtsam::Vector6>> bs_0(this->num_threads, gtsam::Vector6::Zero());
+  std::vector<gtsam::Vector6, Eigen::aligned_allocator<gtsam::Vector6>> bs_1(this->num_threads, gtsam::Vector6::Zero());
 
   gtsam::Matrix6 H_00 = gtsam::Matrix6::Zero();
   gtsam::Matrix6 H_01 = gtsam::Matrix6::Zero();
@@ -88,7 +87,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
   gtsam::Vector6 b_0 = gtsam::Vector6::Zero();
   gtsam::Vector6 b_1 = gtsam::Vector6::Zero();
 
-#pragma omp parallel for reduction(+ : sum_errors) schedule(guided, 8) num_threads(num_threads)
+#pragma omp parallel for reduction(+ : sum_errors) schedule(guided, 8) num_threads(this->num_threads)
   for (int i = 0; i < frame::size(*this->source); i++) {
     const long target_index = this->correspondences[i];
     if (target_index < 0) {
@@ -150,7 +149,7 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
   this->correspondences.resize(frame::size(*this->source));
   this->mahalanobis.resize(frame::size(*this->source));
 
-#pragma omp parallel for schedule(guided, 8) num_threads(num_threads)
+#pragma omp parallel for schedule(guided, 8) num_threads(this->num_threads)
   for (int i = 0; i < frame::size(*this->source); i++) {
     const int time_index = this->time_indices[i];
     const Eigen::Matrix4d pose = this->source_poses[time_index].matrix();
