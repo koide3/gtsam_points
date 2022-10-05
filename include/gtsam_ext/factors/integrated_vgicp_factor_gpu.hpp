@@ -82,6 +82,12 @@ public:
     const Frame::ConstPtr& target,
     const Frame::ConstPtr& source);
 
+  IntegratedVGICPFactorGPU(
+    const gtsam::Pose3& fixed_target_pose,
+    gtsam::Key source_key,
+    const GaussianVoxelMap::ConstPtr& target,
+    const Frame::ConstPtr& source);
+
   /// Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
   IntegratedVGICPFactorGPU(
     const gtsam::Pose3& fixed_target_pose,

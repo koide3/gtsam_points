@@ -20,6 +20,13 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
 : IntegratedVGICPFactorGPU(target_key, source_key, target, source, nullptr, nullptr) {}
 
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const GaussianVoxelMap::ConstPtr& target,
+  const Frame::ConstPtr& source)
+: IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target, source, nullptr, nullptr) {}
+
+IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   gtsam::Key target_key,
   gtsam::Key source_key,
   const Frame::ConstPtr& target,
