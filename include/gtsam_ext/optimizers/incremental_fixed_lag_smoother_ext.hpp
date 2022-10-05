@@ -38,7 +38,9 @@ public:
   typedef boost::shared_ptr<IncrementalFixedLagSmootherExt> shared_ptr;
 
   /** default constructor */
-  IncrementalFixedLagSmootherExt(double smootherLag = 0.0, const ISAM2Params& parameters = DefaultISAM2Params()) : FixedLagSmoother(smootherLag), isam_(parameters) {}
+  IncrementalFixedLagSmootherExt(double smootherLag = 0.0, const ISAM2Params& parameters = DefaultISAM2Params())
+  : FixedLagSmoother(smootherLag),
+    isam_(parameters) {}
 
   /** destructor */
   ~IncrementalFixedLagSmootherExt() override {}
