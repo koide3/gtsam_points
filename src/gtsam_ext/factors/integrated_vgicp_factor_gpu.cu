@@ -221,6 +221,8 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(con
 }
 
 void IntegratedVGICPFactorGPU::set_linearization_point(const gtsam::Values& values, void* lin_input_cpu) {
+  // If -march=native is used and some GPU factor requests a storage size that causes memory misalignment,
+  // the following lines that directly operates on the input buffer may cause segfaults
   Eigen::Isometry3f* linearization_point = reinterpret_cast<Eigen::Isometry3f*>(lin_input_cpu);
   *linearization_point = calc_delta(values);
 }
