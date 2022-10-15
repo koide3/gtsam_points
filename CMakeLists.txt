@@ -160,6 +160,7 @@ if(BUILD_WITH_CUDA)
     src/gtsam_ext/cuda/check_error.cu
     src/gtsam_ext/cuda/cuda_stream.cu
     src/gtsam_ext/cuda/cuda_device_sync.cu
+    src/gtsam_ext/cuda/cuda_device_prop.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu
     src/gtsam_ext/cuda/stream_temp_buffer_roundrobin.cu

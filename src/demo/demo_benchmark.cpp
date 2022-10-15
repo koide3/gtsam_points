@@ -1,3 +1,4 @@
+#include <regex>
 #include <chrono>
 #include <iostream>
 #include <Eigen/Core>
@@ -17,6 +18,7 @@
 #include <gtsam_ext/types/frame_gpu.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
+#include <gtsam_ext/cuda/cuda_device_prop.hpp>
 #endif
 
 class StopWatch {
@@ -140,13 +142,13 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
       frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size(), 10, num_threads));
       frames.emplace_back(frame);
 #else
-    std::cerr << "error: gtsam_ext was built without CUDA!!" << std::endl;
+      std::cerr << "error: gtsam_ext was built without CUDA!!" << std::endl;
 #endif
     }
   }
   stopwatch.stop("frame creation");
 
-  if(factor_type == "GICP") {
+  if (factor_type == "GICP") {
     stopwatch.start();
     for (int i = 0; i < 5; i++) {
       trees.emplace_back(std::make_shared<gtsam_ext::KdTree>(frames[i]->points, frames[i]->size()));
@@ -226,9 +228,34 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
   }
 }
 
-int main(int argc, char** argv) {
-  std::cout << "SIMD: " << Eigen::SimdInstructionSetsInUse() << std::endl;
+void print_info() {
+  std::ifstream ifs("/proc/cpuinfo");
+  if (ifs) {
+    std::string line;
+    std::regex pattern("model name\\s+:\\s*(.*)");
+    while (!ifs.eof() && std::getline(ifs, line)) {
+      std::smatch matched;
+      if (std::regex_search(line, matched, pattern)) {
+        std::cout << "CPU model  : " << matched.str(1) << std::endl;
+        break;
+      }
+    }
+  }
+
+#ifdef BUILD_GTSAM_EXT_GPU
+  const auto cuda_devices = gtsam_ext::cuda_device_names();
+  for (int i = 0; i < cuda_devices.size(); i++) {
+    std::cout << boost::format("GPU model%d : %s") % i % cuda_devices[i] << std::endl;
+  }
+
+#endif
+
+  std::cout << "SIMD in use: " << Eigen::SimdInstructionSetsInUse() << std::endl;
   std::cout << std::endl;
+}
+
+int main(int argc, char** argv) {
+  print_info();
 
   benchmark_eigen_fixed<float, 4>();
   benchmark_eigen_dynamic<float>();
