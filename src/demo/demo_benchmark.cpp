@@ -97,7 +97,7 @@ double benchmark_eigen_dynamic() {
 void benchmark_alignment(const std::string& factor_type, int num_threads, int num_factors) {
   std::cout << boost::format("%s (%d threads, x%d factors)") % factor_type % num_threads % num_factors << std::endl;
 
-  const std::string dump_path = "/home/koide/workspace/gtsam_ext/data/kitti_07_dump";
+  const std::string dump_path = "data/kitti_07_dump";
   std::ifstream ifs(dump_path + "/graph.txt");
   if (!ifs) {
     std::cerr << "error: failed to open " << dump_path << "/graph.txt" << std::endl;
@@ -265,7 +265,11 @@ int main(int argc, char** argv) {
   benchmark_eigen_dynamic<double>();
   std::cout << std::endl;
 
+#ifdef _OPENMP
   const int max_num_threads = omp_get_max_threads();
+#else
+  const int max_num_threads = 1;
+#endif
 
   benchmark_alignment("GICP", 1, 1);
   benchmark_alignment("GICP", max_num_threads, 1);
