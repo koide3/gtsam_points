@@ -32,7 +32,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
     EXPECT_EQ(ifs.is_open(), true) << "Failed to open " << dump_path;
 
     // It seems generated random numbers change depending on the compiler
-    // Should we pregenerated randoms for reproductivity?
+    // Should we use pregenerated randoms for reproductivity?
     const double pose_noise_scale = 0.1;
     std::mt19937 mt(8192 - 1);
     std::uniform_real_distribution<> udist(-pose_noise_scale, pose_noise_scale);

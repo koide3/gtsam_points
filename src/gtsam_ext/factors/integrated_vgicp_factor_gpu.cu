@@ -20,6 +20,13 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
 : IntegratedVGICPFactorGPU(target_key, source_key, target, source, nullptr, nullptr) {}
 
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
+  const gtsam::Pose3& fixed_target_pose,
+  gtsam::Key source_key,
+  const GaussianVoxelMap::ConstPtr& target,
+  const Frame::ConstPtr& source)
+: IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target, source, nullptr, nullptr) {}
+
+IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   gtsam::Key target_key,
   gtsam::Key source_key,
   const Frame::ConstPtr& target,
@@ -214,6 +221,8 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(con
 }
 
 void IntegratedVGICPFactorGPU::set_linearization_point(const gtsam::Values& values, void* lin_input_cpu) {
+  // If -march=native is used and some GPU factor requests a storage size that causes memory misalignment,
+  // the following lines that directly operates on the input buffer may cause segfaults
   Eigen::Isometry3f* linearization_point = reinterpret_cast<Eigen::Isometry3f*>(lin_input_cpu);
   *linearization_point = calc_delta(values);
 }

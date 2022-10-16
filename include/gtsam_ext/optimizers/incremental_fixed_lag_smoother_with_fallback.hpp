@@ -47,6 +47,8 @@ public:
     }
   }
 
+  Matrix marginalCovariance(Key key) const { return smoother->marginalCovariance(key); }
+
 private:
   void update_fallback_state();
   void fallback_smoother() const;

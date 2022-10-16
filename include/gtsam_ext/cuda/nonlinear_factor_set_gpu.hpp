@@ -103,13 +103,13 @@ private:
 
   std::vector<boost::shared_ptr<NonlinearFactorGPU>> factors;
 
-  thrust::host_vector<unsigned char> linearization_input_buffer_cpu;
-  thrust::host_vector<unsigned char> linearization_output_buffer_cpu;
+  thrust::host_vector<unsigned char, Eigen::aligned_allocator<unsigned char>> linearization_input_buffer_cpu;
+  thrust::host_vector<unsigned char, Eigen::aligned_allocator<unsigned char>> linearization_output_buffer_cpu;
   thrust::device_vector<unsigned char> linearization_input_buffer_gpu;
   thrust::device_vector<unsigned char> linearization_output_buffer_gpu;
 
-  thrust::host_vector<unsigned char> evaluation_input_buffer_cpu;
-  thrust::host_vector<unsigned char> evaluation_output_buffer_cpu;
+  thrust::host_vector<unsigned char, Eigen::aligned_allocator<unsigned char>> evaluation_input_buffer_cpu;
+  thrust::host_vector<unsigned char, Eigen::aligned_allocator<unsigned char>> evaluation_output_buffer_cpu;
   thrust::device_vector<unsigned char> evaluation_input_buffer_gpu;
   thrust::device_vector<unsigned char> evaluation_output_buffer_gpu;
 };

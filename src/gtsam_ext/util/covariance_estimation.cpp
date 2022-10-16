@@ -14,7 +14,6 @@ std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
 estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors, int num_threads) {
   //
   KdTree tree(points, num_points);
-
   std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs(num_points);
 
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
