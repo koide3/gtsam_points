@@ -2,7 +2,7 @@
 
 This is a collection of GTSAM factors and optimizers for range-based SLAM.
 
-Tested on Ubuntu 20.04 and CUDA 11.6 / NVIDIA Jetson Xavier (JetPack 5.0.1).
+Tested on Ubuntu 20.04 and CUDA 11.6 / Ubuntu 22.04 and CUDA 11.8 / NVIDIA Jetson Xavier and Orin (JetPack 5.0.1).
 
 [![Build](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml)
 
@@ -18,7 +18,7 @@ Tested on Ubuntu 20.04 and CUDA 11.6 / NVIDIA Jetson Xavier (JetPack 5.0.1).
     GICP with voxel-based data association and multi-distribution-correspondence [[3]](#VGICP1)[[4]](#VGICP2)
 - **IntegratedVGICPFactorGPU**  
     GPU implementation of VGICP [[3]](#VGICP1)[[4]](#VGICP2)  
-    To enable this factor, need to set ```BUILD_WITH_CUDA``` cmake option to ```ON```
+    To enable this factor, set ```-DBUILD_WITH_CUDA=ON```
 - **IntegratedLOAMFactor**  
     Matching cost factor based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO)
 
@@ -76,17 +76,16 @@ All the following optimizers were derived from the implementations in GTSAM
 # Install gtsam
 git clone https://github.com/borglab/gtsam
 mkdir gtsam/build && cd gtsam/build
-cmake .. -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF -DGTSAM_BUILD_TESTS=OFF
-
-# If you face segfaults, try the following configuration
-# cmake .. \
-#   -DGTSAM_WITH_TBB=OFF \
-#   -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF
+cmake .. \
+  -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
+  -DGTSAM_BUILD_TESTS=OFF \
+  -DGTSAM_WITH_TBB=OFF \
+  -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF
 
 make -j$(nproc)
 sudo make install
 
-# [optional] Install visualization library
+# [optional] Install iridescence visualization library
 # This is required for only demo programs
 sudo apt install -y libglm-dev libglfw3-dev libpng-dev
 git clone https://github.com/koide3/iridescence --recursive
@@ -95,7 +94,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 sudo make install
 
-## Install gtsam_ext
+## Build gtsam_ext
 git clone https://github.com/koide3/gtsam_ext --recursive
 mkdir gtsam_ext/build && cd gtsam/build
 cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -106,7 +105,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 #   -DBUILD_TESTS=OFF \
 #   -DBUILD_WITH_CUDA=OFF \
 #   -DBUILD_WITH_MARCH_NATIVE=OFF \
-#   -DBUILD_WITH_SYSTEM_EIGEN=OFF
+#   -DBUILD_WITH_SYSTEM_EIGEN=ON
 
 make -j$(nproc)
 ```
