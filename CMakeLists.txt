@@ -15,7 +15,7 @@ option(BUILD_EXAMPLE "Build example programs" OFF)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_CUDA_MULTIARCH "Build with GPU cross-platform support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
-option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" OFF)
+option(BUILD_WITH_SYSTEM_EIGEN "Build with system-default Eigen" ON)
 
 if(BUILD_WITH_MARCH_NATIVE)
   add_compile_options(-march=native)

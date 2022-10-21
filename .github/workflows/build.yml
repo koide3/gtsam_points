@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        DISTRO: [focal, focal_cuda10.2, focal_cuda11.2, focal_llvm, focal_cuda11.2_llvm]
+        DISTRO: [focal, focal_cuda11.2, focal_llvm, focal_cuda11.2_llvm, jammy, jammy_cuda11.8, jammy_llvm, jammy_cuda11.8_llvm]
 
     steps:
       - uses: actions/checkout@v2
