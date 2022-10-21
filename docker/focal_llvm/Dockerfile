@@ -36,8 +36,7 @@ RUN CC=clang CXX=clang++ \
   -DBUILD_TESTS=ON \
   -DBUILD_EXAMPLE=ON \
   -DBUILD_WITH_CUDA=OFF \
-  -DCMAKE_BUILD_TYPE=Release \
-  -DBUILD_WITH_SYSTEM_EIGEN=OFF
+  -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
 RUN make test
 
