@@ -47,6 +47,9 @@ public:
     }
   }
 
+  const Values& getLinearizationPoint() const { return smoother->getLinearizationPoint(); }
+  const VectorValues& getDelta() const { return smoother->getDelta(); }
+
   Matrix marginalCovariance(Key key) const { return smoother->marginalCovariance(key); }
 
 private:
