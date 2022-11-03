@@ -17,7 +17,12 @@ RUN apt-get update \
 WORKDIR /root
 RUN git clone https://github.com/borglab/gtsam.git
 WORKDIR /root/gtsam/build
-RUN cmake .. -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF -DGTSAM_BUILD_TESTS=OFF -DGTSAM_WITH_TBB=OFF -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF
+RUN cmake .. \
+  -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
+  -DGTSAM_BUILD_TESTS=OFF \
+  -DGTSAM_WITH_TBB=OFF \
+  -DGTSAM_USE_SYSTEM_EIGEN=ON \
+  -DGTSAM_BUILD_WITH_MARCH_NATIVE=OFF
 RUN make -j$(nproc) && make install
 
 WORKDIR /root
