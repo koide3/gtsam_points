@@ -216,10 +216,17 @@ void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
     }
   }
 
+  std::unordered_set<gtsam::Key> keys_to_remove;
   for(const auto& value: values) {
     if(!traversed_keys.count(value.key)) {
       std::cerr << "unreached key found:" << gtsam::Symbol(value.key) << std::endl;
+      keys_to_remove.insert(value.key);
     }
+  }
+
+  for(const auto& key: keys_to_remove) {
+    values.erase(key);
+    stamps.erase(key);
   }
 
   // Create fixation factors
