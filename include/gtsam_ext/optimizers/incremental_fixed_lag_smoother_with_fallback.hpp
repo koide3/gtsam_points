@@ -61,7 +61,7 @@ private:
   mutable gtsam::Values values;
   gtsam::NonlinearFactorGraph factors;
   std::unordered_map<gtsam::Key, std::vector<gtsam::NonlinearFactor::shared_ptr>> factor_map;
-  gtsam::FixedLagSmootherKeyTimestampMap stamps;
+  mutable gtsam::FixedLagSmootherKeyTimestampMap stamps;
 
   mutable std::unique_ptr<IncrementalFixedLagSmootherExt> smoother;
 };
