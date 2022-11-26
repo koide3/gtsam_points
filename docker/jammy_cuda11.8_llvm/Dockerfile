@@ -2,6 +2,9 @@ FROM koide3/gtsam_docker:jammy_cuda11.8
 
 RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 50
 
+# resolve omp_is_initial_device-related errors
+RUN sed -i '496{s/^/\/\//}' /usr/lib/llvm-14/lib/clang/14.0.0/include/omp.h
+
 COPY . /root/gtsam_ext
 WORKDIR /root/gtsam_ext/build
 RUN rm -rf *
