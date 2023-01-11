@@ -42,7 +42,7 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   const Frame::ConstPtr& source,
   CUstream_st* stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
-: gtsam_ext::NonlinearFactorGPU(gtsam::cref_list_of<2>(target_key)(source_key)),
+: gtsam_ext::NonlinearFactorGPU(gtsam::KeyVector{target_key, source_key}),
   is_binary(true),
   fixed_target_pose(Eigen::Isometry3f::Identity()),
   target(std::dynamic_pointer_cast<const gtsam_ext::GaussianVoxelMapGPU>(target)),
@@ -90,7 +90,7 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   const Frame::ConstPtr& source,
   CUstream_st* stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
-: gtsam_ext::NonlinearFactorGPU(gtsam::cref_list_of<1>(source_key)),
+: gtsam_ext::NonlinearFactorGPU(gtsam::KeyVector{source_key}),
   is_binary(false),
   fixed_target_pose(fixed_target_pose.matrix().cast<float>()),
   target(std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(target)),

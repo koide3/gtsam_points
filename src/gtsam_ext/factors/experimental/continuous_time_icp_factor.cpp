@@ -34,7 +34,7 @@ CTICPFactorExpr::CTICPFactorExpr(
   const double source_ti,
   const gtsam::Point3& source_pt,
   const gtsam::SharedNoiseModel& noise_model)
-: gtsam::NoiseModelFactor(noise_model, gtsam::cref_list_of<2>(source_t0_key)(source_t1_key)),
+: gtsam::NoiseModelFactor(noise_model, gtsam::KeyVector{source_t0_key, source_t1_key}),
   target(target),
   target_tree(target_tree),
   source_time((source_ti - source_t0) / (source_t1 - source_t0)),

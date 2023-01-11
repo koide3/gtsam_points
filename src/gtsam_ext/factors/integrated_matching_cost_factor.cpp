@@ -9,12 +9,12 @@
 namespace gtsam_ext {
 
 IntegratedMatchingCostFactor::IntegratedMatchingCostFactor(gtsam::Key target_key, gtsam::Key source_key)
-: gtsam::NonlinearFactor(gtsam::cref_list_of<2>(target_key)(source_key)),
+: gtsam::NonlinearFactor(gtsam::KeyVector{target_key, source_key}),
   is_binary(true),
   fixed_target_pose(Eigen::Isometry3d::Identity()) {}
 
 IntegratedMatchingCostFactor::IntegratedMatchingCostFactor(const gtsam::Pose3& fixed_target_pose, gtsam::Key source_key)
-: gtsam::NonlinearFactor(gtsam::cref_list_of<1>(source_key)),
+: gtsam::NonlinearFactor(gtsam::KeyVector{source_key}),
   is_binary(false),
   fixed_target_pose(fixed_target_pose.matrix()) {}
 

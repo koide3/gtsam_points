@@ -21,7 +21,7 @@ public:
   ~LoosePriorFactor() override {}
 
   LoosePriorFactor(gtsam::Key key, const T& prior, const gtsam::SharedNoiseModel& model = nullptr)
-  : gtsam::NonlinearFactor(gtsam::cref_list_of<1>(key)),
+  : gtsam::NonlinearFactor(gtsam::KeyVector{key}),
     noise_model_(model),
     prior_(new gtsam::PriorFactor<T>(key, prior, model)) {}
 

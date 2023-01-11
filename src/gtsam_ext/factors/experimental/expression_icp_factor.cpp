@@ -24,7 +24,7 @@ ICPFactorExpr::ICPFactorExpr(
   const std::shared_ptr<const KdTree>& target_tree,
   const gtsam::Point3& source,
   const gtsam::SharedNoiseModel& noise_model)
-: gtsam::NoiseModelFactor(noise_model, gtsam::cref_list_of<2>(target_key)(source_key)),
+: gtsam::NoiseModelFactor(noise_model, gtsam::KeyVector{target_key, source_key}),
   target(target),
   target_tree(target_tree),
   delta(gtsam::between(gtsam::Pose3_(target_key), gtsam::Pose3_(source_key))),
