@@ -25,7 +25,7 @@ gtsam::Vector6_ interpolate_(const gtsam::Pose3_& xi_, const gtsam::Pose3_& xj_,
   const auto Re_ = gtsam::between(gtsam::rotation(xk_), Rint_);
   const auto re_ = gtsam_ext::logmap(Re_);
 
-  const auto te_ = gtsam_ext::translation(xk_) - (1.0 - t) * gtsam_ext::translation(xi_) - t * gtsam_ext::translation(xj_);
+  const auto te_ = gtsam::translation(xk_) - (1.0 - t) * gtsam::translation(xi_) - t * gtsam::translation(xj_);
   const auto error_ = gtsam_ext::concatenate(re_, te_);
 
   return error_;
@@ -69,7 +69,7 @@ int main(int argc, char** argv) {
   auto viewer = guik::LightViewer::instance();
   viewer->update_drawable("xi", glk::Primitives::coordinate_system(), guik::VertexColor(values.at<gtsam::Pose3>(0).matrix().cast<float>()));
   viewer->update_drawable("xj", glk::Primitives::coordinate_system(), guik::VertexColor(values.at<gtsam::Pose3>(1).matrix().cast<float>()));
-  
+
   float time = 0.0f;
   viewer->register_ui_callback("ui", [&] {
     ImGui::DragFloat("time", &time, 0.01f, 0.0f, 1.0f);

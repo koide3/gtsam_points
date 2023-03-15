@@ -78,10 +78,10 @@ public:
       const auto rot0 = rot0_.value(*values, Hs_rot0);
 
       const auto trans0_ = gtsam_ext::bspline_trans(
-        gtsam_ext::translation(X(knot_i - 1)),
-        gtsam_ext::translation(X(knot_i)),
-        gtsam_ext::translation(X(knot_i + 1)),
-        gtsam_ext::translation(X(knot_i + 2)),
+        gtsam::translation(X(knot_i - 1)),
+        gtsam::translation(X(knot_i)),
+        gtsam::translation(X(knot_i + 1)),
+        gtsam::translation(X(knot_i + 2)),
         p);
       std::vector<gtsam::Matrix> Hs_trans0(trans0_.keys().size());
       const auto trans0 = trans0_.value(*values, Hs_trans0);
@@ -99,10 +99,10 @@ public:
       check_error(dr_dt, Hs_rot0.front(), "Angular vel", 1e-1);
 
       const auto dt_dt_ = gtsam_ext::bspline_linear_vel(
-        gtsam_ext::translation(X(knot_i - 1)),
-        gtsam_ext::translation(X(knot_i)),
-        gtsam_ext::translation(X(knot_i + 1)),
-        gtsam_ext::translation(X(knot_i + 2)),
+        gtsam::translation(X(knot_i - 1)),
+        gtsam::translation(X(knot_i)),
+        gtsam::translation(X(knot_i + 1)),
+        gtsam::translation(X(knot_i + 2)),
         p,
         ct->knot_interval);
 
@@ -111,10 +111,10 @@ public:
       check_error(dt_dt, Hs_trans0.front(), "Linear vel", 5e-2);
 
       const auto dt_dt2_ = gtsam_ext::bspline_linear_acc(
-        gtsam_ext::translation(X(knot_i - 1)),
-        gtsam_ext::translation(X(knot_i)),
-        gtsam_ext::translation(X(knot_i + 1)),
-        gtsam_ext::translation(X(knot_i + 2)),
+        gtsam::translation(X(knot_i - 1)),
+        gtsam::translation(X(knot_i)),
+        gtsam::translation(X(knot_i + 1)),
+        gtsam::translation(X(knot_i + 2)),
         p,
         ct->knot_interval);
       const auto dt_dt2 = dt_dt2_.value(*values);

@@ -7,7 +7,8 @@
 
 namespace gtsam_ext {
 
-gtsam::Pose3_ bspline(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, const gtsam::Pose3_& pose2, const gtsam::Pose3_& pose3, const gtsam::Double_& t) {
+gtsam::Pose3_
+bspline(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, const gtsam::Pose3_& pose2, const gtsam::Pose3_& pose3, const gtsam::Double_& t) {
   const gtsam::Double_ t2 = t * t;
   const gtsam::Double_ t3 = t2 * t;
 
@@ -24,10 +25,10 @@ gtsam::Pose3_ bspline(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, co
   const gtsam::Rot3_ r_delta2 = gtsam_ext::expmap(gtsam_ext::scale(beta2, gtsam::logmap(rot1, rot2)));
   const gtsam::Rot3_ r_delta3 = gtsam_ext::expmap(gtsam_ext::scale(beta3, gtsam::logmap(rot2, rot3)));
 
-  const gtsam::Vector3_ trans0 = gtsam_ext::translation(pose0);
-  const gtsam::Vector3_ trans1 = gtsam_ext::translation(pose1);
-  const gtsam::Vector3_ trans2 = gtsam_ext::translation(pose2);
-  const gtsam::Vector3_ trans3 = gtsam_ext::translation(pose3);
+  const gtsam::Vector3_ trans0 = gtsam::translation(pose0);
+  const gtsam::Vector3_ trans1 = gtsam::translation(pose1);
+  const gtsam::Vector3_ trans2 = gtsam::translation(pose2);
+  const gtsam::Vector3_ trans3 = gtsam::translation(pose3);
 
   const gtsam::Vector3_ t_delta1 = gtsam_ext::scale(beta1, gtsam::between(trans0, trans1));
   const gtsam::Vector3_ t_delta2 = gtsam_ext::scale(beta2, gtsam::between(trans1, trans2));
@@ -40,7 +41,8 @@ gtsam::Pose3_ bspline(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, co
   return pose;
 }
 
-gtsam::Pose3_ bspline_se3(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, const gtsam::Pose3_& pose2, const gtsam::Pose3_& pose3, const gtsam::Double_& t) {
+gtsam::Pose3_
+bspline_se3(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1, const gtsam::Pose3_& pose2, const gtsam::Pose3_& pose3, const gtsam::Double_& t) {
   const gtsam::Double_ t2 = t * t;
   const gtsam::Double_ t3 = t2 * t;
 
@@ -57,7 +59,8 @@ gtsam::Pose3_ bspline_se3(const gtsam::Pose3_& pose0, const gtsam::Pose3_& pose1
   return pose;
 }
 
-gtsam::Rot3_ bspline_so3(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, const gtsam::Rot3_& rot2, const gtsam::Rot3_& rot3, const gtsam::Double_& t) {
+gtsam::Rot3_
+bspline_so3(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, const gtsam::Rot3_& rot2, const gtsam::Rot3_& rot3, const gtsam::Double_& t) {
   const gtsam::Double_ t2 = t * t;
   const gtsam::Double_ t3 = t2 * t;
 
@@ -74,7 +77,12 @@ gtsam::Rot3_ bspline_so3(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, con
   return rot;
 }
 
-gtsam::Vector3_ bspline_trans(const gtsam::Vector3_& trans0, const gtsam::Vector3_& trans1, const gtsam::Vector3_& trans2, const gtsam::Vector3_& trans3, const gtsam::Double_& t) {
+gtsam::Vector3_ bspline_trans(
+  const gtsam::Vector3_& trans0,
+  const gtsam::Vector3_& trans1,
+  const gtsam::Vector3_& trans2,
+  const gtsam::Vector3_& trans3,
+  const gtsam::Double_& t) {
   const gtsam::Double_ t2 = t * t;
   const gtsam::Double_ t3 = t2 * t;
 
@@ -91,8 +99,13 @@ gtsam::Vector3_ bspline_trans(const gtsam::Vector3_& trans0, const gtsam::Vector
   return trans;
 }
 
-gtsam::Vector3_
-bspline_angular_vel(const gtsam::Rot3_& rot0, const gtsam::Rot3_& rot1, const gtsam::Rot3_& rot2, const gtsam::Rot3_& rot3, const gtsam::Double_& t, const double knot_interval) {
+gtsam::Vector3_ bspline_angular_vel(
+  const gtsam::Rot3_& rot0,
+  const gtsam::Rot3_& rot1,
+  const gtsam::Rot3_& rot2,
+  const gtsam::Rot3_& rot3,
+  const gtsam::Double_& t,
+  const double knot_interval) {
   const gtsam::Double_ t2 = t * t;
   const gtsam::Double_ t3 = t2 * t;
 
@@ -227,10 +240,10 @@ gtsam::Vector6_ bspline_imu(
   const gtsam::Vector3_ r_omega3 = gtsam_ext::add(gtsam::unrotate(r_A2, r_omega2), gtsam_ext::scale(H_beta3_t, r_d3));
 
   // Translation
-  const gtsam::Vector3_ trans0 = gtsam_ext::translation(pose0);
-  const gtsam::Vector3_ trans1 = gtsam_ext::translation(pose1);
-  const gtsam::Vector3_ trans2 = gtsam_ext::translation(pose2);
-  const gtsam::Vector3_ trans3 = gtsam_ext::translation(pose3);
+  const gtsam::Vector3_ trans0 = gtsam::translation(pose0);
+  const gtsam::Vector3_ trans1 = gtsam::translation(pose1);
+  const gtsam::Vector3_ trans2 = gtsam::translation(pose2);
+  const gtsam::Vector3_ trans3 = gtsam::translation(pose3);
 
   const gtsam::Vector3_ t_d1 = gtsam::between(trans0, trans1);
   const gtsam::Vector3_ t_d2 = gtsam::between(trans1, trans2);
