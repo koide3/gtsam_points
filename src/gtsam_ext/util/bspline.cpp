@@ -258,11 +258,9 @@ gtsam::Vector6_ bspline_imu(
 
   const double inv_knot_interval = 1.0 / knot_interval;
   const double inv_knot_interval2 = inv_knot_interval * inv_knot_interval;
-  // const gtsam::Vector3_ angular_vel = gtsam::unrotate(rot, inv_knot_interval * r_omega3);
 
   const gtsam::Vector3_ angular_vel = inv_knot_interval * r_omega3;
-  // const gtsam::Vector3_ angular_vel = gtsam::rotate(rot, inv_knot_interval * r_omega3);
-  const gtsam::Vector3_ linear_acc = gtsam::unrotate(rot, inv_knot_interval * t_omega3_ + gtsam::Vector3_(g));
+  const gtsam::Vector3_ linear_acc = gtsam::unrotate(rot, inv_knot_interval2 * t_omega3_ + gtsam::Vector3_(g));
 
   return gtsam_ext::concatenate(linear_acc, angular_vel);
 }
