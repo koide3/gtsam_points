@@ -15,6 +15,7 @@ option(BUILD_EXAMPLE "Build example programs" OFF)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_CUDA_MULTIARCH "Build with GPU cross-platform support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
+option(ENABLE_CPPCHECK "Enable cppcheck" OFF)
 
 if(BUILD_WITH_MARCH_NATIVE)
   add_compile_options(-march=native)
@@ -91,6 +92,17 @@ if(BUILD_WITH_CUDA)
       set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} -Xcudafe --diag_suppress=20236")
     endif()
   endif()
+endif()
+
+if(ENABLE_CPPCHECK)
+  set(CMAKE_CXX_CPPCHECK "cppcheck")
+  list(APPEND CMAKE_CXX_CPPCHECK
+    "--enable=warning"
+    "--inconclusive"
+    "--force"
+    "--inline-suppr"
+    "--suppressions-list=${CMAKE_SOURCE_DIR}/.cppcheck_suppressions.txt"
+  )
 endif()
 
 ###########
