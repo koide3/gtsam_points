@@ -88,6 +88,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
   gtsam::Values newValues;
   gtsam::VectorValues delta;
 
+  auto linear_solver_start_time = std::chrono::high_resolution_clock::now();
   bool systemSolvedSuccessfully;
   try {
     // ============ Solve is where most computation happens !! =================
@@ -96,6 +97,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
   } catch (const gtsam::IndeterminantLinearSystemException&) {
     systemSolvedSuccessfully = false;
   }
+  auto linear_solver_end_time = std::chrono::high_resolution_clock::now();
 
   if (systemSolvedSuccessfully) {
     // Compute the old linearized error as it is not the same
@@ -144,6 +146,8 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
     auto t = std::chrono::high_resolution_clock::now();
     status.elapsed_time = 1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(t - optimization_start_time).count();
     status.lambda_iteration_time = 1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(t - lambda_iteration_start_time).count();
+    status.linear_solver_time =
+      1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(linear_solver_end_time - linear_solver_start_time).count();
 
     params_.callback(status, currentState->values);
   }

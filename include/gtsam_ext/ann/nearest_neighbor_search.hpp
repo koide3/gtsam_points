@@ -12,6 +12,9 @@ namespace gtsam_ext {
  */
 struct NearestNeighborSearch {
 public:
+  using Ptr = std::shared_ptr<NearestNeighborSearch>;
+  using ConstPtr = std::shared_ptr<const NearestNeighborSearch>;
+
   NearestNeighborSearch() {}
   virtual ~NearestNeighborSearch() {}
 

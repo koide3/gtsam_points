@@ -23,6 +23,7 @@ public:
 
   double elapsed_time;           // time since optimization beginning
   double lambda_iteration_time;  // time since LM iteration beginning
+  double linear_solver_time;     // time spent for solving the linear system
 };
 
 }  // namespace gtsam_ext
