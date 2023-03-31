@@ -74,16 +74,17 @@ FrameGPU::~FrameGPU() {
 template <typename T>
 void FrameGPU::add_times_gpu(const T* times, int num_points, CUstream_st* stream) {
   assert(num_points == size());
-  std::vector<float> times_h(num_points);
-  std::copy(times, times + num_points, times_h.begin());
-
   if (times_gpu) {
     check_error << cudaFreeAsync(times_gpu, stream);
   }
 
   check_error << cudaMallocAsync(&times_gpu, sizeof(float) * num_points, stream);
-  check_error << cudaMemcpyAsync(times_gpu, times_h.data(), sizeof(float) * num_points, cudaMemcpyHostToDevice, stream);
-  check_error << cudaStreamSynchronize(stream);
+  if (times) {
+    std::vector<float> times_h(num_points);
+    std::copy(times, times + num_points, times_h.begin());
+    check_error << cudaMemcpyAsync(times_gpu, times_h.data(), sizeof(float) * num_points, cudaMemcpyHostToDevice, stream);
+    check_error << cudaStreamSynchronize(stream);
+  }
 }
 
 template void FrameGPU::add_times_gpu(const float* times, int num_points, CUstream_st* stream);
@@ -93,18 +94,19 @@ template void FrameGPU::add_times_gpu(const double* times, int num_points, CUstr
 template <typename T, int D>
 void FrameGPU::add_points_gpu(const Eigen::Matrix<T, D, 1>* points, int num_points, CUstream_st* stream) {
   this->num_points = num_points;
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_h(num_points);
-  for (int i = 0; i < num_points; i++) {
-    points_h[i] = points[i].template cast<float>().template head<3>();
-  }
-
   if (points_gpu) {
     check_error << cudaFreeAsync(points_gpu, stream);
   }
 
   check_error << cudaMallocAsync(&points_gpu, sizeof(Eigen::Vector3f) * num_points, stream);
-  check_error << cudaMemcpyAsync(points_gpu, points_h.data(), sizeof(Eigen::Vector3f) * num_points, cudaMemcpyHostToDevice, stream);
-  check_error << cudaStreamSynchronize(stream);
+  if (points) {
+    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_h(num_points);
+    for (int i = 0; i < num_points; i++) {
+      points_h[i] = points[i].template cast<float>().template head<3>();
+    }
+    check_error << cudaMemcpyAsync(points_gpu, points_h.data(), sizeof(Eigen::Vector3f) * num_points, cudaMemcpyHostToDevice, stream);
+    check_error << cudaStreamSynchronize(stream);
+  }
 }
 
 template void FrameGPU::add_points_gpu(const Eigen::Matrix<float, 3, 1>* points, int num_points, CUstream_st* stream);
@@ -117,18 +119,19 @@ template <typename T, int D>
 void FrameGPU::add_normals_gpu(const Eigen::Matrix<T, D, 1>* normals, int num_points, CUstream_st* stream) {
   assert(num_points == this->size());
 
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_h(num_points);
-  for (int i = 0; i < num_points; i++) {
-    normals_h[i] = normals[i].template head<3>().template cast<float>();
-  }
-
   if (normals_gpu) {
     check_error << cudaFreeAsync(normals_gpu, stream);
   }
 
   check_error << cudaMallocAsync(&normals_gpu, sizeof(Eigen::Vector3f) * num_points, stream);
-  check_error << cudaMemcpyAsync(normals_gpu, normals_h.data(), sizeof(Eigen::Vector3f) * num_points, cudaMemcpyHostToDevice, stream);
-  check_error << cudaStreamSynchronize(stream);
+  if (normals) {
+    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_h(num_points);
+    for (int i = 0; i < num_points; i++) {
+      normals_h[i] = normals[i].template head<3>().template cast<float>();
+    }
+    check_error << cudaMemcpyAsync(normals_gpu, normals_h.data(), sizeof(Eigen::Vector3f) * num_points, cudaMemcpyHostToDevice, stream);
+    check_error << cudaStreamSynchronize(stream);
+  }
 }
 
 template void FrameGPU::add_normals_gpu(const Eigen::Matrix<float, 3, 1>* normals, int num_points, CUstream_st* stream);
@@ -140,18 +143,20 @@ template void FrameGPU::add_normals_gpu(const Eigen::Matrix<double, 4, 1>* norma
 template <typename T, int D>
 void FrameGPU::add_covs_gpu(const Eigen::Matrix<T, D, D>* covs, int num_points, CUstream_st* stream) {
   assert(num_points == size());
-  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs_h(num_points);
-  for (int i = 0; i < num_points; i++) {
-    covs_h[i] = covs[i].template cast<float>().template block<3, 3>(0, 0);
-  }
 
   if (covs_gpu) {
     check_error << cudaFreeAsync(covs_gpu, stream);
   }
 
   check_error << cudaMallocAsync(&covs_gpu, sizeof(Eigen::Matrix3f) * num_points, stream);
-  check_error << cudaMemcpyAsync(covs_gpu, covs_h.data(), sizeof(Eigen::Matrix3f) * num_points, cudaMemcpyHostToDevice, stream);
-  check_error << cudaStreamSynchronize(stream);
+  if (covs) {
+    std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs_h(num_points);
+    for (int i = 0; i < num_points; i++) {
+      covs_h[i] = covs[i].template cast<float>().template block<3, 3>(0, 0);
+    }
+    check_error << cudaMemcpyAsync(covs_gpu, covs_h.data(), sizeof(Eigen::Matrix3f) * num_points, cudaMemcpyHostToDevice, stream);
+    check_error << cudaStreamSynchronize(stream);
+  }
 }
 
 template void FrameGPU::add_covs_gpu(const Eigen::Matrix<float, 3, 3>* covs, int num_points, CUstream_st* stream);
@@ -163,41 +168,45 @@ template void FrameGPU::add_covs_gpu(const Eigen::Matrix<double, 4, 4>* covs, in
 template <typename T>
 void FrameGPU::add_intensities_gpu(const T* intensities, int num_points, CUstream_st* stream) {
   assert(num_points == size());
-  std::vector<float> intensities_h(num_points);
-  std::copy(intensities, intensities + num_points, intensities_h.begin());
 
   if (intensities_gpu) {
     check_error << cudaFreeAsync(intensities_gpu, stream);
   }
 
   check_error << cudaMallocAsync(&intensities_gpu, sizeof(float) * num_points, stream);
-  check_error << cudaMemcpyAsync(intensities_gpu, intensities_h.data(), sizeof(float) * num_points, cudaMemcpyHostToDevice, stream);
-  check_error << cudaStreamSynchronize(stream);
+  if (intensities) {
+    std::vector<float> intensities_h(num_points);
+    std::copy(intensities, intensities + num_points, intensities_h.begin());
+    check_error << cudaMemcpyAsync(intensities_gpu, intensities_h.data(), sizeof(float) * num_points, cudaMemcpyHostToDevice, stream);
+    check_error << cudaStreamSynchronize(stream);
+  }
 }
 
 template void FrameGPU::add_intensities_gpu(const float* intensities, int num_points, CUstream_st* stream);
 template void FrameGPU::add_intensities_gpu(const double* intensities, int num_points, CUstream_st* stream);
 
 // copy data from GPU to CPU
-std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> FrameGPU::get_points_gpu() const {
+std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> FrameGPU::get_points_gpu(CUstream_st* stream) const {
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_h;
   if (!points_gpu) {
     return points_h;
   }
 
   points_h.resize(num_points);
-  check_error << cudaMemcpy(points_h.data(), points_gpu, sizeof(Eigen::Vector3f) * num_points, cudaMemcpyDeviceToHost);
+  check_error << cudaMemcpyAsync(points_h.data(), points_gpu, sizeof(Eigen::Vector3f) * num_points, cudaMemcpyDeviceToHost, stream);
+  cudaStreamSynchronize(stream);
   return points_h;
 }
 
-std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> FrameGPU::get_covs_gpu() const {
+std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> FrameGPU::get_covs_gpu(CUstream_st* stream) const {
   std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs_h;
   if (!covs_gpu) {
     return covs_h;
   }
 
   covs_h.resize(num_points);
-  check_error << cudaMemcpy(covs_h.data(), covs_gpu, sizeof(Eigen::Matrix3f) * num_points, cudaMemcpyDeviceToHost);
+  check_error << cudaMemcpyAsync(covs_h.data(), covs_gpu, sizeof(Eigen::Matrix3f) * num_points, cudaMemcpyDeviceToHost, stream);
+  cudaStreamSynchronize(stream);
   return covs_h;
 }
 

@@ -120,8 +120,8 @@ public:
   }
 
   // copy data from GPU to CPU
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> get_points_gpu() const;
-  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> get_covs_gpu() const;
+  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> get_points_gpu(CUstream_st* stream = nullptr) const;
+  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> get_covs_gpu(CUstream_st* stream = nullptr) const;
 };
 
 }  // namespace gtsam_ext

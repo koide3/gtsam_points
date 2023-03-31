@@ -70,7 +70,9 @@ template <typename T>
 void FrameCPU::add_times(const T* times, int num_points) {
   assert(num_points == size());
   times_storage.resize(num_points);
-  std::copy(times, times + num_points, times_storage.begin());
+  if (times) {
+    std::copy(times, times + num_points, times_storage.begin());
+  }
   this->times = this->times_storage.data();
 }
 
@@ -81,8 +83,10 @@ template void FrameCPU::add_times(const double* times, int num_points);
 template <typename T, int D>
 void FrameCPU::add_points(const Eigen::Matrix<T, D, 1>* points, int num_points) {
   points_storage.resize(num_points, Eigen::Vector4d(0.0, 0.0, 0.0, 1.0));
-  for (int i = 0; i < num_points; i++) {
-    points_storage[i].head<D>() = points[i].template head<D>().template cast<double>();
+  if (points) {
+    for (int i = 0; i < num_points; i++) {
+      points_storage[i].head<D>() = points[i].template head<D>().template cast<double>();
+    }
   }
   this->points = points_storage.data();
   this->num_points = num_points;
@@ -98,8 +102,10 @@ template <typename T, int D>
 void FrameCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
   assert(num_points == size());
   normals_storage.resize(num_points, Eigen::Vector4d::Zero());
-  for (int i = 0; i < num_points; i++) {
-    normals_storage[i].head<D>() = normals[i].template head<D>().template cast<double>();
+  if (normals) {
+    for (int i = 0; i < num_points; i++) {
+      normals_storage[i].head<D>() = normals[i].template head<D>().template cast<double>();
+    }
   }
   this->normals = normals_storage.data();
 }
@@ -114,8 +120,10 @@ template <typename T, int D>
 void FrameCPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points) {
   assert(num_points == size());
   covs_storage.resize(num_points, Eigen::Matrix4d::Zero());
-  for (int i = 0; i < num_points; i++) {
-    covs_storage[i].block<D, D>(0, 0) = covs[i].template block<D, D>(0, 0).template cast<double>();
+  if (covs) {
+    for (int i = 0; i < num_points; i++) {
+      covs_storage[i].block<D, D>(0, 0) = covs[i].template block<D, D>(0, 0).template cast<double>();
+    }
   }
   this->covs = covs_storage.data();
 }
@@ -130,7 +138,9 @@ template <typename T>
 void FrameCPU::add_intensities(const T* intensities, int num_points) {
   assert(num_points == size());
   intensities_storage.resize(num_points);
-  std::copy(intensities, intensities + num_points, intensities_storage.begin());
+  if (intensities) {
+    std::copy(intensities, intensities + num_points, intensities_storage.begin());
+  }
   this->intensities = this->intensities_storage.data();
 }
 
