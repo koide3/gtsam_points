@@ -20,7 +20,7 @@
 
 #include <gtsam/linear/VectorValues.h>
 #include <gtsam/inference/Ordering.h>
-#include <gtsam_ext/cuda/nonlinear_factor_set_gpu.hpp>
+#include <gtsam_ext/optimizers/linearization_hook.hpp>
 
 namespace gtsam_ext {
 
@@ -95,7 +95,7 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
     const gtsam::VectorValues& dx_n,
     const M& Rd,
     const F& f,
-    NonlinearFactorSetGPU& gpu_factors,
+    LinearizationHook& linearization_hook,
     const VALUES& x0,
     const double f_error,
     const bool verbose = false);
@@ -145,7 +145,7 @@ typename DoglegOptimizerImplExt::IterationResult DoglegOptimizerImplExt::Iterate
   const gtsam::VectorValues& dx_n,
   const M& Rd,
   const F& f,
-  NonlinearFactorSetGPU& gpu_factors,
+  LinearizationHook& linearization_hook,
   const VALUES& x0,
   const double f_error,
   const bool verbose) {
@@ -174,7 +174,7 @@ typename DoglegOptimizerImplExt::IterationResult DoglegOptimizerImplExt::Iterate
 
     gttic(decrease_in_f);
     // Compute decrease in f
-    gpu_factors.error(x_d);
+    linearization_hook.error(x_d);
     result.f_error = f.error(x_d);
     gttoc(decrease_in_f);
 

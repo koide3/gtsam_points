@@ -143,6 +143,7 @@ add_library(gtsam_ext SHARED
   # experimental
   src/gtsam_ext/factors/experimental/continuous_time_icp_factor.cpp
   # optimizers
+  src/gtsam_ext/optimizers/linearization_hook.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
   src/gtsam_ext/optimizers/isam2_ext.cpp
@@ -174,6 +175,7 @@ if(BUILD_WITH_CUDA)
     src/gtsam_ext/cuda/cuda_device_sync.cu
     src/gtsam_ext/cuda/cuda_device_prop.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
+    src/gtsam_ext/cuda/nonlinear_factor_set_gpu_create.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu
     src/gtsam_ext/cuda/stream_temp_buffer_roundrobin.cu
     # types
