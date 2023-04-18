@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <gtsam/nonlinear/Values.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 namespace gtsam_ext {

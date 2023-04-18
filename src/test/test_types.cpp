@@ -201,7 +201,7 @@ void creation_test_gpu() {
   ASSERT_EQ(frame_gpu->points, nullptr);
   ASSERT_NE(frame_gpu->points_gpu, nullptr);
 
-  const auto points_gpu = frame_gpu->get_points_gpu();
+  const auto points_gpu = gtsam_ext::download_points_gpu(*frame_gpu);
   ASSERT_EQ(points_gpu.size(), num_points);
   for (int i = 0; i < num_points; i++) {
     EXPECT_LT((points_gpu[i].template cast<double>() - frame->points[i].template head<3>()).norm(), 1e-6);
@@ -217,7 +217,7 @@ void creation_test_gpu() {
   ASSERT_EQ(frame_gpu->covs, nullptr);
   ASSERT_NE(frame_gpu->covs_gpu, nullptr);
 
-  const auto covs_gpu = frame_gpu->get_covs_gpu();
+  const auto covs_gpu = gtsam_ext::download_covs_gpu(*frame_gpu);
   ASSERT_EQ(covs_gpu.size(), num_points);
   for (int i = 0; i < num_points; i++) {
     EXPECT_LT((covs_gpu[i].template cast<double>() - frame->covs[i].template block<3, 3>(0, 0)).norm(), 1e-6);
@@ -254,7 +254,7 @@ void creation_test_voxels_gpu() {
   ASSERT_EQ(frame_gpu->points, nullptr);
   ASSERT_NE(frame_gpu->points_gpu, nullptr);
 
-  const auto points_gpu = frame_gpu->get_points_gpu();
+  const auto points_gpu = gtsam_ext::download_points_gpu(*frame_gpu);
   ASSERT_EQ(points_gpu.size(), num_points);
   for (int i = 0; i < num_points; i++) {
     EXPECT_LT((points_gpu[i].template cast<double>() - frame->points[i].template head<3>()).norm(), 1e-6);
@@ -269,7 +269,7 @@ void creation_test_voxels_gpu() {
   ASSERT_EQ(frame_gpu->covs, nullptr);
   ASSERT_NE(frame_gpu->covs_gpu, nullptr);
 
-  const auto covs_gpu = frame_gpu->get_covs_gpu();
+  const auto covs_gpu = gtsam_ext::download_covs_gpu(*frame_gpu);
   ASSERT_EQ(covs_gpu.size(), num_points);
   for (int i = 0; i < num_points; i++) {
     EXPECT_LT((covs_gpu[i].template cast<double>() - frame->covs[i].template block<3, 3>(0, 0)).norm(), 1e-6);
