@@ -170,6 +170,7 @@ if(BUILD_WITH_CUDA)
   cuda_add_library(gtsam_ext_cuda SHARED
     # cuda-related
     src/gtsam_ext/cuda/check_error.cu
+    src/gtsam_ext/cuda/cuda_memory.cu
     src/gtsam_ext/cuda/cuda_stream.cu
     src/gtsam_ext/cuda/cuda_device_sync.cu
     src/gtsam_ext/cuda/cuda_device_prop.cu
@@ -187,6 +188,8 @@ if(BUILD_WITH_CUDA)
     src/gtsam_ext/factors/integrated_vgicp_derivatives_compute.cu
     src/gtsam_ext/factors/integrated_vgicp_derivatives_linearize.cu
     src/gtsam_ext/factors/integrated_vgicp_factor_gpu.cu
+    # util
+    src/gtsam_ext/util/easy_profiler_cuda.cu
   )
   target_include_directories(gtsam_ext_cuda PUBLIC
     include

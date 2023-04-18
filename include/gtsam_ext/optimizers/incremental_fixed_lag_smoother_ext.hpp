@@ -89,6 +89,9 @@ public:
   /** Access the current set of factors */
   const NonlinearFactorGraph& getFactors() const { return isam_.getFactorsUnsafe(); }
 
+  /** Access the current set of linearized factors */
+  const GaussianFactorGraph& getLinearFactors() const { return isam_.getLinearFactorsUnsafe(); }
+
   /** Access the current linearization point */
   const Values& getLinearizationPoint() const { return isam_.getLinearizationPoint(); }
 

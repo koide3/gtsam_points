@@ -261,6 +261,9 @@ public:
   /** Access the set of nonlinear factors */
   const NonlinearFactorGraph& getFactorsUnsafe() const { return nonlinearFactors_; }
 
+  /** Access the set of linear factors */
+  const GaussianFactorGraph& getLinearFactorsUnsafe() const { return linearFactors_; }
+
   /** Access the nonlinear variable index */
   const VariableIndex& getVariableIndex() const { return variableIndex_; }
 
