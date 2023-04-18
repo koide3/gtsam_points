@@ -36,7 +36,7 @@ namespace gtsam_ext {
 
 using namespace gtsam;
 
-class NonlinearFactorSetGPU;
+class LinearizationHook;
 
 /**
  * @addtogroup ISAM2
@@ -320,7 +320,7 @@ protected:
   void updateDelta(bool forceFullSolve = false) const;
 
   std::chrono::high_resolution_clock::time_point optimization_start_time;
-  std::unique_ptr<NonlinearFactorSetGPU> gpu_factors;
+  std::unique_ptr<LinearizationHook> linearization_hook;
 };  // ISAM2
 
 }  // namespace gtsam_ext

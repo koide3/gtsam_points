@@ -3,6 +3,7 @@
 
 #include <gtsam_ext/cuda/nonlinear_factor_set_gpu.hpp>
 
+#include <cuda_runtime.h>
 #include <thrust/device_vector.h>
 #include <gtsam_ext/cuda/check_error.cuh>
 
@@ -24,7 +25,7 @@ void NonlinearFactorSetGPU::clear_counts() {
 bool NonlinearFactorSetGPU::add(boost::shared_ptr<gtsam::NonlinearFactor> factor) {
   auto gpu_factor = boost::dynamic_pointer_cast<NonlinearFactorGPU>(factor);
   if (gpu_factor) {
-    add(gpu_factor);
+    factors.push_back(gpu_factor);
     return true;
   }
 
@@ -35,10 +36,6 @@ void NonlinearFactorSetGPU::add(const gtsam::NonlinearFactorGraph& factors) {
   for (auto& factor : factors) {
     add(factor);
   }
-}
-
-void NonlinearFactorSetGPU::add(boost::shared_ptr<NonlinearFactorGPU> factor) {
-  factors.push_back(factor);
 }
 
 void NonlinearFactorSetGPU::linearize(const gtsam::Values& linearization_point) {
