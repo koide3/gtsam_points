@@ -36,7 +36,7 @@ namespace gtsam_ext {
 
 using namespace gtsam;
 
-class NonlinearFactorSetGPU;
+class LinearizationHook;
 
 /**
  * @addtogroup ISAM2
@@ -261,6 +261,9 @@ public:
   /** Access the set of nonlinear factors */
   const NonlinearFactorGraph& getFactorsUnsafe() const { return nonlinearFactors_; }
 
+  /** Access the set of linear factors */
+  const GaussianFactorGraph& getLinearFactorsUnsafe() const { return linearFactors_; }
+
   /** Access the nonlinear variable index */
   const VariableIndex& getVariableIndex() const { return variableIndex_; }
 
@@ -317,7 +320,7 @@ protected:
   void updateDelta(bool forceFullSolve = false) const;
 
   std::chrono::high_resolution_clock::time_point optimization_start_time;
-  std::unique_ptr<NonlinearFactorSetGPU> gpu_factors;
+  std::unique_ptr<LinearizationHook> linearization_hook;
 };  // ISAM2
 
 }  // namespace gtsam_ext

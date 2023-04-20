@@ -118,10 +118,10 @@ public:
   void add_intensities_gpu(const std::vector<T>& intensities, CUstream_st* stream = 0) {
     add_intensities_gpu(intensities.data(), intensities.size(), stream);
   }
-
-  // copy data from GPU to CPU
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> get_points_gpu(CUstream_st* stream = nullptr) const;
-  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> get_covs_gpu(CUstream_st* stream = nullptr) const;
 };
+
+// Device to host data transfer
+std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream = nullptr);
+std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream = nullptr);
 
 }  // namespace gtsam_ext

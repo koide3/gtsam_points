@@ -47,6 +47,8 @@ public:
     }
   }
 
+  const NonlinearFactorGraph& getFactors() const { return smoother->getFactors(); }
+  const GaussianFactorGraph& getLinearFactors() const { return smoother->getLinearFactors(); }
   const Values& getLinearizationPoint() const { return smoother->getLinearizationPoint(); }
   const VectorValues& getDelta() const { return smoother->getDelta(); }
 

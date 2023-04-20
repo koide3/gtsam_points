@@ -30,7 +30,7 @@
 
 #include <gtsam_ext/optimizers/isam2_ext.hpp>
 #include <gtsam_ext/optimizers/dogleg_optimizer_ext_impl.hpp>
-#include <gtsam_ext/cuda/nonlinear_factor_set_gpu.hpp>
+#include <gtsam_ext/optimizers/linearization_hook.hpp>
 
 #include <algorithm>
 #include <map>
@@ -50,7 +50,7 @@ ISAM2Ext::ISAM2Ext(const ISAM2Params& params) : params_(params), update_count_(0
   if (params_.optimizationParams.type() == typeid(ISAM2DoglegParams))
     doglegDelta_ = boost::get<ISAM2DoglegParams>(params_.optimizationParams).initialDelta;
 
-  gpu_factors.reset(new NonlinearFactorSetGPU());
+  linearization_hook.reset(new LinearizationHook());
 }
 
 /* ************************************************************************* */
@@ -58,7 +58,7 @@ ISAM2Ext::ISAM2Ext() : update_count_(0) {
   if (params_.optimizationParams.type() == typeid(ISAM2DoglegParams))
     doglegDelta_ = boost::get<ISAM2DoglegParams>(params_.optimizationParams).initialDelta;
 
-  gpu_factors.reset(new NonlinearFactorSetGPU());
+  linearization_hook.reset(new LinearizationHook());
 }
 
 /* ************************************************************************* */
@@ -85,7 +85,7 @@ ISAM2Ext::relinearizeAffectedFactors(const ISAM2UpdateParams& updateParams, cons
   gttic(check_candidates_and_linearize);
   GaussianFactorGraph linearized;
 
-  gpu_factors->clear();
+  linearization_hook->clear();
   std::vector<FactorIndex> gpu_factor_indices;
 
   for (const FactorIndex idx : candidates) {
@@ -103,7 +103,7 @@ ISAM2Ext::relinearizeAffectedFactors(const ISAM2UpdateParams& updateParams, cons
         linearized.push_back(linearFactors_[idx]);
       } else {
         // GPU factor
-        if (gpu_factors->add(nonlinearFactors_[idx])) {
+        if (linearization_hook->add(nonlinearFactors_[idx])) {
           gpu_factor_indices.push_back(idx);
         }
         // non GPU factor
@@ -119,7 +119,7 @@ ISAM2Ext::relinearizeAffectedFactors(const ISAM2UpdateParams& updateParams, cons
   }
   gttoc(check_candidates_and_linearize);
 
-  auto linear_factors_gpu = gpu_factors->calc_linear_factors(theta_);
+  auto linear_factors_gpu = linearization_hook->calc_linear_factors(theta_);
   for (int i = 0; i < linear_factors_gpu.size(); i++) {
     const auto& linearFactor = linear_factors_gpu[i];
     const FactorIndex idx = gpu_factor_indices[i];
@@ -223,9 +223,9 @@ void ISAM2Ext::recalculateBatch(const ISAM2UpdateParams& updateParams, KeySet* a
 
   gttic(linearize);
   // issue linearization of GPU factors
-  gpu_factors->clear();
-  gpu_factors->add(nonlinearFactors_);
-  gpu_factors->linearize(theta_);
+  linearization_hook->clear();
+  linearization_hook->add(nonlinearFactors_);
+  linearization_hook->linearize(theta_);
 
   auto linearized = nonlinearFactors_.linearize(theta_);
   if (params_.cacheLinearizedFactors) linearFactors_ = *linearized;
@@ -422,7 +422,7 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
 
   UpdateImpl update(params_, updateParams);
 
-  gpu_factors->clear_counts();
+  linearization_hook->clear_counts();
 
   // Update delta if we need it to check relinearization later
   if (update.relinarizationNeeded(update_count_)) updateDelta(updateParams.forceFullSolve);
@@ -436,10 +436,10 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
   addVariables(newTheta, result.details());
   if (params_.evaluateNonlinearError) {
     auto estimate = calculateEstimate();
-    gpu_factors->clear();
-    gpu_factors->add(nonlinearFactors_);
-    gpu_factors->linearize(theta_);
-    gpu_factors->error(estimate);
+    linearization_hook->clear();
+    linearization_hook->add(nonlinearFactors_);
+    linearization_hook->linearize(theta_);
+    linearization_hook->error(estimate);
 
     update.error(nonlinearFactors_, estimate, &result.errorBefore);
   }
@@ -465,9 +465,9 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
   }
 
   // 7. Linearize new factors
-  gpu_factors->clear();
-  gpu_factors->add(newFactors);
-  gpu_factors->linearize(theta_);
+  linearization_hook->clear();
+  linearization_hook->add(newFactors);
+  linearization_hook->linearize(theta_);
 
   update.linearizeNewFactors(newFactors, theta_, nonlinearFactors_.size(), result.newFactorsIndices, &linearFactors_);
   update.augmentVariableIndex(newFactors, result.newFactorsIndices, &variableIndex_);
@@ -479,18 +479,18 @@ ISAM2ResultExt ISAM2Ext::update(const NonlinearFactorGraph& newFactors, const Va
 
   if (params_.evaluateNonlinearError) {
     auto estimate = calculateEstimate();
-    gpu_factors->clear();
-    gpu_factors->add(nonlinearFactors_);
-    gpu_factors->linearize(theta_);
-    gpu_factors->error(estimate);
+    linearization_hook->clear();
+    linearization_hook->add(nonlinearFactors_);
+    linearization_hook->linearize(theta_);
+    linearization_hook->error(estimate);
 
     update.error(nonlinearFactors_, estimate, &result.errorAfter);
   }
 
   result.update_count = update_count_;
   result.delta = delta_.norm();
-  result.gpu_evaluation_count = gpu_factors->evaluation_count();
-  result.gpu_linearization_count = gpu_factors->linearization_count();
+  result.gpu_evaluation_count = linearization_hook->evaluation_count();
+  result.gpu_linearization_count = linearization_hook->linearization_count();
   result.elapsed_time =
     std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - optimization_start_time).count() / 1e9;
 
@@ -627,16 +627,16 @@ void ISAM2Ext::marginalizeLeaves(
           }
         }
         // Create factor graph from factor indices
-        gpu_factors->clear();
+        linearization_hook->clear();
         for (const auto index : factorsFromMarginalizedInClique_step1) {
-          if (!gpu_factors->add(nonlinearFactors_[index])) {
+          if (!linearization_hook->add(nonlinearFactors_[index])) {
             // non GPU factors are linearized here
             graph.push_back(nonlinearFactors_[index]->linearize(theta_));
           }
         }
 
         // linearize GPU factors
-        auto linear_factors_gpu = gpu_factors->calc_linear_factors(theta_);
+        auto linear_factors_gpu = linearization_hook->calc_linear_factors(theta_);
         for (const auto& factor : linear_factors_gpu) {
           graph.push_back(factor);
         }
@@ -758,19 +758,27 @@ void ISAM2Ext::updateDelta(bool forceFullSolve) const {
     // RgProd_
     deltaReplacedMask_.clear();
 
-    gpu_factors->clear();
-    gpu_factors->add(nonlinearFactors_);
-    gpu_factors->linearize(theta_);
-    gpu_factors->error(theta_);
+    linearization_hook->clear();
+    linearization_hook->add(nonlinearFactors_);
+    linearization_hook->linearize(theta_);
+    linearization_hook->error(theta_);
 
     double error0 = nonlinearFactors_.error(theta_);
     DoglegOptimizerImplExt::TrustRegionAdaptationMode adaptationMode =
       static_cast<DoglegOptimizerImplExt::TrustRegionAdaptationMode>(doglegParams.adaptationMode);
 
     // Compute dogleg point
-    DoglegOptimizerImplExt::IterationResult doglegResult(
-      DoglegOptimizerImplExt::
-        Iterate(*doglegDelta_, adaptationMode, dx_u, deltaNewton_, *this, nonlinearFactors_, *gpu_factors, theta_, error0, doglegParams.verbose));
+    DoglegOptimizerImplExt::IterationResult doglegResult(DoglegOptimizerImplExt::Iterate(
+      *doglegDelta_,
+      adaptationMode,
+      dx_u,
+      deltaNewton_,
+      *this,
+      nonlinearFactors_,
+      *linearization_hook,
+      theta_,
+      error0,
+      doglegParams.verbose));
     gttoc(Dogleg_Iterate);
 
     gttic(Copy_dx_d);

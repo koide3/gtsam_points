@@ -185,29 +185,28 @@ void FrameGPU::add_intensities_gpu(const T* intensities, int num_points, CUstrea
 template void FrameGPU::add_intensities_gpu(const float* intensities, int num_points, CUstream_st* stream);
 template void FrameGPU::add_intensities_gpu(const double* intensities, int num_points, CUstream_st* stream);
 
-// copy data from GPU to CPU
-std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> FrameGPU::get_points_gpu(CUstream_st* stream) const {
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_h;
-  if (!points_gpu) {
-    return points_h;
+std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream) {
+  if (!frame.points_gpu) {
+    std::cerr << "error: frame does not have points on GPU!!" << std::endl;
+    return {};
   }
 
-  points_h.resize(num_points);
-  check_error << cudaMemcpyAsync(points_h.data(), points_gpu, sizeof(Eigen::Vector3f) * num_points, cudaMemcpyDeviceToHost, stream);
+  std::vector<Eigen::Vector3f> points(frame.size());
+  check_error << cudaMemcpyAsync(points.data(), frame.points_gpu, sizeof(Eigen::Vector3f) * frame.size(), cudaMemcpyDeviceToHost, stream);
   cudaStreamSynchronize(stream);
-  return points_h;
+  return points;
 }
 
-std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> FrameGPU::get_covs_gpu(CUstream_st* stream) const {
-  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs_h;
-  if (!covs_gpu) {
-    return covs_h;
+std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream) {
+  if (!frame.covs_gpu) {
+    std::cerr << "error: frame does not have covs on GPU!!" << std::endl;
+    return {};
   }
 
-  covs_h.resize(num_points);
-  check_error << cudaMemcpyAsync(covs_h.data(), covs_gpu, sizeof(Eigen::Matrix3f) * num_points, cudaMemcpyDeviceToHost, stream);
+  std::vector<Eigen::Matrix3f> covs(frame.size());
+  check_error << cudaMemcpyAsync(covs.data(), frame.covs_gpu, sizeof(Eigen::Matrix3f) * frame.size(), cudaMemcpyDeviceToHost, stream);
   cudaStreamSynchronize(stream);
-  return covs_h;
+  return covs;
 }
 
 }  // namespace gtsam_ext

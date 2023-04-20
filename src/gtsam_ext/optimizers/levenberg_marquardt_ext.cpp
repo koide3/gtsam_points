@@ -20,7 +20,7 @@
 
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
-#include <gtsam_ext/cuda/nonlinear_factor_set_gpu.hpp>
+#include <gtsam_ext/optimizers/linearization_hook.hpp>
 
 #include <gtsam/base/Vector.h>
 #include <gtsam/linear/GaussianFactorGraph.h>
@@ -54,8 +54,8 @@ LevenbergMarquardtOptimizerExt::LevenbergMarquardtOptimizerExt(
     std::unique_ptr<State>(new State(initialValues, std::numeric_limits<double>::max(), params.lambdaInitial, params.lambdaFactor))),
   params_(params.ensureHasOrdering(graph)) {
   // find gpu factors
-  gpu_factors.reset(new NonlinearFactorSetGPU());
-  gpu_factors->add(graph);
+  linearization_hook.reset(new LinearizationHook());
+  linearization_hook->add(graph);
 }
 
 LevenbergMarquardtOptimizerExt::~LevenbergMarquardtOptimizerExt() {}
@@ -113,7 +113,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
       // =======================================================================
 
       // cost change in the original, nonlinear system (old - new)
-      gpu_factors->error(newValues);
+      linearization_hook->error(newValues);
       newError = graph_.error(newValues);
       costChange = oldError - newError;
 
@@ -178,10 +178,10 @@ gtsam::GaussianFactorGraph::shared_ptr LevenbergMarquardtOptimizerExt::iterate()
   auto currentState = static_cast<const State*>(state_.get());
 
   gtsam::GaussianFactorGraph::shared_ptr linear;
-  gpu_factors->linearize(currentState->values);
+  linearization_hook->linearize(currentState->values);
   linear = graph_.linearize(currentState->values);
 
-  gpu_factors->error(currentState->values);
+  linearization_hook->error(currentState->values);
   double oldError = graph_.error(currentState->values);
   // double oldError = graph_.error(currentState->values, linear);
 

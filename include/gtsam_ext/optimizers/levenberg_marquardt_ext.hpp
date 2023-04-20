@@ -31,7 +31,7 @@
 
 namespace gtsam_ext {
 
-class NonlinearFactorSetGPU;
+class LinearizationHook;
 
 class LevenbergMarquardtExtParams : public gtsam::LevenbergMarquardtParams {
 public:
@@ -70,7 +70,7 @@ private:
 
 private:
   std::chrono::high_resolution_clock::time_point optimization_start_time;
-  std::unique_ptr<NonlinearFactorSetGPU> gpu_factors;
+  std::unique_ptr<LinearizationHook> linearization_hook;
   const LevenbergMarquardtExtParams params_;
 
   gtsam::GaussianFactorGraph::shared_ptr linearized;
