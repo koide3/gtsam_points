@@ -198,6 +198,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(con
     l = *linearization_result;
     linearization_result.reset();
   } else {
+    std::cerr << "warning: performing linearization in sync mode seriously affects the processing speed!!" << std::endl;
     l = derivatives->linearize(linearization_point);
   }
 
