@@ -389,11 +389,12 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
   downsampled->num_points = voxels.size();
   downsampled->points_storage.resize(voxels.size());
   downsampled->points = downsampled->points_storage.data();
-  std::transform(voxels.begin(), voxels.end(), downsampled->points, [&](const Indices& indices) {
+  std::transform(voxels.begin(), voxels.end(), downsampled->points, [&](const Indices& indices) -> Eigen::Vector4d {
     Eigen::Vector4d sum = Eigen::Vector4d::Zero();
     for (const auto i : *indices) {
       sum += frame->points[i];
     }
+
     return sum / indices->size();
   });
 
@@ -412,7 +413,7 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
   if (frame->normals) {
     downsampled->normals_storage.resize(voxels.size());
     downsampled->normals = downsampled->normals_storage.data();
-    std::transform(voxels.begin(), voxels.end(), downsampled->normals, [&](const Indices& indices) {
+    std::transform(voxels.begin(), voxels.end(), downsampled->normals, [&](const Indices& indices) -> Eigen::Vector4d {
       Eigen::Vector4d sum = Eigen::Vector4d::Zero();
       for (const auto i : *indices) {
         sum += frame->normals[i];
@@ -424,7 +425,7 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
   if (frame->covs) {
     downsampled->covs_storage.resize(voxels.size());
     downsampled->covs = downsampled->covs_storage.data();
-    std::transform(voxels.begin(), voxels.end(), downsampled->covs, [&](const Indices& indices) {
+    std::transform(voxels.begin(), voxels.end(), downsampled->covs, [&](const Indices& indices) -> Eigen::Matrix4d {
       Eigen::Matrix4d sum = Eigen::Matrix4d::Zero();
       for (const auto i : *indices) {
         sum += frame->covs[i];
