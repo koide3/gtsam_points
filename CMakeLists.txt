@@ -171,8 +171,10 @@ if(BUILD_WITH_CUDA)
   cuda_add_library(gtsam_ext_cuda SHARED
     # cuda-related
     src/gtsam_ext/cuda/check_error.cu
+    src/gtsam_ext/cuda/check_error_cusolver.cu
     src/gtsam_ext/cuda/cuda_memory.cu
     src/gtsam_ext/cuda/cuda_stream.cu
+    src/gtsam_ext/cuda/cuda_buffer.cu
     src/gtsam_ext/cuda/cuda_device_sync.cu
     src/gtsam_ext/cuda/cuda_device_prop.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
