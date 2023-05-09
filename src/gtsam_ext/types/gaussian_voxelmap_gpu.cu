@@ -284,4 +284,22 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const Frame& 
   check_error << cudaFreeAsync(index_buckets, stream);
 }
 
+std::vector<Eigen::Vector3f> download_voxel_means(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {
+  std::vector<Eigen::Vector3f> means(voxelmap.voxelmap_info.num_voxels);
+  check_error << cudaMemcpyAsync(
+    means.data(),
+    voxelmap.voxel_means,
+    sizeof(Eigen::Vector3f) * voxelmap.voxelmap_info.num_voxels,
+    cudaMemcpyDeviceToHost,
+    stream);
+  return means;
+}
+
+std::vector<Eigen::Matrix3f> download_voxel_covs(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {
+  std::vector<Eigen::Matrix3f> covs(voxelmap.voxelmap_info.num_voxels);
+  check_error
+    << cudaMemcpyAsync(covs.data(), voxelmap.voxel_covs, sizeof(Eigen::Matrix3f) * voxelmap.voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
+  return covs;
+}
+
 }  // namespace gtsam_ext

@@ -45,6 +45,7 @@ public:
 
   std::function<bool(const gtsam::Values& values)> termination_criteria;
   std::function<void(const LevenbergMarquardtOptimizationStatus&, const gtsam::Values&)> callback;  // callback for optimization iteration
+  std::function<void(const std::string&)> status_msg_callback;
 };
 
 class LevenbergMarquardtOptimizerExt : public gtsam::NonlinearOptimizer {

@@ -134,7 +134,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
     }
   }  // if (systemSolvedSuccessfully)
 
-  if (params_.callback) {
+  if (params_.callback || params_.status_msg_callback) {
     LevenbergMarquardtOptimizationStatus status;
     status.iterations = currentState->iterations;
     status.total_inner_iterations = currentState->totalNumberInnerIterations;
@@ -149,7 +149,21 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
     status.linear_solver_time =
       1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(linear_solver_end_time - linear_solver_start_time).count();
 
-    params_.callback(status, currentState->values);
+    if (params_.status_msg_callback) {
+      const std::string msg = status.to_string();
+      const auto newline_loc = msg.find('\n');
+
+      if (newline_loc == std::string::npos) {
+        params_.status_msg_callback(msg);
+      } else {
+        params_.status_msg_callback(msg.substr(0, newline_loc));
+        params_.status_msg_callback(msg.substr(newline_loc + 1));
+      }
+    }
+
+    if (params_.callback) {
+      params_.callback(status, currentState->values);
+    }
   }
 
   if (step_is_successful) {
