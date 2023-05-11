@@ -185,6 +185,23 @@ void FrameGPU::add_intensities_gpu(const T* intensities, int num_points, CUstrea
 template void FrameGPU::add_intensities_gpu(const float* intensities, int num_points, CUstream_st* stream);
 template void FrameGPU::add_intensities_gpu(const double* intensities, int num_points, CUstream_st* stream);
 
+void FrameGPU::download_points(CUstream_st* stream) {
+  if (!points_gpu) {
+    std::cerr << "error: frame does not have points on GPU!!" << std::endl;
+    return;
+  }
+
+  std::vector<Eigen::Vector3f> points_h(num_points);
+  check_error << cudaMemcpyAsync(points_h.data(), points_gpu, sizeof(Eigen::Vector3f) * num_points, cudaMemcpyDeviceToHost, stream);
+
+  if (!points) {
+    points_storage.resize(num_points);
+    points = points_storage.data();
+  }
+
+  std::transform(points_h.begin(), points_h.end(), points, [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p.x(), p.y(), p.z(), 1.0); });
+}
+
 std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream) {
   if (!frame.points_gpu) {
     std::cerr << "error: frame does not have points on GPU!!" << std::endl;

@@ -92,7 +92,12 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
   bool systemSolvedSuccessfully;
   try {
     // ============ Solve is where most computation happens !! =================
-    delta = solve(dampedSystem, params_);
+    if (params_.solver) {
+      delta = params_.solver->solve(dampedSystem, *params_.ordering);
+    } else {
+      delta = solve(dampedSystem, params_);
+    }
+
     systemSolvedSuccessfully = true;
   } catch (const gtsam::IndeterminantLinearSystemException&) {
     systemSolvedSuccessfully = false;
@@ -145,9 +150,11 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
 
     auto t = std::chrono::high_resolution_clock::now();
     status.elapsed_time = 1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(t - optimization_start_time).count();
+    status.linearization_time = 1e-9 * linearization_time.count();
     status.lambda_iteration_time = 1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(t - lambda_iteration_start_time).count();
     status.linear_solver_time =
       1e-9 * std::chrono::duration_cast<std::chrono::nanoseconds>(linear_solver_end_time - linear_solver_start_time).count();
+    linearization_time = std::chrono::nanoseconds(0);
 
     if (params_.status_msg_callback) {
       const std::string msg = status.to_string();
@@ -172,7 +179,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
     // TODO(frank): make Values actually support move. Does not seem to happen now.
     state_ = currentState->decreaseLambda(params_, modelFidelity, std::move(newValues), newError);
     return true;
-  } else if (!stopSearchingLambda) {  // we failed to solved the system or had no decrease in cost
+  } else if (!stopSearchingLambda) {         // we failed to solved the system or had no decrease in cost
     State* modifiedState = static_cast<State*>(state_.get());
     modifiedState->increaseLambda(params_);  // TODO(frank): make this functional with Values move
 
@@ -183,7 +190,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
     } else {
       return false;  // only case where we will keep trying
     }
-  } else {  // the change in the cost is very small and it is not worth trying bigger lambdas
+  } else {           // the change in the cost is very small and it is not worth trying bigger lambdas
     return true;
   }
 }
@@ -191,9 +198,12 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
 gtsam::GaussianFactorGraph::shared_ptr LevenbergMarquardtOptimizerExt::iterate() {
   auto currentState = static_cast<const State*>(state_.get());
 
+  auto t1 = std::chrono::high_resolution_clock::now();
   gtsam::GaussianFactorGraph::shared_ptr linear;
   linearization_hook->linearize(currentState->values);
   linear = graph_.linearize(currentState->values);
+  auto t2 = std::chrono::high_resolution_clock::now();
+  linearization_time = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
 
   linearization_hook->error(currentState->values);
   double oldError = graph_.error(currentState->values);

@@ -118,6 +118,8 @@ public:
   void add_intensities_gpu(const std::vector<T>& intensities, CUstream_st* stream = 0) {
     add_intensities_gpu(intensities.data(), intensities.size(), stream);
   }
+
+  void download_points(CUstream_st* stream = 0);
 };
 
 // Device to host data transfer

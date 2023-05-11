@@ -144,6 +144,8 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/factors/experimental/continuous_time_icp_factor.cpp
   # optimizers
   src/gtsam_ext/optimizers/linearization_hook.cpp
+  src/gtsam_ext/optimizers/linear_system_builder.cpp
+  src/gtsam_ext/optimizers/gaussian_factor_graph_solver.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_ext/optimizers/levenberg_marquardt_optimization_status.cpp
   src/gtsam_ext/optimizers/isam2_ext.cpp

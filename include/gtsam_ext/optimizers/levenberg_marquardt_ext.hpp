@@ -27,26 +27,12 @@
 #include <gtsam/nonlinear/NonlinearOptimizer.h>
 #include <gtsam/nonlinear/LevenbergMarquardtParams.h>
 
+#include <gtsam_ext/optimizers/levenberg_marquardt_ext_params.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_optimization_status.hpp>
 
 namespace gtsam_ext {
 
 class LinearizationHook;
-
-class LevenbergMarquardtExtParams : public gtsam::LevenbergMarquardtParams {
-public:
-  LevenbergMarquardtExtParams() : gtsam::LevenbergMarquardtParams() {}
-
-  LevenbergMarquardtExtParams ensureHasOrdering(const gtsam::NonlinearFactorGraph& graph) const;
-
-  void set_verbose() {
-    callback = [](const LevenbergMarquardtOptimizationStatus& status, const gtsam::Values&) { std::cout << status.to_string() << std::endl; };
-  }
-
-  std::function<bool(const gtsam::Values& values)> termination_criteria;
-  std::function<void(const LevenbergMarquardtOptimizationStatus&, const gtsam::Values&)> callback;  // callback for optimization iteration
-  std::function<void(const std::string&)> status_msg_callback;
-};
 
 class LevenbergMarquardtOptimizerExt : public gtsam::NonlinearOptimizer {
 public:
@@ -71,6 +57,8 @@ private:
 
 private:
   std::chrono::high_resolution_clock::time_point optimization_start_time;
+  std::chrono::nanoseconds linearization_time;
+
   std::unique_ptr<LinearizationHook> linearization_hook;
   const LevenbergMarquardtExtParams params_;
 
