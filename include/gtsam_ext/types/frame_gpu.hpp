@@ -125,5 +125,6 @@ public:
 // Device to host data transfer
 std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream = nullptr);
 std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream = nullptr);
+std::vector<Eigen::Vector3f> download_normals_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream = nullptr);
 
 }  // namespace gtsam_ext

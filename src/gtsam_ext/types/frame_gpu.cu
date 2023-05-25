@@ -226,4 +226,16 @@ std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::Frame& frame, CU
   return covs;
 }
 
+std::vector<Eigen::Vector3f> download_normals_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream) {
+  if (!frame.normals_gpu) {
+    std::cerr << "error: frame does not have normals on GPU!!" << std::endl;
+    return {};
+  }
+
+  std::vector<Eigen::Vector3f> normals(frame.size());
+  check_error << cudaMemcpyAsync(normals.data(), frame.normals_gpu, sizeof(Eigen::Vector3f) * frame.size(), cudaMemcpyDeviceToHost, stream);
+  cudaStreamSynchronize(stream);
+  return normals;
+}
+
 }  // namespace gtsam_ext

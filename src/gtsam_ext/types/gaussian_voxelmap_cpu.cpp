@@ -4,11 +4,14 @@
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 
 #include <memory>
+#include <fstream>
 #include <iostream>
 #include <unordered_set>
 
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+
+#include <gtsam_ext/util/easy_profiler.hpp>
 
 namespace gtsam_ext {
 
@@ -77,7 +80,9 @@ void GaussianVoxelMapCPU::insert(const Frame& frame) {
     auto found = voxels.find(coord);
     if (found == voxels.end()) {
       GaussianVoxel::Ptr voxel(new GaussianVoxel());
-      found = voxels.insert(found, std::make_pair(coord, voxel));
+      // found = voxels.insert(found, std::make_pair(coord, voxel));
+
+      found = voxels.emplace_hint(found, coord, voxel);
     }
 
     auto& voxel = found->second;
@@ -102,6 +107,97 @@ void GaussianVoxelMapCPU::insert(const Frame& frame) {
   for (const auto& voxel : updated_voxels) {
     voxel->finalize();
   }
+}
+
+namespace {
+
+struct GaussianVoxelData {
+public:
+  GaussianVoxelData() {}
+
+  GaussianVoxelData(const Eigen::Vector3i& coord, const GaussianVoxel& voxel) {
+    const auto& mean = voxel.mean;
+    const auto& cov = voxel.cov;
+
+    this->coord = coord;
+    this->num_points = voxel.num_points;
+    this->mean << mean[0], mean[1], mean[2];
+    this->cov << cov(0, 0), cov(0, 1), cov(0, 2), cov(1, 1), cov(1, 2), cov(2, 2);
+  }
+
+  std::pair<Eigen::Vector3i, GaussianVoxel::Ptr> uncompact() const {
+    auto voxel = std::make_shared<GaussianVoxel>();
+    voxel->finalized = true;
+    voxel->num_points = num_points;
+    voxel->mean << mean.cast<double>(), 1.0;
+
+    voxel->cov(0, 0) = cov[0];
+    voxel->cov(0, 1) = voxel->cov(1, 0) = cov[1];
+    voxel->cov(0, 2) = voxel->cov(2, 0) = cov[2];
+    voxel->cov(1, 1) = cov[3];
+    voxel->cov(1, 2) = voxel->cov(2, 1) = cov[4];
+    voxel->cov(2, 2) = cov[5];
+
+    return std::make_pair(coord, voxel);
+  }
+
+public:
+  Eigen::Vector3i coord;
+  int num_points;
+  Eigen::Vector3f mean;
+  Eigen::Matrix<float, 6, 1> cov;
+};
+
+}  // namespace
+
+void GaussianVoxelMapCPU::save_compact(const std::string& path) const {
+  std::vector<GaussianVoxelData> flat_voxels(voxels.size());
+  std::transform(voxels.begin(), voxels.end(), flat_voxels.begin(), [](const auto& voxel) { return GaussianVoxelData(voxel.first, *voxel.second); });
+
+  std::ofstream ofs(path);
+  ofs << "compact " << 1 << std::endl;
+  ofs << "resolution " << resolution << std::endl;
+  ofs << "lru_count " << lru_count << std::endl;
+  ofs << "lru_cycle " << lru_cycle << std::endl;
+  ofs << "lru_thresh " << lru_thresh << std::endl;
+  ofs << "voxel_bytes " << sizeof(GaussianVoxelData) << std::endl;
+  ofs << "num_voxels " << flat_voxels.size() << std::endl;
+
+  ofs.write(reinterpret_cast<const char*>(flat_voxels.data()), sizeof(GaussianVoxelData) * flat_voxels.size());
+}
+
+GaussianVoxelMapCPU::Ptr GaussianVoxelMapCPU::load(const std::string& path) {
+  std::ifstream ifs(path);
+  if (!ifs) {
+    std::cerr << "error: failed to open " << path << std::endl;
+    return nullptr;
+  }
+
+  auto voxelmap = std::make_shared<GaussianVoxelMapCPU>(1.0);
+
+  std::string token;
+  bool compact;
+  int voxel_bytes;
+  int num_voxels;
+
+  ifs >> token >> compact;
+  ifs >> token >> voxelmap->resolution;
+  ifs >> token >> voxelmap->lru_count;
+  ifs >> token >> voxelmap->lru_cycle;
+  ifs >> token >> voxelmap->lru_thresh;
+  ifs >> token >> voxel_bytes;
+  ifs >> token >> num_voxels;
+  std::getline(ifs, token);
+
+  std::vector<GaussianVoxelData> flat_voxels(num_voxels);
+  ifs.read(reinterpret_cast<char*>(flat_voxels.data()), sizeof(GaussianVoxelData) * num_voxels);
+
+  voxelmap->voxels.reserve(flat_voxels.size() * 2);
+  for (const auto& voxel : flat_voxels) {
+    voxelmap->voxels.emplace(voxel.uncompact());
+  }
+
+  return voxelmap;
 }
 
 }  // namespace gtsam_ext

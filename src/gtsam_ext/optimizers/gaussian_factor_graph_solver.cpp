@@ -3,6 +3,8 @@
 #include <gtsam_ext/optimizers/linear_solver.hpp>
 #include <gtsam_ext/optimizers/linear_system_builder.hpp>
 
+#include <gtsam_ext/util/easy_profiler.hpp>
+
 namespace gtsam_ext {
 
 DenseGaussianFactorGraphSolver::DenseGaussianFactorGraphSolver(const std::shared_ptr<DenseLinearSolver>& solver) : solver(solver) {}
@@ -20,7 +22,8 @@ SparseGaussianFactorGraphSolver::~SparseGaussianFactorGraphSolver() {}
 
 gtsam::VectorValues SparseGaussianFactorGraphSolver::solve(const gtsam::GaussianFactorGraph& gfg, const gtsam::Ordering& ordering) {
   SparseLinearSystemBuilder system(gfg, ordering);
-  return system.delta(solver->solve(system.A, system.b));
+  auto x = solver->solve(system.A, system.b);
+  return system.delta(x);
 }
 
 GTSAMGaussianFactorGraphSolver::GTSAMGaussianFactorGraphSolver() {}
