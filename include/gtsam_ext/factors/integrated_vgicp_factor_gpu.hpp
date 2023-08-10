@@ -42,19 +42,7 @@ public:
     gtsam::Key target_key,
     gtsam::Key source_key,
     const GaussianVoxelMap::ConstPtr& target,
-    const Frame::ConstPtr& source,
-    CUstream_st* stream,
-    std::shared_ptr<TempBufferManager> temp_buffer);
-
-  /// Create a binary VGICP_GPU factor between target and source poses.
-  IntegratedVGICPFactorGPU(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const std::shared_ptr<const Frame>& source);
-
-  /// Create a binary VGICP_GPU factor between target and source poses.
-  IntegratedVGICPFactorGPU(
-    gtsam::Key target_key,
-    gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const PointCloud::ConstPtr& source,
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
 
@@ -71,31 +59,16 @@ public:
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
     const GaussianVoxelMap::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const PointCloud::ConstPtr& source,
     CUstream_st* stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
 
   /// Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
-  IntegratedVGICPFactorGPU(
-    const gtsam::Pose3& fixed_target_pose,
-    gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source);
-
   IntegratedVGICPFactorGPU(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
     const GaussianVoxelMap::ConstPtr& target,
-    const Frame::ConstPtr& source);
-
-  /// Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
-  IntegratedVGICPFactorGPU(
-    const gtsam::Pose3& fixed_target_pose,
-    gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const Frame::ConstPtr& source,
-    CUstream_st* stream,
-    std::shared_ptr<TempBufferManager> temp_buffer);
+    const PointCloud::ConstPtr& source);
 
   virtual ~IntegratedVGICPFactorGPU() override;
 
@@ -150,7 +123,7 @@ private:
   Eigen::Isometry3f fixed_target_pose;
 
   GaussianVoxelMapGPU::ConstPtr target;
-  Frame::ConstPtr source;
+  PointCloud::ConstPtr source;
 
   std::unique_ptr<IntegratedVGICPDerivatives> derivatives;
 

@@ -38,14 +38,6 @@ IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
 
 template <typename SourceFrame>
 IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
-  gtsam::Key target_key,
-  gtsam::Key source_key,
-  const Frame::ConstPtr& target,
-  const std::shared_ptr<const SourceFrame>& source)
-: IntegratedVGICPFactor_(target_key, source_key, target->voxels, source) {}
-
-template <typename SourceFrame>
-IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
   const GaussianVoxelMap::ConstPtr& target_voxels,
@@ -70,14 +62,6 @@ IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
     abort();
   }
 }
-
-template <typename SourceFrame>
-IntegratedVGICPFactor_<SourceFrame>::IntegratedVGICPFactor_(
-  const gtsam::Pose3& fixed_target_pose,
-  gtsam::Key source_key,
-  const Frame::ConstPtr& target,
-  const std::shared_ptr<const SourceFrame>& source)
-: IntegratedVGICPFactor_(fixed_target_pose, source_key, target->voxels, source) {}
 
 template <typename SourceFrame>
 IntegratedVGICPFactor_<SourceFrame>::~IntegratedVGICPFactor_() {}

@@ -9,7 +9,7 @@
 
 int main(int argc, char** argv) {
   const auto points_f = gtsam_ext::read_points("data/kitti_00/000000.bin");
-  auto frame = std::make_shared<gtsam_ext::FrameCPU>(points_f);
+  auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points_f);
   auto filtered = gtsam_ext::remove_outliers(frame, 10, 1.0, 8);
 
   glk::save_ply_binary("/home/koide/000000.ply", points_f.data(), points_f.size());

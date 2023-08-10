@@ -17,8 +17,8 @@ int main(int argc, char** argv) {
   auto points1 = gtsam_ext::read_points("data/kitti_07_dump/000000/points.bin");
   auto points2 = gtsam_ext::read_points("data/kitti_07_dump/000001/points.bin");
 
-  gtsam_ext::Frame::Ptr frame1(new gtsam_ext::FrameCPU(points1));
-  gtsam_ext::Frame::Ptr frame2(new gtsam_ext::FrameCPU(points2));
+  gtsam_ext::PointCloud::Ptr frame1(new gtsam_ext::PointCloudCPU(points1));
+  gtsam_ext::PointCloud::Ptr frame2(new gtsam_ext::PointCloudCPU(points2));
 
   gtsam::Values values;
   values.insert(0, gtsam::Pose3::Identity());

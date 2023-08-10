@@ -11,110 +11,110 @@
 
 namespace gtsam_ext {
 
-bool Frame::has_times() const {
+bool PointCloud::has_times() const {
   return times;
 }
 
-bool Frame::has_points() const {
+bool PointCloud::has_points() const {
   return points;
 }
 
-bool Frame::has_normals() const {
+bool PointCloud::has_normals() const {
   return normals;
 }
 
-bool Frame::has_covs() const {
+bool PointCloud::has_covs() const {
   return covs;
 }
 
-bool Frame::has_intensities() const {
+bool PointCloud::has_intensities() const {
   return intensities;
 }
 
-bool Frame::has_times_gpu() const {
+bool PointCloud::has_times_gpu() const {
   return times_gpu;
 }
 
-bool Frame::has_points_gpu() const {
+bool PointCloud::has_points_gpu() const {
   return points_gpu;
 }
 
-bool Frame::has_normals_gpu() const {
+bool PointCloud::has_normals_gpu() const {
   return normals_gpu;
 }
 
-bool Frame::has_covs_gpu() const {
+bool PointCloud::has_covs_gpu() const {
   return covs_gpu;
 }
 
-bool Frame::has_intensities_gpu() const {
+bool PointCloud::has_intensities_gpu() const {
   return intensities_gpu;
 }
 
-bool Frame::check_times() const {
+bool PointCloud::check_times() const {
   if (!times) {
     std::cerr << "warning: frame doesn't have times" << std::endl;
   }
   return times;
 }
 
-bool Frame::check_points() const {
+bool PointCloud::check_points() const {
   if (!points) {
     std::cerr << "warning: frame doesn't have points" << std::endl;
   }
   return points;
 }
 
-bool Frame::check_normals() const {
+bool PointCloud::check_normals() const {
   if (!normals) {
     std::cerr << "warning: frame doesn't have normals" << std::endl;
   }
   return normals;
 }
 
-bool Frame::check_covs() const {
+bool PointCloud::check_covs() const {
   if (!covs) {
     std::cerr << "warning: frame doesn't have covs" << std::endl;
   }
   return covs;
 }
 
-bool Frame::check_intensities() const {
+bool PointCloud::check_intensities() const {
   if (!intensities) {
     std::cerr << "warning: frame doesn't have intensities" << std::endl;
   }
   return intensities;
 }
 
-bool Frame::check_times_gpu() const {
+bool PointCloud::check_times_gpu() const {
   if (!times_gpu) {
     std::cerr << "warning: frame doesn't have times on GPU" << std::endl;
   }
   return times_gpu;
 }
 
-bool Frame::check_points_gpu() const {
+bool PointCloud::check_points_gpu() const {
   if (!points_gpu) {
     std::cerr << "warning: frame doesn't have points on GPU" << std::endl;
   }
   return points_gpu;
 }
 
-bool Frame::check_normals_gpu() const {
+bool PointCloud::check_normals_gpu() const {
   if (!normals_gpu) {
     std::cerr << "warning: frame doesn't have normals on GPU" << std::endl;
   }
   return normals_gpu;
 }
 
-bool Frame::check_covs_gpu() const {
+bool PointCloud::check_covs_gpu() const {
   if (!covs_gpu) {
     std::cerr << "warning: frame doesn't have covs on GPU" << std::endl;
   }
   return covs_gpu;
 }
 
-bool Frame::check_intensities_gpu() const {
+bool PointCloud::check_intensities_gpu() const {
   if (!intensities_gpu) {
     std::cerr << "warning: frame doesn't have intensities on GPU" << std::endl;
   }
@@ -128,7 +128,7 @@ void write_binary(const std::string& filename, const void* data, size_t size) {
 }
 }  // namespace
 
-void Frame::save(const std::string& path) const {
+void PointCloud::save(const std::string& path) const {
   boost::filesystem::create_directories(path);
 
   if (times) {
@@ -161,7 +161,7 @@ void Frame::save(const std::string& path) const {
   }
 }
 
-void Frame::save_compact(const std::string& path) const {
+void PointCloud::save_compact(const std::string& path) const {
   boost::filesystem::create_directories(path);
 
   if (times) {

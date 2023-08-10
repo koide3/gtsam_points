@@ -32,7 +32,7 @@ public:
 
   int size() const { return points.size(); }
   void insert(const Eigen::Vector4d& point, const double insertion_dist_sq_thresh);
-  void insert(const Frame& frame, const int i, const double insertion_dist_sq_thresh);
+  void insert(const PointCloud& frame, const int i, const double insertion_dist_sq_thresh);
 
 public:
   mutable std::atomic_int last_lru_count;
@@ -73,7 +73,7 @@ public:
    * @brief Insert points and all available attributes into the iVox
    * @param frame   Input frame
    */
-  virtual void insert(const Frame& frame);
+  virtual void insert(const PointCloud& frame);
 
   /**
    * @brief Find the closest point

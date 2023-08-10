@@ -16,10 +16,10 @@ namespace gtsam_ext {
 /**
  * @brief Point cloud frame on CPU memory
  */
-struct FrameCPU : public Frame {
+struct PointCloudCPU : public PointCloud {
 public:
-  using Ptr = std::shared_ptr<FrameCPU>;
-  using ConstPtr = std::shared_ptr<const FrameCPU>;
+  using Ptr = std::shared_ptr<PointCloudCPU>;
+  using ConstPtr = std::shared_ptr<const PointCloudCPU>;
 
   /**
    * @brief Constructor
@@ -27,20 +27,20 @@ public:
    * @param num_points Number of points
    */
   template <typename T, int D>
-  FrameCPU(const Eigen::Matrix<T, D, 1>* points, int num_points);
+  PointCloudCPU(const Eigen::Matrix<T, D, 1>* points, int num_points);
 
   /**
    * @brief Constructor
    * @param points  Points
    */
   template <typename T, int D, typename Alloc>
-  FrameCPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : FrameCPU(points.data(), points.size()) {}
+  PointCloudCPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : PointCloudCPU(points.data(), points.size()) {}
 
   /// deep copy constructor
-  FrameCPU(const Frame& frame);
+  PointCloudCPU(const PointCloud& points);
 
-  FrameCPU();
-  ~FrameCPU();
+  PointCloudCPU();
+  ~PointCloudCPU();
 
   template <typename T>
   void add_times(const T* times, int num_points);
@@ -88,7 +88,7 @@ public:
     add_aux_attribute(attrib_name, values.data(), values.size());
   }
 
-  static FrameCPU::Ptr load(const std::string& path);
+  static PointCloudCPU::Ptr load(const std::string& path);
 
 public:
   std::vector<double> times_storage;
@@ -102,28 +102,28 @@ public:
 
 /**
  * @brief Sample points
- * @param frame    Input points
+ * @param points   Input points
  * @param indices  Point indices
  */
-FrameCPU::Ptr sample(const Frame::ConstPtr& frame, const std::vector<int>& indices);
+PointCloudCPU::Ptr sample(const PointCloud::ConstPtr& points, const std::vector<int>& indices);
 
 /**
  * @brief Naive random sampling
- * @param frame          Input points
+ * @param points         Input points
  * @param sampling_rate  Random sampling rate in [0, 1]
  * @param mt             RNG
  * @return               Downsampled points
  */
-FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt);
+PointCloudCPU::Ptr random_sampling(const PointCloud::ConstPtr& points, const double sampling_rate, std::mt19937& mt);
 
 /**
  * @brief Voxel grid downsampling
  * @note  This algorithm takes the average of point attributes (whatever it is) of each voxel
  *
- * @param frame             Input points
+ * @param points            Input points
  * @param voxel_resolution  Voxel resolution
  */
-FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution);
+PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& points, const double voxel_resolution);
 
 /**
  * @brief Voxel grid random sampling
@@ -131,136 +131,138 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
  *        This algorithm avoids mixing point attributes (unlike the standard voxelgrid downsampling), and thus can provide spatially
  *        well-distributed point samples with several attributes (e.g., normals and covs).
  *
- * @param frame             Input points
+ * @param points            Input points
  * @param voxel_resolution  Voxel resolution
  * @param sampling_rate     Random sampling rate in [0, 1]
  * @param mt                RNG
  * @return                  Downsampled points
  */
-FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt);
+PointCloudCPU::Ptr
+randomgrid_sampling(const PointCloud::ConstPtr& points, const double voxel_resolution, const double sampling_rate, std::mt19937& mt);
 
 /**
  * @brief Extract points for which pred returns true
- * @param frame  Input points
- * @param pred   Predicate function that takes Eigen::Vector4d and returns bool
+ * @param points  Input points
+ * @param pred    Predicate function that takes Eigen::Vector4d and returns bool
  */
 template <typename Func>
-FrameCPU::Ptr filter(const Frame::ConstPtr& frame, const Func& pred) {
+PointCloudCPU::Ptr filter(const PointCloud::ConstPtr& points, const Func& pred) {
   std::vector<int> indices;
-  indices.reserve(frame->size());
-  for (int i = 0; i < frame->size(); i++) {
-    if (pred(frame->points[i])) {
+  indices.reserve(points->size());
+  for (int i = 0; i < points->size(); i++) {
+    if (pred(points->points[i])) {
       indices.push_back(i);
     }
   }
-  return sample(frame, indices);
+  return sample(points, indices);
 }
 
 /**
  * @brief Extract points for which pred returns true
- * @param frame  Input points
+ * @param points Input points
  * @param pred   Predicate function that takes a point index and returns bool
  */
 template <typename Func>
-FrameCPU::Ptr filter_by_index(const Frame::ConstPtr& frame, const Func& pred) {
+PointCloudCPU::Ptr filter_by_index(const PointCloud::ConstPtr& points, const Func& pred) {
   std::vector<int> indices;
-  indices.reserve(frame->size());
-  for (int i = 0; i < frame->size(); i++) {
+  indices.reserve(points->size());
+  for (int i = 0; i < points->size(); i++) {
     if (pred(i)) {
       indices.push_back(i);
     }
   }
-  return sample(frame, indices);
+  return sample(points, indices);
 }
 
 /**
  * @brief Sort points
- * @param frame  Input points
+ * @param points Input points
  * @param pred   Comparison function that takes two point indices (lhs and rhs) and returns true if lhs < rhs
  */
 template <typename Compare>
-FrameCPU::Ptr sort(const Frame::ConstPtr& frame, const Compare& comp) {
-  std::vector<int> indices(frame->size());
+PointCloudCPU::Ptr sort(const PointCloud::ConstPtr& points, const Compare& comp) {
+  std::vector<int> indices(points->size());
   std::iota(indices.begin(), indices.end(), 0);
   std::sort(indices.begin(), indices.end(), comp);
-  return gtsam_ext::sample(frame, indices);
+  return gtsam_ext::sample(points, indices);
 }
 
 /**
  * @brief Sort points by time
- * @param frame  Input points
+ * @param points  Input points
  */
-FrameCPU::Ptr sort_by_time(const Frame::ConstPtr& frame);
+PointCloudCPU::Ptr sort_by_time(const PointCloud::ConstPtr& points);
 
 /**
  * @brief Transform points, normals, and covariances
  *
- * @param frame            Input points
+ * @param points           Input points
  * @param transformation   Transformation
  * @return Transformed points
  */
 template <typename Scalar, int Mode>
-FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<Scalar, 3, Mode>& transformation);
+PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& points, const Eigen::Transform<Scalar, 3, Mode>& transformation);
 
 /**
  * @brief Transform points, normals, and covariances inplace
- * @param frame            [in/out] Points to be transformed
+ * @param points           [in/out] Points to be transformed
  * @param transformation   Transformation
  */
 template <typename Scalar, int Mode>
-void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<Scalar, 3, Mode>& transformation);
+void transform_inplace(PointCloud::Ptr& points, const Eigen::Transform<Scalar, 3, Mode>& transformation);
 
 /**
  * @brief Statistical outlier removal
- * @param frame       Input points
+ * @param points      Input points
  * @param neighbors   Neighbor indices
- * @param k           Number of neighbors (neighbors.size() must be >= frame->size() * k)
+ * @param k           Number of neighbors (neighbors.size() must be >= points->size() * k)
  * @param std_thresh  Standard deviation multiplication threshold
  * @return            Inlier point indices
  */
-std::vector<int> find_inlier_points(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh = 1.0);
+std::vector<int>
+find_inlier_points(const PointCloud::ConstPtr& points, const std::vector<int>& neighbors, const int k, const double std_thresh = 1.0);
 
 /**
  * @brief Statistical outlier removal
- * @param frame       Input points
+ * @param points      Input points
  * @param neighbors   Neighbor indices
- * @param k           Number of neighbors (neighbors.size() must be >= frame->size() * k)
+ * @param k           Number of neighbors (neighbors.size() must be >= points->size() * k)
  * @param std_thresh  Standard deviation multiplication threshold
  * @return            Filtered point cloud
  */
-FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh = 1.0);
+PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& points, const std::vector<int>& neighbors, const int k, const double std_thresh = 1.0);
 
 /**
  * @brief Statistical outlier removal
- * @param frame       Input points
- * @param k           Number of neighbors (neighbors.size() must be >= frame->size() * k)
+ * @param points      Input points
+ * @param k           Number of neighbors (neighbors.size() must be >= points->size() * k)
  * @param std_thresh  Standard deviation multiplication threshold
  * @return            Filtered point cloud
  */
-FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const int k = 10, const double std_thresh = 1.0, const int num_threads = 1);
+PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& points, const int k = 10, const double std_thresh = 1.0, const int num_threads = 1);
 
 /**
- * @brief Merge a set of voxelized frames into one frame
+ * @brief Merge a set of frames into one frame
  * @note  This function only merges points and covs and discard other point attributes.
  * @param poses                  Poses of input frames
  * @param frames                 Input frames
  * @param downsample_resolution  Downsampling resolution
  * @return                       Merged frame
  */
-Frame::Ptr merge_frames(
+PointCloud::Ptr merge_frames(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<Frame::ConstPtr>& frames,
+  const std::vector<PointCloud::ConstPtr>& frames,
   double downsample_resolution);
 
-Frame::Ptr merge_frames_gpu(
+PointCloud::Ptr merge_frames_gpu(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<Frame::ConstPtr>& frames,
+  const std::vector<PointCloud::ConstPtr>& frames,
   double downsample_resolution,
   CUstream_st* stream = 0);
 
-Frame::Ptr merge_frames_auto(
+PointCloud::Ptr merge_frames_auto(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<Frame::ConstPtr>& frames,
+  const std::vector<PointCloud::ConstPtr>& frames,
   double downsample_resolution);
 
 }  // namespace gtsam_ext

@@ -20,8 +20,8 @@ int main(int argc, char** argv) {
   const auto source_points = gtsam_ext::read_points("data/kitti_00/000001.bin");
 
   // Create gtsam_ext::FrameCPU instances that hold point data
-  const auto target_frame = std::make_shared<gtsam_ext::FrameCPU>(target_points);
-  const auto source_frame = std::make_shared<gtsam_ext::FrameCPU>(source_points);
+  const auto target_frame = std::make_shared<gtsam_ext::PointCloudCPU>(target_points);
+  const auto source_frame = std::make_shared<gtsam_ext::PointCloudCPU>(source_points);
 
   // Create GTSAM values and graph
   gtsam::Values values;

@@ -18,56 +18,56 @@ namespace gtsam_ext {
 
 // constructors & deconstructor
 template <typename T, int D>
-FrameCPU::FrameCPU(const Eigen::Matrix<T, D, 1>* points, int num_points) {
+PointCloudCPU::PointCloudCPU(const Eigen::Matrix<T, D, 1>* points, int num_points) {
   add_points(points, num_points);
 }
 
-template FrameCPU::FrameCPU(const Eigen::Matrix<float, 3, 1>* points, int num_points);
-template FrameCPU::FrameCPU(const Eigen::Matrix<float, 4, 1>* points, int num_points);
-template FrameCPU::FrameCPU(const Eigen::Matrix<double, 3, 1>* points, int num_points);
-template FrameCPU::FrameCPU(const Eigen::Matrix<double, 4, 1>* points, int num_points);
+template PointCloudCPU::PointCloudCPU(const Eigen::Matrix<float, 3, 1>* points, int num_points);
+template PointCloudCPU::PointCloudCPU(const Eigen::Matrix<float, 4, 1>* points, int num_points);
+template PointCloudCPU::PointCloudCPU(const Eigen::Matrix<double, 3, 1>* points, int num_points);
+template PointCloudCPU::PointCloudCPU(const Eigen::Matrix<double, 4, 1>* points, int num_points);
 
-FrameCPU::FrameCPU(const Frame& frame) {
-  if (frame.points) {
-    add_points(frame.points, frame.size());
+PointCloudCPU::PointCloudCPU(const PointCloud& points) {
+  if (points.points) {
+    add_points(points.points, points.size());
   }
 
-  if (frame.times) {
-    add_times(frame.times, frame.size());
+  if (points.times) {
+    add_times(points.times, points.size());
   }
 
-  if (frame.normals) {
-    add_normals(frame.normals, frame.size());
+  if (points.normals) {
+    add_normals(points.normals, points.size());
   }
 
-  if (frame.covs) {
-    add_covs(frame.covs, frame.size());
+  if (points.covs) {
+    add_covs(points.covs, points.size());
   }
 
-  if (frame.intensities) {
-    add_intensities(frame.intensities, frame.size());
+  if (points.intensities) {
+    add_intensities(points.intensities, points.size());
   }
 
-  for (const auto& attrib : frame.aux_attributes) {
+  for (const auto& attrib : points.aux_attributes) {
     const auto& name = attrib.first;
     const size_t elem_size = attrib.second.first;
     const unsigned char* data_ptr = static_cast<const unsigned char*>(attrib.second.second);
 
-    auto storage = std::make_shared<std::vector<unsigned char>>(frame.size() * elem_size);
-    memcpy(storage->data(), data_ptr, elem_size * frame.size());
+    auto storage = std::make_shared<std::vector<unsigned char>>(points.size() * elem_size);
+    memcpy(storage->data(), data_ptr, elem_size * points.size());
 
     aux_attributes_storage[name] = storage;
     aux_attributes[name] = std::make_pair(elem_size, storage->data());
   }
 }
 
-FrameCPU::FrameCPU() {}
+PointCloudCPU::PointCloudCPU() {}
 
-FrameCPU::~FrameCPU() {}
+PointCloudCPU::~PointCloudCPU() {}
 
 // add_times
 template <typename T>
-void FrameCPU::add_times(const T* times, int num_points) {
+void PointCloudCPU::add_times(const T* times, int num_points) {
   assert(num_points == size());
   times_storage.resize(num_points);
   if (times) {
@@ -76,12 +76,12 @@ void FrameCPU::add_times(const T* times, int num_points) {
   this->times = this->times_storage.data();
 }
 
-template void FrameCPU::add_times(const float* times, int num_points);
-template void FrameCPU::add_times(const double* times, int num_points);
+template void PointCloudCPU::add_times(const float* times, int num_points);
+template void PointCloudCPU::add_times(const double* times, int num_points);
 
 // add_points
 template <typename T, int D>
-void FrameCPU::add_points(const Eigen::Matrix<T, D, 1>* points, int num_points) {
+void PointCloudCPU::add_points(const Eigen::Matrix<T, D, 1>* points, int num_points) {
   points_storage.resize(num_points, Eigen::Vector4d(0.0, 0.0, 0.0, 1.0));
   if (points) {
     for (int i = 0; i < num_points; i++) {
@@ -92,14 +92,14 @@ void FrameCPU::add_points(const Eigen::Matrix<T, D, 1>* points, int num_points) 
   this->num_points = num_points;
 }
 
-template void FrameCPU::add_points(const Eigen::Matrix<float, 3, 1>* points, int num_points);
-template void FrameCPU::add_points(const Eigen::Matrix<float, 4, 1>* points, int num_points);
-template void FrameCPU::add_points(const Eigen::Matrix<double, 3, 1>* points, int num_points);
-template void FrameCPU::add_points(const Eigen::Matrix<double, 4, 1>* points, int num_points);
+template void PointCloudCPU::add_points(const Eigen::Matrix<float, 3, 1>* points, int num_points);
+template void PointCloudCPU::add_points(const Eigen::Matrix<float, 4, 1>* points, int num_points);
+template void PointCloudCPU::add_points(const Eigen::Matrix<double, 3, 1>* points, int num_points);
+template void PointCloudCPU::add_points(const Eigen::Matrix<double, 4, 1>* points, int num_points);
 
 // add_normals
 template <typename T, int D>
-void FrameCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
+void PointCloudCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points) {
   assert(num_points == size());
   normals_storage.resize(num_points, Eigen::Vector4d::Zero());
   if (normals) {
@@ -110,14 +110,14 @@ void FrameCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points
   this->normals = normals_storage.data();
 }
 
-template void FrameCPU::add_normals(const Eigen::Matrix<float, 3, 1>* normals, int num_points);
-template void FrameCPU::add_normals(const Eigen::Matrix<float, 4, 1>* normals, int num_points);
-template void FrameCPU::add_normals(const Eigen::Matrix<double, 3, 1>* normals, int num_points);
-template void FrameCPU::add_normals(const Eigen::Matrix<double, 4, 1>* normals, int num_points);
+template void PointCloudCPU::add_normals(const Eigen::Matrix<float, 3, 1>* normals, int num_points);
+template void PointCloudCPU::add_normals(const Eigen::Matrix<float, 4, 1>* normals, int num_points);
+template void PointCloudCPU::add_normals(const Eigen::Matrix<double, 3, 1>* normals, int num_points);
+template void PointCloudCPU::add_normals(const Eigen::Matrix<double, 4, 1>* normals, int num_points);
 
 // add_covs
 template <typename T, int D>
-void FrameCPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points) {
+void PointCloudCPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points) {
   assert(num_points == size());
   covs_storage.resize(num_points, Eigen::Matrix4d::Zero());
   if (covs) {
@@ -128,14 +128,14 @@ void FrameCPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points) {
   this->covs = covs_storage.data();
 }
 
-template void FrameCPU::add_covs(const Eigen::Matrix<float, 3, 3>* covs, int num_points);
-template void FrameCPU::add_covs(const Eigen::Matrix<float, 4, 4>* covs, int num_points);
-template void FrameCPU::add_covs(const Eigen::Matrix<double, 3, 3>* covs, int num_points);
-template void FrameCPU::add_covs(const Eigen::Matrix<double, 4, 4>* covs, int num_points);
+template void PointCloudCPU::add_covs(const Eigen::Matrix<float, 3, 3>* covs, int num_points);
+template void PointCloudCPU::add_covs(const Eigen::Matrix<float, 4, 4>* covs, int num_points);
+template void PointCloudCPU::add_covs(const Eigen::Matrix<double, 3, 3>* covs, int num_points);
+template void PointCloudCPU::add_covs(const Eigen::Matrix<double, 4, 4>* covs, int num_points);
 
 // add_intensities
 template <typename T>
-void FrameCPU::add_intensities(const T* intensities, int num_points) {
+void PointCloudCPU::add_intensities(const T* intensities, int num_points) {
   assert(num_points == size());
   intensities_storage.resize(num_points);
   if (intensities) {
@@ -144,12 +144,12 @@ void FrameCPU::add_intensities(const T* intensities, int num_points) {
   this->intensities = this->intensities_storage.data();
 }
 
-template void FrameCPU::add_intensities(const float* intensities, int num_points);
-template void FrameCPU::add_intensities(const double* intensities, int num_points);
+template void PointCloudCPU::add_intensities(const float* intensities, int num_points);
+template void PointCloudCPU::add_intensities(const double* intensities, int num_points);
 
-// FrameCPU::load
-FrameCPU::Ptr FrameCPU::load(const std::string& path) {
-  FrameCPU::Ptr frame(new FrameCPU);
+// PointCloudCPU::load
+PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
+  PointCloudCPU::Ptr frame(new PointCloudCPU);
 
   if (boost::filesystem::exists(path + "/points.bin")) {
     std::ifstream ifs(path + "/points.bin", std::ios::binary | std::ios::ate);
@@ -291,8 +291,8 @@ FrameCPU::Ptr FrameCPU::load(const std::string& path) {
 }
 
 // sample
-FrameCPU::Ptr sample(const Frame::ConstPtr& frame, const std::vector<int>& indices) {
-  FrameCPU::Ptr sampled(new FrameCPU);
+PointCloudCPU::Ptr sample(const PointCloud::ConstPtr& frame, const std::vector<int>& indices) {
+  PointCloudCPU::Ptr sampled(new PointCloudCPU);
   sampled->num_points = indices.size();
   sampled->points_storage.resize(indices.size());
   sampled->points = sampled->points_storage.data();
@@ -342,10 +342,10 @@ FrameCPU::Ptr sample(const Frame::ConstPtr& frame, const std::vector<int>& indic
 }
 
 // random_sampling
-FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
+PointCloudCPU::Ptr random_sampling(const PointCloud::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
   if (sampling_rate >= 0.99) {
     // No need to do sampling
-    return FrameCPU::Ptr(new FrameCPU(*frame));
+    return PointCloudCPU::Ptr(new PointCloudCPU(*frame));
   }
 
   const int num_samples = frame->size() * sampling_rate;
@@ -359,7 +359,7 @@ FrameCPU::Ptr random_sampling(const Frame::ConstPtr& frame, const double samplin
 }
 
 // voxelgrid_sampling
-FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution) {
+PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolution) {
   using Indices = std::shared_ptr<std::vector<int>>;
   using VoxelMap = std::unordered_map<
     Eigen::Vector3i,
@@ -385,7 +385,7 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
   std::transform(voxelmap.begin(), voxelmap.end(), voxels.begin(), [](const std::pair<Eigen::Vector3i, Indices>& x) { return x.second; });
 
   // Take the average of point attributes of each voxel
-  FrameCPU::Ptr downsampled(new FrameCPU);
+  PointCloudCPU::Ptr downsampled(new PointCloudCPU);
   downsampled->num_points = voxels.size();
   downsampled->points_storage.resize(voxels.size());
   downsampled->points = downsampled->points_storage.data();
@@ -454,10 +454,11 @@ FrameCPU::Ptr voxelgrid_sampling(const Frame::ConstPtr& frame, const double voxe
 }
 
 // randomgrid_sampling
-FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt) {
+PointCloudCPU::Ptr
+randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt) {
   if (sampling_rate >= 0.99) {
     // No need to do sampling
-    return FrameCPU::Ptr(new FrameCPU(*frame));
+    return PointCloudCPU::Ptr(new PointCloudCPU(*frame));
   }
 
   using Indices = std::shared_ptr<std::vector<int>>;
@@ -511,8 +512,8 @@ FrameCPU::Ptr randomgrid_sampling(const Frame::ConstPtr& frame, const double vox
   return sample(frame, indices);
 }
 
-// transform
-FrameCPU::Ptr sort_by_time(const Frame::ConstPtr& frame) {
+// sort_by_time
+PointCloudCPU::Ptr sort_by_time(const PointCloud::ConstPtr& frame) {
   if (!frame->has_times()) {
     std::cerr << "warning: frame does not have per-point times" << std::endl;
   }
@@ -522,8 +523,8 @@ FrameCPU::Ptr sort_by_time(const Frame::ConstPtr& frame) {
 
 // transform
 template <>
-FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
-  auto transformed = std::make_shared<gtsam_ext::FrameCPU>(*frame);
+PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
+  auto transformed = std::make_shared<gtsam_ext::PointCloudCPU>(*frame);
   for (int i = 0; i < frame->size(); i++) {
     transformed->points[i] = transformation * frame->points[i];
   }
@@ -544,13 +545,13 @@ FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<dou
 }
 
 template <>
-FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<float, 3, Eigen::Isometry>& transformation) {
+PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& frame, const Eigen::Transform<float, 3, Eigen::Isometry>& transformation) {
   return transform<double, Eigen::Isometry>(frame, transformation.cast<double>());
 }
 
 template <>
-FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
-  auto transformed = std::make_shared<gtsam_ext::FrameCPU>(*frame);
+PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
+  auto transformed = std::make_shared<gtsam_ext::PointCloudCPU>(*frame);
   for (int i = 0; i < frame->size(); i++) {
     transformed->points[i] = transformation * frame->points[i];
   }
@@ -573,13 +574,13 @@ FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<dou
 }
 
 template <>
-FrameCPU::Ptr transform(const Frame::ConstPtr& frame, const Eigen::Transform<float, 3, Eigen::Affine>& transformation) {
+PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& frame, const Eigen::Transform<float, 3, Eigen::Affine>& transformation) {
   return transform<double, Eigen::Affine>(frame, transformation.cast<double>());
 }
 
 // transform_inplace
 template <>
-void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
+void transform_inplace(PointCloud::Ptr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
   for (int i = 0; i < frame->size(); i++) {
     frame->points[i] = transformation * frame->points[i];
   }
@@ -598,12 +599,12 @@ void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<double, 3, Eige
 }
 
 template <>
-void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<float, 3, Eigen::Isometry>& transformation) {
+void transform_inplace(PointCloud::Ptr& frame, const Eigen::Transform<float, 3, Eigen::Isometry>& transformation) {
   transform_inplace<float, Eigen::Isometry>(frame, transformation);
 }
 
 template <>
-void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
+void transform_inplace(PointCloud::Ptr& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
   for (int i = 0; i < frame->size(); i++) {
     frame->points[i] = transformation * frame->points[i];
   }
@@ -624,12 +625,12 @@ void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<double, 3, Eige
 }
 
 template <>
-void transform_inplace(Frame::Ptr& frame, const Eigen::Transform<float, 3, Eigen::Affine>& transformation) {
+void transform_inplace(PointCloud::Ptr& frame, const Eigen::Transform<float, 3, Eigen::Affine>& transformation) {
   return transform_inplace<double, Eigen::Affine>(frame, transformation.cast<double>());
 }
 
 // statistical outlier removal
-std::vector<int> find_inlier_points(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh) {
+std::vector<int> find_inlier_points(const PointCloud::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh) {
   std::vector<double> dists(frame->size());
 
   for (int i = 0; i < frame->size(); i++) {
@@ -667,12 +668,12 @@ std::vector<int> find_inlier_points(const Frame::ConstPtr& frame, const std::vec
   return inliers;
 }
 
-FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh) {
+PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& frame, const std::vector<int>& neighbors, const int k, const double std_thresh) {
   const auto inliers = find_inlier_points(frame, neighbors, k, std_thresh);
   return sample(frame, inliers);
 }
 
-FrameCPU::Ptr remove_outliers(const Frame::ConstPtr& frame, const int k, const double std_thresh, const int num_threads) {
+PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& frame, const int k, const double std_thresh, const int num_threads) {
   KdTree kdtree(frame->points, frame->size());
 
   std::vector<int> neighbors(frame->size() * k, -1);

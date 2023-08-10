@@ -31,7 +31,7 @@ struct RandomSet {
   std::vector<T> times;
 };
 
-void compare_frames(const gtsam_ext::Frame::ConstPtr& frame1, const gtsam_ext::Frame::ConstPtr& frame2) {
+void compare_frames(const gtsam_ext::PointCloud::ConstPtr& frame1, const gtsam_ext::PointCloud::ConstPtr& frame2) {
   ASSERT_NE(frame1, nullptr);
   ASSERT_NE(frame2, nullptr);
 
@@ -83,10 +83,10 @@ void creation_test() {
   const auto& covs = randomset.covs;
   const auto& times = randomset.times;
 
-  auto frame = std::make_shared<gtsam_ext::FrameCPU>();
+  auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
   frame->add_points(points);
-  compare_frames(frame, std::make_shared<gtsam_ext::FrameCPU>(points));
-  compare_frames(frame, std::make_shared<gtsam_ext::FrameCPU>(*frame));
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(points));
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
 
   for (int i = 0; i < num_points; i++) {
     const double diff = (frame->points[i].template head<D>() - points[i].template cast<double>()).squaredNorm();
@@ -99,11 +99,11 @@ void creation_test() {
   EXPECT_EQ(frame->covs, nullptr);
 
   frame->add_times(times);
-  compare_frames(frame, std::make_shared<gtsam_ext::FrameCPU>(*frame));
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
   frame->add_covs(covs);
-  compare_frames(frame, std::make_shared<gtsam_ext::FrameCPU>(*frame));
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
   frame->add_normals(normals);
-  compare_frames(frame, std::make_shared<gtsam_ext::FrameCPU>(*frame));
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
 
   for (int i = 0; i < num_points; i++) {
     const double diff_t = std::pow(frame->times[i] - times[i], 2);
@@ -122,11 +122,11 @@ void creation_test() {
 
   boost::filesystem::create_directories("/tmp/frame_test");
   frame->save("/tmp/frame_test");
-  compare_frames(frame, gtsam_ext::FrameCPU::load("/tmp/frame_test"));
+  compare_frames(frame, gtsam_ext::PointCloudCPU::load("/tmp/frame_test"));
 
   boost::filesystem::create_directories("/tmp/frame_test_compact");
   frame->save_compact("/tmp/frame_test_compact");
-  compare_frames(frame, gtsam_ext::FrameCPU::load("/tmp/frame_test_compact"));
+  compare_frames(frame, gtsam_ext::PointCloudCPU::load("/tmp/frame_test_compact"));
 }
 
 TEST(TestTypes, TestFrameCPU) {
@@ -145,7 +145,7 @@ void creation_test_voxels() {
   const auto& covs = randomset.covs;
   const auto& times = randomset.times;
 
-  auto frame = std::make_shared<gtsam_ext::FrameCPU>(points);
+  auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points);
   frame->add_covs(covs);
 
   auto voxelized_frame = std::make_shared<gtsam_ext::VoxelizedFrameCPU>();
@@ -194,7 +194,7 @@ void creation_test_gpu() {
   auto frame = std::make_shared<gtsam_ext::FrameCPU>();
   frame->add_points(points);
 
-  auto frame_gpu = std::make_shared<gtsam_ext::FrameGPU>();
+  auto frame_gpu = std::make_shared<gtsam_ext::PointCloudGPU>();
 
   // add_points
   frame_gpu->add_points_gpu(points);
@@ -209,7 +209,7 @@ void creation_test_gpu() {
 
   frame_gpu->add_points(points);
   compare_frames(frame, frame_gpu);
-  compare_frames(frame, std::make_shared<gtsam_ext::FrameGPU>(*frame));
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudGPU>(*frame));
 
   // add_covs
   frame->add_covs(covs);
@@ -225,7 +225,7 @@ void creation_test_gpu() {
 
   frame_gpu->add_covs(covs);
   compare_frames(frame, frame_gpu);
-  compare_frames(frame, std::make_shared<gtsam_ext::FrameGPU>(*frame));
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudGPU>(*frame));
 }
 
 TEST(TestTypes, TestFrameGPU) {

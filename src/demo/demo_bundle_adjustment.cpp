@@ -50,8 +50,8 @@ public:
       std::cout << "loading " << plane_path << std::endl;
       const auto plane_points = gtsam_ext::read_points(plane_path);
 
-      edge_frames.push_back(std::make_shared<gtsam_ext::FrameCPU>(edge_points));
-      plane_frames.push_back(std::make_shared<gtsam_ext::FrameCPU>(plane_points));
+      edge_frames.push_back(std::make_shared<gtsam_ext::PointCloudCPU>(edge_points));
+      plane_frames.push_back(std::make_shared<gtsam_ext::PointCloudCPU>(plane_points));
 
       viewer->update_drawable("edge_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(edge_points), guik::Rainbow());
       viewer->update_drawable("plane_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(plane_points), guik::Rainbow());
@@ -202,8 +202,8 @@ public:
   }
 
 private:
-  std::vector<gtsam_ext::Frame::Ptr> edge_frames;   // Frames containing edge points
-  std::vector<gtsam_ext::Frame::Ptr> plane_frames;  // Frames containing plane points
+  std::vector<gtsam_ext::PointCloud::Ptr> edge_frames;   // Frames containing edge points
+  std::vector<gtsam_ext::PointCloud::Ptr> plane_frames;  // Frames containing plane points
 
   float pose_noise_scale;
 

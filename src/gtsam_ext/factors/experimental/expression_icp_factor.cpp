@@ -20,7 +20,7 @@ namespace gtsam_ext {
 ICPFactorExpr::ICPFactorExpr(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const std::shared_ptr<const Frame>& target,
+  const std::shared_ptr<const PointCloud>& target,
   const std::shared_ptr<const KdTree>& target_tree,
   const gtsam::Point3& source,
   const gtsam::SharedNoiseModel& noise_model)
@@ -88,7 +88,7 @@ public:
 };
 
 gtsam::NonlinearFactorGraph::shared_ptr
-create_icp_factors(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model) {
+create_icp_factors(gtsam::Key target_key, gtsam::Key source_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model) {
   gtsam::NonlinearFactorGraph::shared_ptr factors(new gtsam::NonlinearFactorGraph);
 
   std::shared_ptr<KdTree> target_tree(new KdTree(target->points, target->size()));
@@ -102,7 +102,7 @@ create_icp_factors(gtsam::Key target_key, gtsam::Key source_key, const Frame::Co
 }
 
 gtsam::NonlinearFactor::shared_ptr
-create_integrated_icp_factor(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model)
+create_integrated_icp_factor(gtsam::Key target_key, gtsam::Key source_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model)
 //
 {
   auto factors = create_icp_factors(target_key, source_key, target, source, noise_model);

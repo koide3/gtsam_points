@@ -58,18 +58,18 @@ public:
 
   /// Insert a point cloud frame into the voxelmap
   /// @note Incremental insertion is not supported for GPU
-  virtual void insert(const Frame& frame) override;
+  virtual void insert(const PointCloud& frame) override;
 
 private:
-  void create_bucket_table(CUstream_st* stream, const Frame& frame);
+  void create_bucket_table(CUstream_st* stream, const PointCloud& frame);
 
 public:
   CUstream_st* stream;
 
-  const int init_num_buckets;            ///< Initial number of buckets
-  const double target_points_drop_rate;  ///< Allowable points drop rate
-  VoxelMapInfo voxelmap_info;            ///< Voxelmap information
-  VoxelMapInfo* voxelmap_info_ptr;       ///< Voxelmap information on GPU memory
+  const int init_num_buckets;                   ///< Initial number of buckets
+  const double target_points_drop_rate;         ///< Allowable points drop rate
+  VoxelMapInfo voxelmap_info;                   ///< Voxelmap information
+  VoxelMapInfo* voxelmap_info_ptr;              ///< Voxelmap information on GPU memory
 
   thrust::pair<Eigen::Vector3i, int>* buckets;  ///< Voxel buckets for hashing
 

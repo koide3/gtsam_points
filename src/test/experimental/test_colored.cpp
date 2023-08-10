@@ -16,7 +16,7 @@
 #include <glk/pointcloud_buffer.hpp>
 #include <guik/viewer/light_viewer.hpp>
 
-gtsam_ext::FrameCPU::Ptr load_points(const std::string& filename) {
+gtsam_ext::PointCloudCPU::Ptr load_points(const std::string& filename) {
   auto data = gtsam_ext::read_points4(filename);
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points(data.size());
   std::vector<float> intensities(data.size());
@@ -26,7 +26,7 @@ gtsam_ext::FrameCPU::Ptr load_points(const std::string& filename) {
     intensities[i] = data[i][3];
   }
 
-  auto frame = std::make_shared<gtsam_ext::FrameCPU>(points);
+  auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points);
   frame->add_intensities(intensities.data(), intensities.size());
 
   return frame;
@@ -86,9 +86,9 @@ int main(int argc, char** argv) {
   source_buffer->add_intensity(glk::COLORMAP::TURBO, source_intensities);
   viewer->update_drawable("source", source_buffer, guik::VertexColor());
 
-  auto target = std::make_shared<gtsam_ext::FrameCPU>(target_points);
+  auto target = std::make_shared<gtsam_ext::PointCloudCPU>(target_points);
   target->add_intensities(target_intensities);
-  auto source = std::make_shared<gtsam_ext::FrameCPU>(source_points);
+  auto source = std::make_shared<gtsam_ext::PointCloudCPU>(source_points);
   source->add_intensities(source_intensities);
 
   auto target_gradients = gtsam_ext::IntensityGradients::estimate(target, 10, 50);

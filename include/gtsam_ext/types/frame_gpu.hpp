@@ -17,26 +17,26 @@ namespace gtsam_ext {
 /**
  * @brief Point cloud frame on GPU memory
  */
-struct FrameGPU : public FrameCPU {
+struct PointCloudGPU : public PointCloudCPU {
 public:
-  using Ptr = std::shared_ptr<FrameGPU>;
-  using ConstPtr = std::shared_ptr<const FrameGPU>;
+  using Ptr = std::shared_ptr<PointCloudGPU>;
+  using ConstPtr = std::shared_ptr<const PointCloudGPU>;
 
   template <typename T, int D>
-  FrameGPU(const Eigen::Matrix<T, D, 1>* points, int num_points);
+  PointCloudGPU(const Eigen::Matrix<T, D, 1>* points, int num_points);
 
   template <typename T, int D, typename Alloc>
-  FrameGPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : FrameGPU(points.data(), points.size()) {}
+  PointCloudGPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : PointCloudGPU(points.data(), points.size()) {}
 
-  FrameGPU(const Frame& frame, CUstream_st* stream = 0);
+  PointCloudGPU(const PointCloud& frame, CUstream_st* stream = 0);
 
-  FrameGPU();
-  ~FrameGPU();
+  PointCloudGPU();
+  ~PointCloudGPU();
 
   // add_*_gpu() only adds attributes to GPU storage
   template <typename T>
   void add_times(const T* times, int num_points, CUstream_st* stream = 0) {
-    FrameCPU::add_times<T>(times, num_points);
+    PointCloudCPU::add_times<T>(times, num_points);
     add_times_gpu(times, num_points, stream);
   }
   template <typename T>
@@ -53,7 +53,7 @@ public:
 
   template <typename T, int D>
   void add_points(const Eigen::Matrix<T, D, 1>* points, int num_points, CUstream_st* stream = 0) {
-    FrameCPU::add_points<T, D>(points, num_points);
+    PointCloudCPU::add_points<T, D>(points, num_points);
     add_points_gpu(points, num_points, stream);
   }
   template <typename T, int D, typename Alloc>
@@ -70,7 +70,7 @@ public:
 
   template <typename T, int D>
   void add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_points, CUstream_st* stream = 0) {
-    FrameCPU::add_normals<T, D>(normals, num_points);
+    PointCloudCPU::add_normals<T, D>(normals, num_points);
     add_normals_gpu<T, D>(normals, num_points, stream);
   }
   template <typename T, int D, typename Alloc>
@@ -87,7 +87,7 @@ public:
 
   template <typename T, int D>
   void add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points, CUstream_st* stream = 0) {
-    FrameCPU::add_covs<T, D>(covs, num_points);
+    PointCloudCPU::add_covs<T, D>(covs, num_points);
     add_covs_gpu<T, D>(covs, num_points, stream);
   }
   template <typename T, int D, typename Alloc>
@@ -104,7 +104,7 @@ public:
 
   template <typename T>
   void add_intensities(const T* intensities, int num_points, CUstream_st* stream = 0) {
-    FrameCPU::add_intensities<T>(intensities, num_points);
+    PointCloudCPU::add_intensities<T>(intensities, num_points);
     add_intensities_gpu(intensities, num_points, stream);
   }
   template <typename T>
@@ -123,8 +123,8 @@ public:
 };
 
 // Device to host data transfer
-std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream = nullptr);
-std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream = nullptr);
-std::vector<Eigen::Vector3f> download_normals_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream = nullptr);
+std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream = nullptr);
+std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream = nullptr);
+std::vector<Eigen::Vector3f> download_normals_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream = nullptr);
 
 }  // namespace gtsam_ext

@@ -29,7 +29,7 @@ public:
    * @param k_neighbors Number of neighbors used for intensity gradient estimation
    * @param num_threads Number of threads
    */
-  static IntensityGradients::Ptr estimate(const Frame::ConstPtr& frame, int k_neighbors = 10, int num_threads = 1);
+  static IntensityGradients::Ptr estimate(const PointCloud::ConstPtr& frame, int k_neighbors = 10, int num_threads = 1);
 
   /**
    * @brief Estimate normals, covs, and intensity gradients
@@ -40,9 +40,9 @@ public:
    * @param num_threads Number of threads
    */
   static IntensityGradients::Ptr
-  estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors = 10, int k_photo_neighbors = 20, int num_threads = 1);
+  estimate(const gtsam_ext::PointCloudCPU::Ptr& frame, int k_geom_neighbors = 10, int k_photo_neighbors = 20, int num_threads = 1);
 
-  static IntensityGradients::Ptr estimate(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, int k_photo_neighbors);
+  static IntensityGradients::Ptr estimate(const PointCloud::ConstPtr& frame, const std::vector<int>& neighbors, int k_photo_neighbors);
 
 public:
   std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> intensity_gradients;

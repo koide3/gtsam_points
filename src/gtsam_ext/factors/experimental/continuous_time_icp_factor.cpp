@@ -27,7 +27,7 @@ gtsam::Pose3 interpolate_pose(const gtsam::Pose3& pose0, const gtsam::Pose3& pos
 CTICPFactorExpr::CTICPFactorExpr(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,
-  const std::shared_ptr<const Frame>& target,
+  const std::shared_ptr<const PointCloud>& target,
   const std::shared_ptr<const KdTree>& target_tree,
   const double source_t0,
   const double source_t1,
@@ -136,7 +136,7 @@ std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> Integrat
 }
 
 gtsam::NonlinearFactorGraph::shared_ptr
-create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model) {
+create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model) {
   gtsam::NonlinearFactorGraph::shared_ptr factors(new gtsam::NonlinearFactorGraph);
   std::shared_ptr<KdTree> target_tree(new KdTree(target->points, target->size()));
 
@@ -156,8 +156,8 @@ create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const F
 IntegratedCTICPFactorExpr::shared_ptr create_integrated_cticp_factor(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,
-  const Frame::ConstPtr& target,
-  const Frame::ConstPtr& source,
+  const PointCloud::ConstPtr& target,
+  const PointCloud::ConstPtr& source,
   const gtsam::SharedNoiseModel& noise_model) {
   //
   auto factors = create_cticp_factors(source_t0_key, source_t1_key, target, source, noise_model);

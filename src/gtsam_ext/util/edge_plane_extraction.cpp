@@ -202,7 +202,7 @@ void extract_edge_plane_points_line(
   }
 }
 
-std::pair<FrameCPU::Ptr, FrameCPU::Ptr>
+std::pair<PointCloudCPU::Ptr, PointCloudCPU::Ptr>
 extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points) {
   // Estimate tilt and heading angles of each point
   std::vector<std::tuple<double, double, int>> tilt_heading_points(num_points);
@@ -248,8 +248,8 @@ extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Ve
     extract_edge_plane_points_line(line_points, plane_points, edge_points);
   }
 
-  FrameCPU::Ptr edges(new FrameCPU(edge_points));
-  FrameCPU::Ptr planes(new FrameCPU(plane_points));
+  PointCloudCPU::Ptr edges(new PointCloudCPU(edge_points));
+  PointCloudCPU::Ptr planes(new PointCloudCPU(plane_points));
 
   return std::make_pair(edges, planes);
 }

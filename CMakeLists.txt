@@ -124,8 +124,8 @@ add_library(gtsam_ext SHARED
   # types
   src/gtsam_ext/types/frame.cpp
   src/gtsam_ext/types/frame_cpu.cpp
-  src/gtsam_ext/types/voxelized_frame_cpu.cpp
   src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
+  src/gtsam_ext/types/gaussian_voxelmap_cpu_funcs.cpp
   # factors
   src/gtsam_ext/factors/integrated_matching_cost_factor.cpp
   src/gtsam_ext/factors/integrated_icp_factor.cpp
@@ -186,8 +186,8 @@ if(BUILD_WITH_CUDA)
     # types
     src/gtsam_ext/types/frame.cu
     src/gtsam_ext/types/frame_gpu.cu
-    src/gtsam_ext/types/voxelized_frame_gpu.cu
     src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
+    src/gtsam_ext/types/gaussian_voxelmap_gpu_funcs.cu
     # factors
     src/gtsam_ext/factors/integrated_vgicp_derivatives.cu
     src/gtsam_ext/factors/integrated_vgicp_derivatives_inliers.cu

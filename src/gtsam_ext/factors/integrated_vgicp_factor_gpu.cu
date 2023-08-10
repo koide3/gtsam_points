@@ -13,33 +13,17 @@
 namespace gtsam_ext {
 
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
-  gtsam::Key target_key,
-  gtsam::Key source_key,
-  const Frame::ConstPtr& target,
-  const Frame::ConstPtr& source)
-: IntegratedVGICPFactorGPU(target_key, source_key, target, source, nullptr, nullptr) {}
-
-IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
   const GaussianVoxelMap::ConstPtr& target,
-  const Frame::ConstPtr& source)
+  const PointCloud::ConstPtr& source)
 : IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target, source, nullptr, nullptr) {}
 
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const Frame::ConstPtr& target,
-  const Frame::ConstPtr& source,
-  CUstream_st* stream,
-  std::shared_ptr<TempBufferManager> temp_buffer)
-: IntegratedVGICPFactorGPU(target_key, source_key, target->voxels_gpu, source, stream, temp_buffer) {}
-
-IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
-  gtsam::Key target_key,
-  gtsam::Key source_key,
   const GaussianVoxelMap::ConstPtr& target,
-  const Frame::ConstPtr& source,
+  const PointCloud::ConstPtr& source,
   CUstream_st* stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
 : gtsam_ext::NonlinearFactorGPU(gtsam::KeyVector{target_key, source_key}),
@@ -70,24 +54,8 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   const gtsam::Pose3& fixed_target_pose,
   gtsam::Key source_key,
-  const Frame::ConstPtr& target,
-  const Frame::ConstPtr& source)
-: IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target, source, nullptr, nullptr) {}
-
-IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
-  const gtsam::Pose3& fixed_target_pose,
-  gtsam::Key source_key,
-  const Frame::ConstPtr& target,
-  const Frame::ConstPtr& source,
-  CUstream_st* stream,
-  std::shared_ptr<TempBufferManager> temp_buffer)
-: IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target->voxels_gpu, source, stream, temp_buffer) {}
-
-IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
-  const gtsam::Pose3& fixed_target_pose,
-  gtsam::Key source_key,
   const GaussianVoxelMap::ConstPtr& target,
-  const Frame::ConstPtr& source,
+  const PointCloud::ConstPtr& source,
   CUstream_st* stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
 : gtsam_ext::NonlinearFactorGPU(gtsam::KeyVector{source_key}),

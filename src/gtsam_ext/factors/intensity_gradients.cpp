@@ -10,7 +10,7 @@
 
 namespace gtsam_ext {
 
-IntensityGradients::Ptr IntensityGradients::estimate(const Frame::ConstPtr& frame, const std::vector<int>& neighbors, int k_photo_neighbors) {
+IntensityGradients::Ptr IntensityGradients::estimate(const PointCloud::ConstPtr& frame, const std::vector<int>& neighbors, int k_photo_neighbors) {
   if (!frame::has_points(*frame) || !frame::has_normals(*frame) || !frame::has_intensities(*frame)) {
     std::cerr << "error: input frame doesn't have required attributes for intensity gradient estimation!!" << std::endl;
     abort();
@@ -61,13 +61,13 @@ IntensityGradients::Ptr IntensityGradients::estimate(const Frame::ConstPtr& fram
   return gradients;
 }
 
-IntensityGradients::Ptr IntensityGradients::estimate(const Frame::ConstPtr& frame, int k_neighbors, int num_threads) {
+IntensityGradients::Ptr IntensityGradients::estimate(const PointCloud::ConstPtr& frame, int k_neighbors, int num_threads) {
   if (!frame::has_points(*frame) || !frame::has_normals(*frame) || !frame::has_intensities(*frame)) {
     std::cerr << "error: input frame doesn't have required attributes for intensity gradient estimation!!" << std::endl;
     abort();
   }
 
-  gtsam_ext::KdTree2<Frame> kdtree(frame);
+  gtsam_ext::KdTree2<PointCloud> kdtree(frame);
 
   IntensityGradients::Ptr gradients(new IntensityGradients);
   gradients->intensity_gradients.resize(frame::size(*frame));
@@ -109,8 +109,8 @@ IntensityGradients::Ptr IntensityGradients::estimate(const Frame::ConstPtr& fram
 }
 
 IntensityGradients::Ptr
-IntensityGradients::estimate(const gtsam_ext::FrameCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads) {
-  gtsam_ext::KdTree2<Frame> kdtree(frame);
+IntensityGradients::estimate(const gtsam_ext::PointCloudCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads) {
+  gtsam_ext::KdTree2<PointCloud> kdtree(frame);
 
   bool estimate_normals = frame->normals == nullptr;
   bool estimate_covs = frame->covs == nullptr;

@@ -32,11 +32,11 @@ public:
         pt = q * pt;
       }
 
-      gtsam_ext::FrameCPU::Ptr source(new gtsam_ext::FrameCPU(raw_points));
+      gtsam_ext::PointCloudCPU::Ptr source(new gtsam_ext::PointCloudCPU(raw_points));
       source->add_times(times);
       source->add_covs(gtsam_ext::estimate_covariances(source->points, source->size()));
 
-      gtsam_ext::FrameCPU::Ptr target(new gtsam_ext::FrameCPU(deskewed_points));
+      gtsam_ext::PointCloudCPU::Ptr target(new gtsam_ext::PointCloudCPU(deskewed_points));
       target->add_covs(gtsam_ext::estimate_covariances(target->points, target->size()));
       target->add_normals(gtsam_ext::estimate_normals(target->points, target->covs, target->size()));
 
@@ -45,8 +45,8 @@ public:
     }
   }
 
-  std::vector<gtsam_ext::Frame::Ptr> raw_source_frames;
-  std::vector<gtsam_ext::Frame::Ptr> deskewed_target_frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> raw_source_frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> deskewed_target_frames;
 };
 
 TEST_F(ContinuousTimeFactorsTestBase, LoadCheck) {
@@ -56,7 +56,7 @@ TEST_F(ContinuousTimeFactorsTestBase, LoadCheck) {
 
 struct ContinuousTimeFactorTest : public ContinuousTimeFactorsTestBase, public testing::WithParamInterface<std::string> {
 public:
-  double pointcloud_distance(const gtsam_ext::Frame::ConstPtr& frame1, const gtsam_ext::Frame::ConstPtr& frame2) {
+  double pointcloud_distance(const gtsam_ext::PointCloud::ConstPtr& frame1, const gtsam_ext::PointCloud::ConstPtr& frame2) {
     gtsam_ext::KdTree tree(frame2->points, frame2->size());
 
     double sum_dists = 0.0;
@@ -98,7 +98,7 @@ TEST_P(ContinuousTimeFactorTest, AlignmentTest) {
     values = optimizer.optimize();
 
     auto corrected_source = factor->deskewed_source_points(values);
-    gtsam_ext::Frame::Ptr correcred(new gtsam_ext::FrameCPU(corrected_source));
+    gtsam_ext::PointCloud::Ptr correcred(new gtsam_ext::PointCloudCPU(corrected_source));
 
     // The corrected point cloud should have a small distance to the target
     // double dist_before = pointcloud_distance(source, target);

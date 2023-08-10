@@ -100,17 +100,17 @@ public:
 };
 
 TEST_F(ColoredGICPTestBase, Check) {
-  gtsam_ext::FrameCPU::Ptr target(new gtsam_ext::FrameCPU(target_points));
+  gtsam_ext::PointCloudCPU::Ptr target(new gtsam_ext::PointCloudCPU(target_points));
   target->add_intensities(target_intensities);
   auto target_gradients = gtsam_ext::IntensityGradients::estimate(target, 10, 50, 1);
 
   EXPECT_NE(target->normals, nullptr);
   EXPECT_NE(target->covs, nullptr);
 
-  gtsam_ext::Frame::Ptr target_ = target;
+  gtsam_ext::PointCloud::Ptr target_ = target;
   auto target_gradients2 = gtsam_ext::IntensityGradients::estimate(target_, 50, 1);
 
-  gtsam_ext::FrameCPU::Ptr source(new gtsam_ext::FrameCPU(source_points));
+  gtsam_ext::PointCloudCPU::Ptr source(new gtsam_ext::PointCloudCPU(source_points));
   source->add_intensities(source_intensities);
   source->add_covs(gtsam_ext::estimate_covariances(source->points, source->size()));
 

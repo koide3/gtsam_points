@@ -40,7 +40,7 @@ estimate_scan_lines(const Eigen::Vector4d* points, int num_points, int num_scan_
  * @param num_points    Number of points
  * @return Extracted edge and plane points
  */
-std::pair<FrameCPU::Ptr, FrameCPU::Ptr>
+std::pair<PointCloudCPU::Ptr, PointCloudCPU::Ptr>
 extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Vector4d* points, int num_points);
 
 }  // namespace gtsam_ext

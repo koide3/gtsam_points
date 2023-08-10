@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
-#include <gtsam_ext/types/voxelized_frame_gpu.hpp>
-
 #include <thrust/transform.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
@@ -12,7 +10,7 @@
 #include <cub/device/device_reduce.cuh>
 #include <cub/iterator/transform_input_iterator.cuh>
 
-#include <gtsam_ext/types/voxelized_frame_cpu.hpp>
+#include <gtsam_ext/types/frame_gpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 #include <gtsam_ext/cuda/check_error.cuh>
@@ -20,100 +18,6 @@
 #include <gtsam_ext/cuda/cuda_malloc_async.hpp>
 
 namespace gtsam_ext {
-
-// constructor with points & covs
-template <typename T, int D>
-VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<T, D, 1>* points,
-  const Eigen::Matrix<T, D, D>* covs,
-  int num_points) {
-  //
-  FrameGPU::add_points(points, num_points);
-  FrameGPU::add_covs(covs, num_points);
-
-  create_voxelmap(voxel_resolution);
-}
-
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<float, 3, 1>* points,
-  const Eigen::Matrix<float, 3, 3>* covs,
-  int num_points);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<float, 4, 1>* points,
-  const Eigen::Matrix<float, 4, 4>* covs,
-  int num_points);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<double, 3, 1>* points,
-  const Eigen::Matrix<double, 3, 3>* covs,
-  int num_points);
-template VoxelizedFrameGPU::VoxelizedFrameGPU(
-  double voxel_resolution,
-  const Eigen::Matrix<double, 4, 1>* points,
-  const Eigen::Matrix<double, 4, 4>* covs,
-  int num_points);
-
-// deep copy constructor
-VoxelizedFrameGPU::VoxelizedFrameGPU(double voxel_resolution, const Frame& frame) : FrameGPU(frame) {
-  create_voxelmap(voxel_resolution);
-}
-
-VoxelizedFrameGPU::VoxelizedFrameGPU() {}
-VoxelizedFrameGPU::~VoxelizedFrameGPU() {}
-
-void VoxelizedFrameGPU::create_voxelmap(double voxel_resolution, CUstream_st* stream) {
-  if (!check_points() || !check_covs()) {
-    std::cerr << "error: frame does not have points or covs!!" << std::endl;
-  }
-
-  voxels.reset(new GaussianVoxelMapCPU(voxel_resolution));
-  voxels->insert(*this);
-
-  create_voxelmap_gpu(voxel_resolution, stream);
-}
-
-void VoxelizedFrameGPU::create_voxelmap_gpu(double voxel_resolution, CUstream_st* stream) {
-  if (!check_points_gpu() || !check_covs_gpu()) {
-    std::cerr << "error: frame does not have points or covs on GPU!!" << std::endl;
-  }
-
-  voxels_gpu.reset(new GaussianVoxelMapGPU(voxel_resolution, 8192 * 2, 10, 1e-3, stream));
-  voxels_gpu->insert(*this);
-}
-
-// GPU-to-CPU copy
-std::vector<std::pair<Eigen::Vector3i, int>> VoxelizedFrameGPU::get_voxel_buckets_gpu() const {
-  std::vector<std::pair<Eigen::Vector3i, int>> buffer(voxels_gpu->voxelmap_info.num_buckets);
-  check_error << cudaMemcpy(
-    buffer.data(),
-    thrust::raw_pointer_cast(voxels_gpu->buckets),
-    sizeof(thrust::pair<Eigen::Vector3i, int>) * voxels_gpu->voxelmap_info.num_buckets,
-    cudaMemcpyDeviceToHost);
-  return buffer;
-}
-
-std::vector<int> VoxelizedFrameGPU::get_voxel_num_points_gpu() const {
-  std::vector<int> buffer(voxels_gpu->voxelmap_info.num_voxels);
-  check_error << cudaMemcpy(buffer.data(), voxels_gpu->num_points, sizeof(int) * voxels_gpu->voxelmap_info.num_voxels, cudaMemcpyDeviceToHost);
-  return buffer;
-}
-
-std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> VoxelizedFrameGPU::get_voxel_means_gpu() const {
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> buffer(voxels_gpu->voxelmap_info.num_voxels);
-  check_error
-    << cudaMemcpy(buffer.data(), voxels_gpu->voxel_means, sizeof(Eigen::Vector3f) * voxels_gpu->voxelmap_info.num_voxels, cudaMemcpyDeviceToHost);
-  return buffer;
-}
-
-std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> VoxelizedFrameGPU::get_voxel_covs_gpu() const {
-  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> buffer(voxels_gpu->voxelmap_info.num_voxels);
-  check_error
-    << cudaMemcpy(buffer.data(), voxels_gpu->voxel_covs, sizeof(Eigen::Matrix3f) * voxels_gpu->voxelmap_info.num_voxels, cudaMemcpyDeviceToHost);
-  return buffer;
-}
 
 namespace {
 
@@ -140,9 +44,9 @@ struct transform_covs_kernel {
 };
 }  // namespace
 
-Frame::Ptr merge_frames_gpu(
+PointCloud::Ptr merge_frames_gpu(
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<Frame::ConstPtr>& frames,
+  const std::vector<PointCloud::ConstPtr>& frames,
   double downsample_resolution,
   CUstream_st* stream) {
   //
@@ -190,7 +94,7 @@ Frame::Ptr merge_frames_gpu(
     result.wait();
   }
 
-  Frame all_frames;
+  PointCloud all_frames;
   all_frames.num_points = num_all_points;
   all_frames.points_gpu = all_points;
   all_frames.covs_gpu = all_covs;
@@ -213,7 +117,7 @@ Frame::Ptr merge_frames_gpu(
   check_error << cudaFreeAsync(all_points, stream);
   check_error << cudaFreeAsync(all_covs, stream);
 
-  auto merged = std::make_shared<FrameGPU>();
+  auto merged = std::make_shared<PointCloudGPU>();
   merged->add_points(means, stream);
   merged->add_covs(covs, stream);
 
@@ -259,7 +163,7 @@ struct cast_kernel {
 }  // namespace
 
 double
-overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu, CUstream_st* stream) {
+overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const PointCloud::ConstPtr& source, const Eigen::Isometry3f* delta_gpu, CUstream_st* stream) {
   if (!source->check_points_gpu()) {
     std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
     abort();
@@ -301,11 +205,8 @@ overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& so
   return static_cast<double>(num_inliers_cpu) / source->size();
 }
 
-double overlap_gpu(const Frame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3f* delta_gpu, CUstream_st* stream) {
-  return overlap_gpu(target->voxels_gpu, source, delta_gpu, stream);
-}
-
-double overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta, CUstream_st* stream) {
+double
+overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const PointCloud::ConstPtr& source, const Eigen::Isometry3d& delta, CUstream_st* stream) {
   if (!source->points_gpu) {
     std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
     abort();
@@ -328,13 +229,9 @@ double overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const Frame::Const
   return overlap;
 }
 
-double overlap_gpu(const Frame::ConstPtr& target, const Frame::ConstPtr& source, const Eigen::Isometry3d& delta, CUstream_st* stream) {
-  return overlap_gpu(target->voxels_gpu, source, delta, stream);
-}
-
 double overlap_gpu(
   const std::vector<GaussianVoxelMap::ConstPtr>& targets_,
-  const Frame::ConstPtr& source,
+  const PointCloud::ConstPtr& source,
   const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_,
   CUstream_st* stream) {
   if (!source->points_gpu) {
@@ -408,16 +305,6 @@ double overlap_gpu(
   check_error << cudaFreeAsync(num_inliers, stream);
 
   return static_cast<double>(num_inliers_cpu) / source->size();
-}
-
-double overlap_gpu(
-  const std::vector<Frame::ConstPtr>& targets,
-  const Frame::ConstPtr& source,
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_,
-  CUstream_st* stream) {
-  std::vector<GaussianVoxelMap::ConstPtr> target_voxelmaps(targets.size());
-  std::transform(targets.begin(), targets.end(), target_voxelmaps.begin(), [](const Frame::ConstPtr& frame) { return frame->voxels_gpu; });
-  return overlap_gpu(target_voxelmaps, source, deltas_, stream);
 }
 
 }  // namespace gtsam_ext

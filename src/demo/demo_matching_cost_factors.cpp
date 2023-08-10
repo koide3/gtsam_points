@@ -166,7 +166,7 @@ public:
   }
 
   gtsam::NonlinearFactor::shared_ptr
-  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::Frame::ConstPtr& target, const gtsam_ext::Frame::ConstPtr& source) {
+  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::PointCloud::ConstPtr& target, const gtsam_ext::PointCloud::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
       auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
@@ -258,7 +258,7 @@ private:
 
   gtsam::Values poses;
   gtsam::Values poses_gt;
-  std::vector<gtsam_ext::Frame::Ptr> frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> frames;
 };
 
 int main(int argc, char** argv) {

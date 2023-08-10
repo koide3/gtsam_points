@@ -17,7 +17,7 @@ public:
     const int num_threads = 1);
   ~iVoxCovarianceEstimation() override;
 
-  virtual void insert(const Frame& frame) override;
+  virtual void insert(const PointCloud& frame) override;
 
   const Eigen::Vector4d& normal(const size_t i) const;
   const Eigen::Matrix4d& cov(const size_t i) const;

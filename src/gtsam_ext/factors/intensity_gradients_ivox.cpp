@@ -14,7 +14,7 @@ IntensityGradientsiVox::IntensityGradientsiVox(const double voxel_resolution, co
 
 IntensityGradientsiVox::~IntensityGradientsiVox() {}
 
-void IntensityGradientsiVox::insert(const Frame& frame) {
+void IntensityGradientsiVox::insert(const PointCloud& frame) {
   iVox::insert(frame);
 
   // Remove gradient voxels that are already removed from iVox

@@ -19,7 +19,7 @@ struct GaussianVoxel;
  *        Koide et al., "Voxelized GICP for Fast and Accurate 3D Point Cloud Registration", ICRA2021
  *        Koide et al., "Globally Consistent 3D LiDAR Mapping with GPU-accelerated GICP Matching Cost Factors", RA-L2021
  */
-template <typename SourceFrame = gtsam_ext::Frame>
+template <typename SourceFrame = gtsam_ext::PointCloud>
 class IntegratedVGICPFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -38,13 +38,6 @@ public:
     const GaussianVoxelMap::ConstPtr& target_voxels,
     const std::shared_ptr<const SourceFrame>& source);
 
-  ///< Create a binary VGICP factor between target and source poses.
-  IntegratedVGICPFactor_(
-    gtsam::Key target_key,
-    gtsam::Key source_key,
-    const Frame::ConstPtr& target,
-    const std::shared_ptr<const SourceFrame>& source);
-
   /**
    * @brief Create a unary VGICP factor between a fixed target pose and an active source pose.
    * @param fixed_target_pose   Fixed target pose
@@ -56,13 +49,6 @@ public:
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
     const GaussianVoxelMap::ConstPtr& target_voxels,
-    const std::shared_ptr<const SourceFrame>& source);
-
-  ///< Create a unary VGICP factor between a fixed target pose and an active source pose.
-  IntegratedVGICPFactor_(
-    const gtsam::Pose3& fixed_target_pose,
-    gtsam::Key source_key,
-    const Frame::ConstPtr& target,
     const std::shared_ptr<const SourceFrame>& source);
 
   virtual ~IntegratedVGICPFactor_() override;

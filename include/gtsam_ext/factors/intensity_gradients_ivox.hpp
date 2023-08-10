@@ -17,7 +17,7 @@ public:
    * @brief Insert points and all available attributes into the iVox
    * @param frame   Input frame
    */
-  virtual void insert(const Frame& frame) override;
+  virtual void insert(const PointCloud& frame) override;
 
   const Eigen::Vector4d& normal(const size_t i) const;
   const Eigen::Vector4d& intensity_gradient(const size_t i) const;

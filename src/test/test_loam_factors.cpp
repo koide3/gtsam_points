@@ -47,13 +47,13 @@ struct LOAMTestBase : public testing::Test {
       EXPECT_NE(edge_points.size(), true) << "Faile to read edge points";
       EXPECT_NE(plane_points.size(), true) << "Faile to read plane points";
 
-      edge_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(edge_points)));
-      plane_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(plane_points)));
+      edge_frames.push_back(gtsam_ext::PointCloud::Ptr(new gtsam_ext::PointCloudCPU(edge_points)));
+      plane_frames.push_back(gtsam_ext::PointCloud::Ptr(new gtsam_ext::PointCloudCPU(plane_points)));
     }
   }
 
-  std::vector<gtsam_ext::Frame::Ptr> edge_frames;
-  std::vector<gtsam_ext::Frame::Ptr> plane_frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> edge_frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> plane_frames;
   gtsam::Values poses;
   gtsam::Values poses_gt;
 };
@@ -70,10 +70,10 @@ public:
   gtsam::NonlinearFactor::shared_ptr create_factor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const gtsam_ext::Frame::ConstPtr& target_edges,
-    const gtsam_ext::Frame::ConstPtr& target_planes,
-    const gtsam_ext::Frame::ConstPtr& source_edges,
-    const gtsam_ext::Frame::ConstPtr& source_planes) {
+    const gtsam_ext::PointCloud::ConstPtr& target_edges,
+    const gtsam_ext::PointCloud::ConstPtr& target_planes,
+    const gtsam_ext::PointCloud::ConstPtr& source_edges,
+    const gtsam_ext::PointCloud::ConstPtr& source_planes) {
     std::string method = GetParam();
 
     gtsam::NonlinearFactor::shared_ptr factor;

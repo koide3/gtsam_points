@@ -50,13 +50,13 @@ public:
       }
 
       // Source frames
-      auto raw_frame = std::make_shared<gtsam_ext::FrameCPU>(raw_points);
+      auto raw_frame = std::make_shared<gtsam_ext::PointCloudCPU>(raw_points);
       raw_frame->add_times(times);
       raw_frame->add_covs(gtsam_ext::estimate_covariances(raw_frame->points, raw_frame->size()));
       raw_frames.push_back(raw_frame);
 
       // Target frames
-      auto deskewed_frame = std::make_shared<gtsam_ext::FrameCPU>(deskewed_points);
+      auto deskewed_frame = std::make_shared<gtsam_ext::PointCloudCPU>(deskewed_points);
       deskewed_frame->add_covs(gtsam_ext::estimate_covariances(deskewed_frame->points, deskewed_frame->size()));
       deskewed_frame->add_normals(gtsam_ext::estimate_normals(deskewed_frame->points, deskewed_frame->covs, deskewed_frame->size()));
       deskewed_frames.push_back(deskewed_frame);
@@ -207,8 +207,8 @@ public:
   }
 
 private:
-  std::vector<gtsam_ext::Frame::Ptr> raw_frames;
-  std::vector<gtsam_ext::Frame::Ptr> deskewed_frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> raw_frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> deskewed_frames;
 
   float pose_noise_scale;
   gtsam::Pose3 pose_noise;

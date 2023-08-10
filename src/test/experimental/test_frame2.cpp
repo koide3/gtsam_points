@@ -38,7 +38,7 @@ int main(int argc, char** argv) {
     poses[i].translation() = trans;
   }
 
-  std::vector<gtsam_ext::Frame::ConstPtr> frames(5);
+  std::vector<gtsam_ext::PointCloud::ConstPtr> frames(5);
   std::vector<std::vector<gtsam_ext::GaussianVoxelMapGPU::ConstPtr>> voxelmaps(5);
 
   double voxel_resolution = 0.1;
@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
   for (int i = 0; i < 5; i++) {
     auto points = gtsam_ext::read_points((boost::format("%s/%06d/points.bin") % data_path % i).str());
 
-    auto frame = std::make_shared<gtsam_ext::FrameGPU>();
+    auto frame = std::make_shared<gtsam_ext::PointCloudGPU>();
     frame->add_points(points);
     frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size()));
     frames[i] = frame;

@@ -17,19 +17,19 @@ int main(int argc, char** argv) {
   // Input points are converted and held as Eigen::Vector4d internally.
   // Note that if you feed 4D vectors, their last elements (w) must be 1.
   std::vector<Eigen::Vector3f> points_3f(num_points);
-  const auto frame_3f = std::make_shared<gtsam_ext::FrameCPU>(points_3f);
+  const auto frame_3f = std::make_shared<gtsam_ext::PointCloudCPU>(points_3f);
 
   std::vector<Eigen::Vector4f> points_4f(num_points);
-  const auto frame_4f = std::make_shared<gtsam_ext::FrameCPU>(points_4f);
+  const auto frame_4f = std::make_shared<gtsam_ext::PointCloudCPU>(points_4f);
 
   std::vector<Eigen::Vector3d> points_3d(num_points);
-  const auto frame_3d = std::make_shared<gtsam_ext::FrameCPU>(points_3d);
+  const auto frame_3d = std::make_shared<gtsam_ext::PointCloudCPU>(points_3d);
 
   std::vector<Eigen::Vector4d> points_4d(num_points);
-  const auto frame_4d = std::make_shared<gtsam_ext::FrameCPU>(points_4d);
+  const auto frame_4d = std::make_shared<gtsam_ext::PointCloudCPU>(points_4d);
 
   // Is it also possible to create FrameCPU from a raw Eigen::Vector pointer.
-  const auto frame = std::make_shared<gtsam_ext::FrameCPU>(points_4d.data(), points_4d.size());
+  const auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points_4d.data(), points_4d.size());
 
   // You can add point attributes by calling FrameCPU::add_*.
   std::vector<double> times(num_points);
@@ -42,7 +42,7 @@ int main(int argc, char** argv) {
   frame->add_intensities(intensities);                // Add point intensities
 
   // gtsam_ext::FrameCPU is derived from gtsam_ext::Frame that holds only pointers to point attributes.
-  gtsam_ext::Frame::Ptr base_frame = frame;
+  gtsam_ext::PointCloud::Ptr base_frame = frame;
   int frame_size = base_frame->num_points;            // Number of points
   frame_size = base_frame->size();                    // frame->size() == frame->num_points
   Eigen::Vector4d* points_ptr = base_frame->points;   // Pointer to point coordinates
@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
   // If you don't want to let gtsam_ext::FrameCPU hold point data but want to manage points by yourself,
   // you can just give gtsam_ext::Frame pointers to point attributes.
   // Note that you need to take care of the ownership of point data in this case.
-  gtsam_ext::Frame::Ptr base_frame2(new gtsam_ext::Frame);
+  gtsam_ext::PointCloud::Ptr base_frame2(new gtsam_ext::PointCloud);
   base_frame2->num_points = points_4d.size();
   base_frame2->points = points_4d.data();
 

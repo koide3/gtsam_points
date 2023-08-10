@@ -13,17 +13,17 @@ namespace gtsam_ext {
 
 // constructor with points
 template <typename T, int D>
-FrameGPU::FrameGPU(const Eigen::Matrix<T, D, 1>* points, int num_points) : FrameCPU(points, num_points) {
+PointCloudGPU::PointCloudGPU(const Eigen::Matrix<T, D, 1>* points, int num_points) : PointCloudCPU(points, num_points) {
   add_points_gpu(points, num_points);
 }
 
-template FrameGPU::FrameGPU(const Eigen::Matrix<float, 3, 1>*, int);
-template FrameGPU::FrameGPU(const Eigen::Matrix<float, 4, 1>*, int);
-template FrameGPU::FrameGPU(const Eigen::Matrix<double, 3, 1>*, int);
-template FrameGPU::FrameGPU(const Eigen::Matrix<double, 4, 1>*, int);
+template PointCloudGPU::PointCloudGPU(const Eigen::Matrix<float, 3, 1>*, int);
+template PointCloudGPU::PointCloudGPU(const Eigen::Matrix<float, 4, 1>*, int);
+template PointCloudGPU::PointCloudGPU(const Eigen::Matrix<double, 3, 1>*, int);
+template PointCloudGPU::PointCloudGPU(const Eigen::Matrix<double, 4, 1>*, int);
 
 // deep copy constructor
-FrameGPU::FrameGPU(const Frame& frame, CUstream_st* stream) : FrameCPU(frame) {
+PointCloudGPU::PointCloudGPU(const PointCloud& frame, CUstream_st* stream) : PointCloudCPU(frame) {
   // TODO: GPU-to-GPU copy for efficiency
   if (frame.points) {
     add_points_gpu(frame.points, frame.size(), stream);
@@ -46,9 +46,9 @@ FrameGPU::FrameGPU(const Frame& frame, CUstream_st* stream) : FrameCPU(frame) {
   }
 }
 
-FrameGPU::FrameGPU() {}
+PointCloudGPU::PointCloudGPU() {}
 
-FrameGPU::~FrameGPU() {
+PointCloudGPU::~PointCloudGPU() {
   if (times_gpu) {
     check_error << cudaFreeAsync(times_gpu, 0);
   }
@@ -72,7 +72,7 @@ FrameGPU::~FrameGPU() {
 
 // add_times_gpu
 template <typename T>
-void FrameGPU::add_times_gpu(const T* times, int num_points, CUstream_st* stream) {
+void PointCloudGPU::add_times_gpu(const T* times, int num_points, CUstream_st* stream) {
   assert(num_points == size());
   if (times_gpu) {
     check_error << cudaFreeAsync(times_gpu, stream);
@@ -87,12 +87,12 @@ void FrameGPU::add_times_gpu(const T* times, int num_points, CUstream_st* stream
   }
 }
 
-template void FrameGPU::add_times_gpu(const float* times, int num_points, CUstream_st* stream);
-template void FrameGPU::add_times_gpu(const double* times, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_times_gpu(const float* times, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_times_gpu(const double* times, int num_points, CUstream_st* stream);
 
 // add_points_gpu
 template <typename T, int D>
-void FrameGPU::add_points_gpu(const Eigen::Matrix<T, D, 1>* points, int num_points, CUstream_st* stream) {
+void PointCloudGPU::add_points_gpu(const Eigen::Matrix<T, D, 1>* points, int num_points, CUstream_st* stream) {
   this->num_points = num_points;
   if (points_gpu) {
     check_error << cudaFreeAsync(points_gpu, stream);
@@ -109,14 +109,14 @@ void FrameGPU::add_points_gpu(const Eigen::Matrix<T, D, 1>* points, int num_poin
   }
 }
 
-template void FrameGPU::add_points_gpu(const Eigen::Matrix<float, 3, 1>* points, int num_points, CUstream_st* stream);
-template void FrameGPU::add_points_gpu(const Eigen::Matrix<float, 4, 1>* points, int num_points, CUstream_st* stream);
-template void FrameGPU::add_points_gpu(const Eigen::Matrix<double, 3, 1>* points, int num_points, CUstream_st* stream);
-template void FrameGPU::add_points_gpu(const Eigen::Matrix<double, 4, 1>* points, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_points_gpu(const Eigen::Matrix<float, 3, 1>* points, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_points_gpu(const Eigen::Matrix<float, 4, 1>* points, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_points_gpu(const Eigen::Matrix<double, 3, 1>* points, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_points_gpu(const Eigen::Matrix<double, 4, 1>* points, int num_points, CUstream_st* stream);
 
 // add_normals_gpu
 template <typename T, int D>
-void FrameGPU::add_normals_gpu(const Eigen::Matrix<T, D, 1>* normals, int num_points, CUstream_st* stream) {
+void PointCloudGPU::add_normals_gpu(const Eigen::Matrix<T, D, 1>* normals, int num_points, CUstream_st* stream) {
   assert(num_points == this->size());
 
   if (normals_gpu) {
@@ -134,14 +134,14 @@ void FrameGPU::add_normals_gpu(const Eigen::Matrix<T, D, 1>* normals, int num_po
   }
 }
 
-template void FrameGPU::add_normals_gpu(const Eigen::Matrix<float, 3, 1>* normals, int num_points, CUstream_st* stream);
-template void FrameGPU::add_normals_gpu(const Eigen::Matrix<float, 4, 1>* normals, int num_points, CUstream_st* stream);
-template void FrameGPU::add_normals_gpu(const Eigen::Matrix<double, 3, 1>* normals, int num_points, CUstream_st* stream);
-template void FrameGPU::add_normals_gpu(const Eigen::Matrix<double, 4, 1>* normals, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_normals_gpu(const Eigen::Matrix<float, 3, 1>* normals, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_normals_gpu(const Eigen::Matrix<float, 4, 1>* normals, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_normals_gpu(const Eigen::Matrix<double, 3, 1>* normals, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_normals_gpu(const Eigen::Matrix<double, 4, 1>* normals, int num_points, CUstream_st* stream);
 
 // add_covs_gpu
 template <typename T, int D>
-void FrameGPU::add_covs_gpu(const Eigen::Matrix<T, D, D>* covs, int num_points, CUstream_st* stream) {
+void PointCloudGPU::add_covs_gpu(const Eigen::Matrix<T, D, D>* covs, int num_points, CUstream_st* stream) {
   assert(num_points == size());
 
   if (covs_gpu) {
@@ -159,14 +159,14 @@ void FrameGPU::add_covs_gpu(const Eigen::Matrix<T, D, D>* covs, int num_points, 
   }
 }
 
-template void FrameGPU::add_covs_gpu(const Eigen::Matrix<float, 3, 3>* covs, int num_points, CUstream_st* stream);
-template void FrameGPU::add_covs_gpu(const Eigen::Matrix<float, 4, 4>* covs, int num_points, CUstream_st* stream);
-template void FrameGPU::add_covs_gpu(const Eigen::Matrix<double, 3, 3>* covs, int num_points, CUstream_st* stream);
-template void FrameGPU::add_covs_gpu(const Eigen::Matrix<double, 4, 4>* covs, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_covs_gpu(const Eigen::Matrix<float, 3, 3>* covs, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_covs_gpu(const Eigen::Matrix<float, 4, 4>* covs, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_covs_gpu(const Eigen::Matrix<double, 3, 3>* covs, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_covs_gpu(const Eigen::Matrix<double, 4, 4>* covs, int num_points, CUstream_st* stream);
 
 // add_intensities_gpu
 template <typename T>
-void FrameGPU::add_intensities_gpu(const T* intensities, int num_points, CUstream_st* stream) {
+void PointCloudGPU::add_intensities_gpu(const T* intensities, int num_points, CUstream_st* stream) {
   assert(num_points == size());
 
   if (intensities_gpu) {
@@ -182,10 +182,10 @@ void FrameGPU::add_intensities_gpu(const T* intensities, int num_points, CUstrea
   }
 }
 
-template void FrameGPU::add_intensities_gpu(const float* intensities, int num_points, CUstream_st* stream);
-template void FrameGPU::add_intensities_gpu(const double* intensities, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_intensities_gpu(const float* intensities, int num_points, CUstream_st* stream);
+template void PointCloudGPU::add_intensities_gpu(const double* intensities, int num_points, CUstream_st* stream);
 
-void FrameGPU::download_points(CUstream_st* stream) {
+void PointCloudGPU::download_points(CUstream_st* stream) {
   if (!points_gpu) {
     std::cerr << "error: frame does not have points on GPU!!" << std::endl;
     return;
@@ -202,7 +202,7 @@ void FrameGPU::download_points(CUstream_st* stream) {
   std::transform(points_h.begin(), points_h.end(), points, [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p.x(), p.y(), p.z(), 1.0); });
 }
 
-std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream) {
+std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream) {
   if (!frame.points_gpu) {
     std::cerr << "error: frame does not have points on GPU!!" << std::endl;
     return {};
@@ -214,7 +214,7 @@ std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::Frame& frame, 
   return points;
 }
 
-std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream) {
+std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream) {
   if (!frame.covs_gpu) {
     std::cerr << "error: frame does not have covs on GPU!!" << std::endl;
     return {};
@@ -226,7 +226,7 @@ std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::Frame& frame, CU
   return covs;
 }
 
-std::vector<Eigen::Vector3f> download_normals_gpu(const gtsam_ext::Frame& frame, CUstream_st* stream) {
+std::vector<Eigen::Vector3f> download_normals_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream) {
   if (!frame.normals_gpu) {
     std::cerr << "error: frame does not have normals on GPU!!" << std::endl;
     return {};

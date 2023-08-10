@@ -193,7 +193,7 @@ GaussianVoxelMapGPU::~GaussianVoxelMapGPU() {
   check_error << cudaFreeAsync(voxel_covs, 0);
 }
 
-void GaussianVoxelMapGPU::insert(const Frame& frame) {
+void GaussianVoxelMapGPU::insert(const PointCloud& frame) {
   if (!frame.check_points_gpu() || !frame.check_covs_gpu()) {
     std::cerr << "error: GPU points/covs not allocated!!" << std::endl;
     abort();
@@ -228,7 +228,7 @@ void GaussianVoxelMapGPU::insert(const Frame& frame) {
   finalize_result.wait();
 }
 
-void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const Frame& frame) {
+void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCloud& frame) {
   // transform points(Vector3f) to voxel coords(Vector3i)
   Eigen::Vector3i* coords;
   check_error << cudaMallocAsync(&coords, sizeof(Eigen::Vector3i) * frame.size(), stream);

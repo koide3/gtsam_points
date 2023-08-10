@@ -29,7 +29,7 @@ void LinearContainer::insert(const Eigen::Vector4d& point, const double insertio
   }
 }
 
-void LinearContainer::insert(const Frame& frame, const int i, const double insertion_dist_sq_thresh) {
+void LinearContainer::insert(const PointCloud& frame, const int i, const double insertion_dist_sq_thresh) {
   const auto& point = frame.points[i];
 
   double min_dist = std::numeric_limits<double>::max();
@@ -122,7 +122,7 @@ std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> iVox::ne
   }
 }
 
-void iVox::insert(const Frame& frame) {
+void iVox::insert(const PointCloud& frame) {
   // Attribute check
   if (!points_available) {
     points_available = frame.has_points();

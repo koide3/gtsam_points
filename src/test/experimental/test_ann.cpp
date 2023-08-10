@@ -9,8 +9,8 @@ int main(int argc, char** argv) {
   auto points0 = gtsam_ext::read_points("data/kitti_07_dump/000000/points.bin");
   auto points1 = gtsam_ext::read_points("data/kitti_07_dump/000001/points.bin");
 
-  auto frame0 = std::make_shared<gtsam_ext::FrameCPU>(points0);
-  auto frame1 = std::make_shared<gtsam_ext::FrameCPU>(points1);
+  auto frame0 = std::make_shared<gtsam_ext::PointCloudCPU>(points0);
+  auto frame1 = std::make_shared<gtsam_ext::PointCloudCPU>(points1);
 
   gtsam_ext::KdTree kdtree(frame0->points, frame0->size());
   gtsam_ext::OmniProjectiveSearch search(frame0->points, frame0->size());

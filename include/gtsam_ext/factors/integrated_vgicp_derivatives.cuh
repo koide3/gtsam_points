@@ -26,7 +26,7 @@ public:
 
   IntegratedVGICPDerivatives(
     const GaussianVoxelMapGPU::ConstPtr& target,
-    const Frame::ConstPtr& source,
+    const PointCloud::ConstPtr& source,
     CUstream_st* ext_stream,
     std::shared_ptr<TempBufferManager> temp_buffer);
   ~IntegratedVGICPDerivatives();
@@ -70,7 +70,7 @@ private:
   std::shared_ptr<TempBufferManager> temp_buffer;
 
   GaussianVoxelMapGPU::ConstPtr target;
-  Frame::ConstPtr source;
+  PointCloud::ConstPtr source;
 
   Eigen::Isometry3f inlier_evaluation_point;
 

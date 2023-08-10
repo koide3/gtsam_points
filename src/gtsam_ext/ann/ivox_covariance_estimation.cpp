@@ -16,7 +16,7 @@ iVoxCovarianceEstimation::iVoxCovarianceEstimation(
 
 iVoxCovarianceEstimation::~iVoxCovarianceEstimation() {}
 
-void iVoxCovarianceEstimation::insert(const Frame& frame) {
+void iVoxCovarianceEstimation::insert(const PointCloud& frame) {
   iVox::insert(frame);
 
   // Remove covariance voxels that are already removed from iVox

@@ -53,13 +53,13 @@ int main(int argc, char** argv) {
   auto viewer = guik::LightViewer::instance();
 
   gtsam::Values values;
-  std::vector<gtsam_ext::FrameCPU::Ptr> frames;
+  std::vector<gtsam_ext::PointCloudCPU::Ptr> frames;
 
   std::ifstream ifs("data/newer_01/graph.txt");
   for (int i = 0; i < 5; i++) {
     auto points_path = (boost::format("data/newer_01/planes_%06d.bin") % (i * 10)).str();
     auto points = gtsam_ext::read_points(points_path);
-    frames.push_back(gtsam_ext::FrameCPU::Ptr(new gtsam_ext::FrameCPU(points)));
+    frames.push_back(gtsam_ext::PointCloudCPU::Ptr(new gtsam_ext::PointCloudCPU(points)));
 
     std::string token;
     Eigen::Vector3d trans;

@@ -17,11 +17,11 @@ struct NearestNeighborSearch;
  * @brief Naive point-to-point ICP matching cost factor
  *        Zhang, "Iterative Point Matching for Registration of Free-Form Curve", IJCV1994
  */
-template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+template <typename TargetFrame = gtsam_ext::PointCloud, typename SourceFrame = gtsam_ext::PointCloud>
 class IntegratedICPFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedICPFactor_<Frame>>;
+  using shared_ptr = boost::shared_ptr<IntegratedICPFactor_<PointCloud>>;
 
   /**
    * @brief Create a binary ICP factor between two poses.
@@ -125,7 +125,7 @@ private:
 /**
  * @brief Point-to-plane ICP factor
  */
-template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+template <typename TargetFrame = gtsam_ext::PointCloud, typename SourceFrame = gtsam_ext::PointCloud>
 class IntegratedPointToPlaneICPFactor_ : public gtsam_ext::IntegratedICPFactor_<TargetFrame, SourceFrame> {
 public:
   using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneICPFactor_<TargetFrame, SourceFrame>>;

@@ -74,7 +74,7 @@ public:
    * @brief Insert a point cloud frame into the voxelmap
    * @param frame Point cloud frame to be inserted
    */
-  virtual void insert(const Frame& frame) override;
+  virtual void insert(const PointCloud& frame) override;
 
   /**
    * @brief Calculate the coordinates of a voxel that contains $x$.

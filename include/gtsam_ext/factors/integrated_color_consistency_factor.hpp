@@ -27,8 +27,8 @@ struct NearestNeighborSearch;
  *        Park et al., "Colored Point Cloud Registration Revisited", ICCV2017
  */
 template <
-  typename TargetFrame = gtsam_ext::Frame,
-  typename SourceFrame = gtsam_ext::Frame,
+  typename TargetFrame = gtsam_ext::PointCloud,
+  typename SourceFrame = gtsam_ext::PointCloud,
   typename IntensityGradients = gtsam_ext::IntensityGradients>
 class IntegratedColorConsistencyFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:

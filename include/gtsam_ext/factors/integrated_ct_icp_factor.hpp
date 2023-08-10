@@ -16,7 +16,7 @@ struct NearestNeighborSearch;
  * @brief Continuous Time ICP Factor
  *        Bellenbach et al., "CT-ICP: Real-time Elastic LiDAR Odometry with Loop Closure", 2021
  */
-template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+template <typename TargetFrame = gtsam_ext::PointCloud, typename SourceFrame = gtsam_ext::PointCloud>
 class IntegratedCT_ICPFactor_ : public gtsam::NonlinearFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
     std::for_each(points.begin(), points.end(), [](Eigen::Vector4f& p) { p.w() = 1.0f; });
 
     // Create a frame and do random sampling and covariance estimation
-    auto frame = std::make_shared<gtsam_ext::FrameCPU>(points);
+    auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points);
     frame = gtsam_ext::random_sampling(frame, randomsampling_rate, mt);
     frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size(), 10, num_threads));
 
@@ -66,7 +66,7 @@ int main(int argc, char** argv) {
       graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
       // Create an ICP factor between target (iVox) and source (current frame)
-      auto icp_factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor_<gtsam_ext::iVox, gtsam_ext::Frame>>(0, 1, ivox, frame, ivox);
+      auto icp_factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor_<gtsam_ext::iVox, gtsam_ext::PointCloud>>(0, 1, ivox, frame, ivox);
       icp_factor->set_num_threads(num_threads);
       graph.add(icp_factor);
 

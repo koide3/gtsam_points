@@ -22,7 +22,7 @@ public:
   ICPFactorExpr(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const PointCloud>& target,
     const std::shared_ptr<const KdTree>& target_tree,
     const gtsam::Point3& source,
     const gtsam::SharedNoiseModel& noise_model);
@@ -36,7 +36,7 @@ public:
   gtsam::Point3_ calc_error() const;
 
 private:
-  const std::shared_ptr<const Frame> target;
+  const std::shared_ptr<const PointCloud> target;
   const std::shared_ptr<const KdTree> target_tree;
 
   const gtsam::Pose3_ delta;
@@ -50,7 +50,7 @@ private:
  * @brief Create a set of ICPFactorExpr
  */
 gtsam::NonlinearFactorGraph::shared_ptr
-create_icp_factors(gtsam::Key target_key, gtsam::Key source_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model);
+create_icp_factors(gtsam::Key target_key, gtsam::Key source_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model);
 
 /**
  * @brief Create a nonlinear factor that wraps a set of ICP factors
@@ -58,8 +58,8 @@ create_icp_factors(gtsam::Key target_key, gtsam::Key source_key, const Frame::Co
 gtsam::NonlinearFactor::shared_ptr create_integrated_icp_factor(
   gtsam::Key target_key,
   gtsam::Key source_key,
-  const Frame::ConstPtr& target,
-  const Frame::ConstPtr& source,
+  const PointCloud::ConstPtr& target,
+  const PointCloud::ConstPtr& source,
   const gtsam::SharedNoiseModel& noise_model);
 
 }  // namespace gtsam_ext

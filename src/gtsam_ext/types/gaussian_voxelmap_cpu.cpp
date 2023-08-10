@@ -11,8 +11,6 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include <gtsam_ext/util/easy_profiler.hpp>
-
 namespace gtsam_ext {
 
 GaussianVoxel::GaussianVoxel() {
@@ -65,7 +63,7 @@ GaussianVoxel::Ptr GaussianVoxelMapCPU::lookup_voxel(const Eigen::Vector3i& coor
   return found->second;
 }
 
-void GaussianVoxelMapCPU::insert(const Frame& frame) {
+void GaussianVoxelMapCPU::insert(const PointCloud& frame) {
   if (!frame::has_points(frame) || !frame::has_covs(frame)) {
     std::cerr << "error: points/covs not allocated!!" << std::endl;
     abort();

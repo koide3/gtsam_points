@@ -17,7 +17,7 @@ namespace gtsam_ext {
 
 IntegratedVGICPDerivatives::IntegratedVGICPDerivatives(
   const GaussianVoxelMapGPU::ConstPtr& target,
-  const Frame::ConstPtr& source,
+  const PointCloud::ConstPtr& source,
   CUstream_st* ext_stream,
   std::shared_ptr<TempBufferManager> temp_buffer)
 : enable_surface_validation(false),

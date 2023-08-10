@@ -25,7 +25,7 @@ class IntegratedPointToEdgeFactor_;
  * Zhang and Singh, "LOAM: LiDAR Odometry and Mapping in Real-time", RSS2014
  * Tixiao and Brendan, "LeGO-LOAM: Lightweight and Ground-Optimized Lidar Odometry and Mapping on Variable Terrain", IROS2018
  */
-template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+template <typename TargetFrame = gtsam_ext::PointCloud, typename SourceFrame = gtsam_ext::PointCloud>
 class IntegratedLOAMFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   GTSAM_MAKE_ALIGNED_OPERATOR_NEW
@@ -82,7 +82,7 @@ private:
 };
 
 // Point-to-plane distance
-template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+template <typename TargetFrame = gtsam_ext::PointCloud, typename SourceFrame = gtsam_ext::PointCloud>
 class IntegratedPointToPlaneFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
@@ -140,7 +140,7 @@ private:
 };
 
 // Point-to-edge distance
-template <typename TargetFrame = gtsam_ext::Frame, typename SourceFrame = gtsam_ext::Frame>
+template <typename TargetFrame = gtsam_ext::PointCloud, typename SourceFrame = gtsam_ext::PointCloud>
 class IntegratedPointToEdgeFactor_ : public gtsam_ext::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW

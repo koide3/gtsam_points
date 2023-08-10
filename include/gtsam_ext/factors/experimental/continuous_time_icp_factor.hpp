@@ -31,7 +31,7 @@ public:
   CTICPFactorExpr(
     gtsam::Key source_t0_key,  // source pose at the scan beginning
     gtsam::Key source_t1_key,  // source pose at the scan ending
-    const std::shared_ptr<const Frame>& target,
+    const std::shared_ptr<const PointCloud>& target,
     const std::shared_ptr<const KdTree>& target_tree,
     const double source_t0,  // time of the very first point in source
     const double source_t1,  // time of the very last point in source
@@ -49,7 +49,7 @@ public:
   gtsam::Double_ calc_error() const;
 
 private:
-  const std::shared_ptr<const Frame> target;
+  const std::shared_ptr<const PointCloud> target;
   const std::shared_ptr<const KdTree> target_tree;
 
   const double source_time;       // source point time \in [0.0, 1.0]
@@ -85,7 +85,7 @@ private:
  * @brief Create a set of CT-ICP factors
  */
 gtsam::NonlinearFactorGraph::shared_ptr
-create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const Frame::ConstPtr& target, const Frame::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model);
+create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model);
 
 /**
  * @brief Create a nonlinear factor that wraps a set of CT-ICP factors
@@ -93,8 +93,8 @@ create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const F
 IntegratedCTICPFactorExpr::shared_ptr create_integrated_cticp_factor(
   gtsam::Key source_t0_key,
   gtsam::Key source_t1_key,
-  const Frame::ConstPtr& target,
-  const Frame::ConstPtr& source,
+  const PointCloud::ConstPtr& target,
+  const PointCloud::ConstPtr& source,
   const gtsam::SharedNoiseModel& noise_model);
 
 }  // namespace gtsam_ext

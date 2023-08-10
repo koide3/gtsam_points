@@ -67,7 +67,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs = gtsam_ext::estimate_covariances(points);
 
 #ifndef BUILD_GTSAM_EXT_GPU
-      frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::VoxelizedFrameCPU(1.0, points, covs)));
+      frames.push_back(gtsam_ext::PointCloud::Ptr(new gtsam_ext::VoxelizedFrameCPU(1.0, points, covs)));
 #else
       frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::VoxelizedFrameGPU(1.0, points, covs)));
 #endif
@@ -78,7 +78,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
 #endif
   }
 
-  std::vector<gtsam_ext::Frame::Ptr> frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> frames;
   gtsam::Values poses;
   gtsam::Values poses_gt;
 
@@ -95,7 +95,7 @@ TEST_F(MatchingCostFactorsTestBase, LoadCheck) {
 class MatchingCostFactorTest : public MatchingCostFactorsTestBase, public testing::WithParamInterface<std::string> {
 public:
   gtsam::NonlinearFactor::shared_ptr
-  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::Frame::ConstPtr& target, const gtsam_ext::Frame::ConstPtr& source) {
+  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::PointCloud::ConstPtr& target, const gtsam_ext::PointCloud::ConstPtr& source) {
     std::string method = GetParam();
 
     gtsam::NonlinearFactor::shared_ptr factor;
@@ -120,8 +120,8 @@ public:
   gtsam::NonlinearFactor::shared_ptr create_factor(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const gtsam_ext::Frame::ConstPtr& target,
-    const gtsam_ext::Frame::ConstPtr& source) {
+    const gtsam_ext::PointCloud::ConstPtr& target,
+    const gtsam_ext::PointCloud::ConstPtr& source) {
     std::string method = GetParam();
 
     gtsam::NonlinearFactor::shared_ptr factor;

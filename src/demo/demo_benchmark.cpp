@@ -124,7 +124,7 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
 
   StopWatch stopwatch;
 
-  std::vector<gtsam_ext::Frame::Ptr> frames;
+  std::vector<gtsam_ext::PointCloud::Ptr> frames;
   std::vector<std::shared_ptr<gtsam_ext::KdTree>> trees;
   std::vector<gtsam_ext::GaussianVoxelMap::Ptr> voxels;
 
@@ -133,7 +133,7 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
     const auto points = gtsam_ext::read_points((boost::format("%s/%06d/points.bin") % dump_path % i).str());
 
     if (factor_type.find("GPU") == std::string::npos) {
-      auto frame = std::make_shared<gtsam_ext::FrameCPU>(points);
+      auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points);
       frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size(), 10, num_threads));
       frames.emplace_back(frame);
     } else {
