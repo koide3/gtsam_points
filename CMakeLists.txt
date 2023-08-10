@@ -16,6 +16,7 @@ option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_CUDA_MULTIARCH "Build with GPU cross-platform support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 option(ENABLE_CPPCHECK "Enable cppcheck" OFF)
+option(ENABLE_COVERAGE "Enable coverage check" OFF)
 
 if(BUILD_WITH_MARCH_NATIVE)
   add_compile_options(-march=native)
@@ -103,6 +104,18 @@ if(ENABLE_CPPCHECK)
     "--inline-suppr"
     "--suppressions-list=${CMAKE_SOURCE_DIR}/.cppcheck_suppressions.txt"
   )
+endif()
+
+if(ENABLE_COVERAGE)
+  set(CMAKE_CXX_FLAGS "-coverage")
+
+  find_program(LCOV lcov REQUIRED)
+  find_program(GENHTML genhtml REQUIRED)
+
+  add_custom_target(coverage
+    COMMAND ${LCOV} --directory . --capture --output-file coverage.info
+    COMMAND ${GENHTML} --demangle-cpp -o coverage coverage.info
+    WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 
 ###########

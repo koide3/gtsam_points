@@ -69,25 +69,23 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs = gtsam_ext::estimate_covariances(points);
 
 #ifndef BUILD_GTSAM_EXT_GPU
-      auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points);
+      auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
 #else
       auto frame = std::make_shared<gtsam_ext::PointCloudGPU>();
 #endif
-
       frame->add_points(points);
       frame->add_covs(covs);
+      frames.push_back(frame);
 
       auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapCPU>(1.0);
       voxelmap->insert(*frame);
+      voxelmaps.push_back(voxelmap);
 
 #ifdef BUILD_GTSAM_EXT_GPU
       auto voxelmap_gpu = std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(1.0);
       voxelmap_gpu->insert(*frame);
-#endif
-
-      frames.push_back(frame);
-      voxelmaps.push_back(voxelmap);
       voxelmaps_gpu.push_back(voxelmap_gpu);
+#endif
     }
 
 #ifdef BUILD_GTSAM_EXT_GPU
