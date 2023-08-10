@@ -85,6 +85,8 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       auto voxelmap_gpu = std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(1.0);
       voxelmap_gpu->insert(*frame);
       voxelmaps_gpu.push_back(voxelmap_gpu);
+#else
+      voxelmaps_gpu.push_back(nullptr);
 #endif
     }
 
