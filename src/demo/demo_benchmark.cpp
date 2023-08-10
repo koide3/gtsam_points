@@ -138,7 +138,7 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
       frames.emplace_back(frame);
     } else {
 #ifdef BUILD_GTSAM_EXT_GPU
-      auto frame = std::make_shared<gtsam_ext::FrameGPU>(points);
+      auto frame = std::make_shared<gtsam_ext::PointCloudGPU>(points);
       frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size(), 10, num_threads));
       frames.emplace_back(frame);
 #else

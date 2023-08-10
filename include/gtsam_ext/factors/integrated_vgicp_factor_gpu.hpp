@@ -43,8 +43,8 @@ public:
     gtsam::Key source_key,
     const GaussianVoxelMap::ConstPtr& target,
     const PointCloud::ConstPtr& source,
-    CUstream_st* stream,
-    std::shared_ptr<TempBufferManager> temp_buffer);
+    CUstream_st* stream = nullptr,
+    std::shared_ptr<TempBufferManager> temp_buffer = nullptr);
 
   /**
    * @brief Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
@@ -60,8 +60,8 @@ public:
     gtsam::Key source_key,
     const GaussianVoxelMap::ConstPtr& target,
     const PointCloud::ConstPtr& source,
-    CUstream_st* stream,
-    std::shared_ptr<TempBufferManager> temp_buffer);
+    CUstream_st* stream = nullptr,
+    std::shared_ptr<TempBufferManager> temp_buffer = nullptr);
 
   /// Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
   IntegratedVGICPFactorGPU(

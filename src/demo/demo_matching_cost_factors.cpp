@@ -12,8 +12,14 @@
 #include <gtsam_ext/util/normal_estimation.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>
 
-#include <gtsam_ext/types/voxelized_frame_cpu.hpp>
-#include <gtsam_ext/types/voxelized_frame_gpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
+
+#ifdef BUILD_GTSAM_EXT_GPU
+#include <gtsam_ext/types/point_cloud_gpu.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
+#include <gtsam_ext/cuda/nonlinear_factor_set_gpu_create.hpp>
+#endif
 
 #include <gtsam_ext/factors/integrated_icp_factor.hpp>
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
@@ -21,6 +27,7 @@
 #include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_ext/optimizers/isam2_ext.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_ext/optimizers/linearization_hook.hpp>
 
 #include <glk/thin_lines.hpp>
 #include <glk/pointcloud_buffer.hpp>
@@ -39,6 +46,11 @@ public:
       std::cerr << "error: failed to open " << data_path + "/graph.txt" << std::endl;
       abort();
     }
+
+#ifdef BUILD_GTSAM_EXT_GPU
+    std::cout << "Register GPU linearization hook" << std::endl;
+    gtsam_ext::LinearizationHook::register_hook([] { return gtsam_ext::create_nonlinear_factor_set_gpu(); });
+#endif
 
     // Read test data
     for (int i = 0; i < 5; i++) {
@@ -69,14 +81,20 @@ public:
 
 #ifndef BUILD_GTSAM_EXT_GPU
       std::cout << "Create CPU frame" << std::endl;
-      gtsam_ext::VoxelizedFrameCPU::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameCPU>(2.0, points, covs);
-      frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
+      auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
+      auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapCPU>(2.0);
 #else
       std::cout << "Create GPU frame" << std::endl;
-      gtsam_ext::VoxelizedFrameGPU::Ptr frame = std::make_shared<gtsam_ext::VoxelizedFrameGPU>(2.0, points, covs);
-      frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
+      auto frame = std::make_shared<gtsam_ext::PointCloudGPU>();
+      auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(2.0);
 #endif
+      frame->add_points(points);
+      frame->add_covs(covs);
+      frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
+      voxelmap->insert(*frame);
+
       frames.push_back(frame);
+      voxelmaps.push_back(voxelmap);
 
       viewer->update_drawable("frame_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size()), guik::Rainbow());
     }
@@ -165,8 +183,12 @@ public:
     });
   }
 
-  gtsam::NonlinearFactor::shared_ptr
-  create_factor(gtsam::Key target_key, gtsam::Key source_key, const gtsam_ext::PointCloud::ConstPtr& target, const gtsam_ext::PointCloud::ConstPtr& source) {
+  gtsam::NonlinearFactor::shared_ptr create_factor(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const gtsam_ext::PointCloud::ConstPtr& target,
+    const gtsam_ext::GaussianVoxelMap::ConstPtr& target_voxelmap,
+    const gtsam_ext::PointCloud::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
       auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
@@ -180,10 +202,10 @@ public:
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("VGICP")) {
-      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor>(target_key, source_key, target, source);
+      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
 #ifdef BUILD_GTSAM_EXT_GPU
-      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactorGPU>(target_key, source_key, target, source);
+      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap, source);
 #endif
     }
 
@@ -200,7 +222,7 @@ public:
       // If full_connection == false, factors are only created between consecutive frames
       int j_end = full_connection ? 5 : std::min(i + 2, 5);
       for (int j = i + 1; j < j_end; j++) {
-        auto factor = create_factor(i, j, frames[i], frames[j]);
+        auto factor = create_factor(i, j, frames[i], voxelmaps[i], frames[j]);
         graph.add(factor);
       }
     }
@@ -259,6 +281,7 @@ private:
   gtsam::Values poses;
   gtsam::Values poses_gt;
   std::vector<gtsam_ext::PointCloud::Ptr> frames;
+  std::vector<gtsam_ext::GaussianVoxelMap::Ptr> voxelmaps;
 };
 
 int main(int argc, char** argv) {

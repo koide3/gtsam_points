@@ -6,8 +6,8 @@
 #include <gtest/gtest.h>
 #include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/types/point_cloud_gpu.hpp>
-#include <gtsam_ext/types/voxelized_frame_cpu.hpp>
-#include <gtsam_ext/types/voxelized_frame_gpu.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
+#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 
 template <typename T, int D>
 struct RandomSet {
@@ -129,55 +129,11 @@ void creation_test() {
   compare_frames(frame, gtsam_ext::PointCloudCPU::load("/tmp/frame_test_compact"));
 }
 
-TEST(TestTypes, TestFrameCPU) {
+TEST(TestTypes, TestPointCloudCPU) {
   creation_test<float, 3>();
   creation_test<float, 4>();
   creation_test<double, 3>();
   creation_test<double, 4>();
-}
-
-template <typename T, int D>
-void creation_test_voxels() {
-  RandomSet<T, D> randomset;
-  const int num_points = randomset.num_points;
-  const auto& points = randomset.points;
-  const auto& normals = randomset.normals;
-  const auto& covs = randomset.covs;
-  const auto& times = randomset.times;
-
-  auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points);
-  frame->add_covs(covs);
-
-  auto voxelized_frame = std::make_shared<gtsam_ext::VoxelizedFrameCPU>();
-  voxelized_frame->add_points(points);
-  voxelized_frame->add_covs(covs);
-  voxelized_frame->create_voxelmap(0.1);
-  ASSERT_NE(voxelized_frame->voxels, nullptr);
-
-  compare_frames(frame, voxelized_frame);
-  compare_frames(frame, std::make_shared<gtsam_ext::VoxelizedFrameCPU>(0.1, points, covs));
-  compare_frames(frame, std::make_shared<gtsam_ext::VoxelizedFrameCPU>(0.1, *frame));
-
-  frame->add_times(times);
-  voxelized_frame->add_times(times);
-  compare_frames(frame, voxelized_frame);
-
-  frame->add_normals(normals);
-  voxelized_frame->add_normals(normals);
-  compare_frames(frame, voxelized_frame);
-
-  frame->add_covs(covs);
-  voxelized_frame->add_covs(covs);
-  compare_frames(frame, voxelized_frame);
-
-  compare_frames(frame, std::make_shared<gtsam_ext::VoxelizedFrameCPU>(0.1, *frame));
-}
-
-TEST(TestTypes, TestVoxelizedFrameCPU) {
-  creation_test_voxels<float, 3>();
-  creation_test_voxels<float, 4>();
-  creation_test_voxels<double, 3>();
-  creation_test_voxels<double, 4>();
 }
 
 #ifdef BUILD_GTSAM_EXT_GPU
@@ -191,7 +147,7 @@ void creation_test_gpu() {
   const auto& covs = randomset.covs;
   const auto& times = randomset.times;
 
-  auto frame = std::make_shared<gtsam_ext::FrameCPU>();
+  auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
   frame->add_points(points);
 
   auto frame_gpu = std::make_shared<gtsam_ext::PointCloudGPU>();
@@ -228,89 +184,11 @@ void creation_test_gpu() {
   compare_frames(frame, std::make_shared<gtsam_ext::PointCloudGPU>(*frame));
 }
 
-TEST(TestTypes, TestFrameGPU) {
+TEST(TestTypes, TestPointCloudGPU) {
   creation_test_gpu<float, 3>();
   creation_test_gpu<float, 4>();
   creation_test_gpu<double, 3>();
   creation_test_gpu<double, 4>();
-}
-
-template <typename T, int D>
-void creation_test_voxels_gpu() {
-  RandomSet<T, D> randomset;
-  const int num_points = randomset.num_points;
-  const auto& points = randomset.points;
-  const auto& normals = randomset.normals;
-  const auto& covs = randomset.covs;
-  const auto& times = randomset.times;
-
-  auto frame = std::make_shared<gtsam_ext::FrameCPU>();
-  frame->add_points(points);
-
-  auto frame_gpu = std::make_shared<gtsam_ext::VoxelizedFrameGPU>();
-
-  // add_points
-  frame_gpu->add_points_gpu(points);
-  ASSERT_EQ(frame_gpu->points, nullptr);
-  ASSERT_NE(frame_gpu->points_gpu, nullptr);
-
-  const auto points_gpu = gtsam_ext::download_points_gpu(*frame_gpu);
-  ASSERT_EQ(points_gpu.size(), num_points);
-  for (int i = 0; i < num_points; i++) {
-    EXPECT_LT((points_gpu[i].template cast<double>() - frame->points[i].template head<3>()).norm(), 1e-6);
-  }
-
-  frame_gpu->add_points(points);
-  compare_frames(frame, frame_gpu);
-
-  // add_covs
-  frame->add_covs(covs);
-  frame_gpu->add_covs_gpu(covs);
-  ASSERT_EQ(frame_gpu->covs, nullptr);
-  ASSERT_NE(frame_gpu->covs_gpu, nullptr);
-
-  const auto covs_gpu = gtsam_ext::download_covs_gpu(*frame_gpu);
-  ASSERT_EQ(covs_gpu.size(), num_points);
-  for (int i = 0; i < num_points; i++) {
-    EXPECT_LT((covs_gpu[i].template cast<double>() - frame->covs[i].template block<3, 3>(0, 0)).norm(), 1e-6);
-  }
-
-  frame_gpu->add_covs(covs);
-  compare_frames(frame, frame_gpu);
-  compare_frames(frame, std::make_shared<gtsam_ext::VoxelizedFrameGPU>(0.1, *frame));
-
-  EXPECT_EQ(frame_gpu->voxels_gpu, nullptr);
-  frame_gpu->create_voxelmap(0.5);
-  EXPECT_NE(frame_gpu->voxels_gpu, nullptr);
-
-  const auto voxel_num_points_gpu = frame_gpu->get_voxel_num_points_gpu();
-  const auto voxel_means_gpu = frame_gpu->get_voxel_means_gpu();
-  const auto voxel_covs_gpu = frame_gpu->get_voxel_covs_gpu();
-
-  auto find_corresponding_voxel = [&](const Eigen::Vector3f& mean_gpu) -> gtsam_ext::GaussianVoxel::Ptr {
-    for (const auto& voxel : frame_gpu->voxels->voxels) {
-      if ((mean_gpu.template cast<double>() - voxel.second->mean.template head<3>()).norm() < 1e-6) {
-        return voxel.second;
-      }
-    }
-    return nullptr;
-  };
-
-  EXPECT_EQ(voxel_means_gpu.size(), frame_gpu->voxels->voxels.size());
-  for (int i = 0; i < voxel_num_points_gpu.size(); i++) {
-    auto voxel_cpu = find_corresponding_voxel(voxel_means_gpu[i]);
-    ASSERT_NE(voxel_cpu, nullptr);
-    EXPECT_EQ(voxel_cpu->num_points, voxel_num_points_gpu[i]);
-    EXPECT_LT((voxel_means_gpu[i].template cast<double>() - voxel_cpu->mean.template head<3>()).norm(), 1e-6);
-    EXPECT_LT((voxel_covs_gpu[i].template cast<double>() - voxel_cpu->cov.template block<3, 3>(0, 0)).norm(), 1e-6);
-  }
-}
-
-TEST(TestTypes, TestVoxelizedFrameGPU) {
-  creation_test_voxels_gpu<float, 3>();
-  creation_test_voxels_gpu<float, 4>();
-  creation_test_voxels_gpu<double, 3>();
-  creation_test_voxels_gpu<double, 4>();
 }
 
 #endif
