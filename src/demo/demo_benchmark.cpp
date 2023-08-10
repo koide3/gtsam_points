@@ -7,7 +7,7 @@
 
 #include <gtsam/nonlinear/Values.h>
 #include <gtsam_ext/ann/kdtree.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
@@ -15,7 +15,7 @@
 #include <gtsam_ext/util/read_points.hpp>
 
 #ifdef BUILD_GTSAM_EXT_GPU
-#include <gtsam_ext/types/frame_gpu.hpp>
+#include <gtsam_ext/types/point_cloud_gpu.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
 #include <gtsam_ext/cuda/cuda_device_prop.hpp>

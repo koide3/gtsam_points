@@ -10,7 +10,7 @@
 
 #include <Eigen/Core>
 
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 #include <gtsam_ext/types/frame_traits.hpp>
 #include <gtsam_ext/ann/nearest_neighbor_search.hpp>
 #include <gtsam_ext/util/vector3i_hash.hpp>

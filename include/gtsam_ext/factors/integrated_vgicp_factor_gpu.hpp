@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 #include <gtsam_ext/factors/nonlinear_factor_gpu.hpp>
 

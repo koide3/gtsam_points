@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 
 #include <fstream>
 #include <iostream>

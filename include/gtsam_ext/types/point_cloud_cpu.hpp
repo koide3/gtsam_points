@@ -7,7 +7,7 @@
 #include <random>
 #include <Eigen/Core>
 
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 
 struct CUstream_st;
 

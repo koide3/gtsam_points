@@ -6,7 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 #include <gtsam_ext/factors/intensity_gradients.hpp>
 #include <gtsam_ext/factors/integrated_matching_cost_factor.hpp>
 

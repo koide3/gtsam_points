@@ -1,7 +1,7 @@
 #include <iostream>
 
 #include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 
 #include <glk/io/ply_io.hpp>
 #include <glk/pointcloud_buffer.hpp>

@@ -12,7 +12,7 @@
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/factors/integrated_loam_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_ext/util/read_points.hpp>

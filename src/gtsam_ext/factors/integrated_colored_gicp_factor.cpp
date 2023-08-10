@@ -1,5 +1,5 @@
 #include <gtsam_ext/ann/ivox.hpp>
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 #include <gtsam_ext/factors/intensity_gradients_ivox.hpp>
 #include <gtsam_ext/factors/integrated_colored_gicp_factor.hpp>
 #include <gtsam_ext/factors/impl/integrated_colored_gicp_factor_impl.hpp>

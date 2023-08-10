@@ -5,7 +5,7 @@
 
 #include <vector>
 #include <Eigen/Core>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 
 namespace gtsam_ext {
 

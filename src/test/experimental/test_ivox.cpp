@@ -3,7 +3,7 @@
 #include <boost/format.hpp>
 
 #include <gtsam_ext/ann/ivox.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>

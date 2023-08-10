@@ -122,8 +122,8 @@ add_library(gtsam_ext SHARED
   src/gtsam_ext/ann/ivox.cpp
   src/gtsam_ext/ann/ivox_covariance_estimation.cpp
   # types
-  src/gtsam_ext/types/frame.cpp
-  src/gtsam_ext/types/frame_cpu.cpp
+  src/gtsam_ext/types/point_cloud.cpp
+  src/gtsam_ext/types/point_cloud_cpu.cpp
   src/gtsam_ext/types/gaussian_voxelmap_cpu.cpp
   src/gtsam_ext/types/gaussian_voxelmap_cpu_funcs.cpp
   # factors
@@ -184,8 +184,8 @@ if(BUILD_WITH_CUDA)
     src/gtsam_ext/cuda/stream_roundrobin.cu
     src/gtsam_ext/cuda/stream_temp_buffer_roundrobin.cu
     # types
-    src/gtsam_ext/types/frame.cu
-    src/gtsam_ext/types/frame_gpu.cu
+    src/gtsam_ext/types/point_cloud.cu
+    src/gtsam_ext/types/point_cloud_gpu.cu
     src/gtsam_ext/types/gaussian_voxelmap_gpu.cu
     src/gtsam_ext/types/gaussian_voxelmap_gpu_funcs.cu
     # factors

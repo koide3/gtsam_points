@@ -6,7 +6,7 @@
 
 #include <gtsam_ext/ann/kdtree.hpp>
 #include <gtsam_ext/ann/intensity_kdtree.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/factors/integrated_gicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_colored_gicp_factor.hpp>

@@ -7,7 +7,7 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <gtsam_ext/ann/kdtree.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/normal_estimation.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>

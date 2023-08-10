@@ -7,8 +7,8 @@
 #include <vector>
 #include <Eigen/Core>
 
-#include <gtsam_ext/types/frame.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/types/frame_traits.hpp>
 
 namespace gtsam_ext {

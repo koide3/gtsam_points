@@ -5,7 +5,7 @@
 
 #include <gtsam/slam/expressions.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 
 namespace gtsam_ext {
 

@@ -11,7 +11,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 
 #ifdef BUILD_GTSAM_EXT_GPU
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>

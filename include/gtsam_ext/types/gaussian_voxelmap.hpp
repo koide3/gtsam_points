@@ -3,7 +3,7 @@
 
 #pragma once
 
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 
 // forward declaration
 struct CUstream_st;

@@ -6,7 +6,7 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/PriorFactor.h>
 
-#include <gtsam_ext/types/frame_gpu.hpp>
+#include <gtsam_ext/types/point_cloud_gpu.hpp>
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>

@@ -7,7 +7,7 @@
 
 #include <gtsam_ext/ann/kdtree.hpp>
 #include <gtsam_ext/ann/intensity_kdtree.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/factors/integrated_colored_gicp_factor.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_ext/util/normal_estimation.hpp>

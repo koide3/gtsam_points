@@ -1,6 +1,6 @@
 #include <gtsam_ext/ann/ivox.hpp>
 #include <gtsam_ext/ann/ivox_covariance_estimation.hpp>
-#include <gtsam_ext/types/frame.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
 #include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
 #include <gtsam_ext/factors/impl/integrated_ct_icp_factor_impl.hpp>
 

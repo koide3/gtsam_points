@@ -6,8 +6,8 @@
 #include <gtsam_ext/util/read_points.hpp>
 #include <gtsam_ext/util/normal_estimation.hpp>
 #include <gtsam_ext/util/covariance_estimation.hpp>
-#include <gtsam_ext/types/frame.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
 #include <gtsam_ext/factors/integrated_ct_gicp_factor.hpp>
 #include <gtsam_ext/factors/experimental/continuous_time_icp_factor.hpp>

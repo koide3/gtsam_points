@@ -10,7 +10,7 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
 #include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 

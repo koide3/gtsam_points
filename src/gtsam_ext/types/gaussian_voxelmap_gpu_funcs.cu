@@ -10,7 +10,7 @@
 #include <cub/device/device_reduce.cuh>
 #include <cub/iterator/transform_input_iterator.cuh>
 
-#include <gtsam_ext/types/frame_gpu.hpp>
+#include <gtsam_ext/types/point_cloud_gpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
 #include <gtsam_ext/cuda/check_error.cuh>

@@ -4,8 +4,8 @@
 #include <boost/filesystem.hpp>
 
 #include <gtest/gtest.h>
-#include <gtsam_ext/types/frame_cpu.hpp>
-#include <gtsam_ext/types/frame_gpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_gpu.hpp>
 #include <gtsam_ext/types/voxelized_frame_cpu.hpp>
 #include <gtsam_ext/types/voxelized_frame_gpu.hpp>
 

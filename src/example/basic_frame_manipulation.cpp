@@ -7,7 +7,7 @@
  */
 
 #include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
+#include <gtsam_ext/types/point_cloud_cpu.hpp>
 #include <gtsam_ext/factors/integrated_icp_factor.hpp>
 
 int main(int argc, char** argv) {
