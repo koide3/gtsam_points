@@ -155,8 +155,6 @@ void PointCloud::save(const std::string& path) const {
     const auto& name = attrib.first;
     const size_t elem_size = attrib.second.first;
     const void* data_ptr = attrib.second.second;
-    std::cout << "write:" << name << std::endl;
-
     write_binary(path + "/aux_" + name + ".bin", data_ptr, elem_size * num_points);
   }
 }
@@ -200,7 +198,6 @@ void PointCloud::save_compact(const std::string& path) const {
     const auto& name = attrib.first;
     const size_t elem_size = attrib.second.first;
     const void* data_ptr = attrib.second.second;
-
     write_binary(path + "/aux_" + name + ".bin", data_ptr, elem_size * num_points);
   }
 }

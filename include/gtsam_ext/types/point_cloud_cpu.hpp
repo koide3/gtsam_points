@@ -101,14 +101,15 @@ public:
 };
 
 /**
- * @brief Sample points
+ * @brief Sample points by indices.
  * @param points   Input points
  * @param indices  Point indices
+ * @return         Sampled points
  */
 PointCloudCPU::Ptr sample(const PointCloud::ConstPtr& points, const std::vector<int>& indices);
 
 /**
- * @brief Naive random sampling
+ * @brief Naive random sampling.
  * @param points         Input points
  * @param sampling_rate  Random sampling rate in [0, 1]
  * @param mt             RNG
@@ -117,16 +118,17 @@ PointCloudCPU::Ptr sample(const PointCloud::ConstPtr& points, const std::vector<
 PointCloudCPU::Ptr random_sampling(const PointCloud::ConstPtr& points, const double sampling_rate, std::mt19937& mt);
 
 /**
- * @brief Voxel grid downsampling
- * @note  This algorithm takes the average of point attributes (whatever it is) of each voxel
+ * @brief Voxel grid downsampling.
+ * @note  This algorithm takes the average of point attributes (whatever it is) of each voxel.
  *
  * @param points            Input points
  * @param voxel_resolution  Voxel resolution
+ * @return                  Downsampled points
  */
 PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& points, const double voxel_resolution);
 
 /**
- * @brief Voxel grid random sampling
+ * @brief Voxel grid random sampling.
  * @note  This algorithm randomly samples points such that the number of sampled points of each voxel becomes (more or less) the same.
  *        This algorithm avoids mixing point attributes (unlike the standard voxelgrid downsampling), and thus can provide spatially
  *        well-distributed point samples with several attributes (e.g., normals and covs).
@@ -141,7 +143,7 @@ PointCloudCPU::Ptr
 randomgrid_sampling(const PointCloud::ConstPtr& points, const double voxel_resolution, const double sampling_rate, std::mt19937& mt);
 
 /**
- * @brief Extract points for which pred returns true
+ * @brief Extract points for which pred returns true.
  * @param points  Input points
  * @param pred    Predicate function that takes Eigen::Vector4d and returns bool
  */
@@ -158,7 +160,7 @@ PointCloudCPU::Ptr filter(const PointCloud::ConstPtr& points, const Func& pred) 
 }
 
 /**
- * @brief Extract points for which pred returns true
+ * @brief Extract points for which pred returns true.
  * @param points Input points
  * @param pred   Predicate function that takes a point index and returns bool
  */
