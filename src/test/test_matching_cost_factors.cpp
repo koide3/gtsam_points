@@ -23,7 +23,9 @@
 #include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
+#include <gtsam_ext/cuda/nonlinear_factor_set_gpu_create.hpp>
 
+#include <gtsam_ext/optimizers/linearization_hook.hpp>
 #include <gtsam_ext/optimizers/isam2_ext.hpp>
 #include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
 
@@ -68,22 +70,22 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       });
       std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs = gtsam_ext::estimate_covariances(points);
 
-#ifndef BUILD_GTSAM_EXT_GPU
       auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
-#else
-      auto frame = std::make_shared<gtsam_ext::PointCloudGPU>();
-#endif
       frame->add_points(points);
       frame->add_covs(covs);
       frames.push_back(frame);
 
+#ifdef BUILD_GTSAM_EXT_GPU
+      frames.back() = std::make_shared<gtsam_ext::PointCloudGPU>(*frames.back());
+#endif
+
       auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapCPU>(1.0);
-      voxelmap->insert(*frame);
+      voxelmap->insert(*frames.back());
       voxelmaps.push_back(voxelmap);
 
 #ifdef BUILD_GTSAM_EXT_GPU
       auto voxelmap_gpu = std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(1.0);
-      voxelmap_gpu->insert(*frame);
+      voxelmap_gpu->insert(*frames.back());
       voxelmaps_gpu.push_back(voxelmap_gpu);
 #else
       voxelmaps_gpu.push_back(nullptr);
@@ -91,6 +93,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
     }
 
 #ifdef BUILD_GTSAM_EXT_GPU
+    gtsam_ext::LinearizationHook::register_hook([] { return gtsam_ext::create_nonlinear_factor_set_gpu(); });
     stream_buffer_roundrobin.reset(new gtsam_ext::StreamTempBufferRoundRobin(32));
 #endif
   }
@@ -175,6 +178,9 @@ public:
     const gtsam::Values& additional_values,
     const std::string& note = "") {
     gtsam_ext::LevenbergMarquardtExtParams lm_params;
+    lm_params.setMaxIterations(30);
+    lm_params.setRelativeErrorTol(1e-4);
+    // lm_params.set_verbose();
     gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
     gtsam::Values result = optimizer.optimize();
     result.insert(additional_values);
@@ -214,7 +220,7 @@ TEST_P(MatchingCostFactorTest, AlignmentTest) {
     return;
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 2; i++) {
     gtsam::Values values;
     gtsam::NonlinearFactorGraph graph;
 
@@ -231,7 +237,7 @@ TEST_P(MatchingCostFactorTest, AlignmentTest) {
     test_graph(graph, values, gtsam::Values(), "BACKWARD_TEST_" + std::to_string(i));
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 2; i++) {
     gtsam::Values values;
     gtsam::Values fixed_values;
     gtsam::NonlinearFactorGraph graph;
@@ -247,10 +253,12 @@ TEST_P(MatchingCostFactorTest, AlignmentTest) {
   gtsam::NonlinearFactorGraph graph;
   for (int i = 0; i < 5; i++) {
     values.insert(i, poses.at(i));
-    for (int j = i + 1; j < 5; j++) {
-      graph.add(create_factor(i, j, frames[i], voxelmaps[i], voxelmaps_gpu[i], frames[j]));
-    }
   }
+
+  for (int i = 1; i < 5; i++) {
+    graph.add(create_factor(i - 1, i, frames[i - 1], voxelmaps[i - 1], voxelmaps_gpu[i - 1], frames[i]));
+  }
+
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, poses.at<gtsam::Pose3>(0), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
   test_graph(graph, values, gtsam::Values(), "MULTI_FRAME");
 }

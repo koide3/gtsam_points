@@ -107,7 +107,7 @@ if(ENABLE_CPPCHECK)
 endif()
 
 if(ENABLE_COVERAGE)
-  set(CMAKE_CXX_FLAGS "-coverage")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -coverage")
 
   find_program(LCOV lcov REQUIRED)
   find_program(GENHTML genhtml REQUIRED)
