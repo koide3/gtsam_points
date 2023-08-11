@@ -247,7 +247,7 @@ const gtsam::Values& LevenbergMarquardtOptimizerExt::optimize() {
 
     double delta_error = std::abs(currentError - newError);
     terminate |= delta_error < params.absoluteErrorTol;
-    terminate |= delta_error / newError < params.relativeErrorTol;
+    terminate |= delta_error / std::abs(currentError) < params.relativeErrorTol;
     terminate |= newError < params.errorTol;
 
     if (params_.termination_criteria) {

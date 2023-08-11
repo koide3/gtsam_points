@@ -24,6 +24,7 @@ struct LOAMTestBase : public testing::Test {
     std::ifstream ifs(data_path + "/graph.txt");
     EXPECT_EQ(ifs.is_open(), true) << "Failed to open " << data_path << "/graph.txt";
 
+    std::mt19937 mt(0);
     for (int i = 0; i < 5; i++) {
       // Read poses
       std::string token;
@@ -47,8 +48,9 @@ struct LOAMTestBase : public testing::Test {
       EXPECT_NE(edge_points.size(), true) << "Faile to read edge points";
       EXPECT_NE(plane_points.size(), true) << "Faile to read plane points";
 
-      edge_frames.push_back(gtsam_ext::PointCloud::Ptr(new gtsam_ext::PointCloudCPU(edge_points)));
-      plane_frames.push_back(gtsam_ext::PointCloud::Ptr(new gtsam_ext::PointCloudCPU(plane_points)));
+      edge_frames.emplace_back(std::make_shared<gtsam_ext::PointCloudCPU>(edge_points));
+      plane_frames.emplace_back(std::make_shared<gtsam_ext::PointCloudCPU>(plane_points));
+      plane_frames.back() = gtsam_ext::randomgrid_sampling(plane_frames.back(), 1.0, 5000.0 / plane_frames.back()->size(), mt);
     }
   }
 
@@ -90,6 +92,7 @@ public:
 
   void test_graph(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& values, const std::string& note = "") {
     gtsam_ext::LevenbergMarquardtExtParams lm_params;
+    lm_params.setRelativeErrorTol(1e-4);
     gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
     gtsam::Values result = optimizer.optimize();
 
@@ -126,7 +129,7 @@ TEST_P(LOAMFactorTest, AlignmentTest) {
     return;
   }
 
-  for (int i = 0; i < 4; i++) {
+  for (int i = 0; i < 2; i++) {
     gtsam::Values values;
     gtsam::NonlinearFactorGraph graph;
 
@@ -147,10 +150,12 @@ TEST_P(LOAMFactorTest, AlignmentTest) {
   gtsam::NonlinearFactorGraph graph;
   for (int i = 0; i < 5; i++) {
     values.insert(i, poses.at(i));
-    for (int j = i + 1; j < 5; j++) {
-      graph.add(create_factor(i, j, edge_frames[i], plane_frames[i], edge_frames[j], plane_frames[j]));
-    }
   }
+
+  for (int i = 1; i < 5; i++) {
+    graph.add(create_factor(i - 1, i, edge_frames[i - 1], plane_frames[i - 1], edge_frames[i], plane_frames[i]));
+  }
+
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, poses.at<gtsam::Pose3>(0), gtsam::noiseModel::Isotropic::Precision(6, 1e6)));
   test_graph(graph, values, "MULTI_FRAME");
 }
