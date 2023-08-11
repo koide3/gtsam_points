@@ -11,7 +11,16 @@
 
 template <typename T, int D>
 struct RandomSet {
-  RandomSet() : num_points(128), points(num_points), normals(num_points), covs(num_points), times(num_points) {
+  RandomSet()
+  : num_points(128),
+    points(num_points),
+    normals(num_points),
+    covs(num_points),
+    intensities(num_points),
+    times(num_points),
+    aux1(num_points),
+    aux2(num_points) {
+    //
     for (int i = 0; i < num_points; i++) {
       points[i].setOnes();
       points[i].template head<3>() = Eigen::Matrix<T, 3, 1>::Random();
@@ -20,7 +29,11 @@ struct RandomSet {
       covs[i].setZero();
       covs[i].template block<3, 3>(0, 0) = Eigen::Matrix<T, 3, 3>::Random();
       covs[i] = (covs[i] * covs[i].transpose()).eval();
+      intensities[i] = Eigen::Vector2d::Random()[0];
       times[i] = Eigen::Vector2d::Random()[0];
+
+      aux1[i] = Eigen::Matrix<T, D, 1>::Random();
+      aux2[i] = Eigen::Matrix<T, D, D>::Random();
     }
   }
 
@@ -28,7 +41,11 @@ struct RandomSet {
   std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>> points;
   std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>> normals;
   std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>> covs;
+  std::vector<T> intensities;
   std::vector<T> times;
+
+  std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>> aux1;
+  std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>> aux2;
 };
 
 void compare_frames(const gtsam_ext::PointCloud::ConstPtr& frame1, const gtsam_ext::PointCloud::ConstPtr& frame2) {
@@ -72,6 +89,35 @@ void compare_frames(const gtsam_ext::PointCloud::ConstPtr& frame1, const gtsam_e
   } else {
     EXPECT_EQ(frame1->covs, frame2->covs);
   }
+
+  if (frame1->intensities) {
+    EXPECT_NE(frame1->intensities, nullptr);
+    for (int i = 0; i < frame1->size(); i++) {
+      EXPECT_LT(abs(frame1->intensities[i] - frame2->intensities[i]), 1e-6);
+    }
+  } else {
+    EXPECT_EQ(frame1->intensities, frame2->intensities);
+  }
+
+  for (const auto& aux : frame1->aux_attributes) {
+    const auto& name = aux.first;
+    const size_t aux_size = aux.second.first;
+    const char* aux1_ptr = reinterpret_cast<const char*>(aux.second.second);
+
+    EXPECT_TRUE(frame2->aux_attributes.count(name));
+    const auto found = frame2->aux_attributes.find(name);
+    if (found == frame2->aux_attributes.end()) {
+      continue;
+    }
+
+    EXPECT_EQ(found->second.first, aux_size);
+    if (found->second.first != aux_size) {
+      continue;
+    }
+
+    const char* aux2_ptr = reinterpret_cast<const char*>(found->second.second);
+    EXPECT_TRUE(std::equal(aux1_ptr, aux1_ptr + aux_size * frame1->size(), aux2_ptr));
+  }
 }
 
 template <typename T, int D>
@@ -81,10 +127,17 @@ void creation_test() {
   const auto& points = randomset.points;
   const auto& normals = randomset.normals;
   const auto& covs = randomset.covs;
+  const auto& intensities = randomset.intensities;
   const auto& times = randomset.times;
+  const auto& aux1 = randomset.aux1;
+  const auto& aux2 = randomset.aux2;
 
   auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
+
+  EXPECT_FALSE(frame->has_points());
   frame->add_points(points);
+
+  EXPECT_TRUE(frame->has_points() && frame->check_points());
   compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(points));
   compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
 
@@ -94,15 +147,30 @@ void creation_test() {
     EXPECT_DOUBLE_EQ(frame->points[i][3], 1.0) << "point copy failure";
   }
 
-  EXPECT_EQ(frame->times, nullptr);
-  EXPECT_EQ(frame->normals, nullptr);
-  EXPECT_EQ(frame->covs, nullptr);
+  EXPECT_FALSE(frame->has_times());
+  EXPECT_FALSE(frame->has_normals());
+  EXPECT_FALSE(frame->has_covs());
+  EXPECT_FALSE(frame->has_intensities());
 
   frame->add_times(times);
   compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
+  EXPECT_TRUE(frame->has_times() && frame->check_times());
+
   frame->add_covs(covs);
   compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
+  EXPECT_TRUE(frame->has_covs() && frame->check_covs());
+
   frame->add_normals(normals);
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
+  EXPECT_TRUE(frame->has_normals() && frame->check_normals());
+
+  frame->add_intensities(intensities);
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
+  EXPECT_TRUE(frame->has_intensities() && frame->check_intensities());
+
+  frame->add_aux_attribute("aux1", aux1);
+  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
+  frame->add_aux_attribute("aux2", aux2);
   compare_frames(frame, std::make_shared<gtsam_ext::PointCloudCPU>(*frame));
 
   for (int i = 0; i < num_points; i++) {

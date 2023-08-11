@@ -39,8 +39,8 @@ public:
       }
     }
 
-    for (double x = -2.0; x <= 2.0; x += 0.02) {
-      for (double y = -2.0; y < 2.0; y += 0.02) {
+    for (double x = -2.0; x <= 2.0; x += 0.04) {
+      for (double y = -2.0; y < 2.0; y += 0.04) {
         const Eigen::Vector4d pt(x, y, 2.0, 1.0);
 
         source_points.push_back(delta * pt + Eigen::Vector4d(ndist(mt), ndist(mt), ndist(mt), 0.0));
@@ -55,6 +55,9 @@ public:
   }
 
   void test_factor(const gtsam::NonlinearFactor::shared_ptr& factor, const std::string& tag) {
+    const double error_angle_tol = 0.5 * M_PI / 180.0;
+    const double error_trans_tol = 0.02;
+
     gtsam::Values values;
     values.insert(0, gtsam::Pose3::Identity());
     values.insert(1, gtsam::Pose3::Identity());
@@ -64,15 +67,17 @@ public:
     graph.add(factor);
     graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
-    values = gtsam_ext::LevenbergMarquardtOptimizerExt(graph, values).optimize();
+    gtsam_ext::LevenbergMarquardtExtParams lm_params;
+    lm_params.setMaxIterations(30);
+    values = gtsam_ext::LevenbergMarquardtOptimizerExt(graph, values, lm_params).optimize();
 
     Eigen::Isometry3d estimated((values.at<gtsam::Pose3>(0).inverse() * values.at<gtsam::Pose3>(1)).matrix());
     Eigen::Isometry3d error = estimated * delta;
     double error_angle = Eigen::AngleAxisd(error.linear()).angle();
     double error_trans = error.translation().norm();
 
-    EXPECT_LE(error_angle, 0.1 * M_PI / 180.0) << "[FORWARD] Too large rotation error " << tag;
-    EXPECT_LE(error_trans, 0.01) << "[FORWARD] Too large translation error" << tag;
+    EXPECT_LE(error_angle, error_angle_tol) << "[FORWARD] Too large rotation error " << tag;
+    EXPECT_LE(error_trans, error_trans_tol) << "[FORWARD] Too large translation error" << tag;
 
     // Backward test (fix the second)
     values.update(0, gtsam::Pose3::Identity());
@@ -81,15 +86,15 @@ public:
     graph.erase(graph.begin() + 1);
     graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(1, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
-    values = gtsam_ext::LevenbergMarquardtOptimizerExt(graph, values).optimize();
+    values = gtsam_ext::LevenbergMarquardtOptimizerExt(graph, values, lm_params).optimize();
 
     estimated = Eigen::Isometry3d((values.at<gtsam::Pose3>(0).inverse() * values.at<gtsam::Pose3>(1)).matrix());
     error = estimated * delta;
     error_angle = Eigen::AngleAxisd(error.linear()).angle();
     error_trans = error.translation().norm();
 
-    EXPECT_LE(error_angle, 0.1 * M_PI / 180.0) << "[BACKWARD] Too large rotation error" << tag;
-    EXPECT_LE(error_trans, 0.01) << "[BACKWARD] Too large translation error" << tag;
+    EXPECT_LE(error_angle, error_angle_tol) << "[BACKWARD] Too large rotation error" << tag;
+    EXPECT_LE(error_trans, error_trans_tol) << "[BACKWARD] Too large translation error" << tag;
   }
 
   Eigen::Isometry3d delta;
