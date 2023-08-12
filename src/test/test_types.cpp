@@ -110,14 +110,14 @@ void creation_test_gpu() {
   const auto& times = randomset.times;
 
   auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
-  frame->add_points(points);
-
   auto frame_gpu = std::make_shared<gtsam_ext::PointCloudGPU>();
 
   // add_points
+  ASSERT_FALSE(frame_gpu->has_points_gpu());
+  frame->add_points(points);
   frame_gpu->add_points_gpu(points);
-  ASSERT_EQ(frame_gpu->points, nullptr);
-  ASSERT_NE(frame_gpu->points_gpu, nullptr);
+  ASSERT_FALSE(frame_gpu->has_points());
+  ASSERT_TRUE(frame_gpu->has_points_gpu() && frame_gpu->check_points_gpu());
 
   const auto points_gpu = gtsam_ext::download_points_gpu(*frame_gpu);
   ASSERT_EQ(points_gpu.size(), num_points);
@@ -133,10 +133,11 @@ void creation_test_gpu() {
   compare_frames(frame, gtsam_ext::PointCloudGPU::clone(*frame));
 
   // add_times
+  ASSERT_FALSE(frame_gpu->has_times_gpu());
   frame->add_times(times);
   frame_gpu->add_times_gpu(times);
-  ASSERT_EQ(frame_gpu->times, nullptr);
-  ASSERT_NE(frame_gpu->times_gpu, nullptr);
+  ASSERT_FALSE(frame_gpu->has_times());
+  ASSERT_TRUE(frame_gpu->has_times_gpu() && frame_gpu->check_times_gpu());
 
   const auto times_gpu = gtsam_ext::download_times_gpu(*frame_gpu);
   ASSERT_EQ(times_gpu.size(), num_points);
@@ -149,10 +150,11 @@ void creation_test_gpu() {
   compare_frames(frame, gtsam_ext::PointCloudGPU::clone(*frame));
 
   // add_intensities
+  ASSERT_FALSE(frame_gpu->has_intensities_gpu());
   frame->add_intensities(intensities);
   frame_gpu->add_intensities_gpu(intensities);
-  ASSERT_EQ(frame_gpu->intensities, nullptr);
-  ASSERT_NE(frame_gpu->intensities_gpu, nullptr);
+  ASSERT_FALSE(frame_gpu->has_intensities());
+  ASSERT_TRUE(frame_gpu->has_intensities_gpu() && frame_gpu->check_intensities_gpu());
 
   const auto intensities_gpu = gtsam_ext::download_intensities_gpu(*frame_gpu);
   ASSERT_EQ(intensities_gpu.size(), num_points);
@@ -165,10 +167,11 @@ void creation_test_gpu() {
   compare_frames(frame, gtsam_ext::PointCloudGPU::clone(*frame));
 
   // add_normals
+  ASSERT_FALSE(frame_gpu->has_normals_gpu());
   frame->add_normals(normals);
   frame_gpu->add_normals_gpu(normals);
-  ASSERT_EQ(frame_gpu->normals, nullptr);
-  ASSERT_NE(frame_gpu->normals_gpu, nullptr);
+  ASSERT_FALSE(frame_gpu->has_normals());
+  ASSERT_TRUE(frame_gpu->has_normals_gpu() && frame_gpu->check_normals_gpu());
 
   const auto normals_gpu = gtsam_ext::download_normals_gpu(*frame_gpu);
   ASSERT_EQ(normals_gpu.size(), num_points);
@@ -181,10 +184,11 @@ void creation_test_gpu() {
   compare_frames(frame, gtsam_ext::PointCloudGPU::clone(*frame));
 
   // add_covs
+  ASSERT_FALSE(frame_gpu->has_covs_gpu());
   frame->add_covs(covs);
   frame_gpu->add_covs_gpu(covs);
-  ASSERT_EQ(frame_gpu->covs, nullptr);
-  ASSERT_NE(frame_gpu->covs_gpu, nullptr);
+  ASSERT_FALSE(frame_gpu->has_covs());
+  ASSERT_TRUE(frame_gpu->has_covs_gpu() && frame_gpu->check_covs_gpu());
 
   const auto covs_gpu = gtsam_ext::download_covs_gpu(*frame_gpu);
   ASSERT_EQ(covs_gpu.size(), num_points);

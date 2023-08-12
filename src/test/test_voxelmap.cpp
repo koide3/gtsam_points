@@ -89,7 +89,10 @@ TEST_F(VoxelMapTestBase, LoadCheck) {
 
 TEST_F(VoxelMapTestBase, VoxelMapCPU) {
   for (int i = 0; i < frames.size(); i++) {
-    EXPECT_GT(gtsam_ext::overlap(voxelmaps[i], frames[i], Eigen::Isometry3d::Identity()), 0.99);
+    const double overlap = gtsam_ext::overlap(voxelmaps[i], frames[i], Eigen::Isometry3d::Identity());
+    const double overlap_auto = gtsam_ext::overlap_auto(voxelmaps[i], frames[i], Eigen::Isometry3d::Identity());
+    EXPECT_GT(overlap, 0.99);
+    EXPECT_DOUBLE_EQ(overlap, overlap_auto);
   }
 
   std::vector<gtsam_ext::GaussianVoxelMap::ConstPtr> voxelmaps_(voxelmaps.begin(), voxelmaps.end());
@@ -98,7 +101,10 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
     for (int j = 0; j < frames.size(); j++) {
       deltas[i] = Eigen::Isometry3d((poses_gt.at<gtsam::Pose3>(i).inverse() * poses_gt.at<gtsam::Pose3>(i)).matrix());
     }
-    EXPECT_GT(gtsam_ext::overlap(voxelmaps_, frames[i], deltas), 0.99);
+    const double overlap = gtsam_ext::overlap(voxelmaps_, frames[i], deltas);
+    const double overlap_auto = gtsam_ext::overlap_auto(voxelmaps_, frames[i], deltas);
+    EXPECT_GT(overlap, 0.99);
+    EXPECT_DOUBLE_EQ(overlap, overlap_auto);
   }
 
   for (int i = 0; i < frames.size(); i++) {
@@ -131,7 +137,64 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
   std::vector<gtsam_ext::PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
   auto merged = gtsam_ext::merge_frames(poses_, frames_, 0.2);
   validate_frame(merged);
+
+  auto merged2 = gtsam_ext::merge_frames_auto(poses_, frames_, 0.2);
+  validate_frame(merged2);
 }
+
+#ifdef BUILD_GTSAM_EXT_GPU
+
+TEST_F(VoxelMapTestBase, VoxelMapGPU) {
+  for (int i = 0; i < frames.size(); i++) {
+    const double overlap_gpu = gtsam_ext::overlap_gpu(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
+    const double overlap_auto = gtsam_ext::overlap_gpu(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
+    EXPECT_GE(overlap_gpu, 0.99);
+    EXPECT_DOUBLE_EQ(overlap_gpu, overlap_auto);
+  }
+
+  std::vector<gtsam_ext::GaussianVoxelMap::ConstPtr> voxelmaps_(voxelmaps_gpu.begin(), voxelmaps_gpu.end());
+  for (int i = 0; i < frames.size(); i++) {
+    std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> deltas(frames.size());
+    for (int j = 0; j < frames.size(); j++) {
+      deltas[i] = Eigen::Isometry3d((poses_gt.at<gtsam::Pose3>(i).inverse() * poses_gt.at<gtsam::Pose3>(i)).matrix());
+    }
+    const double overlap_gpu = gtsam_ext::overlap_gpu(voxelmaps_, frames[i], deltas);
+    const double overlap_auto = gtsam_ext::overlap_auto(voxelmaps_, frames[i], deltas);
+    EXPECT_GT(overlap_gpu, 0.99);
+    EXPECT_DOUBLE_EQ(overlap_gpu, overlap_auto);
+  }
+
+  for (int i = 0; i < frames.size(); i++) {
+    Eigen::Isometry3d delta = Eigen::Isometry3d::Identity();
+    delta.linear() = Eigen::AngleAxisd(Eigen::Vector2d::Random()[0] * 0.2, Eigen::Vector3d::Random().normalized()).toRotationMatrix();
+    delta.translation() = Eigen::Vector3d::Random();
+
+    const double overlap_cpu = gtsam_ext::overlap(voxelmaps[i], frames[i], delta);
+    const double overlap_gpu = gtsam_ext::overlap_gpu(voxelmaps_gpu[i], frames[i], delta);
+    EXPECT_LT(std::abs(overlap_cpu - overlap_gpu), 0.01);
+  }
+
+  for (int i = 0; i < frames.size(); i++) {
+    auto voxelmap_gpu = std::dynamic_pointer_cast<gtsam_ext::GaussianVoxelMapGPU>(voxelmaps_gpu[i]);
+    const auto means = gtsam_ext::download_voxel_means(*voxelmap_gpu);
+    const auto covs = gtsam_ext::download_voxel_covs(*voxelmap_gpu);
+    EXPECT_EQ(means.size(), voxelmap_gpu->voxelmap_info.num_voxels);
+    EXPECT_EQ(covs.size(), voxelmap_gpu->voxelmap_info.num_voxels);
+    EXPECT_TRUE(std::all_of(means.begin(), means.end(), [](const Eigen::Vector3f& p) { return p.array().isFinite().all(); }));
+    EXPECT_TRUE(std::all_of(covs.begin(), covs.end(), [](const Eigen::Matrix3f& c) { return c.array().isFinite().all(); }));
+  }
+
+  // Test for merge_frames
+  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> poses_(poses_gt.size());
+  for (int i = 0; i < poses_gt.size(); i++) {
+    poses_[i] = Eigen::Isometry3d(poses_gt.at<gtsam::Pose3>(i).matrix());
+  }
+  std::vector<gtsam_ext::PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
+  auto merged = gtsam_ext::merge_frames_gpu(poses_, frames_, 0.2);
+  validate_frame_gpu(merged);
+}
+
+#endif
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);

@@ -39,6 +39,38 @@ void validate_frame(const gtsam_ext::PointCloud::ConstPtr& frame) {
   }
 }
 
+void validate_frame_gpu(const gtsam_ext::PointCloud::ConstPtr& frame) {
+  if (frame->points_gpu) {
+    const auto points = gtsam_ext::download_points_gpu(*frame);
+    ASSERT_EQ(points.size(), frame->size());
+    EXPECT_TRUE(std::all_of(points.begin(), points.end(), [](const Eigen::Vector3f& p) { return p.array().isFinite().all(); }));
+  }
+
+  if (frame->normals_gpu) {
+    const auto normals = gtsam_ext::download_normals_gpu(*frame);
+    ASSERT_EQ(normals.size(), frame->size());
+    EXPECT_TRUE(std::all_of(normals.begin(), normals.end(), [](const Eigen::Vector3f& p) { return p.array().isFinite().all(); }));
+  }
+
+  if (frame->covs_gpu) {
+    const auto covs = gtsam_ext::download_covs_gpu(*frame);
+    ASSERT_EQ(covs.size(), frame->size());
+    EXPECT_TRUE(std::all_of(covs.begin(), covs.end(), [](const Eigen::Matrix3f& c) { return c.array().isFinite().all(); }));
+  }
+
+  if (frame->intensities_gpu) {
+    const auto intensities = gtsam_ext::download_intensities_gpu(*frame);
+    ASSERT_EQ(intensities.size(), frame->size());
+    EXPECT_TRUE(std::all_of(intensities.begin(), intensities.end(), [](float x) { return std::isfinite(x); }));
+  }
+
+  if (frame->times_gpu) {
+    const auto times = gtsam_ext::download_times_gpu(*frame);
+    ASSERT_EQ(times.size(), frame->size());
+    EXPECT_TRUE(std::all_of(times.begin(), times.end(), [](float x) { return std::isfinite(x); }));
+  }
+}
+
 void validate_all_propaties(const gtsam_ext::PointCloud::ConstPtr& frame, bool test_aux = true) {
   ASSERT_TRUE(frame->points);
   ASSERT_TRUE(frame->normals);
