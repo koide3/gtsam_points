@@ -242,4 +242,28 @@ std::vector<Eigen::Vector3f> download_normals_gpu(const gtsam_ext::PointCloud& f
   return normals;
 }
 
+std::vector<float> download_intensities_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream) {
+  if (!frame.intensities_gpu) {
+    std::cerr << "error: frame does not have intensities on GPU!!" << std::endl;
+    return {};
+  }
+
+  std::vector<float> intensities(frame.size());
+  check_error << cudaMemcpyAsync(intensities.data(), frame.intensities_gpu, sizeof(float) * frame.size(), cudaMemcpyDeviceToHost, stream);
+  cudaStreamSynchronize(stream);
+  return intensities;
+}
+
+std::vector<float> download_times_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream) {
+  if (!frame.times_gpu) {
+    std::cerr << "error: frame does not have times on GPU!!" << std::endl;
+    return {};
+  }
+
+  std::vector<float> times(frame.size());
+  check_error << cudaMemcpyAsync(times.data(), frame.times_gpu, sizeof(float) * frame.size(), cudaMemcpyDeviceToHost, stream);
+  cudaStreamSynchronize(stream);
+  return times;
+}
+
 }  // namespace gtsam_ext

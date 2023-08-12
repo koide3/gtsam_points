@@ -131,5 +131,7 @@ public:
 std::vector<Eigen::Vector3f> download_points_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream = nullptr);
 std::vector<Eigen::Matrix3f> download_covs_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream = nullptr);
 std::vector<Eigen::Vector3f> download_normals_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream = nullptr);
+std::vector<float> download_intensities_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream = nullptr);
+std::vector<float> download_times_gpu(const gtsam_ext::PointCloud& frame, CUstream_st* stream = nullptr);
 
 }  // namespace gtsam_ext
