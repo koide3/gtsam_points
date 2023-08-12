@@ -22,16 +22,21 @@ public:
   using Ptr = std::shared_ptr<PointCloudGPU>;
   using ConstPtr = std::shared_ptr<const PointCloudGPU>;
 
+  PointCloudGPU();
+  ~PointCloudGPU();
+
   template <typename T, int D>
   PointCloudGPU(const Eigen::Matrix<T, D, 1>* points, int num_points);
 
   template <typename T, int D, typename Alloc>
   PointCloudGPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : PointCloudGPU(points.data(), points.size()) {}
 
-  PointCloudGPU(const PointCloud& frame, CUstream_st* stream = 0);
+  // Forbid shallow copy
+  PointCloudGPU(const PointCloudGPU& points) = delete;
+  PointCloudGPU& operator=(PointCloudGPU const&) = delete;
 
-  PointCloudGPU();
-  ~PointCloudGPU();
+  // Deep copy
+  static PointCloudGPU::Ptr clone(const PointCloud& frame, CUstream_st* stream = 0);
 
   // add_*_gpu() only adds attributes to GPU storage
   template <typename T>

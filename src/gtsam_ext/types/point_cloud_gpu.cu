@@ -22,28 +22,32 @@ template PointCloudGPU::PointCloudGPU(const Eigen::Matrix<float, 4, 1>*, int);
 template PointCloudGPU::PointCloudGPU(const Eigen::Matrix<double, 3, 1>*, int);
 template PointCloudGPU::PointCloudGPU(const Eigen::Matrix<double, 4, 1>*, int);
 
-// deep copy constructor
-PointCloudGPU::PointCloudGPU(const PointCloud& frame, CUstream_st* stream) : PointCloudCPU(frame) {
+// deep copy
+PointCloudGPU::Ptr PointCloudGPU::clone(const PointCloud& frame, CUstream_st* stream) {
+  auto new_frame = std::make_shared<gtsam_ext::PointCloudGPU>();
+
   // TODO: GPU-to-GPU copy for efficiency
   if (frame.points) {
-    add_points_gpu(frame.points, frame.size(), stream);
+    new_frame->add_points(frame.points, frame.size(), stream);
   }
 
   if (frame.times) {
-    add_times_gpu(frame.times, frame.size(), stream);
+    new_frame->add_times(frame.times, frame.size(), stream);
   }
 
   if (frame.normals) {
-    add_normals_gpu(frame.normals, frame.size(), stream);
+    new_frame->add_normals(frame.normals, frame.size(), stream);
   }
 
   if (frame.covs) {
-    add_covs_gpu(frame.covs, frame.size(), stream);
+    new_frame->add_covs(frame.covs, frame.size(), stream);
   }
 
   if (frame.intensities) {
-    add_intensities_gpu(frame.intensities, frame.size(), stream);
+    new_frame->add_intensities(frame.intensities, frame.size(), stream);
   }
+
+  return new_frame;
 }
 
 PointCloudGPU::PointCloudGPU() {}

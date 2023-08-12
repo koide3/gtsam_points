@@ -233,7 +233,7 @@ void creation_test_gpu() {
 
   frame_gpu->add_points(points);
   compare_frames(frame, frame_gpu);
-  compare_frames(frame, std::make_shared<gtsam_ext::PointCloudGPU>(*frame));
+  compare_frames(frame, gtsam_ext::PointCloudGPU::clone(*frame));
 
   // add_covs
   frame->add_covs(covs);
@@ -249,7 +249,7 @@ void creation_test_gpu() {
 
   frame_gpu->add_covs(covs);
   compare_frames(frame, frame_gpu);
-  // compare_frames(frame, std::make_shared<gtsam_ext::PointCloudGPU>(*frame));
+  compare_frames(frame, gtsam_ext::PointCloudGPU::clone(*frame));
 }
 
 TEST(TestTypes, TestPointCloudGPU) {

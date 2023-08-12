@@ -76,7 +76,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       frames.push_back(frame);
 
 #ifdef BUILD_GTSAM_EXT_GPU
-      frames.back() = std::make_shared<gtsam_ext::PointCloudGPU>(*frames.back());
+      frames.back() = gtsam_ext::PointCloudGPU::clone(*frames.back());
 #endif
 
       auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapCPU>(1.0);
