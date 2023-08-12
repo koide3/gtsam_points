@@ -269,7 +269,7 @@ if(BUILD_TESTS)
 
     add_executable(${test_name} ${test_src})
     target_link_libraries(${test_name} gtsam_ext gtest_main)
-    target_include_directories(${test_name} PRIVATE ${Boost_INCLUDE_DIRS})
+    target_include_directories(${test_name} PRIVATE ${Boost_INCLUDE_DIRS} src/test/include)
     gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endforeach()
 endif()
