@@ -21,6 +21,9 @@ public:
   using Ptr = std::shared_ptr<PointCloudCPU>;
   using ConstPtr = std::shared_ptr<const PointCloudCPU>;
 
+  PointCloudCPU();
+  ~PointCloudCPU();
+
   /**
    * @brief Constructor
    * @param points     Pointer to point data
@@ -36,11 +39,12 @@ public:
   template <typename T, int D, typename Alloc>
   PointCloudCPU(const std::vector<Eigen::Matrix<T, D, 1>, Alloc>& points) : PointCloudCPU(points.data(), points.size()) {}
 
-  /// deep copy constructor
-  PointCloudCPU(const PointCloud& points);
+  // Forbid shallow copy
+  PointCloudCPU(const PointCloudCPU& points) = delete;
+  PointCloudCPU& operator=(PointCloudCPU const&) = delete;
 
-  PointCloudCPU();
-  ~PointCloudCPU();
+  /// Deep copy
+  static PointCloudCPU::Ptr clone(const PointCloud& points);
 
   template <typename T>
   void add_times(const T* times, int num_points);
@@ -211,7 +215,17 @@ PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& points, const Eigen::Tr
  * @param transformation   Transformation
  */
 template <typename Scalar, int Mode>
-void transform_inplace(PointCloud::Ptr& points, const Eigen::Transform<Scalar, 3, Mode>& transformation);
+void transform_inplace(PointCloud& points, const Eigen::Transform<Scalar, 3, Mode>& transformation);
+
+/**
+ * @brief Transform points, normals, and covariances inplace
+ * @param points           [in/out] Points to be transformed
+ * @param transformation   Transformation
+ */
+template <typename Scalar, int Mode>
+void transform_inplace(PointCloud::Ptr points, const Eigen::Transform<Scalar, 3, Mode>& transformation) {
+  transform_inplace(*points, transformation);
+}
 
 /**
  * @brief Statistical outlier removal

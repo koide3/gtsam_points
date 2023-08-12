@@ -35,6 +35,10 @@ public:
     intensities_gpu(nullptr) {}
   virtual ~PointCloud() {}
 
+  // Forbid copy
+  PointCloud(const PointCloud&) = delete;
+  PointCloud& operator=(PointCloud const&) = delete;
+
   /// Number of points
   size_t size() const { return num_points; }
 

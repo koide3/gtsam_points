@@ -27,25 +27,31 @@ template PointCloudCPU::PointCloudCPU(const Eigen::Matrix<float, 4, 1>* points, 
 template PointCloudCPU::PointCloudCPU(const Eigen::Matrix<double, 3, 1>* points, int num_points);
 template PointCloudCPU::PointCloudCPU(const Eigen::Matrix<double, 4, 1>* points, int num_points);
 
-PointCloudCPU::PointCloudCPU(const PointCloud& points) {
+PointCloudCPU::PointCloudCPU() {}
+
+PointCloudCPU::~PointCloudCPU() {}
+
+PointCloudCPU::Ptr PointCloudCPU::clone(const PointCloud& points) {
+  auto new_points = std::make_shared<gtsam_ext::PointCloudCPU>();
+
   if (points.points) {
-    add_points(points.points, points.size());
+    new_points->add_points(points.points, points.size());
   }
 
   if (points.times) {
-    add_times(points.times, points.size());
+    new_points->add_times(points.times, points.size());
   }
 
   if (points.normals) {
-    add_normals(points.normals, points.size());
+    new_points->add_normals(points.normals, points.size());
   }
 
   if (points.covs) {
-    add_covs(points.covs, points.size());
+    new_points->add_covs(points.covs, points.size());
   }
 
   if (points.intensities) {
-    add_intensities(points.intensities, points.size());
+    new_points->add_intensities(points.intensities, points.size());
   }
 
   for (const auto& attrib : points.aux_attributes) {
@@ -56,14 +62,12 @@ PointCloudCPU::PointCloudCPU(const PointCloud& points) {
     auto storage = std::make_shared<std::vector<unsigned char>>(points.size() * elem_size);
     memcpy(storage->data(), data_ptr, elem_size * points.size());
 
-    aux_attributes_storage[name] = storage;
-    aux_attributes[name] = std::make_pair(elem_size, storage->data());
+    new_points->aux_attributes_storage[name] = storage;
+    new_points->aux_attributes[name] = std::make_pair(elem_size, storage->data());
   }
+
+  return new_points;
 }
-
-PointCloudCPU::PointCloudCPU() {}
-
-PointCloudCPU::~PointCloudCPU() {}
 
 // add_times
 template <typename T>
@@ -345,7 +349,7 @@ PointCloudCPU::Ptr sample(const PointCloud::ConstPtr& frame, const std::vector<i
 PointCloudCPU::Ptr random_sampling(const PointCloud::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
   if (sampling_rate >= 0.99) {
     // No need to do sampling
-    return PointCloudCPU::Ptr(new PointCloudCPU(*frame));
+    return PointCloudCPU::Ptr(PointCloudCPU::clone(*frame));
   }
 
   const int num_samples = frame->size() * sampling_rate;
@@ -458,7 +462,7 @@ PointCloudCPU::Ptr
 randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt) {
   if (sampling_rate >= 0.99) {
     // No need to do sampling
-    return PointCloudCPU::Ptr(new PointCloudCPU(*frame));
+    return PointCloudCPU::clone(*frame);
   }
 
   using Indices = std::shared_ptr<std::vector<int>>;
@@ -524,7 +528,7 @@ PointCloudCPU::Ptr sort_by_time(const PointCloud::ConstPtr& frame) {
 // transform
 template <>
 PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
-  auto transformed = std::make_shared<gtsam_ext::PointCloudCPU>(*frame);
+  auto transformed = gtsam_ext::PointCloudCPU::clone(*frame);
   for (int i = 0; i < frame->size(); i++) {
     transformed->points[i] = transformation * frame->points[i];
   }
@@ -551,7 +555,7 @@ PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& frame, const Eigen::Tra
 
 template <>
 PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
-  auto transformed = std::make_shared<gtsam_ext::PointCloudCPU>(*frame);
+  auto transformed = PointCloudCPU::clone(*frame);
   for (int i = 0; i < frame->size(); i++) {
     transformed->points[i] = transformation * frame->points[i];
   }
@@ -580,52 +584,52 @@ PointCloudCPU::Ptr transform(const PointCloud::ConstPtr& frame, const Eigen::Tra
 
 // transform_inplace
 template <>
-void transform_inplace(PointCloud::Ptr& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
-  for (int i = 0; i < frame->size(); i++) {
-    frame->points[i] = transformation * frame->points[i];
+void transform_inplace(PointCloud& frame, const Eigen::Transform<double, 3, Eigen::Isometry>& transformation) {
+  for (int i = 0; i < frame.size(); i++) {
+    frame.points[i] = transformation * frame.points[i];
   }
 
-  if (frame->normals) {
-    for (int i = 0; i < frame->size(); i++) {
-      frame->normals[i] = transformation.matrix() * frame->normals[i];
+  if (frame.normals) {
+    for (int i = 0; i < frame.size(); i++) {
+      frame.normals[i] = transformation.matrix() * frame.normals[i];
     }
   }
 
-  if (frame->covs) {
-    for (int i = 0; i < frame->size(); i++) {
-      frame->covs[i] = transformation.matrix() * frame->covs[i] * transformation.matrix().transpose();
-    }
-  }
-}
-
-template <>
-void transform_inplace(PointCloud::Ptr& frame, const Eigen::Transform<float, 3, Eigen::Isometry>& transformation) {
-  transform_inplace<float, Eigen::Isometry>(frame, transformation);
-}
-
-template <>
-void transform_inplace(PointCloud::Ptr& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
-  for (int i = 0; i < frame->size(); i++) {
-    frame->points[i] = transformation * frame->points[i];
-  }
-
-  if (frame->normals) {
-    for (int i = 0; i < frame->size(); i++) {
-      Eigen::Matrix4d normal_matrix = Eigen::Matrix4d::Zero();
-      normal_matrix.block<3, 3>(0, 0) = transformation.linear().inverse().transpose();
-      frame->normals[i] = normal_matrix * frame->normals[i];
-    }
-  }
-
-  if (frame->covs) {
-    for (int i = 0; i < frame->size(); i++) {
-      frame->covs[i] = transformation.matrix() * frame->covs[i] * transformation.matrix().transpose();
+  if (frame.covs) {
+    for (int i = 0; i < frame.size(); i++) {
+      frame.covs[i] = transformation.matrix() * frame.covs[i] * transformation.matrix().transpose();
     }
   }
 }
 
 template <>
-void transform_inplace(PointCloud::Ptr& frame, const Eigen::Transform<float, 3, Eigen::Affine>& transformation) {
+void transform_inplace(PointCloud& frame, const Eigen::Transform<float, 3, Eigen::Isometry>& transformation) {
+  transform_inplace<double, Eigen::Isometry>(frame, transformation.cast<double>());
+}
+
+template <>
+void transform_inplace(PointCloud& frame, const Eigen::Transform<double, 3, Eigen::Affine>& transformation) {
+  for (int i = 0; i < frame.size(); i++) {
+    frame.points[i] = transformation * frame.points[i];
+  }
+
+  if (frame.normals) {
+    Eigen::Matrix4d normal_matrix = Eigen::Matrix4d::Zero();
+    normal_matrix.block<3, 3>(0, 0) = transformation.linear().inverse().transpose();
+    for (int i = 0; i < frame.size(); i++) {
+      frame.normals[i] = normal_matrix * frame.normals[i];
+    }
+  }
+
+  if (frame.covs) {
+    for (int i = 0; i < frame.size(); i++) {
+      frame.covs[i] = transformation.matrix() * frame.covs[i] * transformation.matrix().transpose();
+    }
+  }
+}
+
+template <>
+void transform_inplace(PointCloud& frame, const Eigen::Transform<float, 3, Eigen::Affine>& transformation) {
   return transform_inplace<double, Eigen::Affine>(frame, transformation.cast<double>());
 }
 
