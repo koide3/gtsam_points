@@ -174,11 +174,14 @@ if(BUILD_WITH_CUDA)
     # cuda-related
     src/gtsam_ext/cuda/check_error.cu
     src/gtsam_ext/cuda/check_error_cusolver.cu
+    src/gtsam_ext/cuda/check_error_curand.cu
     src/gtsam_ext/cuda/cuda_memory.cu
     src/gtsam_ext/cuda/cuda_stream.cu
     src/gtsam_ext/cuda/cuda_buffer.cu
     src/gtsam_ext/cuda/cuda_device_sync.cu
     src/gtsam_ext/cuda/cuda_device_prop.cu
+    src/gtsam_ext/cuda/cuda_graph.cu
+    src/gtsam_ext/cuda/cuda_graph_exec.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu_create.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu
