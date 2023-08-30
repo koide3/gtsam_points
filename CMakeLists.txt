@@ -182,6 +182,7 @@ if(BUILD_WITH_CUDA)
     src/gtsam_ext/cuda/cuda_device_prop.cu
     src/gtsam_ext/cuda/cuda_graph.cu
     src/gtsam_ext/cuda/cuda_graph_exec.cu
+    src/gtsam_ext/cuda/gl_buffer_map.cpp
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu_create.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu
