@@ -14,6 +14,7 @@ RUN CC=clang CXX=clang++ \
   -DBUILD_TESTS=ON \
   -DBUILD_WITH_CUDA=ON \
   -DBUILD_EXAMPLE=ON \
+  -DBUILD_WITH_CUDA_MULTIARCH=ON \
   -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
 

@@ -32,6 +32,25 @@ void CUDABuffer::resize(size_t size, CUstream_st* stream) {
   }
 }
 
+void CUDABuffer::upload(size_t size, CUstream_st* stream) {
+  if (size > buffer_size) {
+    std::cerr << "error: data size must be smaller than buffer_size!!" << std::endl;
+    std::cerr << "     : size=" << size << " buffer_size=" << buffer_size << std::endl;
+    abort();
+  }
+
+  if (!use_pinned_buffer) {
+    std::cerr << "error: pinned buffer must be enabled!!" << std::endl;
+    abort();
+  }
+
+  check_error << cudaMemcpyAsync(d_buffer, h_buffer, size, cudaMemcpyHostToDevice, stream);
+}
+
+void CUDABuffer::upload(CUstream_st* stream) {
+  upload(buffer_size, stream);
+}
+
 void CUDABuffer::upload(const void* buffer, size_t size, CUstream_st* stream) {
   resize(size, stream);
 

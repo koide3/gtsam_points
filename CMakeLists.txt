@@ -73,6 +73,7 @@ if(BUILD_WITH_CUDA)
     message(STATUS "CUDA_MULTIARCH")
   else()
     CUDA_SELECT_NVCC_ARCH_FLAGS(ARCH_FLAGS Auto)
+    list(APPEND CUDA_NVCC_FLAGS ${ARCH_FLAGS})
     message(STATUS "CUDA_SELECT_NVCC_ARCH_FLAGS:${ARCH_FLAGS}")
   endif()
 
@@ -187,11 +188,15 @@ if(BUILD_WITH_CUDA)
     # cuda-related
     src/gtsam_ext/cuda/check_error.cu
     src/gtsam_ext/cuda/check_error_cusolver.cu
+    src/gtsam_ext/cuda/check_error_curand.cu
     src/gtsam_ext/cuda/cuda_memory.cu
     src/gtsam_ext/cuda/cuda_stream.cu
     src/gtsam_ext/cuda/cuda_buffer.cu
     src/gtsam_ext/cuda/cuda_device_sync.cu
     src/gtsam_ext/cuda/cuda_device_prop.cu
+    src/gtsam_ext/cuda/cuda_graph.cu
+    src/gtsam_ext/cuda/cuda_graph_exec.cu
+    src/gtsam_ext/cuda/gl_buffer_map.cpp
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_ext/cuda/nonlinear_factor_set_gpu_create.cu
     src/gtsam_ext/cuda/stream_roundrobin.cu

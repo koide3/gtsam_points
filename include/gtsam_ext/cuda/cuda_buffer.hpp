@@ -12,7 +12,7 @@ namespace gtsam_ext {
 /**
  * @brief Device buffer for asynchronous data transfer.
  * @note  To enable asynchronous upload/download, use_pinned_buffer needs to be true.
-*/
+ */
 class CUDABuffer {
 public:
   CUDABuffer(bool use_pinned_buffer = true);
@@ -23,8 +23,21 @@ public:
    *        doesn't shrink them when buffer_size < size.
    * @param size   Buffer size
    * @param stream CUDA stream
-  */
+   */
   void resize(size_t size, CUstream_st* stream);
+
+  /**
+   * @brief Upload data from the host pinned buffer to the device buffer.
+   * @param stream CUDA stream
+   */
+  void upload(CUstream_st* stream);
+
+  /**
+   * @brief Upload data from the host pinned buffer to the device buffer.
+   * @param size   Data size (must be smaller than buffer_size)
+   * @param stream CUDA stream
+   */
+  void upload(size_t size, CUstream_st* stream);
 
   /**
    * @brief Upload data to the device buffer. If size > buffer_size,
@@ -32,13 +45,13 @@ public:
    * @param buffer  Input data
    * @param size    Buffer size
    * @param stream  CUDA stream
-  */
+   */
   void upload(const void* buffer, size_t size, CUstream_st* stream);
 
   /**
    * @brief Download data from the device buffer to the pinned host buffer.
    * @param stream  CUDA stream
-  */
+   */
   void download(CUstream_st* stream);
 
   /**
@@ -51,14 +64,14 @@ public:
 
   /**
    * @brief Buffer size.
-  */
+   */
   size_t size() const;
 
   /**
    * @brief Pinned host buffer.
    * @note  If use_pinned_buffer is false, the pinned host buffer
    *        will not be allocated, and this method returns nullptr.
-  */
+   */
   void* host_buffer();
 
   /**
