@@ -39,6 +39,7 @@ void validate_frame(const gtsam_ext::PointCloud::ConstPtr& frame) {
   }
 }
 
+#ifdef BUILD_GTSAM_EXT_GPU
 void validate_frame_gpu(const gtsam_ext::PointCloud::ConstPtr& frame) {
   if (frame->points_gpu) {
     const auto points = gtsam_ext::download_points_gpu(*frame);
@@ -70,6 +71,7 @@ void validate_frame_gpu(const gtsam_ext::PointCloud::ConstPtr& frame) {
     EXPECT_TRUE(std::all_of(times.begin(), times.end(), [](float x) { return std::isfinite(x); }));
   }
 }
+#endif
 
 void validate_all_propaties(const gtsam_ext::PointCloud::ConstPtr& frame, bool test_aux = true) {
   ASSERT_TRUE(frame->points);
