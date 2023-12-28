@@ -19,14 +19,14 @@ int main(int argc, char** argv) {
   const auto target_points = gtsam_ext::read_points("data/kitti_00/000000.bin");
   const auto source_points = gtsam_ext::read_points("data/kitti_00/000001.bin");
 
-  // Create gtsam_ext::FrameCPU instances that hold point data
+  // Create gtsam_ext::PointCloudCPU instances that hold point data
   const auto target_frame = std::make_shared<gtsam_ext::PointCloudCPU>(target_points);
   const auto source_frame = std::make_shared<gtsam_ext::PointCloudCPU>(source_points);
 
   // Create GTSAM values and graph
   gtsam::Values values;
-  values.insert(0, gtsam::Pose3());   // Target pose initial guess
-  values.insert(1, gtsam::Pose3());   // Source pose initial guess
+  values.insert(0, gtsam::Pose3());  // Target pose initial guess
+  values.insert(1, gtsam::Pose3());  // Source pose initial guess
 
   gtsam::NonlinearFactorGraph graph;
 
@@ -51,7 +51,10 @@ int main(int argc, char** argv) {
   auto viewer = guik::LightViewer::instance();
   viewer->update_drawable("target", std::make_shared<glk::PointCloudBuffer>(target_points), guik::FlatRed());
   viewer->update_drawable("source", std::make_shared<glk::PointCloudBuffer>(source_points), guik::FlatGreen());
-  viewer->update_drawable("aligned", std::make_shared<glk::PointCloudBuffer>(source_points), guik::FlatBlue(values.at<gtsam::Pose3>(1).matrix().cast<float>()));
+  viewer->update_drawable(
+    "aligned",
+    std::make_shared<glk::PointCloudBuffer>(source_points),
+    guik::FlatBlue(values.at<gtsam::Pose3>(1).matrix().cast<float>()));
   viewer->spin();
 
   return 0;

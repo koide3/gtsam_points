@@ -58,7 +58,8 @@ size_t DeltaImpl::UpdateGaussNewtonDelta(const ISAM2Ext::Roots& roots, const Key
   } else {
     // Optimize with wildfire
     lastBacksubVariableCount = 0;
-    for (const ISAM2Ext::sharedClique& root : roots) lastBacksubVariableCount += optimizeWildfireNonRecursive(root, wildfireThreshold, replacedKeys, delta);  // modifies delta
+    for (const ISAM2Ext::sharedClique& root : roots)
+      lastBacksubVariableCount += optimizeWildfireNonRecursive(root, wildfireThreshold, replacedKeys, delta);  // modifies delta
 
 #if !defined(NDEBUG) && defined(GTSAM_EXTRA_CONSISTENCY_CHECKS)
     for (VectorValues::const_iterator key_delta = delta->begin(); key_delta != delta->end(); ++key_delta) {
@@ -72,7 +73,12 @@ size_t DeltaImpl::UpdateGaussNewtonDelta(const ISAM2Ext::Roots& roots, const Key
 
 /* ************************************************************************* */
 namespace internal {
-void updateRgProd(const ISAM2Ext::sharedClique& clique, const KeySet& replacedKeys, const VectorValues& grad, VectorValues* RgProd, size_t* varsUpdated) {
+void updateRgProd(
+  const ISAM2Ext::sharedClique& clique,
+  const KeySet& replacedKeys,
+  const VectorValues& grad,
+  VectorValues* RgProd,
+  size_t* varsUpdated) {
   // Check if any frontal or separator keys were recalculated, if so, we need
   // update deltas and recurse to children, but if not, we do not need to
   // recurse further because of the running separator property.

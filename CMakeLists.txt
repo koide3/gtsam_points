@@ -157,6 +157,7 @@ add_library(gtsam_ext SHARED
   # experimental
   src/gtsam_ext/factors/experimental/continuous_time_icp_factor.cpp
   # optimizers
+  src/gtsam_ext/optimizers/fast_scatter.cpp
   src/gtsam_ext/optimizers/linearization_hook.cpp
   src/gtsam_ext/optimizers/linear_system_builder.cpp
   src/gtsam_ext/optimizers/gaussian_factor_graph_solver.cpp

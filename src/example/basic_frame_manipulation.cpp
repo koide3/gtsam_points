@@ -3,7 +3,7 @@
 
 /**
  * @file  basic_frame_manipulation.cpp
- * @brief This example demonstrates how to create and manipulate gtsam_ext::Frame class to manage point clouds.
+ * @brief This example demonstrates how to create and manipulate gtsam_ext::PointCloud class to manage point clouds.
  */
 
 #include <gtsam_ext/util/read_points.hpp>
@@ -13,7 +13,7 @@
 int main(int argc, char** argv) {
   const int num_points = 128;
 
-  // gtsam_ext::FrameCPU can be created from a vector of Eigen::Vector3f, 4f, 3d or 4d.
+  // gtsam_ext::PointCloudCPU can be created from a vector of Eigen::Vector3f, 4f, 3d or 4d.
   // Input points are converted and held as Eigen::Vector4d internally.
   // Note that if you feed 4D vectors, their last elements (w) must be 1.
   std::vector<Eigen::Vector3f> points_3f(num_points);
@@ -36,23 +36,23 @@ int main(int argc, char** argv) {
   std::vector<Eigen::Vector4d> normals(num_points);
   std::vector<Eigen::Matrix4d> covs(num_points);
   std::vector<double> intensities(num_points);
-  frame->add_times(times);                            // Add point times
-  frame->add_normals(normals);                        // Add point normals
-  frame->add_covs(covs);                              // Add point covariances
-  frame->add_intensities(intensities);                // Add point intensities
+  frame->add_times(times);              // Add point times
+  frame->add_normals(normals);          // Add point normals
+  frame->add_covs(covs);                // Add point covariances
+  frame->add_intensities(intensities);  // Add point intensities
 
-  // gtsam_ext::FrameCPU is derived from gtsam_ext::Frame that holds only pointers to point attributes.
+  // gtsam_ext::PointCloudCPU is derived from gtsam_ext::PointCloud that holds only pointers to point attributes.
   gtsam_ext::PointCloud::Ptr base_frame = frame;
-  int frame_size = base_frame->num_points;            // Number of points
-  frame_size = base_frame->size();                    // frame->size() == frame->num_points
-  Eigen::Vector4d* points_ptr = base_frame->points;   // Pointer to point coordinates
-  double* times_ptr = base_frame->times;              // Pointer to point times
-  Eigen::Vector4d* normals_ptr = base_frame->normals; // Pointer to point normals
-  Eigen::Matrix4d* covs_ptr = base_frame->covs;       // Pointer to point covariances
-  double* intensities_ptr = base_frame->intensities;  // Pointer to point intensities
+  int frame_size = base_frame->num_points;             // Number of points
+  frame_size = base_frame->size();                     // frame->size() == frame->num_points
+  Eigen::Vector4d* points_ptr = base_frame->points;    // Pointer to point coordinates
+  double* times_ptr = base_frame->times;               // Pointer to point times
+  Eigen::Vector4d* normals_ptr = base_frame->normals;  // Pointer to point normals
+  Eigen::Matrix4d* covs_ptr = base_frame->covs;        // Pointer to point covariances
+  double* intensities_ptr = base_frame->intensities;   // Pointer to point intensities
 
-  // If you don't want to let gtsam_ext::FrameCPU hold point data but want to manage points by yourself,
-  // you can just give gtsam_ext::Frame pointers to point attributes.
+  // If you don't want to let gtsam_ext::PointCloudCPU hold point data but want to manage points by yourself,
+  // you can just give gtsam_ext::PointCloud pointers to point attributes.
   // Note that you need to take care of the ownership of point data in this case.
   gtsam_ext::PointCloud::Ptr base_frame2(new gtsam_ext::PointCloud);
   base_frame2->num_points = points_4d.size();

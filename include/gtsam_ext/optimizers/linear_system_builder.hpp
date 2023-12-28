@@ -5,6 +5,7 @@
 
 #include <Eigen/Sparse>
 #include <gtsam/linear/GaussianFactorGraph.h>
+#include <gtsam_ext/optimizers/fast_scatter.hpp>
 
 namespace gtsam_ext {
 
@@ -27,7 +28,7 @@ public:
   gtsam::VectorValues delta(const Eigen::VectorXd& x);
 
 public:
-  const gtsam::Scatter scatter;
+  const gtsam_ext::FastScatter scatter;
 
   Eigen::MatrixXd A;
   Eigen::VectorXd b;
@@ -53,7 +54,7 @@ public:
   gtsam::VectorValues delta(const Eigen::VectorXd& x);
 
 public:
-  const gtsam::Scatter scatter;
+  const gtsam_ext::FastScatter scatter;
 
   Eigen::SparseMatrix<double, Eigen::RowMajor> A;  // Lower triangular
   Eigen::VectorXd b;
