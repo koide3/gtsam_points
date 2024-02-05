@@ -6,6 +6,11 @@ Tested on Ubuntu 20.04 and CUDA 11.6 / Ubuntu 22.04 and CUDA 11.8 / NVIDIA Jetso
 
 [![Build](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml)
 
+## Important Notes
+
+Releases after v0.1.1 (13fb3c76b64530832f52a80d07ad2da4c267b89a, Nov, 27th, 2023) can be subject to the change to a non-permissive license.  
+Note that v0.1.1 and earlier remain on the MIT license.
+
 ## Factors
 
 ### Scan Matching Factors

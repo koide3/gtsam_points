@@ -42,23 +42,23 @@ public:
   /// Number of points
   size_t size() const { return num_points; }
 
-  bool has_times() const;              ///< Check if the point cloud has per-point timestamps
-  bool has_points() const;             ///< Check if the point cloud has points
-  bool has_normals() const;            ///< Check if the point cloud has point normals
-  bool has_covs() const;               ///< Check if the point cloud has point covariances
-  bool has_intensities() const;        ///< Check if the point cloud has point intensities
+  bool has_times() const;        ///< Check if the point cloud has per-point timestamps
+  bool has_points() const;       ///< Check if the point cloud has points
+  bool has_normals() const;      ///< Check if the point cloud has point normals
+  bool has_covs() const;         ///< Check if the point cloud has point covariances
+  bool has_intensities() const;  ///< Check if the point cloud has point intensities
 
-  bool check_times() const;            ///< Warn if the point cloud doesn't have times
-  bool check_points() const;           ///< Warn if the point cloud doesn't have points
-  bool check_normals() const;          ///< Warn if the point cloud doesn't have normals
-  bool check_covs() const;             ///< Warn if the point cloud doesn't have covs
-  bool check_intensities() const;      ///< Warn if the point cloud doesn't have intensities
+  bool check_times() const;        ///< Warn if the point cloud doesn't have times
+  bool check_points() const;       ///< Warn if the point cloud doesn't have points
+  bool check_normals() const;      ///< Warn if the point cloud doesn't have normals
+  bool check_covs() const;         ///< Warn if the point cloud doesn't have covs
+  bool check_intensities() const;  ///< Warn if the point cloud doesn't have intensities
 
-  bool has_times_gpu() const;          ///< Check if the point cloud has per-point timestamps on GPU
-  bool has_points_gpu() const;         ///< Check if the point cloud has points on GPU
-  bool has_normals_gpu() const;        ///< Check if the point cloud has point normals on GPU
-  bool has_covs_gpu() const;           ///< Check if the point cloud has point covariances on GPU
-  bool has_intensities_gpu() const;    ///< Check if the point cloud has point intensities on GPU
+  bool has_times_gpu() const;        ///< Check if the point cloud has per-point timestamps on GPU
+  bool has_points_gpu() const;       ///< Check if the point cloud has points on GPU
+  bool has_normals_gpu() const;      ///< Check if the point cloud has point normals on GPU
+  bool has_covs_gpu() const;         ///< Check if the point cloud has point covariances on GPU
+  bool has_intensities_gpu() const;  ///< Check if the point cloud has point intensities on GPU
 
   bool check_times_gpu() const;        ///< Warn if the point cloud doesn't have times on GPU
   bool check_points_gpu() const;       ///< Warn if the point cloud doesn't have points on GPU
@@ -100,7 +100,7 @@ public:
   void save_compact(const std::string& path) const;
 
 public:
-  size_t num_points;         ///< Number of points
+  size_t num_points;  ///< Number of points
 
   double* times;             ///< Per-point timestamp w.r.t. the first point (should be sorted)
   Eigen::Vector4d* points;   ///< Point coordinates (x, y, z, 1)
