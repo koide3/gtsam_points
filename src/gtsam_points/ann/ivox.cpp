@@ -75,12 +75,12 @@ const Eigen::Vector3i iVox::voxel_coord(const Eigen::Vector4d& point) const {
   return coord.head<3>();
 }
 
-std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> iVox::neighbor_offsets(const int neighbor_voxel_mode) const {
+std::vector<Eigen::Vector3i> iVox::neighbor_offsets(const int neighbor_voxel_mode) const {
   switch (neighbor_voxel_mode) {
     case 1:
-      return std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>>{Eigen::Vector3i(0, 0, 0)};
+      return std::vector<Eigen::Vector3i>{Eigen::Vector3i(0, 0, 0)};
     case 7:
-      return std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>>{
+      return std::vector<Eigen::Vector3i>{
         Eigen::Vector3i(0, 0, 0),
         Eigen::Vector3i(1, 0, 0),
         Eigen::Vector3i(-1, 0, 0),
@@ -89,7 +89,7 @@ std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> iVox::ne
         Eigen::Vector3i(0, 0, 1),
         Eigen::Vector3i(0, 0, -1)};
     case 19: {
-      std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> offsets;
+      std::vector<Eigen::Vector3i> offsets;
       for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
           for (int k = -1; k <= 1; k++) {
@@ -104,7 +104,7 @@ std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> iVox::ne
       return offsets;
     }
     case 27: {
-      std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> offsets;
+      std::vector<Eigen::Vector3i> offsets;
       for (int i = -1; i <= 1; i++) {
         for (int j = -1; j <= 1; j++) {
           for (int k = -1; k <= 1; k++) {
@@ -118,7 +118,7 @@ std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> iVox::ne
     default:
       std::cerr << "error: invalid neighbor voxel mode " << neighbor_voxel_mode << std::endl;
       std::cerr << "     : neighbor voxel mode must be 1, 7, 19, or 27" << std::endl;
-      return std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>>();
+      return std::vector<Eigen::Vector3i>();
   }
 }
 
@@ -185,9 +185,7 @@ void iVox::insert(const PointCloud& frame) {
     std::cerr << "warning: too many voxels!!" << std::endl;
     std::cerr << "       : drop old voxels" << std::endl;
 
-    std::vector<std::pair<Eigen::Vector3i, LinearContainer::Ptr>, Eigen::aligned_allocator<std::pair<Eigen::Vector3i, LinearContainer::Ptr>>> voxels(
-      voxelmap.begin(),
-      voxelmap.end());
+    std::vector<std::pair<Eigen::Vector3i, LinearContainer::Ptr>> voxels(voxelmap.begin(), voxelmap.end());
     std::sort(
       voxels.begin(),
       voxels.end(),
@@ -315,8 +313,8 @@ double iVox::intensity(const size_t i) const {
   return voxels[voxel_id(i)]->intensities[point_id(i)];
 }
 
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVox::voxel_points() const {
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points;
+std::vector<Eigen::Vector4d> iVox::voxel_points() const {
+  std::vector<Eigen::Vector4d> points;
   points.reserve(voxels.size() * 10);
   for (const auto& voxel : voxels) {
     points.insert(points.end(), voxel->points.begin(), voxel->points.end());
@@ -324,8 +322,8 @@ std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVox::vo
   return points;
 }
 
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVox::voxel_normals() const {
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals;
+std::vector<Eigen::Vector4d> iVox::voxel_normals() const {
+  std::vector<Eigen::Vector4d> normals;
   if (!has_normals()) {
     std::cerr << "warning: iVox doesn't have normals!!" << std::endl;
     return normals;
@@ -338,8 +336,8 @@ std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVox::vo
   return normals;
 }
 
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> iVox::voxel_covs() const {
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs;
+std::vector<Eigen::Matrix4d> iVox::voxel_covs() const {
+  std::vector<Eigen::Matrix4d> covs;
   if (!has_covs()) {
     std::cerr << "warning: iVox doesn't have covs!!" << std::endl;
     return covs;

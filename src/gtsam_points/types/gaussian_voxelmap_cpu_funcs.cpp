@@ -20,18 +20,16 @@
 namespace gtsam_points {
 
 // merge_frames
-PointCloud::Ptr merge_frames(
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<PointCloud::ConstPtr>& frames,
-  double downsample_resolution) {
+PointCloud::Ptr
+merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution) {
   //
   int num_all_points = 0;
   for (const auto& frame : frames) {
     num_all_points += frame->size();
   }
 
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> all_points(num_all_points);
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> all_covs(num_all_points);
+  std::vector<Eigen::Vector4d> all_points(num_all_points);
+  std::vector<Eigen::Matrix4d> all_covs(num_all_points);
 
   int begin = 0;
   for (int i = 0; i < frames.size(); i++) {
@@ -53,8 +51,8 @@ PointCloud::Ptr merge_frames(
   GaussianVoxelMapCPU downsampling(downsample_resolution);
   downsampling.insert(all_frames);
 
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> downsampled_points;
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> downsampled_covs;
+  std::vector<Eigen::Vector4d> downsampled_points;
+  std::vector<Eigen::Matrix4d> downsampled_covs;
   downsampled_points.reserve(downsampling.voxels.size());
   downsampled_covs.reserve(downsampling.voxels.size());
 
@@ -70,10 +68,8 @@ PointCloud::Ptr merge_frames(
   return merged;
 }
 
-PointCloud::Ptr merge_frames_auto(
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<PointCloud::ConstPtr>& frames,
-  double downsample_resolution) {
+PointCloud::Ptr
+merge_frames_auto(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution) {
 //
 #ifdef BUILD_GTSAM_POINTS_GPU
   if (frames[0]->points_gpu && frames[0]->covs_gpu) {
@@ -103,10 +99,8 @@ double overlap(const GaussianVoxelMap::ConstPtr& target_, const PointCloud::Cons
   return static_cast<double>(num_overlap) / source->size();
 }
 
-double overlap(
-  const std::vector<GaussianVoxelMap::ConstPtr>& targets_,
-  const PointCloud::ConstPtr& source,
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
+double
+overlap(const std::vector<GaussianVoxelMap::ConstPtr>& targets_, const PointCloud::ConstPtr& source, const std::vector<Eigen::Isometry3d>& deltas) {
   std::vector<GaussianVoxelMapCPU::ConstPtr> targets(targets_.size());
   for (int i = 0; i < targets_.size(); i++) {
     targets[i] = std::dynamic_pointer_cast<const GaussianVoxelMapCPU>(targets_[i]);
@@ -145,7 +139,7 @@ double overlap_auto(const GaussianVoxelMap::ConstPtr& target, const PointCloud::
 double overlap_auto(
   const std::vector<GaussianVoxelMap::ConstPtr>& targets,
   const PointCloud::ConstPtr& source,
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas) {
+  const std::vector<Eigen::Isometry3d>& deltas) {
 #ifdef BUILD_GTSAM_POINTS_GPU
   if (source->points_gpu && !targets.empty() && std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(targets[0])) {
     return overlap_gpu(targets, source, deltas);

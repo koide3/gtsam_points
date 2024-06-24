@@ -41,9 +41,9 @@ public:
   bool finalized;                          ///< If the mean and cov are finalized
   mutable std::atomic_int last_lru_count;  ///< LRU cache count
 
-  int num_points;                          ///< Number of inserted points
-  Eigen::Vector4d mean;                    ///< Mean. If it is not finalized, it stores num_points * mean instead;
-  Eigen::Matrix4d cov;                     ///< Covariance. If it is not finalized, it stores num_points * cov instead;
+  int num_points;        ///< Number of inserted points
+  Eigen::Vector4d mean;  ///< Mean. If it is not finalized, it stores num_points * mean instead;
+  Eigen::Matrix4d cov;   ///< Covariance. If it is not finalized, it stores num_points * cov instead;
 };
 
 /**
@@ -101,16 +101,11 @@ public:
   static GaussianVoxelMapCPU::Ptr load(const std::string& path);
 
 public:
-  using VoxelMap = std::unordered_map<
-    Eigen::Vector3i,
-    GaussianVoxel::Ptr,
-    XORVector3iHash,
-    std::equal_to<Eigen::Vector3i>,
-    Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, GaussianVoxel::Ptr>>>;
+  using VoxelMap = std::unordered_map<Eigen::Vector3i, GaussianVoxel::Ptr, XORVector3iHash>;
 
-  int lru_count;      ///< LRU count
-  int lru_cycle;      ///< LRU check cycle
-  int lru_thresh;     ///< LRU threshold. Voxels that are not observed longer than this are removed from the voxelmap.
+  int lru_count;   ///< LRU count
+  int lru_cycle;   ///< LRU check cycle
+  int lru_thresh;  ///< LRU threshold. Voxels that are not observed longer than this are removed from the voxelmap.
 
   double resolution;  ///< Voxel resolution
   VoxelMap voxels;    ///< Voxelmap

@@ -125,8 +125,8 @@ const Eigen::Matrix4d& iVoxCovarianceEstimation::cov(const size_t i) const {
   return covs[voxel_id(i)]->covs[point_id(i)];
 }
 
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVoxCovarianceEstimation::voxel_normals() const {
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals;
+std::vector<Eigen::Vector4d> iVoxCovarianceEstimation::voxel_normals() const {
+  std::vector<Eigen::Vector4d> normals;
   normals.reserve(covs.size());
   for (const auto& cov : covs) {
     normals.insert(normals.end(), cov->normals.begin(), cov->normals.end());
@@ -134,8 +134,8 @@ std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> iVoxCova
   return normals;
 }
 
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> iVoxCovarianceEstimation::voxel_covs() const {
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs;
+std::vector<Eigen::Matrix4d> iVoxCovarianceEstimation::voxel_covs() const {
+  std::vector<Eigen::Matrix4d> covs;
   covs.reserve(this->covs.size());
   for (const auto& cov : this->covs) {
     covs.insert(covs.end(), cov->covs.begin(), cov->covs.end());

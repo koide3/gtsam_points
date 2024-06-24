@@ -169,19 +169,19 @@ void PointCloud::save_compact(const std::string& path) const {
   }
 
   if (points) {
-    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_f(num_points);
+    std::vector<Eigen::Vector3f> points_f(num_points);
     std::transform(points, points + num_points, points_f.begin(), [](const Eigen::Vector4d& p) { return p.head<3>().cast<float>(); });
     write_binary(path + "/points_compact.bin", points_f.data(), sizeof(Eigen::Vector3f) * num_points);
   }
 
   if (normals) {
-    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_f(num_points);
+    std::vector<Eigen::Vector3f> normals_f(num_points);
     std::transform(normals, normals + num_points, normals_f.begin(), [](const Eigen::Vector4d& p) { return p.head<3>().cast<float>(); });
     write_binary(path + "/normals_compact.bin", normals_f.data(), sizeof(Eigen::Vector3f) * num_points);
   }
 
   if (covs) {
-    std::vector<Eigen::Matrix<float, 6, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 6, 1>>> covs_f(num_points);
+    std::vector<Eigen::Matrix<float, 6, 1>> covs_f(num_points);
     std::transform(covs, covs + num_points, covs_f.begin(), [](const Eigen::Matrix4d& cov) {
       return (Eigen::Matrix<float, 6, 1>() << cov(0, 0), cov(0, 1), cov(0, 2), cov(1, 1), cov(1, 2), cov(2, 2)).finished();
     });

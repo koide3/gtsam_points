@@ -75,7 +75,7 @@ public:
   virtual double error(const gtsam::Values& values) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> deskewed_source_points(const gtsam::Values& values) const;
+  std::vector<Eigen::Vector3d> deskewed_source_points(const gtsam::Values& values) const;
 
 private:
   gtsam::NonlinearFactorGraph::shared_ptr graph;
@@ -84,8 +84,12 @@ private:
 /**
  * @brief Create a set of CT-ICP factors
  */
-gtsam::NonlinearFactorGraph::shared_ptr
-create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model);
+gtsam::NonlinearFactorGraph::shared_ptr create_cticp_factors(
+  gtsam::Key source_t0_key,
+  gtsam::Key source_t1_key,
+  const PointCloud::ConstPtr& target,
+  const PointCloud::ConstPtr& source,
+  const gtsam::SharedNoiseModel& noise_model);
 
 /**
  * @brief Create a nonlinear factor that wraps a set of CT-ICP factors

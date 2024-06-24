@@ -97,7 +97,7 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
 
   std::vector<gtsam_points::GaussianVoxelMap::ConstPtr> voxelmaps_(voxelmaps.begin(), voxelmaps.end());
   for (int i = 0; i < frames.size(); i++) {
-    std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> deltas(frames.size());
+    std::vector<Eigen::Isometry3d> deltas(frames.size());
     for (int j = 0; j < frames.size(); j++) {
       deltas[i] = Eigen::Isometry3d((poses_gt.at<gtsam::Pose3>(i).inverse() * poses_gt.at<gtsam::Pose3>(i)).matrix());
     }
@@ -130,7 +130,7 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
   }
 
   // Test for merge_frames
-  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> poses_(poses_gt.size());
+  std::vector<Eigen::Isometry3d> poses_(poses_gt.size());
   for (int i = 0; i < poses_gt.size(); i++) {
     poses_[i] = Eigen::Isometry3d(poses_gt.at<gtsam::Pose3>(i).matrix());
   }
@@ -154,7 +154,7 @@ TEST_F(VoxelMapTestBase, VoxelMapGPU) {
 
   std::vector<gtsam_points::GaussianVoxelMap::ConstPtr> voxelmaps_(voxelmaps_gpu.begin(), voxelmaps_gpu.end());
   for (int i = 0; i < frames.size(); i++) {
-    std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> deltas(frames.size());
+    std::vector<Eigen::Isometry3d> deltas(frames.size());
     for (int j = 0; j < frames.size(); j++) {
       deltas[i] = Eigen::Isometry3d((poses_gt.at<gtsam::Pose3>(i).inverse() * poses_gt.at<gtsam::Pose3>(i)).matrix());
     }
@@ -185,7 +185,7 @@ TEST_F(VoxelMapTestBase, VoxelMapGPU) {
   }
 
   // Test for merge_frames
-  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> poses_(poses_gt.size());
+  std::vector<Eigen::Isometry3d> poses_(poses_gt.size());
   for (int i = 0; i < poses_gt.size(); i++) {
     poses_[i] = Eigen::Isometry3d(poses_gt.at<gtsam::Pose3>(i).matrix());
   }

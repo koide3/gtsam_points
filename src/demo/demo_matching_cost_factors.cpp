@@ -77,7 +77,7 @@ public:
       }
 
       // Transform points from floats to doubles and estimate their covariances
-      std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points(points_f.size());
+      std::vector<Eigen::Vector4d> points(points_f.size());
       std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) {
         return (Eigen::Vector4d() << p.cast<double>(), 1.0).finished();
       });
@@ -170,7 +170,7 @@ public:
     guik::LightViewer::instance()->invoke([=] {
       auto viewer = guik::LightViewer::instance();
 
-      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> factor_lines;
+      std::vector<Eigen::Vector3f> factor_lines;
       for (int i = 0; i < 5; i++) {
         Eigen::Isometry3f pose(values.at<gtsam::Pose3>(i).matrix().cast<float>());
 

@@ -61,9 +61,9 @@ public:
 
   const std::vector<double>& get_time_table() const { return time_table; }
   const std::vector<int>& get_time_indices() const { return time_indices; }
-  const std::vector<gtsam::Pose3, Eigen::aligned_allocator<gtsam::Pose3>>& get_source_poses() const { return source_poses; }
+  const std::vector<gtsam::Pose3>& get_source_poses() const { return source_poses; }
 
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> deskewed_source_points(const gtsam::Values& values, bool local = false);
+  std::vector<Eigen::Vector4d> deskewed_source_points(const gtsam::Values& values, bool local = false);
 
 public:
   virtual void update_poses(const gtsam::Values& values) const;
@@ -78,9 +78,9 @@ protected:
   std::shared_ptr<NearestNeighborSearch> target_tree;
 
   std::vector<double> time_table;
-  mutable std::vector<gtsam::Pose3, Eigen::aligned_allocator<gtsam::Pose3>> source_poses;
-  mutable std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> pose_derivatives_t0;
-  mutable std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> pose_derivatives_t1;
+  mutable std::vector<gtsam::Pose3> source_poses;
+  mutable std::vector<gtsam::Matrix6> pose_derivatives_t0;
+  mutable std::vector<gtsam::Matrix6> pose_derivatives_t1;
 
   std::vector<int> time_indices;
   mutable std::vector<long> correspondences;

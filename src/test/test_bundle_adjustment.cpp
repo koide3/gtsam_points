@@ -26,7 +26,7 @@ TEST(BATest, DerivativeTest) {
   std::normal_distribution<> ndist;
 
   for (int num_points = 6; num_points <= 32; num_points *= 2) {
-    std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points;
+    std::vector<Eigen::Vector3d> points;
     for (int i = 0; i < num_points; i++) {
       points.push_back(Eigen::Vector3d(ndist(mt) * 0.1, ndist(mt) * 0.4, ndist(mt)));
     }
@@ -51,7 +51,7 @@ TEST(BATest, DerivativeTest) {
     }
 
     const auto calc_eigenvalue = [](int k, const Eigen::VectorXd& x) {
-      std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points(x.size() / 3);
+      std::vector<Eigen::Vector3d> points(x.size() / 3);
       for (int i = 0; i < points.size(); i++) {
         points[i] = x.block<3, 1>(i * 3, 0);
       }
@@ -171,7 +171,7 @@ TEST_P(BAFactorTest, AlignmentTest) {
   gtsam::NonlinearFactorGraph graph;
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e3)));
 
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> plane_centers;
+  std::vector<Eigen::Vector3d> plane_centers;
   plane_centers.push_back(Eigen::Vector3d(3.16, 1.79, -1.30));
   plane_centers.push_back(Eigen::Vector3d(25.44, 8.26, 3.68));
   plane_centers.push_back(Eigen::Vector3d(25.41, 19.51, 4.36));
@@ -182,7 +182,7 @@ TEST_P(BAFactorTest, AlignmentTest) {
   plane_centers.push_back(Eigen::Vector3d(11.15, 12.25, -0.45));
   plane_centers.push_back(Eigen::Vector3d(11.17, -22.04, 4.52));
 
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> edge_centers;
+  std::vector<Eigen::Vector3d> edge_centers;
   edge_centers.push_back(Eigen::Vector3d(12.11, -10.86, 1.07));
   edge_centers.push_back(Eigen::Vector3d(14.45, -7.17, 1.09));
   edge_centers.push_back(Eigen::Vector3d(22.30, 15.17, 2.38));

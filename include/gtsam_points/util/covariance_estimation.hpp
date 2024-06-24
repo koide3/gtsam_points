@@ -31,8 +31,7 @@ public:
  * @param params       Estimation params
  * @return             Estimated covariances
  */
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
-estimate_covariances(const Eigen::Vector4d* points, int num_points, const CovarianceEstimationParams& params);
+std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points, int num_points, const CovarianceEstimationParams& params);
 
 /**
  * @brief Estimate point covariances from neighboring points
@@ -43,15 +42,13 @@ estimate_covariances(const Eigen::Vector4d* points, int num_points, const Covari
  * @param num_threads  Number of threads
  * @return             Estimated covariances
  */
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
+std::vector<Eigen::Matrix4d>
 estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors, const Eigen::Vector3d& eigen_values, int num_threads);
 
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
-estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors = 10, int num_threads = 1);
+std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors = 10, int num_threads = 1);
 
 template <typename Alloc>
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
-estimate_covariances(const std::vector<Eigen::Vector4d, Alloc>& points, int k_neighbors = 10, int num_threads = 1) {
+std::vector<Eigen::Matrix4d> estimate_covariances(const std::vector<Eigen::Vector4d, Alloc>& points, int k_neighbors = 10, int num_threads = 1) {
   return estimate_covariances(points.data(), points.size(), k_neighbors, num_threads);
 }
 

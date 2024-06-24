@@ -97,9 +97,9 @@ ScanLineInformation estimate_scan_lines(const Eigen::Vector4d* points, int num_p
 }
 
 void extract_edge_plane_points_line(
-  const std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& points,
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& plane_points,
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>>& edge_points) {
+  const std::vector<Eigen::Vector4d>& points,
+  std::vector<Eigen::Vector4d>& plane_points,
+  std::vector<Eigen::Vector4d>& edge_points) {
   // TODO: remove hardcoded parameters!!
   const int half_curvature_window = 5;
   const double edge_thresh = 0.35;
@@ -234,7 +234,7 @@ extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Ve
   }
 
   // Extract edge and plane points
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> plane_points, edge_points;
+  std::vector<Eigen::Vector4d> plane_points, edge_points;
 
   for (int i = 0; i < scan_lines.size(); i++) {
     auto& line = lines[i];
@@ -242,7 +242,7 @@ extract_edge_plane_points(const ScanLineInformation& scan_lines, const Eigen::Ve
       return std::get<1>(lhs) < std::get<1>(rhs);
     });
 
-    std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> line_points(line.size());
+    std::vector<Eigen::Vector4d> line_points(line.size());
     std::transform(line.begin(), line.end(), line_points.begin(), [&](const std::tuple<double, double, int>& x) { return points[std::get<2>(x)]; });
 
     extract_edge_plane_points_line(line_points, plane_points, edge_points);

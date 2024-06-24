@@ -101,7 +101,9 @@ gtsam::Double_ CTICPFactorExpr::calc_error() const {
 /**
  * @brief IntegratedCTICPFactorExpr
  */
-IntegratedCTICPFactorExpr::IntegratedCTICPFactorExpr(const gtsam::NonlinearFactorGraph::shared_ptr& graph) : gtsam::NonlinearFactor(graph->keys()), graph(graph) {}
+IntegratedCTICPFactorExpr::IntegratedCTICPFactorExpr(const gtsam::NonlinearFactorGraph::shared_ptr& graph)
+: gtsam::NonlinearFactor(graph->keys()),
+  graph(graph) {}
 
 IntegratedCTICPFactorExpr::~IntegratedCTICPFactorExpr() {}
 
@@ -124,8 +126,8 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCTICPFactorExpr::linearize(co
     new gtsam::HessianFactor(keys()[0], keys()[1], H.block<6, 6>(0, 0), H.block<6, 6>(0, 6), b.head<6>(), H.block<6, 6>(6, 6), b.tail<6>(), 0.0));
 }
 
-std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> IntegratedCTICPFactorExpr::deskewed_source_points(const gtsam::Values& values) const {
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points;
+std::vector<Eigen::Vector3d> IntegratedCTICPFactorExpr::deskewed_source_points(const gtsam::Values& values) const {
+  std::vector<Eigen::Vector3d> points;
   for (const auto& factor : *graph) {
     auto f = boost::dynamic_pointer_cast<gtsam_points::CTICPFactorExpr>(factor);
     if (f) {
@@ -135,8 +137,12 @@ std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> Integrat
   return points;
 }
 
-gtsam::NonlinearFactorGraph::shared_ptr
-create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model) {
+gtsam::NonlinearFactorGraph::shared_ptr create_cticp_factors(
+  gtsam::Key source_t0_key,
+  gtsam::Key source_t1_key,
+  const PointCloud::ConstPtr& target,
+  const PointCloud::ConstPtr& source,
+  const gtsam::SharedNoiseModel& noise_model) {
   gtsam::NonlinearFactorGraph::shared_ptr factors(new gtsam::NonlinearFactorGraph);
   std::shared_ptr<KdTree> target_tree(new KdTree(target->points, target->size()));
 
@@ -145,8 +151,16 @@ create_cticp_factors(gtsam::Key source_t0_key, gtsam::Key source_t1_key, const P
     const double source_t1 = source->times[source->size() - 1];
     const double source_ti = source->times[i];
 
-    gtsam::NonlinearFactor::shared_ptr factor(
-      new CTICPFactorExpr(source_t0_key, source_t1_key, target, target_tree, source_t0, source_t1, source_ti, source->points[i].head<3>(), noise_model));
+    gtsam::NonlinearFactor::shared_ptr factor(new CTICPFactorExpr(
+      source_t0_key,
+      source_t1_key,
+      target,
+      target_tree,
+      source_t0,
+      source_t1,
+      source_ti,
+      source->points[i].head<3>(),
+      noise_model));
     factors->push_back(factor);
   }
 

@@ -102,11 +102,11 @@ double IntegratedVGICPFactor_<SourceFrame>::evaluate(
   //
   double sum_errors = 0.0;
 
-  std::vector<Eigen::Matrix<double, 6, 6>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 6>>> Hs_target;
-  std::vector<Eigen::Matrix<double, 6, 6>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 6>>> Hs_source;
-  std::vector<Eigen::Matrix<double, 6, 6>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 6>>> Hs_target_source;
-  std::vector<Eigen::Matrix<double, 6, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 1>>> bs_target;
-  std::vector<Eigen::Matrix<double, 6, 1>, Eigen::aligned_allocator<Eigen::Matrix<double, 6, 1>>> bs_source;
+  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target;
+  std::vector<Eigen::Matrix<double, 6, 6>> Hs_source;
+  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target_source;
+  std::vector<Eigen::Matrix<double, 6, 1>> bs_target;
+  std::vector<Eigen::Matrix<double, 6, 1>> bs_source;
 
   if (H_target && H_source && H_target_source && b_target && b_source) {
     Hs_target.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());

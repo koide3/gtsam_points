@@ -75,11 +75,11 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
   this->update_correspondences();
 
   double sum_errors = 0.0;
-  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_00(this->num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_01(this->num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Matrix6, Eigen::aligned_allocator<gtsam::Matrix6>> Hs_11(this->num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Vector6, Eigen::aligned_allocator<gtsam::Vector6>> bs_0(this->num_threads, gtsam::Vector6::Zero());
-  std::vector<gtsam::Vector6, Eigen::aligned_allocator<gtsam::Vector6>> bs_1(this->num_threads, gtsam::Vector6::Zero());
+  std::vector<gtsam::Matrix6> Hs_00(this->num_threads, gtsam::Matrix6::Zero());
+  std::vector<gtsam::Matrix6> Hs_01(this->num_threads, gtsam::Matrix6::Zero());
+  std::vector<gtsam::Matrix6> Hs_11(this->num_threads, gtsam::Matrix6::Zero());
+  std::vector<gtsam::Vector6> bs_0(this->num_threads, gtsam::Vector6::Zero());
+  std::vector<gtsam::Vector6> bs_1(this->num_threads, gtsam::Vector6::Zero());
 
   gtsam::Matrix6 H_00 = gtsam::Matrix6::Zero();
   gtsam::Matrix6 H_01 = gtsam::Matrix6::Zero();

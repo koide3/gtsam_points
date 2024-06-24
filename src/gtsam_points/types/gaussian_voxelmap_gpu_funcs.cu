@@ -45,13 +45,13 @@ struct transform_covs_kernel {
 }  // namespace
 
 PointCloud::Ptr merge_frames_gpu(
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
+  const std::vector<Eigen::Isometry3d>& poses,
   const std::vector<PointCloud::ConstPtr>& frames,
   double downsample_resolution,
   CUstream_st* stream) {
   //
   int num_all_points = 0;
-  std::vector<Eigen::Isometry3f, Eigen::aligned_allocator<Eigen::Isometry3f>> h_poses(poses.size());
+  std::vector<Eigen::Isometry3f> h_poses(poses.size());
   for (int i = 0; i < poses.size(); i++) {
     h_poses[i] = poses[i].cast<float>();
     num_all_points += frames[i]->size();
@@ -106,8 +106,8 @@ PointCloud::Ptr merge_frames_gpu(
   const Eigen::Vector3f* voxel_means = downsampling.voxel_means;
   const Eigen::Matrix3f* voxel_covs = downsampling.voxel_covs;
 
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> means(num_voxels);
-  std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs(num_voxels);
+  std::vector<Eigen::Vector3f> means(num_voxels);
+  std::vector<Eigen::Matrix3f> covs(num_voxels);
 
   check_error << cudaMemcpyAsync(means.data(), voxel_means, sizeof(Eigen::Vector3f) * num_voxels, cudaMemcpyDeviceToHost, stream);
   check_error << cudaMemcpyAsync(covs.data(), voxel_covs, sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyDeviceToHost, stream);
@@ -232,7 +232,7 @@ overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const PointCloud::ConstPt
 double overlap_gpu(
   const std::vector<GaussianVoxelMap::ConstPtr>& targets_,
   const PointCloud::ConstPtr& source,
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas_,
+  const std::vector<Eigen::Isometry3d>& deltas_,
   CUstream_st* stream) {
   if (!source->points_gpu) {
     std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
@@ -247,7 +247,7 @@ double overlap_gpu(
     }
   }
 
-  std::vector<Eigen::Isometry3f, Eigen::aligned_allocator<Eigen::Isometry3f>> h_deltas(deltas_.size());
+  std::vector<Eigen::Isometry3f> h_deltas(deltas_.size());
   std::transform(deltas_.begin(), deltas_.end(), h_deltas.begin(), [](const Eigen::Isometry3d& delta) { return delta.cast<float>(); });
 
   Eigen::Isometry3f* deltas;

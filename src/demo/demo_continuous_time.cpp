@@ -166,7 +166,7 @@ public:
       viewer->append_text(status.to_string());
 
       // Calculate deskewed source points
-      std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points;
+      std::vector<Eigen::Vector4d> points;
       auto cticp_factor = boost::dynamic_pointer_cast<gtsam_points::IntegratedCT_ICPFactor>(factor);
       if (cticp_factor) {
         points = cticp_factor->deskewed_source_points(values);
@@ -179,7 +179,7 @@ public:
       }
 
       // Calculate interpolated poses for visualization
-      std::vector<Eigen::Isometry3f, Eigen::aligned_allocator<Eigen::Isometry3f>> poses;
+      std::vector<Eigen::Isometry3f> poses;
       for (int i = 0; i < 4; i++) {
         gtsam::Pose3 pose = gtsam_points::interpolate_pose(values.at<gtsam::Pose3>(0), values.at<gtsam::Pose3>(1), static_cast<double>(i) / 3);
         poses.push_back(Eigen::Isometry3f(pose.matrix().cast<float>()));

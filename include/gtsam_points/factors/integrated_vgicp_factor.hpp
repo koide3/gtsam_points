@@ -74,7 +74,7 @@ private:
 
   // I'm unhappy to have mutable members...
   mutable std::vector<const GaussianVoxel*> correspondences;
-  mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
+  mutable std::vector<Eigen::Matrix4d> mahalanobis;
 
   std::shared_ptr<const GaussianVoxelMapCPU> target_voxels;
   std::shared_ptr<const SourceFrame> source;

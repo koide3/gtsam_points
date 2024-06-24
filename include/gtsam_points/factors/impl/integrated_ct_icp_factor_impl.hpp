@@ -209,9 +209,7 @@ void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::update_correspondences()
 }
 
 template <typename TargetFrame, typename SourceFrame>
-std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::deskewed_source_points(
-  const gtsam::Values& values,
-  bool local) {
+std::vector<Eigen::Vector4d> IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::deskewed_source_points(const gtsam::Values& values, bool local) {
   update_poses(values);
 
   if (local) {
@@ -220,7 +218,7 @@ std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> Integrat
     }
   }
 
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> deskewed(frame::size(*source));
+  std::vector<Eigen::Vector4d> deskewed(frame::size(*source));
   for (int i = 0; i < frame::size(*source); i++) {
     const int time_index = time_indices[i];
     const auto& pose = source_poses[time_index];

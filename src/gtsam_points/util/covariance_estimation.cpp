@@ -10,10 +10,9 @@
 
 namespace gtsam_points {
 
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
-estimate_covariances(const Eigen::Vector4d* points, int num_points, const CovarianceEstimationParams& params) {
+std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points, int num_points, const CovarianceEstimationParams& params) {
   KdTree tree(points, num_points);
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs(num_points);
+  std::vector<Eigen::Matrix4d> covs(num_points);
 
 #pragma omp parallel for num_threads(params.num_threads) schedule(guided, 8)
   for (int i = 0; i < num_points; i++) {
@@ -49,15 +48,14 @@ estimate_covariances(const Eigen::Vector4d* points, int num_points, const Covari
   return covs;
 }
 
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
-estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors, int num_threads) {
+std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors, int num_threads) {
   CovarianceEstimationParams params;
   params.k_neighbors = k_neighbors;
   params.num_threads = num_threads;
   return estimate_covariances(points, num_points, params);
 }
 
-std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>>
+std::vector<Eigen::Matrix4d>
 estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighbors, const Eigen::Vector3d& eigen_values, int num_threads) {
   CovarianceEstimationParams params;
   params.k_neighbors = k_neighbors;

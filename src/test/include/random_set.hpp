@@ -32,12 +32,12 @@ struct RandomSet {
   }
 
   const int num_points;
-  std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>> points;
-  std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>> normals;
-  std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>> covs;
+  std::vector<Eigen::Matrix<T, D, 1>> points;
+  std::vector<Eigen::Matrix<T, D, 1>> normals;
+  std::vector<Eigen::Matrix<T, D, D>> covs;
   std::vector<T> intensities;
   std::vector<T> times;
 
-  std::vector<Eigen::Matrix<T, D, 1>, Eigen::aligned_allocator<Eigen::Matrix<T, D, 1>>> aux1;
-  std::vector<Eigen::Matrix<T, D, D>, Eigen::aligned_allocator<Eigen::Matrix<T, D, D>>> aux2;
+  std::vector<Eigen::Matrix<T, D, 1>> aux1;
+  std::vector<Eigen::Matrix<T, D, D>> aux2;
 };

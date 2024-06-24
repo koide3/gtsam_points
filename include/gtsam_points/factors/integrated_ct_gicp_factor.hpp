@@ -54,7 +54,7 @@ public:
 protected:
   virtual void update_correspondences() const override;
 
-  mutable std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> mahalanobis;
+  mutable std::vector<Eigen::Matrix4d> mahalanobis;
 };
 
 using IntegratedCT_GICPFactor = IntegratedCT_GICPFactor_<>;

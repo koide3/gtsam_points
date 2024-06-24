@@ -18,7 +18,7 @@
 
 gtsam_points::PointCloudCPU::Ptr load_points(const std::string& filename) {
   auto data = gtsam_points::read_points4(filename);
-  std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points(data.size());
+  std::vector<Eigen::Vector3f> points(data.size());
   std::vector<float> intensities(data.size());
 
   for (int i = 0; i < data.size(); i++) {
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
   std::mt19937 mt;
   std::normal_distribution<> ndist(0.0, 1e-2);
 
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> target_points;
+  std::vector<Eigen::Vector4d> target_points;
   std::vector<double> target_intensities;
 
   for (double x = -4.0; x <= 4.0; x += 0.02) {
@@ -61,7 +61,7 @@ int main(int argc, char** argv) {
   delta.translation() += Eigen::Vector3d(0.15, 0.15, 0.25);
   delta.linear() = Eigen::AngleAxisd(0.05, Eigen::Vector3d(0.1, 0.2, 0.3).normalized()).toRotationMatrix();
 
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> source_points;
+  std::vector<Eigen::Vector4d> source_points;
   std::vector<double> source_intensities;
   for (double x = -2.0; x <= 2.0; x += 0.02) {
     for (double y = -2.0; y < 2.0; y += 0.02) {

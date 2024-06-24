@@ -32,10 +32,8 @@ void EVMBundleAdjustmentFactorBase::add(const gtsam::Point3& pt, const gtsam::Ke
  *        k = 0 is the smallest eigenvalue
  */
 template <int k>
-double EVMBundleAdjustmentFactorBase::calc_eigenvalue(
-  const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points,
-  Eigen::MatrixXd* H,
-  Eigen::MatrixXd* J) const {
+double EVMBundleAdjustmentFactorBase::calc_eigenvalue(const std::vector<Eigen::Vector3d>& transed_points, Eigen::MatrixXd* H, Eigen::MatrixXd* J)
+  const {
   BALMFeature feature(transed_points);
   if (H == nullptr || J == nullptr) {
     return feature.eigenvalues[k];
@@ -61,7 +59,7 @@ double EVMBundleAdjustmentFactorBase::calc_eigenvalue(
  * @brief Calculate dp / dT
  * @ref   Eqs. (9) - (12)
  */
-Eigen::MatrixXd EVMBundleAdjustmentFactorBase::calc_pose_derivatives(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points) const {
+Eigen::MatrixXd EVMBundleAdjustmentFactorBase::calc_pose_derivatives(const std::vector<Eigen::Vector3d>& transed_points) const {
   Eigen::MatrixXd D = Eigen::MatrixXd::Zero(3 * points.size(), 6 * keys_.size());
   for (int i = 0; i < transed_points.size(); i++) {
     Eigen::Matrix<double, 3, 6> Dij;
@@ -84,7 +82,8 @@ Eigen::MatrixXd EVMBundleAdjustmentFactorBase::calc_pose_derivatives(const std::
 /**
  * @brief Compose a Hessian factor from derivatives
  */
-gtsam::GaussianFactor::shared_ptr EVMBundleAdjustmentFactorBase::compose_factor(const Eigen::MatrixXd& H, const Eigen::MatrixXd& J, double error) const {
+gtsam::GaussianFactor::shared_ptr EVMBundleAdjustmentFactorBase::compose_factor(const Eigen::MatrixXd& H, const Eigen::MatrixXd& J, double error)
+  const {
   std::vector<gtsam::Matrix> Gs;
   std::vector<gtsam::Vector> gs;
 
@@ -108,7 +107,7 @@ PlaneEVMFactor::PlaneEVMFactor() : EVMBundleAdjustmentFactorBase() {}
 PlaneEVMFactor::~PlaneEVMFactor() {}
 
 double PlaneEVMFactor::error(const gtsam::Values& values) const {
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> transed_points(points.size());
+  std::vector<Eigen::Vector3d> transed_points(points.size());
   for (int i = 0; i < points.size(); i++) {
     transed_points[i] = values.at<gtsam::Pose3>(keys[i]) * points[i];
   }
@@ -116,7 +115,7 @@ double PlaneEVMFactor::error(const gtsam::Values& values) const {
 }
 
 boost::shared_ptr<gtsam::GaussianFactor> PlaneEVMFactor::linearize(const gtsam::Values& values) const {
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> transed_points(points.size());
+  std::vector<Eigen::Vector3d> transed_points(points.size());
   for (int i = 0; i < points.size(); i++) {
     transed_points[i] = values.at<gtsam::Pose3>(keys[i]) * points[i];
   }
@@ -141,7 +140,7 @@ EdgeEVMFactor::EdgeEVMFactor() : EVMBundleAdjustmentFactorBase() {}
 EdgeEVMFactor::~EdgeEVMFactor() {}
 
 double EdgeEVMFactor::error(const gtsam::Values& values) const {
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> transed_points(points.size());
+  std::vector<Eigen::Vector3d> transed_points(points.size());
   for (int i = 0; i < points.size(); i++) {
     transed_points[i] = values.at<gtsam::Pose3>(keys[i]) * points[i];
   }
@@ -149,7 +148,7 @@ double EdgeEVMFactor::error(const gtsam::Values& values) const {
 }
 
 boost::shared_ptr<gtsam::GaussianFactor> EdgeEVMFactor::linearize(const gtsam::Values& values) const {
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> transed_points(points.size());
+  std::vector<Eigen::Vector3d> transed_points(points.size());
   for (int i = 0; i < points.size(); i++) {
     transed_points[i] = values.at<gtsam::Pose3>(keys[i]) * points[i];
   }

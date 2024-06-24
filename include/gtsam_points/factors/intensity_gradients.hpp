@@ -45,7 +45,7 @@ public:
   static IntensityGradients::Ptr estimate(const PointCloud::ConstPtr& frame, const std::vector<int>& neighbors, int k_photo_neighbors);
 
 public:
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> intensity_gradients;
+  std::vector<Eigen::Vector4d> intensity_gradients;
 };
 
 namespace frame {

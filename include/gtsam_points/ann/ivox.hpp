@@ -38,9 +38,9 @@ public:
   mutable std::atomic_int last_lru_count;
   int serial_id;
 
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points;
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals;
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs;
+  std::vector<Eigen::Vector4d> points;
+  std::vector<Eigen::Vector4d> normals;
+  std::vector<Eigen::Matrix4d> covs;
   std::vector<double> intensities;
 };
 
@@ -120,9 +120,9 @@ public:
   int num_voxels() const { return voxelmap.size(); }
 
   /// Extract all points in iVox
-  virtual std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_points() const;
-  virtual std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_normals() const;
-  virtual std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> voxel_covs() const;
+  virtual std::vector<Eigen::Vector4d> voxel_points() const;
+  virtual std::vector<Eigen::Vector4d> voxel_normals() const;
+  virtual std::vector<Eigen::Matrix4d> voxel_covs() const;
 
 protected:
   inline size_t calc_index(const size_t voxel_id, const size_t point_id) const { return (voxel_id << point_id_bits) | point_id; }
@@ -130,7 +130,7 @@ protected:
   inline size_t point_id(const size_t i) const { return i & ((1ul << point_id_bits) - 1); }  ///< Extract the voxel ID from an index
 
   const Eigen::Vector3i voxel_coord(const Eigen::Vector4d& point) const;
-  std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> neighbor_offsets(const int neighbor_voxel_mode) const;
+  std::vector<Eigen::Vector3i> neighbor_offsets(const int neighbor_voxel_mode) const;
 
 protected:
   static constexpr int point_id_bits = 32;                  ///< Use the first 32 bits of point index to represent point ID
@@ -142,20 +142,15 @@ protected:
   bool covs_available;
   bool intensities_available;
 
-  double voxel_resolution;                                                          ///< Voxel resolution
-  double insertion_dist_sq_thresh;                                                  ///< Minimum distance between points in a voxel
-  int lru_cycle;                                                                    ///< LRU clearing check cycle
-  int lru_thresh;                                                                   ///< LRU caching threshold
-  std::vector<Eigen::Vector3i, Eigen::aligned_allocator<Eigen::Vector3i>> offsets;  ///< Neighbor voxel offsets
+  double voxel_resolution;               ///< Voxel resolution
+  double insertion_dist_sq_thresh;       ///< Minimum distance between points in a voxel
+  int lru_cycle;                         ///< LRU clearing check cycle
+  int lru_thresh;                        ///< LRU caching threshold
+  std::vector<Eigen::Vector3i> offsets;  ///< Neighbor voxel offsets
 
   int lru_count;  ///< Counter to manage LRU voxel deletion
 
-  using VoxelMap = std::unordered_map<
-    Eigen::Vector3i,
-    LinearContainer::Ptr,
-    XORVector3iHash,
-    std::equal_to<Eigen::Vector3i>,
-    Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, LinearContainer::Ptr>>>;
+  using VoxelMap = std::unordered_map<Eigen::Vector3i, LinearContainer::Ptr, XORVector3iHash>;
 
   VoxelMap voxelmap;                     ///< Voxelmap
   std::vector<LinearContainer*> voxels;  ///< Flattened voxelmap for linear indexing

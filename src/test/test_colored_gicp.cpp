@@ -100,8 +100,8 @@ public:
   Eigen::Isometry3d delta;
   std::vector<double> target_intensities;
   std::vector<double> source_intensities;
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> target_points;
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> source_points;
+  std::vector<Eigen::Vector4d> target_points;
+  std::vector<Eigen::Vector4d> source_points;
 };
 
 TEST_F(ColoredGICPTestBase, Check) {

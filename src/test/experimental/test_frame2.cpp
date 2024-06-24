@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
   const std::string data_path = "/home/koide/workspace/gtsam_points/data/kitti_07_dump";
 
   std::ifstream ifs(data_path + "/graph.txt");
-  std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> poses(5);
+  std::vector<Eigen::Isometry3d> poses(5);
   for (int i = 0; i < 5; i++) {
     std::string token;
     Eigen::Vector3d trans;

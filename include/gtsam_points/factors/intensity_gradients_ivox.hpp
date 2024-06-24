@@ -22,7 +22,7 @@ public:
   const Eigen::Vector4d& normal(const size_t i) const;
   const Eigen::Vector4d& intensity_gradient(const size_t i) const;
 
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_normals() const override;
+  std::vector<Eigen::Vector4d> voxel_normals() const override;
   std::vector<double> voxel_intensities() const;
   std::vector<Eigen::Vector4d> voxel_intensity_gradients() const;
 

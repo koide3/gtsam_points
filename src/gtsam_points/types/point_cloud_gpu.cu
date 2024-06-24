@@ -104,7 +104,7 @@ void PointCloudGPU::add_points_gpu(const Eigen::Matrix<T, D, 1>* points, int num
 
   check_error << cudaMallocAsync(&points_gpu, sizeof(Eigen::Vector3f) * num_points, stream);
   if (points) {
-    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_h(num_points);
+    std::vector<Eigen::Vector3f> points_h(num_points);
     for (int i = 0; i < num_points; i++) {
       points_h[i] = points[i].template cast<float>().template head<3>();
     }
@@ -129,7 +129,7 @@ void PointCloudGPU::add_normals_gpu(const Eigen::Matrix<T, D, 1>* normals, int n
 
   check_error << cudaMallocAsync(&normals_gpu, sizeof(Eigen::Vector3f) * num_points, stream);
   if (normals) {
-    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_h(num_points);
+    std::vector<Eigen::Vector3f> normals_h(num_points);
     for (int i = 0; i < num_points; i++) {
       normals_h[i] = normals[i].template head<3>().template cast<float>();
     }
@@ -154,7 +154,7 @@ void PointCloudGPU::add_covs_gpu(const Eigen::Matrix<T, D, D>* covs, int num_poi
 
   check_error << cudaMallocAsync(&covs_gpu, sizeof(Eigen::Matrix3f) * num_points, stream);
   if (covs) {
-    std::vector<Eigen::Matrix3f, Eigen::aligned_allocator<Eigen::Matrix3f>> covs_h(num_points);
+    std::vector<Eigen::Matrix3f> covs_h(num_points);
     for (int i = 0; i < num_points; i++) {
       covs_h[i] = covs[i].template cast<float>().template block<3, 3>(0, 0);
     }

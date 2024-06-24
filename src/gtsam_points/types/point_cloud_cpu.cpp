@@ -202,7 +202,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
     frame->num_points = num_points;
     frame->points_storage.resize(num_points);
     frame->points = frame->points_storage.data();
-    std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points_f(num_points);
+    std::vector<Eigen::Vector3f> points_f(num_points);
 
     ifs.seekg(0, std::ios::beg);
     ifs.read(reinterpret_cast<char*>(points_f.data()), sizeof(Eigen::Vector3f) * frame->size());
@@ -221,7 +221,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
     if (boost::filesystem::exists(path + "/normals_compact.bin")) {
       frame->normals_storage.resize(frame->size());
       frame->normals = frame->normals_storage.data();
-      std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> normals_f(frame->size());
+      std::vector<Eigen::Vector3f> normals_f(frame->size());
 
       std::ifstream ifs(path + "/normals_compact.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(normals_f.data()), sizeof(Eigen::Vector3f) * frame->size());
@@ -233,7 +233,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
     if (boost::filesystem::exists(path + "/covs_compact.bin")) {
       frame->covs_storage.resize(frame->size());
       frame->covs = frame->covs_storage.data();
-      std::vector<Eigen::Matrix<float, 6, 1>, Eigen::aligned_allocator<Eigen::Matrix<float, 6, 1>>> covs_f(frame->size());
+      std::vector<Eigen::Matrix<float, 6, 1>> covs_f(frame->size());
 
       std::ifstream ifs(path + "/covs_compact.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(covs_f.data()), sizeof(Eigen::Matrix<float, 6, 1>) * frame->size());
@@ -365,12 +365,7 @@ PointCloudCPU::Ptr random_sampling(const PointCloud::ConstPtr& frame, const doub
 // voxelgrid_sampling
 PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolution) {
   using Indices = std::shared_ptr<std::vector<int>>;
-  using VoxelMap = std::unordered_map<
-    Eigen::Vector3i,
-    Indices,
-    Vector3iHash,
-    std::equal_to<Eigen::Vector3i>,
-    Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, Indices>>>;
+  using VoxelMap = std::unordered_map<Eigen::Vector3i, Indices, Vector3iHash>;
 
   VoxelMap voxelmap;
 
@@ -466,12 +461,7 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
   }
 
   using Indices = std::shared_ptr<std::vector<int>>;
-  using VoxelMap = std::unordered_map<
-    Eigen::Vector3i,
-    Indices,
-    Vector3iHash,
-    std::equal_to<Eigen::Vector3i>,
-    Eigen::aligned_allocator<std::pair<const Eigen::Vector3i, Indices>>>;
+  using VoxelMap = std::unordered_map<Eigen::Vector3i, Indices, Vector3iHash>;
   VoxelMap voxelmap;
   voxelmap.rehash(frame->size() * sampling_rate);
 

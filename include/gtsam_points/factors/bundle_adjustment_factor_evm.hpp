@@ -51,17 +51,16 @@ public:
 
 protected:
   template <int k>
-  double calc_eigenvalue(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points, Eigen::MatrixXd* H = nullptr, Eigen::MatrixXd* J = nullptr)
-    const;
+  double calc_eigenvalue(const std::vector<Eigen::Vector3d>& transed_points, Eigen::MatrixXd* H = nullptr, Eigen::MatrixXd* J = nullptr) const;
 
-  Eigen::MatrixXd calc_pose_derivatives(const std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>>& transed_points) const;
+  Eigen::MatrixXd calc_pose_derivatives(const std::vector<Eigen::Vector3d>& transed_points) const;
 
   gtsam::GaussianFactor::shared_ptr compose_factor(const Eigen::MatrixXd& H, const Eigen::MatrixXd& J, double error) const;
 
 protected:
   double error_scale;
   std::vector<gtsam::Key> keys;
-  std::vector<gtsam::Point3, Eigen::aligned_allocator<gtsam::Point3>> points;
+  std::vector<gtsam::Point3> points;
   std::unordered_map<gtsam::Key, int> key_index;
 };
 

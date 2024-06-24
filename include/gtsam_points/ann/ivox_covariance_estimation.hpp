@@ -22,8 +22,8 @@ public:
   const Eigen::Vector4d& normal(const size_t i) const;
   const Eigen::Matrix4d& cov(const size_t i) const;
 
-  virtual std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> voxel_normals() const override;
-  virtual std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> voxel_covs() const override;
+  virtual std::vector<Eigen::Vector4d> voxel_normals() const override;
+  virtual std::vector<Eigen::Matrix4d> voxel_covs() const override;
 
 private:
   std::pair<Eigen::Matrix4d, Eigen::Vector4d>

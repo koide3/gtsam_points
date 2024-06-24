@@ -96,9 +96,9 @@ public:
 
 public:
   std::vector<double> times_storage;
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points_storage;
-  std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> normals_storage;
-  std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs_storage;
+  std::vector<Eigen::Vector4d> points_storage;
+  std::vector<Eigen::Vector4d> normals_storage;
+  std::vector<Eigen::Matrix4d> covs_storage;
   std::vector<double> intensities_storage;
 
   std::unordered_map<std::string, std::shared_ptr<void>> aux_attributes_storage;
@@ -265,20 +265,16 @@ PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& points, const int
  * @param downsample_resolution  Downsampling resolution
  * @return                       Merged frame
  */
-PointCloud::Ptr merge_frames(
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<PointCloud::ConstPtr>& frames,
-  double downsample_resolution);
+PointCloud::Ptr
+merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution);
 
 PointCloud::Ptr merge_frames_gpu(
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
+  const std::vector<Eigen::Isometry3d>& poses,
   const std::vector<PointCloud::ConstPtr>& frames,
   double downsample_resolution,
   CUstream_st* stream = 0);
 
-PointCloud::Ptr merge_frames_auto(
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& poses,
-  const std::vector<PointCloud::ConstPtr>& frames,
-  double downsample_resolution);
+PointCloud::Ptr
+merge_frames_auto(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution);
 
 }  // namespace gtsam_points

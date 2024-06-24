@@ -44,10 +44,8 @@ double overlap(const GaussianVoxelMap::ConstPtr& target, const PointCloud::Const
  * @param delta    Set of T_target_source
  * @return         Overlap rate
  */
-double overlap(
-  const std::vector<GaussianVoxelMap::ConstPtr>& targets,
-  const PointCloud::ConstPtr& source,
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
+double
+overlap(const std::vector<GaussianVoxelMap::ConstPtr>& targets, const PointCloud::ConstPtr& source, const std::vector<Eigen::Isometry3d>& deltas);
 
 /**
  * @brief Calculate the fraction of points fell in target voxels on GPU
@@ -88,7 +86,7 @@ double overlap_gpu(const PointCloud::ConstPtr& target, const PointCloud::ConstPt
 double overlap_gpu(
   const std::vector<GaussianVoxelMap::ConstPtr>& targets,
   const PointCloud::ConstPtr& source,
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas,
+  const std::vector<Eigen::Isometry3d>& deltas,
   CUstream_st* stream = 0);
 
 // Automatically select CPU or GPU method
@@ -97,6 +95,6 @@ double overlap_auto(const GaussianVoxelMap::ConstPtr& target, const PointCloud::
 double overlap_auto(
   const std::vector<GaussianVoxelMap::ConstPtr>& targets,
   const PointCloud::ConstPtr& source,
-  const std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>>& deltas);
+  const std::vector<Eigen::Isometry3d>& deltas);
 
 }  // namespace gtsam_points
