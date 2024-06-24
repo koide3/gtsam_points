@@ -8,26 +8,26 @@
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/util/normal_estimation.hpp>
-#include <gtsam_ext/util/covariance_estimation.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/util/normal_estimation.hpp>
+#include <gtsam_points/util/covariance_estimation.hpp>
 
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
-#include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
 
-#ifdef BUILD_GTSAM_EXT_GPU
-#include <gtsam_ext/types/point_cloud_gpu.hpp>
-#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
-#include <gtsam_ext/cuda/nonlinear_factor_set_gpu_create.hpp>
+#ifdef BUILD_GTSAM_POINTS_GPU
+#include <gtsam_points/types/point_cloud_gpu.hpp>
+#include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
+#include <gtsam_points/cuda/nonlinear_factor_set_gpu_create.hpp>
 #endif
 
-#include <gtsam_ext/factors/integrated_icp_factor.hpp>
-#include <gtsam_ext/factors/integrated_gicp_factor.hpp>
-#include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
-#include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
-#include <gtsam_ext/optimizers/isam2_ext.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
-#include <gtsam_ext/optimizers/linearization_hook.hpp>
+#include <gtsam_points/factors/integrated_icp_factor.hpp>
+#include <gtsam_points/factors/integrated_gicp_factor.hpp>
+#include <gtsam_points/factors/integrated_vgicp_factor.hpp>
+#include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
+#include <gtsam_points/optimizers/isam2_ext.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/optimizers/linearization_hook.hpp>
 
 #include <glk/thin_lines.hpp>
 #include <glk/pointcloud_buffer.hpp>
@@ -47,9 +47,9 @@ public:
       abort();
     }
 
-#ifdef BUILD_GTSAM_EXT_GPU
+#ifdef BUILD_GTSAM_POINTS_GPU
     std::cout << "Register GPU linearization hook" << std::endl;
-    gtsam_ext::LinearizationHook::register_hook([] { return gtsam_ext::create_nonlinear_factor_set_gpu(); });
+    gtsam_points::LinearizationHook::register_hook([] { return gtsam_points::create_nonlinear_factor_set_gpu(); });
 #endif
 
     // Read test data
@@ -66,7 +66,7 @@ public:
       const std::string points_path = (boost::format("%s/%06d/points.bin") % data_path % i).str();
       std::cout << "loading " << points_path << std::endl;
 
-      auto points_f = gtsam_ext::read_points(points_path);
+      auto points_f = gtsam_points::read_points(points_path);
       if (points_f.empty()) {
         std::cerr << "error: failed to read points " << points_path << std::endl;
         abort();
@@ -77,20 +77,20 @@ public:
       std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) {
         return (Eigen::Vector4d() << p.cast<double>(), 1.0).finished();
       });
-      auto covs = gtsam_ext::estimate_covariances(points);
+      auto covs = gtsam_points::estimate_covariances(points);
 
-#ifndef BUILD_GTSAM_EXT_GPU
+#ifndef BUILD_GTSAM_POINTS_GPU
       std::cout << "Create CPU frame" << std::endl;
-      auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
-      auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapCPU>(2.0);
+      auto frame = std::make_shared<gtsam_points::PointCloudCPU>();
+      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(2.0);
 #else
       std::cout << "Create GPU frame" << std::endl;
-      auto frame = std::make_shared<gtsam_ext::PointCloudGPU>();
-      auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(2.0);
+      auto frame = std::make_shared<gtsam_points::PointCloudGPU>();
+      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(2.0);
 #endif
       frame->add_points(points);
       frame->add_covs(covs);
-      frame->add_normals(gtsam_ext::estimate_normals(frame->points, frame->size()));
+      frame->add_normals(gtsam_points::estimate_normals(frame->points, frame->size()));
       voxelmap->insert(*frame);
 
       frames.push_back(frame);
@@ -112,7 +112,7 @@ public:
     factor_types.push_back("ICP_PLANE");
     factor_types.push_back("GICP");
     factor_types.push_back("VGICP");
-#ifdef BUILD_GTSAM_EXT_GPU
+#ifdef BUILD_GTSAM_POINTS_GPU
     factor_types.push_back("VGICP_GPU");
 #endif
 
@@ -186,26 +186,26 @@ public:
   gtsam::NonlinearFactor::shared_ptr create_factor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const gtsam_ext::PointCloud::ConstPtr& target,
-    const gtsam_ext::GaussianVoxelMap::ConstPtr& target_voxelmap,
-    const gtsam_ext::PointCloud::ConstPtr& source) {
+    const gtsam_points::PointCloud::ConstPtr& target,
+    const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap,
+    const gtsam_points::PointCloud::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("ICP_PLANE")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_points::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("GICP")) {
-      auto factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       return factor;
     } else if (factor_types[factor_type] == std::string("VGICP")) {
-      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
+      return gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
-#ifdef BUILD_GTSAM_EXT_GPU
-      return gtsam::make_shared<gtsam_ext::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap, source);
+#ifdef BUILD_GTSAM_POINTS_GPU
+      return gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap, source);
 #endif
     }
 
@@ -229,13 +229,13 @@ public:
 
     // Levenberg-Marquardt optimization
     if (optimizer_types[optimizer_type] == std::string("LM")) {
-      gtsam_ext::LevenbergMarquardtExtParams lm_params;
-      lm_params.callback = [this](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+      gtsam_points::LevenbergMarquardtExtParams lm_params;
+      lm_params.callback = [this](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
         guik::LightViewer::instance()->append_text(status.to_string());
         update_viewer(values);
       };
 
-      gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, poses, lm_params);
+      gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, poses, lm_params);
       optimizer.optimize();
     }
     // iSAM2 optimization
@@ -244,7 +244,7 @@ public:
       // isam2_params.setRelinearizeSkip(1);
       isam2_params.relinearizeSkip = 1;
       isam2_params.setRelinearizeThreshold(0.0);
-      gtsam_ext::ISAM2Ext isam2(isam2_params);
+      gtsam_points::ISAM2Ext isam2(isam2_params);
 
       auto t1 = std::chrono::high_resolution_clock::now();
       auto status = isam2.update(graph, poses);
@@ -280,8 +280,8 @@ private:
 
   gtsam::Values poses;
   gtsam::Values poses_gt;
-  std::vector<gtsam_ext::PointCloud::Ptr> frames;
-  std::vector<gtsam_ext::GaussianVoxelMap::Ptr> voxelmaps;
+  std::vector<gtsam_points::PointCloud::Ptr> frames;
+  std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps;
 };
 
 int main(int argc, char** argv) {

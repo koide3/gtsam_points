@@ -5,9 +5,9 @@
 
 #include <gtest/gtest.h>
 #include <gtsam/inference/Symbol.h>
-#include <gtsam_ext/util/expressions.hpp>
-#include <gtsam_ext/util/bspline.hpp>
-#include <gtsam_ext/util/continuous_trajectory.hpp>
+#include <gtsam_points/util/expressions.hpp>
+#include <gtsam_points/util/bspline.hpp>
+#include <gtsam_points/util/continuous_trajectory.hpp>
 
 using gtsam::symbol_shorthand::X;
 
@@ -43,7 +43,7 @@ public:
 
   void fit_knots(const double knot_interval) {
     values.reset(new gtsam::Values);
-    ct.reset(new gtsam_ext::ContinuousTrajectory('x', stamps.front(), stamps.back(), knot_interval));
+    ct.reset(new gtsam_points::ContinuousTrajectory('x', stamps.front(), stamps.back(), knot_interval));
     *values = ct->fit_knots(stamps, poses);
   }
 
@@ -64,11 +64,11 @@ public:
       const double knot_t = ct->knot_stamp(knot_i);
 
       const gtsam::Double_ p = (1.0 / ct->knot_interval) * (gtsam::Double_(gtsam::Key(0)) - gtsam::Double_(knot_t));
-      const auto pose0_ = gtsam_ext::bspline(X(knot_i), p);
+      const auto pose0_ = gtsam_points::bspline(X(knot_i), p);
       const auto pose0 = pose0_.value(*values);
       check_pose_error(pose, pose0, "Interpolation");
 
-      const auto rot0_ = gtsam_ext::bspline_so3(  //
+      const auto rot0_ = gtsam_points::bspline_so3(  //
         gtsam::rotation(X(knot_i - 1)),
         gtsam::rotation(X(knot_i)),
         gtsam::rotation(X(knot_i + 1)),
@@ -77,7 +77,7 @@ public:
       std::vector<gtsam::Matrix> Hs_rot0(rot0_.keys().size());
       const auto rot0 = rot0_.value(*values, Hs_rot0);
 
-      const auto trans0_ = gtsam_ext::bspline_trans(
+      const auto trans0_ = gtsam_points::bspline_trans(
         gtsam::translation(X(knot_i - 1)),
         gtsam::translation(X(knot_i)),
         gtsam::translation(X(knot_i + 1)),
@@ -88,7 +88,7 @@ public:
       check_pose_error(pose, gtsam::Pose3(rot0, trans0), "Independent");
 
       // Derivatives
-      const auto dr_dt_ = gtsam_ext::bspline_angular_vel(
+      const auto dr_dt_ = gtsam_points::bspline_angular_vel(
         gtsam::rotation(X(knot_i - 1)),
         gtsam::rotation(X(knot_i)),
         gtsam::rotation(X(knot_i + 1)),
@@ -98,7 +98,7 @@ public:
       const auto dr_dt = dr_dt_.value(*values);
       check_error(dr_dt, Hs_rot0.front(), "Angular vel", 1e-1);
 
-      const auto dt_dt_ = gtsam_ext::bspline_linear_vel(
+      const auto dt_dt_ = gtsam_points::bspline_linear_vel(
         gtsam::translation(X(knot_i - 1)),
         gtsam::translation(X(knot_i)),
         gtsam::translation(X(knot_i + 1)),
@@ -110,7 +110,7 @@ public:
       const auto dt_dt = dt_dt_.value(*values, Hs_tvel);
       check_error(dt_dt, Hs_trans0.front(), "Linear vel", 5e-2);
 
-      const auto dt_dt2_ = gtsam_ext::bspline_linear_acc(
+      const auto dt_dt2_ = gtsam_points::bspline_linear_acc(
         gtsam::translation(X(knot_i - 1)),
         gtsam::translation(X(knot_i)),
         gtsam::translation(X(knot_i + 1)),
@@ -121,7 +121,7 @@ public:
       check_error(dt_dt2, Hs_tvel.front(), "Linear acc", 5e-2);
 
       const Eigen::Vector3d g(0.0, 0.0, 9.80665);
-      const auto imu_ = gtsam_ext::bspline_imu(  //
+      const auto imu_ = gtsam_points::bspline_imu(  //
         gtsam::Pose3_(X(knot_i - 1)),
         gtsam::Pose3_(X(knot_i)),
         gtsam::Pose3_(X(knot_i + 1)),
@@ -162,7 +162,7 @@ public:
   std::vector<gtsam::Vector7> imu_data;
 
   std::unique_ptr<gtsam::Values> values;
-  std::unique_ptr<gtsam_ext::ContinuousTrajectory> ct;
+  std::unique_ptr<gtsam_points::ContinuousTrajectory> ct;
 };
 
 TEST_F(ContinuousTrajectoryTestBase, RandomKnots) {

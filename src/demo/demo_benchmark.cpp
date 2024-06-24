@@ -6,19 +6,19 @@
 #include <boost/format.hpp>
 
 #include <gtsam/nonlinear/Values.h>
-#include <gtsam_ext/ann/kdtree.hpp>
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
-#include <gtsam_ext/factors/integrated_gicp_factor.hpp>
-#include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
-#include <gtsam_ext/util/covariance_estimation.hpp>
-#include <gtsam_ext/util/read_points.hpp>
+#include <gtsam_points/ann/kdtree.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/factors/integrated_gicp_factor.hpp>
+#include <gtsam_points/factors/integrated_vgicp_factor.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/util/read_points.hpp>
 
-#ifdef BUILD_GTSAM_EXT_GPU
-#include <gtsam_ext/types/point_cloud_gpu.hpp>
-#include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
-#include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
-#include <gtsam_ext/cuda/cuda_device_prop.hpp>
+#ifdef BUILD_GTSAM_POINTS_GPU
+#include <gtsam_points/types/point_cloud_gpu.hpp>
+#include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
+#include <gtsam_points/cuda/stream_temp_buffer_roundrobin.hpp>
+#include <gtsam_points/cuda/cuda_device_prop.hpp>
 #endif
 
 class StopWatch {
@@ -124,25 +124,25 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
 
   StopWatch stopwatch;
 
-  std::vector<gtsam_ext::PointCloud::Ptr> frames;
-  std::vector<std::shared_ptr<gtsam_ext::KdTree>> trees;
-  std::vector<gtsam_ext::GaussianVoxelMap::Ptr> voxels;
+  std::vector<gtsam_points::PointCloud::Ptr> frames;
+  std::vector<std::shared_ptr<gtsam_points::KdTree>> trees;
+  std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxels;
 
   stopwatch.start();
   for (int i = 0; i < 5; i++) {
-    const auto points = gtsam_ext::read_points((boost::format("%s/%06d/points.bin") % dump_path % i).str());
+    const auto points = gtsam_points::read_points((boost::format("%s/%06d/points.bin") % dump_path % i).str());
 
     if (factor_type.find("GPU") == std::string::npos) {
-      auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points);
-      frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size(), 10, num_threads));
+      auto frame = std::make_shared<gtsam_points::PointCloudCPU>(points);
+      frame->add_covs(gtsam_points::estimate_covariances(frame->points, frame->size(), 10, num_threads));
       frames.emplace_back(frame);
     } else {
-#ifdef BUILD_GTSAM_EXT_GPU
-      auto frame = std::make_shared<gtsam_ext::PointCloudGPU>(points);
-      frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size(), 10, num_threads));
+#ifdef BUILD_GTSAM_POINTS_GPU
+      auto frame = std::make_shared<gtsam_points::PointCloudGPU>(points);
+      frame->add_covs(gtsam_points::estimate_covariances(frame->points, frame->size(), 10, num_threads));
       frames.emplace_back(frame);
 #else
-      std::cerr << "error: gtsam_ext was built without CUDA!!" << std::endl;
+      std::cerr << "error: gtsam_points was built without CUDA!!" << std::endl;
 #endif
     }
   }
@@ -151,33 +151,33 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
   if (factor_type == "GICP") {
     stopwatch.start();
     for (int i = 0; i < 5; i++) {
-      trees.emplace_back(std::make_shared<gtsam_ext::KdTree>(frames[i]->points, frames[i]->size()));
+      trees.emplace_back(std::make_shared<gtsam_points::KdTree>(frames[i]->points, frames[i]->size()));
     }
     stopwatch.stop("kdtree creation");
   } else if (factor_type == "VGICP") {
     stopwatch.start();
     for (int i = 0; i < 5; i++) {
-      voxels.emplace_back(std::make_shared<gtsam_ext::GaussianVoxelMapCPU>(1.0));
+      voxels.emplace_back(std::make_shared<gtsam_points::GaussianVoxelMapCPU>(1.0));
       voxels.back()->insert(*frames[i]);
     }
     stopwatch.stop("voxelmap creation");
   } else if (factor_type == "VGICP_GPU") {
-#ifdef BUILD_GTSAM_EXT_GPU
+#ifdef BUILD_GTSAM_POINTS_GPU
     stopwatch.start();
     for (int i = 0; i < 5; i++) {
-      voxels.emplace_back(std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(1.0));
+      voxels.emplace_back(std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0));
       voxels.back()->insert(*frames[i]);
     }
     stopwatch.stop("voxelmap creation");
 #else
-    std::cerr << "error: gtsam_ext was built without CUDA!!" << std::endl;
+    std::cerr << "error: gtsam_points was built without CUDA!!" << std::endl;
 #endif
   } else {
     std::cerr << "error: unknown factor type " << factor_type << std::endl;
   }
 
-#ifdef BUILD_GTSAM_EXT_GPU
-  gtsam_ext::StreamTempBufferRoundRobin stream_buffer_roundrobin;
+#ifdef BUILD_GTSAM_POINTS_GPU
+  gtsam_points::StreamTempBufferRoundRobin stream_buffer_roundrobin;
 #endif
 
   gtsam::NonlinearFactorGraph graph;
@@ -186,31 +186,31 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
     for (int i = 0; i < 5; i++) {
       for (int j = i + 1; j < 5; j++) {
         if (factor_type == "GICP") {
-          auto factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(i, j, frames[i], frames[j], trees[i]);
+          auto factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(i, j, frames[i], frames[j], trees[i]);
           factor->set_num_threads(num_threads);
           graph.add(factor);
         } else if (factor_type == "VGICP") {
-          auto factor = gtsam::make_shared<gtsam_ext::IntegratedVGICPFactor>(i, j, voxels[i], frames[j]);
+          auto factor = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(i, j, voxels[i], frames[j]);
           factor->set_num_threads(num_threads);
           graph.add(factor);
         } else if (factor_type == "VGICP_GPU") {
-#ifdef BUILD_GTSAM_EXT_GPU
+#ifdef BUILD_GTSAM_POINTS_GPU
           const auto stream_buffer = stream_buffer_roundrobin.get_stream_buffer();
           const auto stream = stream_buffer.first;
           const auto buffer = stream_buffer.second;
 
-          auto factor = gtsam::make_shared<gtsam_ext::IntegratedVGICPFactorGPU>(i, j, voxels[i], frames[j], stream, buffer);
+          auto factor = gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(i, j, voxels[i], frames[j], stream, buffer);
           graph.add(factor);
 #else
-          std::cerr << "error: gtsam_ext was built without CUDA!!" << std::endl;
+          std::cerr << "error: gtsam_points was built without CUDA!!" << std::endl;
 #endif
         }
       }
     }
   }
 
-  gtsam_ext::LevenbergMarquardtExtParams lm_params;
-  gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+  gtsam_points::LevenbergMarquardtExtParams lm_params;
+  gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
 
   stopwatch.start();
   values = optimizer.optimize();
@@ -242,8 +242,8 @@ void print_info() {
     }
   }
 
-#ifdef BUILD_GTSAM_EXT_GPU
-  const auto cuda_devices = gtsam_ext::cuda_device_names();
+#ifdef BUILD_GTSAM_POINTS_GPU
+  const auto cuda_devices = gtsam_points::cuda_device_names();
   for (int i = 0; i < cuda_devices.size(); i++) {
     std::cout << boost::format("GPU model%d : %s") % i % cuda_devices[i] << std::endl;
   }
@@ -281,7 +281,7 @@ int main(int argc, char** argv) {
   benchmark_alignment("VGICP", max_num_threads, 10);
   std::cout << std::endl;
 
-#ifdef BUILD_GTSAM_EXT_GPU
+#ifdef BUILD_GTSAM_POINTS_GPU
   benchmark_alignment("VGICP_GPU", 1, 1);
   benchmark_alignment("VGICP_GPU", max_num_threads, 1);
   benchmark_alignment("VGICP_GPU", max_num_threads, 10);

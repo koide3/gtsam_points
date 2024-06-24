@@ -1,9 +1,9 @@
 #pragma once
 
 #include <gtest/gtest.h>
-#include <gtsam_ext/types/point_cloud.hpp>
+#include <gtsam_points/types/point_cloud.hpp>
 
-void compare_frames(const gtsam_ext::PointCloud::ConstPtr& frame1, const gtsam_ext::PointCloud::ConstPtr& frame2, const std::string& label = "") {
+void compare_frames(const gtsam_points::PointCloud::ConstPtr& frame1, const gtsam_points::PointCloud::ConstPtr& frame2, const std::string& label = "") {
   ASSERT_NE(frame1, nullptr) << label;
   ASSERT_NE(frame2, nullptr) << label;
 

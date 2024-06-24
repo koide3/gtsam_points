@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gtsam_ext</name>
+  <name>gtsam_points</name>
   <version>0.0.0</version>
   <description>An extension library for GTSAM</description>
 

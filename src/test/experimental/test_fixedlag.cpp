@@ -10,7 +10,7 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam_unstable/nonlinear/IncrementalFixedLagSmoother.h>
 
-#include <gtsam_ext/optimizers/incremental_fixed_lag_smoother_ext.hpp>
+#include <gtsam_points/optimizers/incremental_fixed_lag_smoother_ext.hpp>
 
 int main(int argc, char** argv) {
   std::ifstream ifs("/home/koide/isam2_update2.txt");
@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
   gtsam::ISAM2Params isam2_params;
   isam2_params.relinearizeSkip = 1;
   // gtsam::IncrementalFixedLagSmoother smoother(smoother_lag, isam2_params);
-  gtsam_ext::IncrementalFixedLagSmootherExt smoother(smoother_lag, isam2_params);
+  gtsam_points::IncrementalFixedLagSmootherExt smoother(smoother_lag, isam2_params);
 
   std::string line;
   while(!ifs.eof() && std::getline(ifs, line) && !line.empty() ) {

@@ -36,8 +36,8 @@ RUN wget https://github.com/NVIDIA/cub/archive/refs/tags/1.8.0.tar.gz
 RUN tar xzvf 1.8.0.tar.gz
 RUN mv cub-1.8.0/cub /usr/local/cuda/include/
 
-COPY . /root/gtsam_ext
-WORKDIR /root/gtsam_ext/build
+COPY . /root/gtsam_points
+WORKDIR /root/gtsam_points/build
 RUN rm -rf *
 RUN cmake .. \
   -DBUILD_DEMO=ON \

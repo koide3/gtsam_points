@@ -12,22 +12,22 @@
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/util/covariance_estimation.hpp>
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
-#include <gtsam_ext/types/point_cloud_gpu.hpp>
-#include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
-#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
-#include <gtsam_ext/factors/integrated_icp_factor.hpp>
-#include <gtsam_ext/factors/integrated_gicp_factor.hpp>
-#include <gtsam_ext/factors/integrated_vgicp_factor.hpp>
-#include <gtsam_ext/factors/integrated_vgicp_factor_gpu.hpp>
-#include <gtsam_ext/cuda/stream_temp_buffer_roundrobin.hpp>
-#include <gtsam_ext/cuda/nonlinear_factor_set_gpu_create.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/types/point_cloud_gpu.hpp>
+#include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
+#include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
+#include <gtsam_points/factors/integrated_icp_factor.hpp>
+#include <gtsam_points/factors/integrated_gicp_factor.hpp>
+#include <gtsam_points/factors/integrated_vgicp_factor.hpp>
+#include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
+#include <gtsam_points/cuda/stream_temp_buffer_roundrobin.hpp>
+#include <gtsam_points/cuda/nonlinear_factor_set_gpu_create.hpp>
 
-#include <gtsam_ext/optimizers/linearization_hook.hpp>
-#include <gtsam_ext/optimizers/isam2_ext.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/optimizers/linearization_hook.hpp>
+#include <gtsam_points/optimizers/isam2_ext.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 
 struct MatchingCostFactorsTestBase : public testing::Test {
   virtual void SetUp() {
@@ -61,30 +61,30 @@ struct MatchingCostFactorsTestBase : public testing::Test {
     // Read submap points
     for (int i = 0; i < 5; i++) {
       const std::string points_path = (boost::format("%s/%06d/points.bin") % dump_path % i).str();
-      auto points_f = gtsam_ext::read_points(points_path);
+      auto points_f = gtsam_points::read_points(points_path);
       EXPECT_NE(points_f.empty(), true) << "Failed to read points";
 
       std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points(points_f.size());
       std::transform(points_f.begin(), points_f.end(), points.begin(), [](const Eigen::Vector3f& p) {
         return Eigen::Vector4d(p[0], p[1], p[2], 1.0);
       });
-      std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs = gtsam_ext::estimate_covariances(points);
+      std::vector<Eigen::Matrix4d, Eigen::aligned_allocator<Eigen::Matrix4d>> covs = gtsam_points::estimate_covariances(points);
 
-      auto frame = std::make_shared<gtsam_ext::PointCloudCPU>();
+      auto frame = std::make_shared<gtsam_points::PointCloudCPU>();
       frame->add_points(points);
       frame->add_covs(covs);
       frames.push_back(frame);
 
-#ifdef BUILD_GTSAM_EXT_GPU
-      frames.back() = gtsam_ext::PointCloudGPU::clone(*frames.back());
+#ifdef BUILD_GTSAM_POINTS_GPU
+      frames.back() = gtsam_points::PointCloudGPU::clone(*frames.back());
 #endif
 
-      auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapCPU>(1.0);
+      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(1.0);
       voxelmap->insert(*frames.back());
       voxelmaps.push_back(voxelmap);
 
-#ifdef BUILD_GTSAM_EXT_GPU
-      auto voxelmap_gpu = std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(1.0);
+#ifdef BUILD_GTSAM_POINTS_GPU
+      auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
       voxelmap_gpu->insert(*frames.back());
       voxelmaps_gpu.push_back(voxelmap_gpu);
 #else
@@ -92,20 +92,20 @@ struct MatchingCostFactorsTestBase : public testing::Test {
 #endif
     }
 
-#ifdef BUILD_GTSAM_EXT_GPU
-    gtsam_ext::LinearizationHook::register_hook([] { return gtsam_ext::create_nonlinear_factor_set_gpu(); });
-    stream_buffer_roundrobin.reset(new gtsam_ext::StreamTempBufferRoundRobin(32));
+#ifdef BUILD_GTSAM_POINTS_GPU
+    gtsam_points::LinearizationHook::register_hook([] { return gtsam_points::create_nonlinear_factor_set_gpu(); });
+    stream_buffer_roundrobin.reset(new gtsam_points::StreamTempBufferRoundRobin(32));
 #endif
   }
 
-  std::vector<gtsam_ext::PointCloud::Ptr> frames;
-  std::vector<gtsam_ext::GaussianVoxelMap::Ptr> voxelmaps;
-  std::vector<gtsam_ext::GaussianVoxelMap::Ptr> voxelmaps_gpu;
+  std::vector<gtsam_points::PointCloud::Ptr> frames;
+  std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps;
+  std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps_gpu;
   gtsam::Values poses;
   gtsam::Values poses_gt;
 
-#ifdef BUILD_GTSAM_EXT_GPU
-  std::unique_ptr<gtsam_ext::StreamTempBufferRoundRobin> stream_buffer_roundrobin;
+#ifdef BUILD_GTSAM_POINTS_GPU
+  std::unique_ptr<gtsam_points::StreamTempBufferRoundRobin> stream_buffer_roundrobin;
 #endif
 };
 
@@ -119,25 +119,25 @@ public:
   gtsam::NonlinearFactor::shared_ptr create_factor(
     gtsam::Key target_key,
     gtsam::Key source_key,
-    const gtsam_ext::PointCloud::ConstPtr& target,
-    const gtsam_ext::GaussianVoxelMap::ConstPtr& target_voxelmap,
-    const gtsam_ext::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
-    const gtsam_ext::PointCloud::ConstPtr& source) {
+    const gtsam_points::PointCloud::ConstPtr& target,
+    const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap,
+    const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
+    const gtsam_points::PointCloud::ConstPtr& source) {
     std::string method = GetParam();
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      factor.reset(new gtsam_ext::IntegratedICPFactor(target_key, source_key, target, source));
+      factor.reset(new gtsam_points::IntegratedICPFactor(target_key, source_key, target, source));
     } else if (method == "GICP") {
-      factor.reset(new gtsam_ext::IntegratedGICPFactor(target_key, source_key, target, source));
+      factor.reset(new gtsam_points::IntegratedGICPFactor(target_key, source_key, target, source));
     } else if (method == "VGICP") {
-      factor.reset(new gtsam_ext::IntegratedVGICPFactor(target_key, source_key, target_voxelmap, source));
+      factor.reset(new gtsam_points::IntegratedVGICPFactor(target_key, source_key, target_voxelmap, source));
     } else if (method == "VGICP_CUDA") {
-#ifdef BUILD_GTSAM_EXT_GPU
+#ifdef BUILD_GTSAM_POINTS_GPU
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
       const auto& stream = stream_buffer.first;
       const auto& buffer = stream_buffer.second;
-      factor.reset(new gtsam_ext::IntegratedVGICPFactorGPU(target_key, source_key, target_voxelmap_gpu, source, stream, buffer));
+      factor.reset(new gtsam_points::IntegratedVGICPFactorGPU(target_key, source_key, target_voxelmap_gpu, source, stream, buffer));
 #endif
     }
 
@@ -147,25 +147,25 @@ public:
   gtsam::NonlinearFactor::shared_ptr create_factor(
     const gtsam::Pose3& fixed_target_pose,
     gtsam::Key source_key,
-    const gtsam_ext::PointCloud::ConstPtr& target,
-    const gtsam_ext::GaussianVoxelMap::ConstPtr& target_voxelmap,
-    const gtsam_ext::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
-    const gtsam_ext::PointCloud::ConstPtr& source) {
+    const gtsam_points::PointCloud::ConstPtr& target,
+    const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap,
+    const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
+    const gtsam_points::PointCloud::ConstPtr& source) {
     std::string method = GetParam();
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      factor.reset(new gtsam_ext::IntegratedICPFactor(fixed_target_pose, source_key, target, source));
+      factor.reset(new gtsam_points::IntegratedICPFactor(fixed_target_pose, source_key, target, source));
     } else if (method == "GICP") {
-      factor.reset(new gtsam_ext::IntegratedGICPFactor(fixed_target_pose, source_key, target, source));
+      factor.reset(new gtsam_points::IntegratedGICPFactor(fixed_target_pose, source_key, target, source));
     } else if (method == "VGICP") {
-      factor.reset(new gtsam_ext::IntegratedVGICPFactor(fixed_target_pose, source_key, target_voxelmap, source));
+      factor.reset(new gtsam_points::IntegratedVGICPFactor(fixed_target_pose, source_key, target_voxelmap, source));
     } else if (method == "VGICP_CUDA") {
-#ifdef BUILD_GTSAM_EXT_GPU
+#ifdef BUILD_GTSAM_POINTS_GPU
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
       const auto& stream = stream_buffer.first;
       const auto& buffer = stream_buffer.second;
-      factor.reset(new gtsam_ext::IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target_voxelmap_gpu, source, stream, buffer));
+      factor.reset(new gtsam_points::IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target_voxelmap_gpu, source, stream, buffer));
 #endif
     }
 
@@ -177,11 +177,11 @@ public:
     const gtsam::Values& values,
     const gtsam::Values& additional_values,
     const std::string& note = "") {
-    gtsam_ext::LevenbergMarquardtExtParams lm_params;
+    gtsam_points::LevenbergMarquardtExtParams lm_params;
     lm_params.setMaxIterations(30);
     lm_params.setRelativeErrorTol(1e-4);
     // lm_params.set_verbose();
-    gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+    gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
     gtsam::Values result = optimizer.optimize();
     result.insert(additional_values);
 
@@ -209,7 +209,7 @@ public:
   }
 };
 
-INSTANTIATE_TEST_SUITE_P(gtsam_ext, MatchingCostFactorTest, testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), [](const auto& info) {
+INSTANTIATE_TEST_SUITE_P(gtsam_points, MatchingCostFactorTest, testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), [](const auto& info) {
   return info.param;
 });
 

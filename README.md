@@ -1,15 +1,10 @@
-# gtsam_ext
+# gtsam_points
 
 This is a collection of GTSAM factors and optimizers for range-based SLAM.
 
-Tested on Ubuntu 20.04 and CUDA 11.6 / Ubuntu 22.04 and CUDA 11.8 / NVIDIA Jetson Xavier and Orin (JetPack 5.0.1).
+Tested on Ubuntu 22.04 and CUDA 12.2 / NVIDIA Jetson Xavier and Orin (JetPack 5.0.1) with **GTSAM 4.2a9**.
 
-[![Build](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml)
-
-## Important Notes
-
-Releases after v0.1.1 (13fb3c76b64530832f52a80d07ad2da4c267b89a, Nov, 27th, 2023) can be subject to the change to a non-permissive license.  
-Note that v0.1.1 and earlier remain on the MIT license.
+[![Build](https://github.com/koide3/gtsam_points/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_points/actions/workflows/build.yml)
 
 ## Factors
 
@@ -99,9 +94,9 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 sudo make install
 
-## Build gtsam_ext
-git clone https://github.com/koide3/gtsam_ext --recursive
-mkdir gtsam_ext/build && cd gtsam/build
+## Build gtsam_points
+git clone https://github.com/koide3/gtsam_points --recursive
+mkdir gtsam_points/build && cd gtsam/build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 
 # Optional cmake arguments
@@ -118,7 +113,7 @@ make -j$(nproc)
 ## Demo
 
 ```bash
-cd gtsam_ext
+cd gtsam_points
 ./build/demo_matching_cost_factors
 ./build/demo_bundle_adjustment
 ./build/demo_continuous_time

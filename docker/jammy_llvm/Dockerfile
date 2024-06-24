@@ -2,8 +2,8 @@ FROM koide3/gtsam_docker:jammy
 
 RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 50
 
-COPY . /root/gtsam_ext
-WORKDIR /root/gtsam_ext/build
+COPY . /root/gtsam_points
+WORKDIR /root/gtsam_points/build
 RUN rm -rf *
 RUN CC=clang CXX=clang++ \
   cmake .. \

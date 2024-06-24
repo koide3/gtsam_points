@@ -1,16 +1,16 @@
 #include <iostream>
 
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
 
 #include <glk/io/ply_io.hpp>
 #include <glk/pointcloud_buffer.hpp>
 #include <guik/viewer/light_viewer.hpp>
 
 int main(int argc, char** argv) {
-  const auto points_f = gtsam_ext::read_points("data/kitti_00/000000.bin");
-  auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points_f);
-  auto filtered = gtsam_ext::remove_outliers(frame, 10, 1.0, 8);
+  const auto points_f = gtsam_points::read_points("data/kitti_00/000000.bin");
+  auto frame = std::make_shared<gtsam_points::PointCloudCPU>(points_f);
+  auto filtered = gtsam_points::remove_outliers(frame, 10, 1.0, 8);
 
   glk::save_ply_binary("/home/koide/000000.ply", points_f.data(), points_f.size());
 

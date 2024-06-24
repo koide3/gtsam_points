@@ -7,13 +7,13 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/Values.h>
 
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/util/covariance_estimation.hpp>
-#include <gtsam_ext/util/easy_profiler.hpp>
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
-#include <gtsam_ext/types/point_cloud_gpu.hpp>
-#include <gtsam_ext/types/gaussian_voxelmap_cpu.hpp>
-#include <gtsam_ext/types/gaussian_voxelmap_gpu.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/util/easy_profiler.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/types/point_cloud_gpu.hpp>
+#include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
+#include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
 
 #include <validate_frame.hpp>
 
@@ -49,24 +49,24 @@ struct VoxelMapTestBase : public testing::Test {
     // Read submap points
     for (int i = 0; i < 5; i++) {
       const std::string points_path = (boost::format("%s/%06d/points.bin") % dump_path % i).str();
-      auto points_f = gtsam_ext::read_points(points_path);
+      auto points_f = gtsam_points::read_points(points_path);
       EXPECT_NE(points_f.empty(), true) << "Failed to read points";
 
-      auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points_f);
-      frame = gtsam_ext::randomgrid_sampling(frame, 1.0, 10000.0 / frame->size(), mt);
-      frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size()));
+      auto frame = std::make_shared<gtsam_points::PointCloudCPU>(points_f);
+      frame = gtsam_points::randomgrid_sampling(frame, 1.0, 10000.0 / frame->size(), mt);
+      frame->add_covs(gtsam_points::estimate_covariances(frame->points, frame->size()));
       frames.push_back(frame);
 
-#ifdef BUILD_GTSAM_EXT_GPU
-      frames.back() = gtsam_ext::PointCloudGPU::clone(*frames.back());
+#ifdef BUILD_GTSAM_POINTS_GPU
+      frames.back() = gtsam_points::PointCloudGPU::clone(*frames.back());
 #endif
 
-      auto voxelmap = std::make_shared<gtsam_ext::GaussianVoxelMapCPU>(1.0);
+      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(1.0);
       voxelmap->insert(*frames.back());
       voxelmaps.push_back(voxelmap);
 
-#ifdef BUILD_GTSAM_EXT_GPU
-      auto voxelmap_gpu = std::make_shared<gtsam_ext::GaussianVoxelMapGPU>(1.0);
+#ifdef BUILD_GTSAM_POINTS_GPU
+      auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
       voxelmap_gpu->insert(*frames.back());
       voxelmaps_gpu.push_back(voxelmap_gpu);
 #else
@@ -75,9 +75,9 @@ struct VoxelMapTestBase : public testing::Test {
     }
   }
 
-  std::vector<gtsam_ext::PointCloud::Ptr> frames;
-  std::vector<gtsam_ext::GaussianVoxelMap::Ptr> voxelmaps;
-  std::vector<gtsam_ext::GaussianVoxelMap::Ptr> voxelmaps_gpu;
+  std::vector<gtsam_points::PointCloud::Ptr> frames;
+  std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps;
+  std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps_gpu;
   gtsam::Values poses;
   gtsam::Values poses_gt;
 };
@@ -89,31 +89,31 @@ TEST_F(VoxelMapTestBase, LoadCheck) {
 
 TEST_F(VoxelMapTestBase, VoxelMapCPU) {
   for (int i = 0; i < frames.size(); i++) {
-    const double overlap = gtsam_ext::overlap(voxelmaps[i], frames[i], Eigen::Isometry3d::Identity());
-    const double overlap_auto = gtsam_ext::overlap_auto(voxelmaps[i], frames[i], Eigen::Isometry3d::Identity());
+    const double overlap = gtsam_points::overlap(voxelmaps[i], frames[i], Eigen::Isometry3d::Identity());
+    const double overlap_auto = gtsam_points::overlap_auto(voxelmaps[i], frames[i], Eigen::Isometry3d::Identity());
     EXPECT_GT(overlap, 0.99);
     EXPECT_DOUBLE_EQ(overlap, overlap_auto);
   }
 
-  std::vector<gtsam_ext::GaussianVoxelMap::ConstPtr> voxelmaps_(voxelmaps.begin(), voxelmaps.end());
+  std::vector<gtsam_points::GaussianVoxelMap::ConstPtr> voxelmaps_(voxelmaps.begin(), voxelmaps.end());
   for (int i = 0; i < frames.size(); i++) {
     std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> deltas(frames.size());
     for (int j = 0; j < frames.size(); j++) {
       deltas[i] = Eigen::Isometry3d((poses_gt.at<gtsam::Pose3>(i).inverse() * poses_gt.at<gtsam::Pose3>(i)).matrix());
     }
-    const double overlap = gtsam_ext::overlap(voxelmaps_, frames[i], deltas);
-    const double overlap_auto = gtsam_ext::overlap_auto(voxelmaps_, frames[i], deltas);
+    const double overlap = gtsam_points::overlap(voxelmaps_, frames[i], deltas);
+    const double overlap_auto = gtsam_points::overlap_auto(voxelmaps_, frames[i], deltas);
     EXPECT_GT(overlap, 0.99);
     EXPECT_DOUBLE_EQ(overlap, overlap_auto);
   }
 
   for (int i = 0; i < frames.size(); i++) {
-    auto voxels = std::dynamic_pointer_cast<gtsam_ext::GaussianVoxelMapCPU>(voxelmaps[i]);
+    auto voxels = std::dynamic_pointer_cast<gtsam_points::GaussianVoxelMapCPU>(voxelmaps[i]);
     ASSERT_TRUE(voxels);
 
     voxels->save_compact("/tmp/voxelmap.bin");
 
-    auto voxels_ = gtsam_ext::GaussianVoxelMapCPU::load("/tmp/voxelmap.bin");
+    auto voxels_ = gtsam_points::GaussianVoxelMapCPU::load("/tmp/voxelmap.bin");
     ASSERT_TRUE(voxels_);
 
     EXPECT_DOUBLE_EQ(voxels->voxel_resolution(), voxels_->voxel_resolution());
@@ -134,32 +134,32 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
   for (int i = 0; i < poses_gt.size(); i++) {
     poses_[i] = Eigen::Isometry3d(poses_gt.at<gtsam::Pose3>(i).matrix());
   }
-  std::vector<gtsam_ext::PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
-  auto merged = gtsam_ext::merge_frames(poses_, frames_, 0.2);
+  std::vector<gtsam_points::PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
+  auto merged = gtsam_points::merge_frames(poses_, frames_, 0.2);
   validate_frame(merged);
 
-  auto merged2 = gtsam_ext::merge_frames_auto(poses_, frames_, 0.2);
+  auto merged2 = gtsam_points::merge_frames_auto(poses_, frames_, 0.2);
   validate_frame(merged2);
 }
 
-#ifdef BUILD_GTSAM_EXT_GPU
+#ifdef BUILD_GTSAM_POINTS_GPU
 
 TEST_F(VoxelMapTestBase, VoxelMapGPU) {
   for (int i = 0; i < frames.size(); i++) {
-    const double overlap_gpu = gtsam_ext::overlap_gpu(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
-    const double overlap_auto = gtsam_ext::overlap_gpu(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
+    const double overlap_gpu = gtsam_points::overlap_gpu(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
+    const double overlap_auto = gtsam_points::overlap_gpu(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
     EXPECT_GE(overlap_gpu, 0.99);
     EXPECT_DOUBLE_EQ(overlap_gpu, overlap_auto);
   }
 
-  std::vector<gtsam_ext::GaussianVoxelMap::ConstPtr> voxelmaps_(voxelmaps_gpu.begin(), voxelmaps_gpu.end());
+  std::vector<gtsam_points::GaussianVoxelMap::ConstPtr> voxelmaps_(voxelmaps_gpu.begin(), voxelmaps_gpu.end());
   for (int i = 0; i < frames.size(); i++) {
     std::vector<Eigen::Isometry3d, Eigen::aligned_allocator<Eigen::Isometry3d>> deltas(frames.size());
     for (int j = 0; j < frames.size(); j++) {
       deltas[i] = Eigen::Isometry3d((poses_gt.at<gtsam::Pose3>(i).inverse() * poses_gt.at<gtsam::Pose3>(i)).matrix());
     }
-    const double overlap_gpu = gtsam_ext::overlap_gpu(voxelmaps_, frames[i], deltas);
-    const double overlap_auto = gtsam_ext::overlap_auto(voxelmaps_, frames[i], deltas);
+    const double overlap_gpu = gtsam_points::overlap_gpu(voxelmaps_, frames[i], deltas);
+    const double overlap_auto = gtsam_points::overlap_auto(voxelmaps_, frames[i], deltas);
     EXPECT_GT(overlap_gpu, 0.99);
     EXPECT_DOUBLE_EQ(overlap_gpu, overlap_auto);
   }
@@ -169,15 +169,15 @@ TEST_F(VoxelMapTestBase, VoxelMapGPU) {
     delta.linear() = Eigen::AngleAxisd(Eigen::Vector2d::Random()[0] * 0.2, Eigen::Vector3d::Random().normalized()).toRotationMatrix();
     delta.translation() = Eigen::Vector3d::Random();
 
-    const double overlap_cpu = gtsam_ext::overlap(voxelmaps[i], frames[i], delta);
-    const double overlap_gpu = gtsam_ext::overlap_gpu(voxelmaps_gpu[i], frames[i], delta);
+    const double overlap_cpu = gtsam_points::overlap(voxelmaps[i], frames[i], delta);
+    const double overlap_gpu = gtsam_points::overlap_gpu(voxelmaps_gpu[i], frames[i], delta);
     EXPECT_LT(std::abs(overlap_cpu - overlap_gpu), 0.01);
   }
 
   for (int i = 0; i < frames.size(); i++) {
-    auto voxelmap_gpu = std::dynamic_pointer_cast<gtsam_ext::GaussianVoxelMapGPU>(voxelmaps_gpu[i]);
-    const auto means = gtsam_ext::download_voxel_means(*voxelmap_gpu);
-    const auto covs = gtsam_ext::download_voxel_covs(*voxelmap_gpu);
+    auto voxelmap_gpu = std::dynamic_pointer_cast<gtsam_points::GaussianVoxelMapGPU>(voxelmaps_gpu[i]);
+    const auto means = gtsam_points::download_voxel_means(*voxelmap_gpu);
+    const auto covs = gtsam_points::download_voxel_covs(*voxelmap_gpu);
     EXPECT_EQ(means.size(), voxelmap_gpu->voxelmap_info.num_voxels);
     EXPECT_EQ(covs.size(), voxelmap_gpu->voxelmap_info.num_voxels);
     EXPECT_TRUE(std::all_of(means.begin(), means.end(), [](const Eigen::Vector3f& p) { return p.array().isFinite().all(); }));
@@ -189,8 +189,8 @@ TEST_F(VoxelMapTestBase, VoxelMapGPU) {
   for (int i = 0; i < poses_gt.size(); i++) {
     poses_[i] = Eigen::Isometry3d(poses_gt.at<gtsam::Pose3>(i).matrix());
   }
-  std::vector<gtsam_ext::PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
-  auto merged = gtsam_ext::merge_frames_gpu(poses_, frames_, 0.2);
+  std::vector<gtsam_points::PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
+  auto merged = gtsam_points::merge_frames_gpu(poses_, frames_, 0.2);
   validate_frame_gpu(merged);
 }
 

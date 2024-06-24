@@ -3,8 +3,8 @@
 
 #include <gtsam/inference/Symbol.h>
 #include <gtsam/geometry/Pose3.h>
-#include <gtsam_ext/util/bspline.hpp>
-#include <gtsam_ext/util/continuous_trajectory.hpp>
+#include <gtsam_points/util/bspline.hpp>
+#include <gtsam_points/util/continuous_trajectory.hpp>
 
 #include <glk/primitives/primitives.hpp>
 #include <guik/viewer/light_viewer.hpp>
@@ -56,7 +56,7 @@ int main(int argc, char** argv) {
     imu_data.push_back(imu);
   }
 
-  gtsam_ext::ContinuousTrajectory ct('x', stamps.front(), stamps.back(), 0.1);
+  gtsam_points::ContinuousTrajectory ct('x', stamps.front(), stamps.back(), 0.1);
   gtsam::Values values = ct.fit_knots(stamps, poses);
 
   for (int i = 0; i < imu_data.size(); i++) {
@@ -73,7 +73,7 @@ int main(int argc, char** argv) {
     const double p = (t - knot_t) / ct.knot_interval;
 
     const Eigen::Vector3d g(0.0, 0.0, 9.80665);
-    const gtsam::Vector6_ imu_ = gtsam_ext::bspline_imu(X(knot_i), p, ct.knot_interval, g);
+    const gtsam::Vector6_ imu_ = gtsam_points::bspline_imu(X(knot_i), p, ct.knot_interval, g);
     const gtsam::Vector6 imu = imu_.value(values);
 
     std::cout << "sim:" << a.transpose() << " " << w.transpose() << std::endl;

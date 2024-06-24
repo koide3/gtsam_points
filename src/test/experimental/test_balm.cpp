@@ -9,10 +9,10 @@
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
-#include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/factors/bundle_adjustment_factor_evm.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/colormap.hpp>
 #include <glk/pointcloud_buffer.hpp>
@@ -53,13 +53,13 @@ int main(int argc, char** argv) {
   auto viewer = guik::LightViewer::instance();
 
   gtsam::Values values;
-  std::vector<gtsam_ext::PointCloudCPU::Ptr> frames;
+  std::vector<gtsam_points::PointCloudCPU::Ptr> frames;
 
   std::ifstream ifs("data/newer_01/graph.txt");
   for (int i = 0; i < 5; i++) {
     auto points_path = (boost::format("data/newer_01/planes_%06d.bin") % (i * 10)).str();
-    auto points = gtsam_ext::read_points(points_path);
-    frames.push_back(gtsam_ext::PointCloudCPU::Ptr(new gtsam_ext::PointCloudCPU(points)));
+    auto points = gtsam_points::read_points(points_path);
+    frames.push_back(gtsam_points::PointCloudCPU::Ptr(new gtsam_points::PointCloudCPU(points)));
 
     std::string token;
     Eigen::Vector3d trans;
@@ -93,7 +93,7 @@ int main(int argc, char** argv) {
     }
 
     if(ImGui::Button("add factor")) {
-      gtsam_ext::PlaneEVMFactor::shared_ptr plane_factor(new gtsam_ext::PlaneEVMFactor);
+      gtsam_points::PlaneEVMFactor::shared_ptr plane_factor(new gtsam_points::PlaneEVMFactor);
 
       for(int i=0; i<frames.size(); i++) {
         for(int j=0; j<frames[i]->size(); j++) {
@@ -115,8 +115,8 @@ int main(int argc, char** argv) {
     }
 
     if(ImGui::Button("optimize")) {
-      gtsam_ext::LevenbergMarquardtExtParams lm_params;
-      lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+      gtsam_points::LevenbergMarquardtExtParams lm_params;
+      lm_params.callback = [&](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
         viewer->append_text(status.to_string());
         for (int i = 0; i < frames.size(); i++) {
           auto drawable = viewer->find_drawable("frame_" + std::to_string(i));
@@ -124,7 +124,7 @@ int main(int argc, char** argv) {
         }
       };
 
-      gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+      gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
       values = optimizer.optimize();
     }
 

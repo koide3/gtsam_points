@@ -4,20 +4,20 @@
 
 #include <gtsam/slam/PriorFactor.h>
 
-#include <gtsam_ext/ann/kdtree.hpp>
-#include <gtsam_ext/ann/intensity_kdtree.hpp>
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/factors/integrated_gicp_factor.hpp>
-#include <gtsam_ext/factors/integrated_colored_gicp_factor.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
-#include <gtsam_ext/optimizers/gradient_descent.hpp>
+#include <gtsam_points/ann/kdtree.hpp>
+#include <gtsam_points/ann/intensity_kdtree.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/factors/integrated_gicp_factor.hpp>
+#include <gtsam_points/factors/integrated_colored_gicp_factor.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/optimizers/gradient_descent.hpp>
 
 #include <glk/pointcloud_buffer.hpp>
 #include <guik/viewer/light_viewer.hpp>
 
-gtsam_ext::PointCloudCPU::Ptr load_points(const std::string& filename) {
-  auto data = gtsam_ext::read_points4(filename);
+gtsam_points::PointCloudCPU::Ptr load_points(const std::string& filename) {
+  auto data = gtsam_points::read_points4(filename);
   std::vector<Eigen::Vector3f, Eigen::aligned_allocator<Eigen::Vector3f>> points(data.size());
   std::vector<float> intensities(data.size());
 
@@ -26,7 +26,7 @@ gtsam_ext::PointCloudCPU::Ptr load_points(const std::string& filename) {
     intensities[i] = data[i][3];
   }
 
-  auto frame = std::make_shared<gtsam_ext::PointCloudCPU>(points);
+  auto frame = std::make_shared<gtsam_points::PointCloudCPU>(points);
   frame->add_intensities(intensities.data(), intensities.size());
 
   return frame;
@@ -86,15 +86,15 @@ int main(int argc, char** argv) {
   source_buffer->add_intensity(glk::COLORMAP::TURBO, source_intensities);
   viewer->update_drawable("source", source_buffer, guik::VertexColor());
 
-  auto target = std::make_shared<gtsam_ext::PointCloudCPU>(target_points);
+  auto target = std::make_shared<gtsam_points::PointCloudCPU>(target_points);
   target->add_intensities(target_intensities);
-  auto source = std::make_shared<gtsam_ext::PointCloudCPU>(source_points);
+  auto source = std::make_shared<gtsam_points::PointCloudCPU>(source_points);
   source->add_intensities(source_intensities);
 
-  auto target_gradients = gtsam_ext::IntensityGradients::estimate(target, 10, 50);
-  auto source_gradients = gtsam_ext::IntensityGradients::estimate(source, 10, 50);
-  // std::shared_ptr<gtsam_ext::KdTree> target_tree(new gtsam_ext::KdTree(target->points, target->size()));
-  std::shared_ptr<gtsam_ext::IntensityKdTree> target_tree(new gtsam_ext::IntensityKdTree(target->points, target->intensities, target->size()));
+  auto target_gradients = gtsam_points::IntensityGradients::estimate(target, 10, 50);
+  auto source_gradients = gtsam_points::IntensityGradients::estimate(source, 10, 50);
+  // std::shared_ptr<gtsam_points::KdTree> target_tree(new gtsam_points::KdTree(target->points, target->size()));
+  std::shared_ptr<gtsam_points::IntensityKdTree> target_tree(new gtsam_points::IntensityKdTree(target->points, target->intensities, target->size()));
 
   gtsam::Values values;
   values.insert(0, gtsam::Pose3::Identity());
@@ -103,14 +103,14 @@ int main(int argc, char** argv) {
   gtsam::NonlinearFactorGraph graph;
   graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
-  auto f = gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
+  auto f = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
   f->set_photometric_term_weight(0.75);
-  // auto f = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor>(0, 1, target, source);
+  // auto f = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(0, 1, target, source);
   f->set_num_threads(12);
   graph.add(f);
 
-  gtsam_ext::LevenbergMarquardtExtParams lm_params;
-  lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+  gtsam_points::LevenbergMarquardtExtParams lm_params;
+  lm_params.callback = [&](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
     viewer->append_text(status.to_string());
 
     gtsam::Pose3 target_pose = values.at<gtsam::Pose3>(0);
@@ -125,7 +125,7 @@ int main(int argc, char** argv) {
     viewer->spin_until_click();
   };
 
-  gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+  gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
   values = optimizer.optimize();
 
   viewer->spin();
@@ -135,10 +135,10 @@ int main(int argc, char** argv) {
   /*
   auto target = load_points("/home/koide/target.bin");
   auto source = load_points("/home/koide/source.bin");
-  auto target_gradients = gtsam_ext::IntensityGradients::estimate(target, 10, 50);
-  auto source_gradients = gtsam_ext::IntensityGradients::estimate(source, 10, 50);
+  auto target_gradients = gtsam_points::IntensityGradients::estimate(target, 10, 50);
+  auto source_gradients = gtsam_points::IntensityGradients::estimate(source, 10, 50);
 
-  std::shared_ptr<gtsam_ext::KdTree> target_tree(new gtsam_ext::KdTree(target->points, target->size()));
+  std::shared_ptr<gtsam_points::KdTree> target_tree(new gtsam_points::KdTree(target->points, target->size()));
 
   gtsam::Values values;
   values.insert(0, gtsam::Pose3::Identity());
@@ -147,10 +147,10 @@ int main(int argc, char** argv) {
   gtsam::NonlinearFactorGraph graph;
   graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
-  auto f = gtsam::make_shared<gtsam_ext::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
+  auto f = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
   f->set_num_threads(12);
   graph.add(f);
-  // graph.emplace_shared<gtsam_ext::IntegratedGICPFactor>(0, 1, target, source, target_tree);
+  // graph.emplace_shared<gtsam_points::IntegratedGICPFactor>(0, 1, target, source, target_tree);
 
   auto target_buffer = std::make_shared<glk::PointCloudBuffer>(target->points, target->size());
   target_buffer->add_intensity(glk::COLORMAP::TURBO, target->intensities_storage);
@@ -161,8 +161,8 @@ int main(int argc, char** argv) {
   source_buffer->add_intensity(glk::COLORMAP::TURBO, source->intensities_storage);
   viewer->update_drawable("source", source_buffer, guik::VertexColor());
 
-  gtsam_ext::LevenbergMarquardtExtParams lm_params;
-  lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+  gtsam_points::LevenbergMarquardtExtParams lm_params;
+  lm_params.callback = [&](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
     viewer->append_text(status.to_string());
 
     gtsam::Pose3 target_pose = values.at<gtsam::Pose3>(0);
@@ -177,7 +177,7 @@ int main(int argc, char** argv) {
     viewer->spin_once();
   };
 
-  gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+  gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
   values = optimizer.optimize();
 
   viewer->spin();

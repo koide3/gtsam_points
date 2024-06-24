@@ -3,25 +3,25 @@
 
 /**
  * @file  basic_scan_matching.cpp
- * @brief This example demonstrates how to perform simple frame-to-frame ICP scan matching with gtsam_ext.
+ * @brief This example demonstrates how to perform simple frame-to-frame ICP scan matching with gtsam_points.
  */
 
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
-#include <gtsam_ext/factors/integrated_icp_factor.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/factors/integrated_icp_factor.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/pointcloud_buffer.hpp>
 #include <guik/viewer/light_viewer.hpp>
 
 int main(int argc, char** argv) {
   // Read target and source point clouds
-  const auto target_points = gtsam_ext::read_points("data/kitti_00/000000.bin");
-  const auto source_points = gtsam_ext::read_points("data/kitti_00/000001.bin");
+  const auto target_points = gtsam_points::read_points("data/kitti_00/000000.bin");
+  const auto source_points = gtsam_points::read_points("data/kitti_00/000001.bin");
 
-  // Create gtsam_ext::PointCloudCPU instances that hold point data
-  const auto target_frame = std::make_shared<gtsam_ext::PointCloudCPU>(target_points);
-  const auto source_frame = std::make_shared<gtsam_ext::PointCloudCPU>(source_points);
+  // Create gtsam_points::PointCloudCPU instances that hold point data
+  const auto target_frame = std::make_shared<gtsam_points::PointCloudCPU>(target_points);
+  const auto source_frame = std::make_shared<gtsam_points::PointCloudCPU>(source_points);
 
   // Create GTSAM values and graph
   gtsam::Values values;
@@ -35,14 +35,14 @@ int main(int argc, char** argv) {
   graph.add(prior_factor);
 
   // Create an ICP factor between target and source poses
-  auto icp_factor = gtsam::make_shared<gtsam_ext::IntegratedICPFactor>(0, 1, target_frame, source_frame);
+  auto icp_factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(0, 1, target_frame, source_frame);
   icp_factor->set_max_corresponding_distance(5.0);
   graph.add(icp_factor);
 
   // Create LM optimizer
-  gtsam_ext::LevenbergMarquardtExtParams lm_params;
+  gtsam_points::LevenbergMarquardtExtParams lm_params;
   lm_params.set_verbose();
-  gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+  gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
 
   // Optimize
   values = optimizer.optimize();

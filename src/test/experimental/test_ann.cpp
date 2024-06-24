@@ -1,19 +1,19 @@
 #include <chrono>
 #include <iostream>
-#include <gtsam_ext/types/point_cloud_cpu.hpp>
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/ann/kdtree.hpp>
-#include <gtsam_ext/ann/projective_search.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/ann/kdtree.hpp>
+#include <gtsam_points/ann/projective_search.hpp>
 
 int main(int argc, char** argv) {
-  auto points0 = gtsam_ext::read_points("data/kitti_07_dump/000000/points.bin");
-  auto points1 = gtsam_ext::read_points("data/kitti_07_dump/000001/points.bin");
+  auto points0 = gtsam_points::read_points("data/kitti_07_dump/000000/points.bin");
+  auto points1 = gtsam_points::read_points("data/kitti_07_dump/000001/points.bin");
 
-  auto frame0 = std::make_shared<gtsam_ext::PointCloudCPU>(points0);
-  auto frame1 = std::make_shared<gtsam_ext::PointCloudCPU>(points1);
+  auto frame0 = std::make_shared<gtsam_points::PointCloudCPU>(points0);
+  auto frame1 = std::make_shared<gtsam_points::PointCloudCPU>(points1);
 
-  gtsam_ext::KdTree kdtree(frame0->points, frame0->size());
-  gtsam_ext::OmniProjectiveSearch search(frame0->points, frame0->size());
+  gtsam_points::KdTree kdtree(frame0->points, frame0->size());
+  gtsam_points::OmniProjectiveSearch search(frame0->points, frame0->size());
 
   for (int i = 0; i < frame1->size(); i++) {
     size_t k_index;

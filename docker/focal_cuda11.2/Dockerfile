@@ -1,7 +1,7 @@
 FROM koide3/gtsam_docker:focal_cuda11.2
 
-COPY . /root/gtsam_ext
-WORKDIR /root/gtsam_ext/build
+COPY . /root/gtsam_points
+WORKDIR /root/gtsam_points/build
 RUN rm -rf *
 RUN cmake .. \
   -DBUILD_DEMO=ON \
