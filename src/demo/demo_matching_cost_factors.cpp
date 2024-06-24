@@ -53,6 +53,10 @@ public:
 #endif
 
     // Read test data
+    frames.resize(5);
+    voxelmaps.resize(5);
+    voxelmaps_gpu.resize(5);
+
     for (int i = 0; i < 5; i++) {
       std::string token;
       gtsam::Vector3 trans;
@@ -82,19 +86,24 @@ public:
 #ifndef BUILD_GTSAM_POINTS_GPU
       std::cout << "Create CPU frame" << std::endl;
       auto frame = std::make_shared<gtsam_points::PointCloudCPU>();
-      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(2.0);
 #else
       std::cout << "Create GPU frame" << std::endl;
       auto frame = std::make_shared<gtsam_points::PointCloudGPU>();
-      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(2.0);
 #endif
       frame->add_points(points);
       frame->add_covs(covs);
       frame->add_normals(gtsam_points::estimate_normals(frame->points, frame->size()));
-      voxelmap->insert(*frame);
+      frames[i] = frame;
 
-      frames.push_back(frame);
-      voxelmaps.push_back(voxelmap);
+      auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(2.0);
+      voxelmap->insert(*frame);
+      voxelmaps[i] = voxelmap;
+
+#ifdef BUILD_GTSAM_POINTS_GPU
+      auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(2.0);
+      voxelmap_gpu->insert(*frame);
+      voxelmaps_gpu[i] = voxelmap_gpu;
+#endif
 
       viewer->update_drawable("frame_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size()), guik::Rainbow());
     }
@@ -188,6 +197,7 @@ public:
     gtsam::Key source_key,
     const gtsam_points::PointCloud::ConstPtr& target,
     const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap,
+    const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
     const gtsam_points::PointCloud::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
@@ -205,7 +215,7 @@ public:
       return gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
 #ifdef BUILD_GTSAM_POINTS_GPU
-      return gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap, source);
+      return gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap_gpu, source);
 #endif
     }
 
@@ -222,7 +232,7 @@ public:
       // If full_connection == false, factors are only created between consecutive frames
       int j_end = full_connection ? 5 : std::min(i + 2, 5);
       for (int j = i + 1; j < j_end; j++) {
-        auto factor = create_factor(i, j, frames[i], voxelmaps[i], frames[j]);
+        auto factor = create_factor(i, j, frames[i], voxelmaps[i], voxelmaps_gpu[i], frames[j]);
         graph.add(factor);
       }
     }
@@ -282,6 +292,7 @@ private:
   gtsam::Values poses_gt;
   std::vector<gtsam_points::PointCloud::Ptr> frames;
   std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps;
+  std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps_gpu;
 };
 
 int main(int argc, char** argv) {

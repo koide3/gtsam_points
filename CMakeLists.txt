@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5.2)
+cmake_minimum_required(VERSION 3.29)
 project(gtsam_points LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -13,7 +13,7 @@ option(BUILD_TESTS "Build test" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
 option(BUILD_EXAMPLE "Build example programs" OFF)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
-option(BUILD_WITH_CUDA_MULTIARCH "Build with GPU cross-platform support" OFF)
+option(BUILD_WITH_CUDA_MULTIARCH "Build with CUDA multi-architecture support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 option(ENABLE_CPPCHECK "Enable cppcheck" OFF)
 option(ENABLE_COVERAGE "Enable coverage check" OFF)
@@ -42,21 +42,16 @@ endif()
 
 # GPU-related
 if(BUILD_WITH_CUDA)
-  find_package(CUDAToolkit REQUIRED)
-  enable_language(CUDA)
-
   add_definitions(-DBUILD_GTSAM_POINTS_GPU)
 
-  message(STATUS "CUDAToolkit_VERSION=${CUDAToolkit_VERSION}")
-  message(STATUS "CUDAARCHS=${CUDAARCHS}")
-  message(STATUS "CMAKE_CUDA_ARCHITECTURES=${CMAKE_CUDA_ARCHITECTURES}")
-
+  find_package(CUDAToolkit REQUIRED)
+  enable_language(CUDA)
   set(CUDA_STANDARD 17)
 
   if(BUILD_WITH_CUDA_MULTIARCH)
-    set(CMAKE_CUDA_ARCHITECTURES "52 60 61 70 75 80 85 89")
+    set(CUDA_ARCHITECTURES "all-major")
   else()
-    set(CMAKE_CUDA_ARCHITECTURES "89")
+    set(CUDA_ARCHITECTURES "navite")
   endif()
 
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
@@ -208,8 +203,14 @@ if(BUILD_WITH_CUDA)
     ${GTSAM_INCLUDE_DIRS}
     ${CUDA_INCLUDE_DIRS}
   )
-  target_link_libraries(gtsam_points
+  target_link_libraries(gtsam_points_cuda
     CUDA::cudart
+  )
+  set_target_properties(gtsam_points_cuda PROPERTIES
+    CUDA_ARCHITECTURES "native"
+  )
+
+  target_link_libraries(gtsam_points
     gtsam_points_cuda
   )
 endif()

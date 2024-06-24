@@ -7,8 +7,6 @@
 
 namespace gtsam_points {
 
-using gtsam_points::check_error;
-
 GLBufferMap::GLBufferMap(size_t gl_id, BufferMode mode) {
   unsigned int flags = 0;
 
