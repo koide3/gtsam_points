@@ -12,7 +12,6 @@
 #include <gtsam_points/factors/integrated_icp_factor.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 
-
 int main(int argc, char** argv) {
   auto points1 = gtsam_points::read_points("data/kitti_07_dump/000000/points.bin");
   auto points2 = gtsam_points::read_points("data/kitti_07_dump/000001/points.bin");
@@ -29,7 +28,7 @@ int main(int argc, char** argv) {
 
   // *** IntegratedICPFactor ***
   // gtsam_points::IntegratedICPFactor::shared_ptr factor(new gtsam_points::IntegratedICPFactor(0, 1, frame1, frame2));
-  // factor->set_max_corresponding_distance(5.0);
+  // factor->set_max_correspondence_distance(5.0);
   // factor->set_num_threads(10);
   // graph.add(factor);
 
@@ -43,7 +42,9 @@ int main(int argc, char** argv) {
   graph.add(icp_factor);
 
   gtsam_points::LevenbergMarquardtExtParams lm_params;
-  lm_params.callback = [&](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) { std::cout << status.to_string() << std::endl; };
+  lm_params.callback = [&](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+    std::cout << status.to_string() << std::endl;
+  };
   gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
   values = optimizer.optimize();
 

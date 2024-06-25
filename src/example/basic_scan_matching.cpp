@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
 
   // Create an ICP factor between target and source poses
   auto icp_factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(0, 1, target_frame, source_frame);
-  icp_factor->set_max_corresponding_distance(5.0);
+  icp_factor->set_max_correspondence_distance(5.0);
   graph.add(icp_factor);
 
   // Create LM optimizer

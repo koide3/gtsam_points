@@ -394,9 +394,9 @@ void IntegratedLOAMFactor_<TargetFrame, SourceFrame>::set_num_threads(int n) {
 }
 
 template <typename TargetFrame, typename SourceFrame>
-void IntegratedLOAMFactor_<TargetFrame, SourceFrame>::set_max_corresponding_distance(double dist_edge, double dist_plane) {
-  edge_factor->set_max_corresponding_distance(dist_edge);
-  plane_factor->set_max_corresponding_distance(dist_plane);
+void IntegratedLOAMFactor_<TargetFrame, SourceFrame>::set_max_correspondence_distance(double dist_edge, double dist_plane) {
+  edge_factor->set_max_correspondence_distance(dist_edge);
+  plane_factor->set_max_correspondence_distance(dist_plane);
 }
 
 template <typename TargetFrame, typename SourceFrame>

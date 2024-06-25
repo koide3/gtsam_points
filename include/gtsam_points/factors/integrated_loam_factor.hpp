@@ -54,7 +54,7 @@ public:
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
   //     : and setting n>1 can rather affect the processing speed
   void set_num_threads(int n);
-  void set_max_corresponding_distance(double dist_edge, double dist_plane);
+  void set_max_correspondence_distance(double dist_edge, double dist_plane);
   void set_correspondence_update_tolerance(double angle, double trans);
   void set_enable_correspondence_validation(bool enable);
 
@@ -106,7 +106,7 @@ public:
   ~IntegratedPointToPlaneFactor_();
 
   void set_num_threads(int n) { num_threads = n; }
-  void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+  void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
   void set_correspondence_update_tolerance(double angle, double trans) {
     correspondence_update_tolerance_rot = angle;
     correspondence_update_tolerance_trans = trans;
@@ -164,7 +164,7 @@ public:
   ~IntegratedPointToEdgeFactor_();
 
   void set_num_threads(int n) { num_threads = n; }
-  void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+  void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
   void set_correspondence_update_tolerance(double angle, double trans) {
     correspondence_update_tolerance_rot = angle;
     correspondence_update_tolerance_trans = trans;

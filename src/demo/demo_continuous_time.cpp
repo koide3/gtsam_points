@@ -71,7 +71,7 @@ public:
     enable_pose_constraint = true;
     rot_noise_scale = 10.0f;
     trans_noise_scale = 1000.0f;
-    max_corresponding_distance = 1.0f;
+    max_correspondence_distance = 1.0f;
 
     data_id = 0;
     setup(data_id);
@@ -94,7 +94,7 @@ public:
       ImGui::Checkbox("enable pose constraint", &enable_pose_constraint);
       ImGui::DragFloat("pose rot noise scale", &rot_noise_scale, 0.1f, 0.0f);
       ImGui::DragFloat("pose trans noise scale", &trans_noise_scale, 10.0f, 0.0f);
-      ImGui::DragFloat("max corresponding distance", &max_corresponding_distance, 0.1f, 0.0f);
+      ImGui::DragFloat("max corresponding distance", &max_correspondence_distance, 0.1f, 0.0f);
 
       // Run optimization
       if (ImGui::Button("optimize")) {
@@ -144,15 +144,15 @@ public:
     gtsam::NonlinearFactor::shared_ptr factor;
     if (factor_types[factor_type] == std::string("CT-ICP")) {
       auto f = gtsam::make_shared<gtsam_points::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
-      f->set_max_corresponding_distance(max_corresponding_distance);
+      f->set_max_correspondence_distance(max_correspondence_distance);
       factor = f;
     } else if (factor_types[factor_type] == std::string("CT-GICP")) {
       auto f = gtsam::make_shared<gtsam_points::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
-      f->set_max_corresponding_distance(max_corresponding_distance);
+      f->set_max_correspondence_distance(max_correspondence_distance);
       factor = f;
     } else if (factor_types[factor_type] == std::string("CT-ICP-EXPR")) {
       auto noise_model = gtsam::noiseModel::Isotropic::Precision(1, 1.0);
-      auto robust_model = gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(max_corresponding_distance), noise_model);
+      auto robust_model = gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(max_correspondence_distance), noise_model);
       factor = gtsam_points::create_integrated_cticp_factor(0, 1, deskewed_frames[data_id], raw_frames[data_id], robust_model);
     } else {
       std::cerr << "error: unknown factor type " << factor_types[factor_type] << std::endl;
@@ -219,7 +219,7 @@ private:
   bool enable_pose_constraint;
   float rot_noise_scale;
   float trans_noise_scale;
-  float max_corresponding_distance;
+  float max_correspondence_distance;
 
   int data_id;
   std::thread optimization_thread;

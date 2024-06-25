@@ -82,7 +82,7 @@ public:
 
   /// @brief Set the maximum distance between corresponding points.
   ///        Correspondences with distances larger than this will be rejected (i.e., correspondence trimming).
-  void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+  void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
 
   /// @brief Enable or disable point-to-plane distance computation.
   void set_point_to_plane_distance(bool use) { use_point_to_plane = use; }

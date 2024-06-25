@@ -76,7 +76,7 @@ public:
 
   /// @brief Set the maximum distance between corresponding points.
   ///        Correspondences with distances larger than this will be rejected (i.e., correspondence trimming).
-  void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+  void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
 
   /// @brief Correspondences are updated only when the displacement from the last update point is larger than these threshold values.
   /// @note  Default values are angle=trans=0 and correspondences are updated every linearization call.

@@ -65,7 +65,7 @@ int main(int argc, char** argv) {
         ivox_edges,
         ivox_planes);
       factor->set_num_threads(12);
-      factor->set_max_corresponding_distance(1.0, 1.0);
+      factor->set_max_correspondence_distance(1.0, 1.0);
       graph.add(factor);
 
       gtsam_points::LevenbergMarquardtExtParams lm_params;

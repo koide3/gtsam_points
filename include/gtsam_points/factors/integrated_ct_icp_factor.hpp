@@ -57,7 +57,7 @@ public:
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
   void set_num_threads(int n) { num_threads = n; }
-  void set_max_corresponding_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+  void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
 
   const std::vector<double>& get_time_table() const { return time_table; }
   const std::vector<int>& get_time_indices() const { return time_indices; }
