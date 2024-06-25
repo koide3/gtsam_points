@@ -142,10 +142,15 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& points, const 
  * @param voxel_resolution  Voxel resolution
  * @param sampling_rate     Random sampling rate in [0, 1]
  * @param mt                RNG
+ * @param num_threads       Number of threads
  * @return                  Downsampled points
  */
-PointCloudCPU::Ptr
-randomgrid_sampling(const PointCloud::ConstPtr& points, const double voxel_resolution, const double sampling_rate, std::mt19937& mt);
+PointCloudCPU::Ptr randomgrid_sampling(
+  const PointCloud::ConstPtr& points,
+  const double voxel_resolution,
+  const double sampling_rate,
+  std::mt19937& mt,
+  int num_threads = 1);
 
 /**
  * @brief Extract points for which pred returns true.

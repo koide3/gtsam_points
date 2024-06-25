@@ -527,44 +527,87 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
 
 // randomgrid_sampling
 PointCloudCPU::Ptr
-randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt) {
+randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolution, const double sampling_rate, std::mt19937& mt, int num_threads) {
   if (sampling_rate >= 0.99) {
     // No need to do sampling
     return PointCloudCPU::clone(*frame);
   }
 
-  using Indices = std::shared_ptr<std::vector<int>>;
-  using VoxelMap = std::unordered_map<Eigen::Vector3i, Indices, Vector3iHash>;
-  VoxelMap voxelmap;
-  voxelmap.rehash(frame->size() * sampling_rate);
+  const double inv_resolution = 1.0 / voxel_resolution;
+  const int coord_bit_size = 21;                       // Bits to represent each voxel coordinate (pack 21x3=63bits in 64bit int)
+  const size_t coord_bit_mask = (1 << 21) - 1;         // Bit mask
+  const int coord_offset = 1 << (coord_bit_size - 1);  // Coordinate offset to make values positive
 
-  // Insert point indices to corresponding voxels
-  for (int i = 0; i < frame->size(); i++) {
-    const Eigen::Vector3i coord = (frame->points[i].array() / voxel_resolution).floor().cast<int>().head<3>();
-    auto found = voxelmap.find(coord);
-    if (found == voxelmap.end()) {
-      // found = voxelmap.insert(found, std::make_pair(coord, std::make_shared<std::vector<int>>()));
-      found = voxelmap.emplace_hint(found, coord, std::make_shared<std::vector<int>>());
-      found->second->reserve(8);
+  std::vector<std::pair<std::uint64_t, size_t>> coord_pt(frame->size());
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
+  for (std::int64_t i = 0; i < frame->size(); i++) {
+    const Eigen::Array4i coord = fast_floor(frame->points[i] * inv_resolution) + coord_offset;
+    if ((coord < 0).any() || (coord > coord_bit_mask).any()) {
+      std::cerr << "warning: voxel coord is out of range!!" << std::endl;
+      coord_pt[i] = {0, i};
+      continue;
     }
-    found->second->push_back(i);
+
+    // Compute voxel coord bits (0|1bit, z|21bit, y|21bit, x|21bit)
+    const std::uint64_t bits =                                                           //
+      (static_cast<std::uint64_t>(coord[0] & coord_bit_mask) << (coord_bit_size * 0)) |  //
+      (static_cast<std::uint64_t>(coord[1] & coord_bit_mask) << (coord_bit_size * 1)) |  //
+      (static_cast<std::uint64_t>(coord[2] & coord_bit_mask) << (coord_bit_size * 2));
+    coord_pt[i] = {bits, i};
   }
 
-  const int points_per_voxel = std::ceil((sampling_rate * frame->size()) / voxelmap.size());
-  const int max_num_points = frame->size() * sampling_rate * 1.2;
+  // Sort by voxel coords
+  quick_sort_omp(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; }, num_threads);
 
-  // Sample points from voxels
-  std::vector<int> indices;
-  indices.reserve(max_num_points);
-
-  for (const auto& voxel : voxelmap) {
-    const auto& voxel_indices = *voxel.second;
-    if (voxel_indices.size() <= points_per_voxel) {
-      indices.insert(indices.end(), voxel_indices.begin(), voxel_indices.end());
-    } else {
-      std::sample(voxel_indices.begin(), voxel_indices.end(), std::back_insert_iterator(indices), points_per_voxel, mt);
+  size_t num_voxels = 0;
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 128) reduction(+ : num_voxels)
+  for (size_t i = 1; i < coord_pt.size(); i++) {
+    if (coord_pt[i - 1].first != coord_pt[i].first) {
+      num_voxels++;
     }
   }
+
+  const size_t points_per_voxel = std::ceil((sampling_rate * frame->size()) / num_voxels);
+  const size_t max_num_points = frame->size() * sampling_rate * 1.2;
+
+  const int block_size = 1024;
+  std::atomic_uint64_t num_points = 0;
+
+  std::vector<std::mt19937> mts(num_threads);
+  std::generate(mts.begin(), mts.end(), [&mt]() { return std::mt19937(mt()); });
+
+  std::vector<int> indices(frame->size());
+
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 4)
+  for (std::int64_t block_begin = 0; block_begin < coord_pt.size(); block_begin += block_size) {
+    std::vector<size_t> sub_indices;
+    sub_indices.reserve(block_size);
+
+    std::vector<size_t> block_indices;
+    block_indices.reserve(block_size);
+
+    const auto flush_block_indices = [&] {
+      if (block_indices.size() < points_per_voxel) {
+        sub_indices.insert(sub_indices.end(), block_indices.begin(), block_indices.end());
+      } else {
+        std::sample(block_indices.begin(), block_indices.end(), std::back_inserter(sub_indices), points_per_voxel, mts[omp_get_thread_num()]);
+      }
+      block_indices.clear();
+    };
+
+    const size_t block_end = std::min<size_t>(coord_pt.size(), block_begin + block_size);
+    for (size_t i = block_begin; i != block_end; i++) {
+      if (i != block_begin && coord_pt[i - 1].first != coord_pt[i].first) {
+        flush_block_indices();
+      }
+      block_indices.emplace_back(coord_pt[i].second);
+    }
+    flush_block_indices();
+
+    std::copy(sub_indices.begin(), sub_indices.end(), indices.begin() + num_points.fetch_add(sub_indices.size()));
+  }
+
+  indices.resize(num_points);
 
   if (indices.size() > max_num_points) {
     std::vector<int> sub_indices(max_num_points);
@@ -573,7 +616,7 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
   }
 
   // Sort indices to keep points ordered (and for better memory accessing)
-  std::sort(indices.begin(), indices.end());
+  quick_sort_omp(indices.begin(), indices.end(), std::less<int>(), num_threads);
 
   // Sample points and return it
   return sample(frame, indices);
