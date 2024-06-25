@@ -5,7 +5,6 @@
 
 #include <Eigen/Eigen>
 #include <Eigen/Geometry>
-#include <nanoflann.hpp>
 #include <gtsam_points/ann/kdtree.hpp>
 
 namespace gtsam_points {
