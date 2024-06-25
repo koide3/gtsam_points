@@ -127,9 +127,10 @@ PointCloudCPU::Ptr random_sampling(const PointCloud::ConstPtr& points, const dou
  *
  * @param points            Input points
  * @param voxel_resolution  Voxel resolution
+ * @param num_threads       Number of threads
  * @return                  Downsampled points
  */
-PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& points, const double voxel_resolution);
+PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& points, const double voxel_resolution, int num_threads = 1);
 
 /**
  * @brief Voxel grid random sampling.

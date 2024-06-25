@@ -12,6 +12,8 @@
 #include <boost/iterator/counting_iterator.hpp>
 
 #include <gtsam_points/ann/kdtree.hpp>
+#include <gtsam_points/util/sort_omp.hpp>
+#include <gtsam_points/util/fast_floor.hpp>
 #include <gtsam_points/util/vector3i_hash.hpp>
 
 namespace gtsam_points {
@@ -362,87 +364,158 @@ PointCloudCPU::Ptr random_sampling(const PointCloud::ConstPtr& frame, const doub
   return sample(frame, sample_indices);
 }
 
-// voxelgrid_sampling
-PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolution) {
-  using Indices = std::shared_ptr<std::vector<int>>;
-  using VoxelMap = std::unordered_map<Eigen::Vector3i, Indices, Vector3iHash>;
+template <typename T>
+struct Averager {
+public:
+  Averager(const T& zero) : num(0), sum(zero) {}
 
-  VoxelMap voxelmap;
-
-  // Insert point indices to corresponding voxels
-  for (int i = 0; i < frame->size(); i++) {
-    const Eigen::Vector3i coord = (frame->points[i].array() / voxel_resolution).floor().cast<int>().head<3>();
-    auto found = voxelmap.find(coord);
-    if (found == voxelmap.end()) {
-      found = voxelmap.insert(found, std::make_pair(coord, std::make_shared<std::vector<int>>()));
-      found->second->reserve(32);
-    }
-    found->second->push_back(i);
+  const Averager& operator+=(const T& value) {
+    sum += value;
+    num++;
+    return *this;
   }
 
-  std::vector<Indices> voxels(voxelmap.size());
-  std::transform(voxelmap.begin(), voxelmap.end(), voxels.begin(), [](const std::pair<Eigen::Vector3i, Indices>& x) { return x.second; });
+  const void clear(const T& zero) {
+    num = 0;
+    sum = zero;
+  }
 
-  // Take the average of point attributes of each voxel
-  PointCloudCPU::Ptr downsampled(new PointCloudCPU);
-  downsampled->num_points = voxels.size();
-  downsampled->points_storage.resize(voxels.size());
-  downsampled->points = downsampled->points_storage.data();
-  std::transform(voxels.begin(), voxels.end(), downsampled->points, [&](const Indices& indices) -> Eigen::Vector4d {
-    Eigen::Vector4d sum = Eigen::Vector4d::Zero();
-    for (const auto i : *indices) {
-      sum += frame->points[i];
+  const T average() const { return sum / num; }
+
+public:
+  size_t num;
+  T sum;
+};
+
+// voxelgrid_sampling
+PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolution, int num_threads) {
+  if (frame->size() == 0) {
+    return PointCloudCPU::Ptr(new PointCloudCPU());
+  }
+
+  const double inv_resolution = 1.0 / voxel_resolution;
+  const int coord_bit_size = 21;                       // Bits to represent each voxel coordinate (pack 21x3=63bits in 64bit int)
+  const size_t coord_bit_mask = (1 << 21) - 1;         // Bit mask
+  const int coord_offset = 1 << (coord_bit_size - 1);  // Coordinate offset to make values positive
+
+  std::vector<std::pair<std::uint64_t, size_t>> coord_pt(frame->size());
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
+  for (std::int64_t i = 0; i < frame->size(); i++) {
+    const Eigen::Array4i coord = fast_floor(frame->points[i] * inv_resolution) + coord_offset;
+    if ((coord < 0).any() || (coord > coord_bit_mask).any()) {
+      std::cerr << "warning: voxel coord is out of range!!" << std::endl;
+      coord_pt[i] = {0, i};
+      continue;
     }
 
-    return sum / indices->size();
-  });
+    // Compute voxel coord bits (0|1bit, z|21bit, y|21bit, x|21bit)
+    const std::uint64_t bits =                                                           //
+      (static_cast<std::uint64_t>(coord[0] & coord_bit_mask) << (coord_bit_size * 0)) |  //
+      (static_cast<std::uint64_t>(coord[1] & coord_bit_mask) << (coord_bit_size * 1)) |  //
+      (static_cast<std::uint64_t>(coord[2] & coord_bit_mask) << (coord_bit_size * 2));
+    coord_pt[i] = {bits, i};
+  }
+
+  // Sort by voxel coords
+  quick_sort_omp(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; }, num_threads);
+
+  PointCloudCPU::Ptr downsampled(new PointCloudCPU);
+  downsampled->points_storage.resize(frame->size());
+  if (frame->times) {
+    downsampled->times_storage.resize(frame->size());
+  }
+  if (frame->normals) {
+    downsampled->normals_storage.resize(frame->size());
+  }
+  if (frame->covs) {
+    downsampled->covs_storage.resize(frame->size());
+  }
+  if (frame->intensities) {
+    downsampled->intensities_storage.resize(frame->size());
+  }
+
+  const int block_size = 1024;
+  std::atomic_uint64_t num_points = 0;
+
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 4)
+  for (std::int64_t block_begin = 0; block_begin < coord_pt.size(); block_begin += block_size) {
+    std::vector<std::pair<std::uint64_t, size_t>*> sub_blocks;
+    sub_blocks.reserve(block_size);
+
+    const size_t block_end = std::min<size_t>(coord_pt.size(), block_begin + block_size);
+
+    sub_blocks.emplace_back(coord_pt.data() + block_begin);
+    for (size_t i = block_begin + 1; i != block_end; i++) {
+      if (coord_pt[i - 1].first != coord_pt[i].first) {
+        sub_blocks.emplace_back(coord_pt.data() + i);
+      }
+    }
+    sub_blocks.emplace_back(coord_pt.data() + block_end);
+
+    const size_t point_index_begin = num_points.fetch_add(sub_blocks.size() - 1);
+    for (int i = 0; i < sub_blocks.size() - 1; i++) {
+      Averager<Eigen::Vector4d> average(Eigen::Vector4d::Zero());
+      for (auto pt = sub_blocks[i]; pt != sub_blocks[i + 1]; pt++) {
+        average += frame->points[pt->second];
+      }
+      downsampled->points_storage[point_index_begin + i] = average.average();
+
+      if (frame->times) {
+        Averager<double> time_average(0.0);
+        for (auto pt = sub_blocks[i]; pt != sub_blocks[i + 1]; pt++) {
+          time_average += frame->times[pt->second];
+        }
+        downsampled->times_storage[point_index_begin + i] = time_average.average();
+      }
+
+      if (frame->normals) {
+        Averager<Eigen::Vector4d> normal_average(Eigen::Vector4d::Zero());
+        for (auto pt = sub_blocks[i]; pt != sub_blocks[i + 1]; pt++) {
+          normal_average += frame->normals[pt->second];
+        }
+        downsampled->normals_storage[point_index_begin + i] = normal_average.average();
+      }
+
+      if (frame->covs) {
+        Averager<Eigen::Matrix4d> cov_average(Eigen::Matrix4d::Zero());
+        for (auto pt = sub_blocks[i]; pt != sub_blocks[i + 1]; pt++) {
+          cov_average += frame->covs[pt->second];
+        }
+        downsampled->covs_storage[point_index_begin + i] = cov_average.average();
+      }
+
+      if (frame->intensities) {
+        Averager<double> intensity_average(0.0);
+        for (auto pt = sub_blocks[i]; pt != sub_blocks[i + 1]; pt++) {
+          intensity_average += frame->intensities[pt->second];
+        }
+        downsampled->intensities_storage[point_index_begin + i] = intensity_average.average();
+      }
+    }
+  }
+
+  downsampled->num_points = num_points;
+  downsampled->points_storage.resize(num_points);
+  downsampled->points = downsampled->points_storage.data();
 
   if (frame->times) {
-    downsampled->times_storage.resize(voxels.size());
+    downsampled->times_storage.resize(num_points);
     downsampled->times = downsampled->times_storage.data();
-    std::transform(voxels.begin(), voxels.end(), downsampled->times, [&](const Indices& indices) {
-      double sum = 0.0;
-      for (const auto i : *indices) {
-        sum += frame->times[i];
-      }
-      return sum / indices->size();
-    });
   }
 
   if (frame->normals) {
-    downsampled->normals_storage.resize(voxels.size());
+    downsampled->normals_storage.resize(num_points);
     downsampled->normals = downsampled->normals_storage.data();
-    std::transform(voxels.begin(), voxels.end(), downsampled->normals, [&](const Indices& indices) -> Eigen::Vector4d {
-      Eigen::Vector4d sum = Eigen::Vector4d::Zero();
-      for (const auto i : *indices) {
-        sum += frame->normals[i];
-      }
-      return sum / indices->size();
-    });
   }
 
   if (frame->covs) {
-    downsampled->covs_storage.resize(voxels.size());
+    downsampled->covs_storage.resize(num_points);
     downsampled->covs = downsampled->covs_storage.data();
-    std::transform(voxels.begin(), voxels.end(), downsampled->covs, [&](const Indices& indices) -> Eigen::Matrix4d {
-      Eigen::Matrix4d sum = Eigen::Matrix4d::Zero();
-      for (const auto i : *indices) {
-        sum += frame->covs[i];
-      }
-      return sum / indices->size();
-    });
   }
 
   if (frame->intensities) {
-    downsampled->intensities_storage.resize(voxels.size());
+    downsampled->intensities_storage.resize(num_points);
     downsampled->intensities = downsampled->intensities_storage.data();
-    std::transform(voxels.begin(), voxels.end(), downsampled->intensities, [&](const Indices& indices) {
-      double sum = 0.0;
-      for (const auto i : *indices) {
-        sum += frame->intensities[i];
-      }
-      return sum / indices->size();
-    });
   }
 
   if (!frame->aux_attributes.empty()) {
