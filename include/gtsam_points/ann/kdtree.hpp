@@ -9,38 +9,28 @@
 
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
 
-// forward declaration
-namespace nanoflann {
-
-template <class T, class DataSource, typename _DistanceType>
-class L2_Simple_Adaptor;
-
-template <typename Distance, class DatasetAdaptor, int DIM, typename IndexType>
-class KDTreeSingleIndexAdaptor;
-
-}  // namespace nanoflann
-
 namespace gtsam_points {
+
+template <typename PointCloud, typename Projection>
+struct UnsafeKdTree;
+struct AxisAlignedProjection;
 
 /**
  * @brief KdTree-based nearest neighbor search
- * @note  This is just a thin wrapper for nanoflann
  */
 struct KdTree : public NearestNeighborSearch {
 public:
-  using Index = nanoflann::KDTreeSingleIndexAdaptor<nanoflann::L2_Simple_Adaptor<double, KdTree, double>, KdTree, 3, size_t>;
+  using Index = UnsafeKdTree<KdTree, AxisAlignedProjection>;
 
-  KdTree(const Eigen::Vector4d* points, int num_points);
+  KdTree(const Eigen::Vector4d* points, int num_points, int build_num_threads = 1);
   virtual ~KdTree() override;
 
-  inline size_t kdtree_get_point_count() const { return num_points; }
-  inline double kdtree_get_pt(const size_t idx, const size_t dim) const { return points[idx][dim]; }
-
-  template <class BBox>
-  bool kdtree_get_bbox(BBox&) const {
-    return false;
-  }
-
+  /// @brief Find k nearest neighbors
+  /// @param pt           Query point (must be 4D vector [x, y, z, 1])
+  /// @param k            Number of neighbors to search
+  /// @param k_indices    Indices of k nearest neighbors
+  /// @param k_sq_dists   Squared distances of k nearest neighbors
+  /// @return             Number of neighbors found
   virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const override;
 
 public:

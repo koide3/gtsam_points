@@ -80,8 +80,8 @@ TEST_P(ContinuousTimeFactorTest, AlignmentTest) {
     values.insert(0, gtsam::Pose3::Identity());
     values.insert(1, gtsam::Pose3::Identity());
 
-    const auto& target = deskewed_target_frames[i];
-    const auto& source = raw_source_frames[i];
+    const auto target = deskewed_target_frames[i];
+    const auto source = raw_source_frames[i];
 
     gtsam_points::IntegratedCT_ICPFactor::shared_ptr factor;
     if (GetParam() == "CTICP") {

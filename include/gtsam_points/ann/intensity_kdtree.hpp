@@ -6,6 +6,17 @@
 #include <memory>
 #include <gtsam_points/ann/kdtree.hpp>
 
+// forward declaration
+namespace nanoflann {
+
+template <class T, class DataSource, typename _DistanceType>
+class L2_Simple_Adaptor;
+
+template <typename Distance, class DatasetAdaptor, int DIM, typename IndexType>
+class KDTreeSingleIndexAdaptor;
+
+}  // namespace nanoflann
+
 namespace gtsam_points {
 
 /**

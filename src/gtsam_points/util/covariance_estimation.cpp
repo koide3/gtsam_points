@@ -18,19 +18,25 @@ std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points,
   for (int i = 0; i < num_points; i++) {
     std::vector<size_t> k_indices(params.k_neighbors);
     std::vector<double> k_sq_dists(params.k_neighbors);
-    tree.knn_search(points[i].data(), params.k_neighbors, &k_indices[0], &k_sq_dists[0]);
+    size_t num_found = tree.knn_search(points[i].data(), params.k_neighbors, &k_indices[0], &k_sq_dists[0]);
+
+    if (num_found < params.k_neighbors) {
+      std::cerr << "warning: fewer than k neighbors found for point " << i << std::endl;
+      covs[i].setIdentity();
+      continue;
+    }
 
     Eigen::Vector4d sum_points = Eigen::Vector4d::Zero();
     Eigen::Matrix4d sum_covs = Eigen::Matrix4d::Zero();
 
-    for (int j = 0; j < params.k_neighbors; j++) {
+    for (int j = 0; j < num_found; j++) {
       const auto& pt = points[k_indices[j]];
       sum_points += pt;
       sum_covs += pt * pt.transpose();
     }
 
-    Eigen::Vector4d mean = sum_points / params.k_neighbors;
-    Eigen::Matrix4d cov = (sum_covs - mean * sum_points.transpose()) / params.k_neighbors;
+    Eigen::Vector4d mean = sum_points / num_found;
+    Eigen::Matrix4d cov = (sum_covs - mean * sum_points.transpose()) / num_found;
 
     switch (params.regularization_method) {
       default:
