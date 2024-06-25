@@ -11,7 +11,7 @@
 namespace gtsam_points {
 
 std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points, int num_points, const CovarianceEstimationParams& params) {
-  KdTree tree(points, num_points);
+  KdTree tree(points, num_points, params.num_threads);
   std::vector<Eigen::Matrix4d> covs(num_points);
 
 #pragma omp parallel for num_threads(params.num_threads) schedule(guided, 8)
