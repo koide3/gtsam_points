@@ -18,17 +18,19 @@ public:
   virtual ~IncrementalCovarianceVoxelMap();
 
   /// @brief Set the number of neighbors for covariance estimation.
-  void set_num_neighbors(int num_neighbors) { this->num_neighbors = num_neighbors; }
+  void set_num_neighbors(int num_neighbors);
   /// @brief Set the minimum number of neighbors for covariance estimation.
-  void set_min_num_neighbors(int min_num_neighbors) { this->min_num_neighbors = min_num_neighbors; }
+  void set_min_num_neighbors(int min_num_neighbors);
   /// @brief Set the number of warmup cycles. Covariances of new points in this period are not re-evaluated every frame.
-  void set_warmup_cycles(int warmup_cycles) { this->warmup_cycles = warmup_cycles; }
+  void set_warmup_cycles(int warmup_cycles);
   /// @brief Set the number of lowrate update cycles. Covariances of invalid points are re-evaluated every this period.
-  void set_lowrate_cycles(int lowrate_cycles) { this->lowrate_cycles = lowrate_cycles; }
+  void set_lowrate_cycles(int lowrate_cycles);
+  /// @brief Set the age threshold for removing invalid points. Invalid points older than this are removed.
+  void set_remove_invalid_age_thresh(int remove_invalid_age_thresh);
   /// @brief Set the threshold scale for normal validation.
-  void set_eig_stddev_thresh_scale(double eig_stddev_thresh_scale) { this->eig_stddev_thresh_scale = eig_stddev_thresh_scale; }
+  void set_eig_stddev_thresh_scale(double eig_stddev_thresh_scale);
   /// @brief Set the number of threads for normal estimation.
-  void set_num_threads(int num_threads) { this->num_threads = num_threads; }
+  void set_num_threads(int num_threads);
 
   /// @brief Insert point into the voxelmap.
   virtual void insert(const PointCloud& points) override;
@@ -38,6 +40,15 @@ public:
 
   /// @brief Find k-nearest neighbors. This finds neighbors regardless of the validity of covariances.
   size_t knn_search_force(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const;
+
+  /// @brief Get valid point indices. If num_threads is -1, the member variable num_threads is used.
+  std::vector<size_t> valid_indices(int num_threads = -1) const;
+  /// @brief Get points from indices.
+  std::vector<Eigen::Vector4d> voxel_points(const std::vector<size_t>& indices) const;
+  /// @brief Get normals from indices.
+  std::vector<Eigen::Vector4d> voxel_normals(const std::vector<size_t>& indices) const;
+  /// @brief Get covariances from indices.
+  std::vector<Eigen::Matrix4d> voxel_covs(const std::vector<size_t>& indices) const;
 
   /// @brief Get voxel points
   virtual std::vector<Eigen::Vector4d> voxel_points() const override;
@@ -51,6 +62,7 @@ protected:
   int min_num_neighbors;           ///< Minimum number of neighbors for covariance estimation.
   int warmup_cycles;               ///< Number of cycles for covariance warmup.
   int lowrate_cycles;              ///< Number of cycles for lowrate covariance estimation.
+  int remove_invalid_age_thresh;   ///< Age threshold for removing invalid points.
   double eig_stddev_thresh_scale;  ///< Threshold scale for normal validation.
   int num_threads;                 ///< Number of threads for normal estimation.
 

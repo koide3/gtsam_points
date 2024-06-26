@@ -4,7 +4,9 @@
 #pragma once
 
 #include <memory>
-#include <gtsam_points/ann/kdtree.hpp>
+#include <Eigen/Core>
+#include <nanoflann.hpp>
+#include <gtsam_points/ann/nearest_neighbor_search.hpp>
 
 // forward declaration
 namespace nanoflann {

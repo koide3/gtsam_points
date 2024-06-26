@@ -17,7 +17,7 @@ public:
   /// @brief FlatContainer setting.
   struct Setting {
     double min_sq_dist_in_cell = 0.1 * 0.1;  ///< Minimum squared distance between points in a cell.
-    size_t max_num_points_in_cell = 10;      ///< Maximum number of points in a cell.
+    size_t max_num_points_in_cell = 20;      ///< Maximum number of points in a cell.
   };
 
   /// @brief Constructor.

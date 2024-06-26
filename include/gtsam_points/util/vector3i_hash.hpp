@@ -29,9 +29,9 @@ public:
 class XORVector3iHash {
 public:
   size_t operator()(const Eigen::Vector3i& x) const {
-    const size_t p1 = 73856093;
-    const size_t p2 = 19349669;  // 19349663 was not a prime number
-    const size_t p3 = 83492791;
+    const size_t p1 = 9132043225175502913;
+    const size_t p2 = 7277549399757405689;
+    const size_t p3 = 6673468629021231217;
     return static_cast<size_t>((x[0] * p1) ^ (x[1] * p2) ^ (x[2] * p3));
   }
 };

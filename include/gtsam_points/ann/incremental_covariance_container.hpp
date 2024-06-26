@@ -13,31 +13,17 @@ public:
   /// @brief FlatContainer setting.
   struct Setting {
     double min_sq_dist_in_cell = 0.1 * 0.1;  ///< Minimum squared distance between points in a cell.
-    size_t max_num_points_in_cell = 10;      ///< Maximum number of points in a cell.
+    size_t max_num_points_in_cell = 20;      ///< Maximum number of points in a cell.
   };
 
-  IncrementalCovarianceContainer() { points.reserve(10); }
+  /// @brief Constructor.
+  IncrementalCovarianceContainer();
 
   /// @brief Number of points in the container.
   size_t size() const { return points.size(); }
 
   /// @brief Add a point to the container.
-  void add(const Setting& setting, const PointCloud& points, size_t i) {
-    if (
-      this->points.size() >= setting.max_num_points_in_cell ||  //
-      std::any_of(
-        this->points.begin(),
-        this->points.end(),
-        [&](const auto& pt) { return (pt - points.points[i]).squaredNorm() < setting.min_sq_dist_in_cell; })  //
-    ) {
-      return;
-    }
-
-    this->flags.emplace_back(0);
-    this->points.emplace_back(points.points[i]);
-    this->normals.emplace_back(Eigen::Vector4d::Zero());
-    this->covs.emplace_back(Eigen::Matrix4d::Zero());
-  }
+  void add(const Setting& setting, const PointCloud& points, size_t i);
 
   /// @brief Finalize the container (Nothing to do for FlatContainer).
   void finalize() {}
@@ -83,6 +69,12 @@ public:
   /// @brief Get the time when the i-th point was inserted.
   size_t birthday(int i) const { return flags[i] & BIRTHDAY_MASK; }
 
+  /// @brief Get the time since the i-th point was inserted.
+  size_t age(int i, size_t lru) const { return lru - birthday(i); }
+
+  /// @brief Remove old invalid points.
+  size_t remove_old_invalid(int age_thresh, size_t lru);
+
 public:
   static constexpr size_t VALID_BIT = 1ull << 63;
   static constexpr size_t BIRTHDAY_MASK = (VALID_BIT >> 1) - 1;
@@ -101,8 +93,8 @@ struct traits<IncrementalCovarianceContainer> {
   static int size(const IncrementalCovarianceContainer& frame) { return frame.size(); }
 
   static bool has_points(const IncrementalCovarianceContainer& frame) { return !frame.points.empty(); }
-  static bool has_normals(const IncrementalCovarianceContainer& frame) { return !frame.normals.empty(); }
-  static bool has_covs(const IncrementalCovarianceContainer& frame) { return !frame.covs.empty(); }
+  static bool has_normals(const IncrementalCovarianceContainer& frame) { return true; }
+  static bool has_covs(const IncrementalCovarianceContainer& frame) { return true; }
   static bool has_intensities(const IncrementalCovarianceContainer& frame) { return false; }
 
   static const Eigen::Vector4d& point(const IncrementalCovarianceContainer& frame, size_t i) { return frame.points[i]; }

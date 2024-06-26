@@ -1,3 +1,5 @@
+// SPDX-FileCopyrightText: Copyright 2024 Kenji Koide
+// SPDX-License-Identifier: MIT
 #include <gtsam_points/ann/intensity_kdtree.hpp>
 
 #include <nanoflann.hpp>
