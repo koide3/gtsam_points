@@ -75,7 +75,10 @@ All the following optimizers were derived from the implementations in GTSAM
 ```bash
 # Install gtsam
 git clone https://github.com/borglab/gtsam
-mkdir gtsam/build && cd gtsam/build
+cd gtsam
+git checkout 4.2a9
+
+mkdir build && cd build
 cmake .. \
   -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
   -DGTSAM_BUILD_TESTS=OFF \
