@@ -1,0 +1,22 @@
+# Config file for the gtsam_points package
+#
+# Usage from an external project:
+#
+#  find_package(gtsam_points REQUIRED)
+#  target_link_libraries(MY_TARGET_NAME gtsam_points::gtsam_points)
+#
+@PACKAGE_INIT@
+
+include_guard()
+
+set(BUILD_WITH_CUDA @BUILD_WITH_CUDA@)
+
+include(CMakeFindDependencyMacro)
+find_dependency(Eigen3 REQUIRED)
+find_dependency(Boost REQUIRED COMPONENTS timer filesystem)
+
+if(BUILD_WITH_CUDA)
+  find_dependency(CUDAToolkit REQUIRED)
+endif()
+
+include("${CMAKE_CURRENT_LIST_DIR}/gtsam_points-targets.cmake")
