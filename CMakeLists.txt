@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.29)
-project(gtsam_points LANGUAGES CXX)
+project(gtsam_points VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -151,9 +151,9 @@ add_library(gtsam_points SHARED
   src/gtsam_points/optimizers/dogleg_optimizer_ext_impl.cpp
 )
 target_include_directories(gtsam_points PUBLIC
-  include
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include>
   ${EIGEN3_INCLUDE_DIR}
-  thirdparty/nanoflann/include
   ${Boost_INCLUDE_DIRS}
   ${GTSAM_INCLUDE_DIRS}
 )
@@ -197,7 +197,7 @@ if(BUILD_WITH_CUDA)
     src/gtsam_points/util/easy_profiler_cuda.cu
   )
   target_include_directories(gtsam_points_cuda PUBLIC
-    include
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     ${EIGEN3_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${GTSAM_INCLUDE_DIRS}
@@ -266,3 +266,43 @@ if(BUILD_TESTS)
     gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endforeach()
 endif()
+
+
+#############
+## Install ##
+#############
+
+include(GNUInstallDirs)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+install(TARGETS gtsam_points
+  EXPORT gtsam_points-targets
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+)
+set(CMAKE_CONFIG_INSTALL_DIR
+  "${CMAKE_INSTALL_LIBDIR}/cmake/gtsam_points"
+  CACHE PATH "Install directory for CMake config files"
+)
+include(CMakePackageConfigHelpers)
+install(EXPORT gtsam_points-targets
+  FILE gtsam_points-targets.cmake
+  NAMESPACE gtsam_points::
+  DESTINATION ${CMAKE_CONFIG_INSTALL_DIR}
+)
+configure_package_config_file(
+  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/gtsam_points-config.cmake.in"
+  "${CMAKE_CURRENT_BINARY_DIR}/gtsam_points-config.cmake"
+  INSTALL_DESTINATION ${CMAKE_CONFIG_INSTALL_DIR}
+)
+write_basic_package_version_file(
+  "${CMAKE_CURRENT_BINARY_DIR}/gtsam_points-config-version.cmake"
+  VERSION ${VERSION}
+  COMPATIBILITY SameMajorVersion
+)
+install(FILES
+  "${CMAKE_CURRENT_BINARY_DIR}/gtsam_points-config.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/gtsam_points-config-version.cmake"
+  DESTINATION ${CMAKE_CONFIG_INSTALL_DIR}
+)
