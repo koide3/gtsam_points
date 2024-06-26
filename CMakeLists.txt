@@ -233,8 +233,7 @@ if(BUILD_DEMO)
     get_filename_component(demo_name ${demo_src} NAME_WE)
 
     add_executable(${demo_name} ${demo_src})
-    target_include_directories(${demo_name} PUBLIC ${Iridescence_INCLUDE_DIRS})
-    target_link_libraries(${demo_name} gtsam_points ${Iridescence_LIBRARIES})
+    target_link_libraries(${demo_name} gtsam_points Iridescence::Iridescence)
   endforeach()
 endif()
 
@@ -247,8 +246,7 @@ if(BUILD_EXAMPLE)
     get_filename_component(example_name ${example_src} NAME_WE)
 
     add_executable(${example_name} ${example_src})
-    target_include_directories(${example_name} PUBLIC ${Iridescence_INCLUDE_DIRS})
-    target_link_libraries(${example_name} gtsam_points ${Iridescence_LIBRARIES})
+    target_link_libraries(${example_name} gtsam_points Iridescence::Iridescence)
   endforeach()
 endif()
 
