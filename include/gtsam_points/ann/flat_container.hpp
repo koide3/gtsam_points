@@ -16,6 +16,9 @@ struct FlatContainer {
 public:
   /// @brief FlatContainer setting.
   struct Setting {
+    void set_min_dist_in_cell(double dist) { this->min_sq_dist_in_cell = dist * dist; }
+    void set_max_num_points_in_cell(size_t num_points) { this->max_num_points_in_cell = num_points; }
+
     double min_sq_dist_in_cell = 0.1 * 0.1;  ///< Minimum squared distance between points in a cell.
     size_t max_num_points_in_cell = 20;      ///< Maximum number of points in a cell.
   };
