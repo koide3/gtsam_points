@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29)
+cmake_minimum_required(VERSION 3.22)
 project(gtsam_points VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -48,14 +48,25 @@ if(BUILD_WITH_CUDA)
   enable_language(CUDA)
   set(CUDA_STANDARD 17)
 
-  if(BUILD_WITH_CUDA_MULTIARCH)
-    set(CUDA_ARCHITECTURES "all-major")
+  if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.24.0")
+    if(BUILD_WITH_CUDA_MULTIARCH)
+      set(CMAKE_CUDA_ARCHITECTURES "all-major" CACHE STRING "CUDA architectures" FORCE)
+    else()
+      set(CMAKE_CUDA_ARCHITECTURES "native" CACHE STRING "CUDA architectures" FORCE)
+    endif()
   else()
-    set(CUDA_ARCHITECTURES "navite")
+    if(BUILD_WITH_CUDA_MULTIARCH)
+      set(CMAKE_CUDA_ARCHITECTURES 75 80 89 90 CACHE STRING "CUDA architectures" FORCE)
+    else()
+      if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES OR CMAKE_CUDA_ARCHITECTURES STREQUAL "52")
+        message(WARNING "CMAKE_CUDA_ARCHITECTURES is not defined. Set to 89 by default")
+        set(CMAKE_CUDA_ARCHITECTURES 89 CACHE STRING "CUDA architectures" FORCE)
+      endif()
+    endif()
   endif()
 
   set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} -Wno-c99-extensions")
-  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --std=c++14 --expt-relaxed-constexpr")
+  set(CMAKE_CUDA_FLAGS "${CMAKE_CUDA_FLAGS} --expt-relaxed-constexpr")
 
   if(${CMAKE_SYSTEM_PROCESSOR} STREQUAL "aarch64")
   else()
@@ -206,9 +217,6 @@ if(BUILD_WITH_CUDA)
   target_link_libraries(gtsam_points_cuda
     CUDA::cudart
   )
-  set_target_properties(gtsam_points_cuda PROPERTIES
-    CUDA_ARCHITECTURES ${CUDA_ARCHITECTURES}
-  )
 
   target_link_libraries(gtsam_points
     gtsam_points_cuda
@@ -275,7 +283,12 @@ endif()
 include(GNUInstallDirs)
 install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(TARGETS gtsam_points
+list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points)
+if(BUILD_WITH_CUDA)
+  list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points_cuda)
+endif()
+
+install(TARGETS ${GTSAM_POINTS_LIBRARIES}
   EXPORT gtsam_points-targets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
   ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
