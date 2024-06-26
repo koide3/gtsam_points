@@ -117,15 +117,36 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
     ASSERT_TRUE(voxels_);
 
     EXPECT_DOUBLE_EQ(voxels->voxel_resolution(), voxels_->voxel_resolution());
-    EXPECT_EQ(voxels->voxels.size(), voxels_->voxels.size());
+    EXPECT_EQ(voxels->num_voxels(), voxels_->num_voxels());
 
-    for (const auto& voxel : voxels->voxels) {
-      const auto found = voxels_->voxels.find(voxel.first);
-      ASSERT_TRUE(found != voxels_->voxels.end());
+    const auto points = voxels->voxel_points();
+    const auto points_ = voxels_->voxel_points();
+    EXPECT_EQ(points.size(), points_.size());
+    for (int i = 0; i < points.size(); i++) {
+      EXPECT_LT((points[i] - points_[i]).norm(), 1e-3);
+    }
 
-      EXPECT_EQ(voxel.second->num_points, found->second->num_points);
-      EXPECT_LT((voxel.second->mean - found->second->mean).norm(), 1e-3);
-      EXPECT_LT((voxel.second->cov - found->second->cov).norm(), 1e-3);
+    const auto covs = voxels->voxel_covs();
+    const auto covs_ = voxels_->voxel_covs();
+    EXPECT_EQ(covs.size(), covs_.size());
+    for (int i = 0; i < covs.size(); i++) {
+      EXPECT_LT((covs[i] - covs_[i]).norm(), 1e-3);
+    }
+
+    for (const auto& pt : points) {
+      const Eigen::Vector3i coord = voxels->voxel_coord(pt);
+      const Eigen::Vector3i coord_ = voxels_->voxel_coord(pt);
+      EXPECT_EQ(coord, coord_);
+
+      const auto index = voxels->lookup_voxel_index(coord);
+      const auto index_ = voxels_->lookup_voxel_index(coord);
+      EXPECT_EQ(index, index_);
+
+      const auto voxel = voxels->lookup_voxel(index);
+      const auto voxel_ = voxels_->lookup_voxel(index);
+      EXPECT_EQ(voxel.num_points, voxel_.num_points);
+      EXPECT_LT((voxel.mean - voxel_.mean).norm(), 1e-3);
+      EXPECT_LT((voxel.cov - voxel_.cov).norm(), 1e-3);
     }
   }
 

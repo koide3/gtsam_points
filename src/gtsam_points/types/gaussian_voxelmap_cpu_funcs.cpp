@@ -51,15 +51,8 @@ merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<Poin
   GaussianVoxelMapCPU downsampling(downsample_resolution);
   downsampling.insert(all_frames);
 
-  std::vector<Eigen::Vector4d> downsampled_points;
-  std::vector<Eigen::Matrix4d> downsampled_covs;
-  downsampled_points.reserve(downsampling.voxels.size());
-  downsampled_covs.reserve(downsampling.voxels.size());
-
-  for (const auto& voxel : downsampling.voxels) {
-    downsampled_points.push_back(voxel.second->mean);
-    downsampled_covs.push_back(voxel.second->cov);
-  }
+  std::vector<Eigen::Vector4d> downsampled_points = downsampling.voxel_points();
+  std::vector<Eigen::Matrix4d> downsampled_covs = downsampling.voxel_covs();
 
   auto merged = std::make_shared<PointCloudCPU>();
   merged->add_points(downsampled_points);
@@ -91,7 +84,7 @@ double overlap(const GaussianVoxelMap::ConstPtr& target_, const PointCloud::Cons
   for (int i = 0; i < source->size(); i++) {
     Eigen::Vector4d pt = delta * source->points[i];
     Eigen::Vector3i coord = target->voxel_coord(pt);
-    if (target->lookup_voxel(coord)) {
+    if (target->lookup_voxel_index(coord) >= 0) {
       num_overlap++;
     }
   }
@@ -117,7 +110,7 @@ overlap(const std::vector<GaussianVoxelMap::ConstPtr>& targets_, const PointClou
 
       Eigen::Vector4d pt = delta * source->points[i];
       Eigen::Vector3i coord = target->voxel_coord(pt);
-      if (target->lookup_voxel(coord)) {
+      if (target->lookup_voxel_index(coord) >= 0) {
         num_overlap++;
         break;
       }

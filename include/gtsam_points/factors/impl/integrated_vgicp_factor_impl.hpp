@@ -75,13 +75,15 @@ void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Is
   for (int i = 0; i < frame::size(*source); i++) {
     Eigen::Vector4d pt = delta * frame::point(*source, i);
     Eigen::Vector3i coord = target_voxels->voxel_coord(pt);
-    auto voxel = target_voxels->lookup_voxel(coord);
+    const auto voxel_id = target_voxels->lookup_voxel_index(coord);
 
-    if (voxel == nullptr) {
+    if (voxel_id < 0) {
       correspondences[i] = nullptr;
       mahalanobis[i].setIdentity();
     } else {
-      correspondences[i] = voxel.get();
+      const auto voxel = &target_voxels->lookup_voxel(voxel_id);
+
+      correspondences[i] = voxel;
 
       Eigen::Matrix4d RCR = (voxel->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
       RCR(3, 3) = 1.0;

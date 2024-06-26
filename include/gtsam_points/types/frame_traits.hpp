@@ -40,7 +40,8 @@ template <typename T, typename = void>
 struct has_times_defined : std::false_type {};
 
 template <typename T>
-struct has_times_defined<T, std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::has_times), const T&>::value>> : std::true_type {};
+struct has_times_defined<T, std::enable_if_t<boost::poly_collection::detail::is_invocable<decltype(&traits<T>::has_times), const T&>::value>>
+: std::true_type {};
 
 template <typename T>
 std::enable_if_t<has_times_defined<T>::value, bool> has_times(const T& t) {
@@ -132,7 +133,7 @@ double time(const T& t, size_t i) {
 }
 
 template <typename T>
-auto point(const T& t, size_t i) {
+decltype(auto) point(const T& t, size_t i) {
   return traits<T>::point(t, i);
 }
 
@@ -145,7 +146,7 @@ struct normal_defined<T, std::enable_if_t<boost::poly_collection::detail::is_inv
 : std::true_type {};
 
 template <typename T, typename std::enable_if_t<normal_defined<T>::value>* = nullptr>
-auto normal(const T& t, size_t i) {
+decltype(auto) normal(const T& t, size_t i) {
   return traits<T>::normal(t, i);
 }
 
@@ -157,17 +158,17 @@ Eigen::Vector4d normal(const T& t, size_t i) {
 }
 
 template <typename T>
-auto cov(const T& t, size_t i) {
+decltype(auto) cov(const T& t, size_t i) {
   return traits<T>::cov(t, i);
 }
 
 template <typename T>
-auto intensity(const T& t, size_t i) {
+decltype(auto) intensity(const T& t, size_t i) {
   return traits<T>::intensity(t, i);
 }
 
 template <typename T>
-auto intensity_gradient(const T& t, size_t i) {
+decltype(auto) intensity_gradient(const T& t, size_t i) {
   return traits<T>::intensity_gradient(t, i);
 }
 

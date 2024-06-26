@@ -134,6 +134,14 @@ public:
     gtsam::Key target_key,
     gtsam::Key source_key,
     const std::shared_ptr<const TargetFrame>& target,
+    const std::shared_ptr<const SourceFrame>& source,
+    const std::shared_ptr<NearestNeighborSearch>& target_tree)
+  : IntegratedICPFactor_<TargetFrame, SourceFrame>(target_key, source_key, target, source, target_tree, true) {}
+
+  IntegratedPointToPlaneICPFactor_(
+    gtsam::Key target_key,
+    gtsam::Key source_key,
+    const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source)
   : IntegratedICPFactor_<TargetFrame, SourceFrame>(target_key, source_key, target, source, true) {}
 };

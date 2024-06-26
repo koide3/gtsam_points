@@ -114,7 +114,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/ann/kdtree.cpp
   src/gtsam_points/ann/intensity_kdtree.cpp
   src/gtsam_points/ann/ivox.cpp
-  src/gtsam_points/ann/ivox_covariance_estimation.cpp
+  src/gtsam_points/ann/incremental_covariance_voxelmap.cpp
   # types
   src/gtsam_points/types/point_cloud.cpp
   src/gtsam_points/types/point_cloud_cpu.cpp
@@ -127,7 +127,6 @@ add_library(gtsam_points SHARED
   src/gtsam_points/factors/integrated_vgicp_factor.cpp
   src/gtsam_points/factors/integrated_loam_factor.cpp
   src/gtsam_points/factors/intensity_gradients.cpp
-  src/gtsam_points/factors/intensity_gradients_ivox.cpp
   src/gtsam_points/factors/integrated_colored_gicp_factor.cpp
   src/gtsam_points/factors/integrated_color_consistency_factor.cpp
   src/gtsam_points/factors/integrated_ct_icp_factor.cpp
@@ -207,7 +206,7 @@ if(BUILD_WITH_CUDA)
     CUDA::cudart
   )
   set_target_properties(gtsam_points_cuda PROPERTIES
-    CUDA_ARCHITECTURES "native"
+    CUDA_ARCHITECTURES ${CUDA_ARCHITECTURES}
   )
 
   target_link_libraries(gtsam_points
