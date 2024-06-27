@@ -192,7 +192,7 @@ TEST_F(VoxelMapTestBase, VoxelMapGPU) {
 
     const double overlap_cpu = gtsam_points::overlap(voxelmaps[i], frames[i], delta);
     const double overlap_gpu = gtsam_points::overlap_gpu(voxelmaps_gpu[i], frames[i], delta);
-    EXPECT_LT(std::abs(overlap_cpu - overlap_gpu), 0.01);
+    EXPECT_LT(std::abs(overlap_cpu - overlap_gpu), 0.01) << "Overlap mismatch CPU=" << overlap_cpu << " GPU=" << overlap_gpu;
   }
 
   for (int i = 0; i < frames.size(); i++) {

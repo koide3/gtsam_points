@@ -36,9 +36,14 @@ inline __host__ __device__ uint64_t vector3i_hash(const Eigen::Vector3i& x) {
   return seed;
 }
 
+inline __host__ __device__ Eigen::Array3i fast_floor(const Eigen::Array3f& pt) {
+  const Eigen::Array3i ncoord = pt.cast<int>();
+  return ncoord - (pt < ncoord.cast<float>()).cast<int>();
+};
+
 // real vector -> voxel index vector
 inline __host__ __device__ Eigen::Vector3i calc_voxel_coord(const Eigen::Vector3f& x, float resolution) {
-  Eigen::Vector3i coord = (x.array() / resolution - 0.5).floor().cast<int>();
+  Eigen::Vector3i coord = fast_floor(x.array() / resolution).cast<int>();
   return coord;
 }
 
