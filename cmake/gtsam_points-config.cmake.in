@@ -13,7 +13,9 @@ set(BUILD_WITH_CUDA @BUILD_WITH_CUDA@)
 
 include(CMakeFindDependencyMacro)
 find_dependency(Eigen3 REQUIRED)
-find_dependency(Boost REQUIRED COMPONENTS timer filesystem)
+find_dependency(GTSAM REQUIRED)
+find_dependency(OpenMP REQUIRED)
+find_dependency(Boost REQUIRED COMPONENTS filesystem)
 
 if(BUILD_WITH_CUDA)
   find_dependency(CUDAToolkit REQUIRED)
