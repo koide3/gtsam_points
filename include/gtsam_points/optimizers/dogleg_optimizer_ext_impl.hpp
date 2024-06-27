@@ -122,7 +122,8 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    * @param dx_n The Gauss-Newton point
    * @return The dogleg point \f$ \delta x_d \f$
    */
-  static gtsam::VectorValues ComputeDoglegPoint(double delta, const gtsam::VectorValues& dx_u, const gtsam::VectorValues& dx_n, const bool verbose = false);
+  static gtsam::VectorValues
+  ComputeDoglegPoint(double delta, const gtsam::VectorValues& dx_u, const gtsam::VectorValues& dx_n, const bool verbose = false);
 
   /** Compute the point on the line between the steepest descent point and the
    * Newton's method point intersecting the trust region boundary.
@@ -158,7 +159,11 @@ typename DoglegOptimizerImplExt::IterationResult DoglegOptimizerImplExt::Iterate
   IterationResult result;
 
   bool stay = true;
-  enum { NONE, INCREASED_DELTA, DECREASED_DELTA } lastAction = NONE;  // Used to prevent alternating between increasing and decreasing in one iteration
+  enum {
+    NONE,
+    INCREASED_DELTA,
+    DECREASED_DELTA
+  } lastAction = NONE;  // Used to prevent alternating between increasing and decreasing in one iteration
   while (stay) {
     gttic(Dog_leg_point);
     // Compute dog leg point
@@ -189,7 +194,9 @@ typename DoglegOptimizerImplExt::IterationResult DoglegOptimizerImplExt::Iterate
     gttic(adjust_delta);
     // Compute gain ratio.  Here we take advantage of the invariant that the
     // Bayes' net error at zero is equal to the nonlinear error
-    const double rho = std::abs(f_error - result.f_error) < 1e-15 || std::abs(M_error - new_M_error) < 1e-15 ? 0.5 : (f_error - result.f_error) / (M_error - new_M_error);
+    const double rho = std::abs(f_error - result.f_error) < 1e-15 || std::abs(M_error - new_M_error) < 1e-15
+                         ? 0.5
+                         : (f_error - result.f_error) / (M_error - new_M_error);
 
     if (verbose) std::cout << std::setprecision(15) << "rho = " << rho << std::endl;
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #include <gtsam_points/optimizers/gaussian_factor_graph_solver.hpp>
 
 #include <gtsam_points/optimizers/linear_solver.hpp>

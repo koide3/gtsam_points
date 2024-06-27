@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #include <gtsam_points/cuda/gl_buffer_map.hpp>
 
 #include <cuda_runtime.h>

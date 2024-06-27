@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #include <gtsam_points/ann/ivox.hpp>
 #include <gtsam_points/types/point_cloud.hpp>
 // #include <gtsam_points/factors/intensity_gradients_ivox.hpp>

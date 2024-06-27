@@ -44,7 +44,10 @@ public:
    * @param initialValues The initial variable assignments
    * @param params The optimization parameters
    */
-  DoglegOptimizerExt(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& initialValues, const gtsam::DoglegParams& params = gtsam::DoglegParams());
+  DoglegOptimizerExt(
+    const gtsam::NonlinearFactorGraph& graph,
+    const gtsam::Values& initialValues,
+    const gtsam::DoglegParams& params = gtsam::DoglegParams());
 
   /** Standard constructor, requires a nonlinear factor graph, initial
    * variable assignments, and optimization parameters.  For convenience this

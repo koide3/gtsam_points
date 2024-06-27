@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
+
 #pragma once
 
 #include <chrono>
@@ -63,7 +66,8 @@ public:
     times.push_back(std::chrono::high_resolution_clock::now());
 
     if (debug) {
-      ost << ">> " << label << " (" << std::chrono::duration_cast<std::chrono::nanoseconds>(times.back() - times.front()).count() / 1e6 << "[msec])" << std::endl;
+      ost << ">> " << label << " (" << std::chrono::duration_cast<std::chrono::nanoseconds>(times.back() - times.front()).count() / 1e6 << "[msec])"
+          << std::endl;
     }
   }
 
@@ -78,4 +82,4 @@ private:
   std::ostream& ost;
   std::ofstream ofs;
 };
-}  // namespace glim
+}  // namespace gtsam_points
