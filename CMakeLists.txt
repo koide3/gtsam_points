@@ -24,20 +24,15 @@ if(BUILD_WITH_MARCH_NATIVE)
   set(CMAKE_CXX_FLAGS "-march=native ${CMAKE_CXX_FLAGS}")
 endif()
 
-find_package(Boost REQUIRED COMPONENTS timer filesystem)
+find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(GTSAM REQUIRED)
-
+find_package(OpenMP REQUIRED)
 find_package(Eigen3 REQUIRED)
+
 if(${BUILD_WITH_CUDA} AND ${EIGEN3_VERSION_STRING} VERSION_LESS "3.3.90")
   set(EIGEN3_INCLUDE_DIR "thirdparty/Eigen")
   message(STATUS "Use bundled Eigen because the system Eigen ${EIGEN3_VERSION_STRING} may not compatible with CUDA")
   message(STATUS "Override EIGEN3_INCLUDE_DIR: ${EIGEN3_INCLUDE_DIR}")
-endif()
-
-find_package(OpenMP)
-if (OPENMP_FOUND)
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
 endif()
 
 # GPU-related
@@ -165,14 +160,13 @@ add_library(gtsam_points SHARED
 target_include_directories(gtsam_points PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include>
-  ${EIGEN3_INCLUDE_DIR}
-  ${Boost_INCLUDE_DIRS}
-  ${GTSAM_INCLUDE_DIRS}
 )
 target_link_libraries(gtsam_points
-  pthread
-  ${Boost_LIBRARIES}
-  ${GTSAM_LIBRARIES}
+  Boost::boost
+  Boost::filesystem
+  Eigen3::Eigen
+  GTSAM::GTSAM
+  OpenMP::OpenMP_CXX
 )
 
 # GPU-related
@@ -210,12 +204,12 @@ if(BUILD_WITH_CUDA)
   )
   target_include_directories(gtsam_points_cuda PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    ${EIGEN3_INCLUDE_DIR}
-    ${Boost_INCLUDE_DIRS}
-    ${GTSAM_INCLUDE_DIRS}
-    ${CUDA_INCLUDE_DIRS}
   )
   target_link_libraries(gtsam_points_cuda
+    Boost::boost
+    Eigen3::Eigen
+    GTSAM::GTSAM
+    OpenMP::OpenMP_CXX
     CUDA::cudart
   )
 
