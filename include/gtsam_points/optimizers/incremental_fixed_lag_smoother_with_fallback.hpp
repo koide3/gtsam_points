@@ -2,6 +2,7 @@
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 #pragma once
 
+#include <atomic>
 #include <gtsam_points/optimizers/incremental_fixed_lag_smoother_ext.hpp>
 
 namespace gtsam_points {
@@ -17,6 +18,7 @@ public:
     const KeyTimestampMap& timestamps = KeyTimestampMap(),
     const gtsam::FactorIndices& factorsToRemove = gtsam::FactorIndices()) override;
 
+  bool fallbackHappened() const { return fallback_happend; }
   gtsam::Values calculateEstimate() const override;
 
   const gtsam::Value& calculateEstimate(gtsam::Key key) const;
@@ -61,6 +63,7 @@ private:
 private:
   double current_stamp;
   mutable gtsam::Values values;
+  mutable std::atomic_bool fallback_happend;
   gtsam::NonlinearFactorGraph factors;
   std::unordered_map<gtsam::Key, std::vector<gtsam::NonlinearFactor::shared_ptr>> factor_map;
   mutable gtsam::FixedLagSmootherKeyTimestampMap stamps;

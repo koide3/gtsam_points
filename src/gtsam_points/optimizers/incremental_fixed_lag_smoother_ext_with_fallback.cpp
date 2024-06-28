@@ -16,6 +16,7 @@ namespace gtsam_points {
 
 IncrementalFixedLagSmootherExtWithFallback::IncrementalFixedLagSmootherExtWithFallback(double smootherLag, const ISAM2Params& parameters)
 : IncrementalFixedLagSmootherExt(smootherLag, parameters) {
+  fallback_happend = false;
   current_stamp = 0.0;
   smoother.reset(new IncrementalFixedLagSmootherExt(smootherLag, parameters));
 }
@@ -28,6 +29,7 @@ IncrementalFixedLagSmootherExtWithFallback::Result IncrementalFixedLagSmootherEx
   const KeyTimestampMap& timestamps,
   const gtsam::FactorIndices& factorsToRemove) {
   //
+  fallback_happend = false;
   factors.add(newFactors);
   for (const auto& factor : newFactors) {
     for (const auto key : factor->keys()) {
@@ -145,6 +147,7 @@ void IncrementalFixedLagSmootherExtWithFallback::update_fallback_state() {
 }
 
 void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
+  fallback_happend = true;
   std::cout << "falling back!!" << std::endl;
   std::cout << "smoother_lag:" << smoother->smootherLag() << std::endl;
 
