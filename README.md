@@ -125,9 +125,10 @@ cd gtsam_points
 
 ## Videos
 
-- [Comparison of scan matching factors (multi-scan registration of 5 frames)](https://youtu.be/HCXCWlx_VOM)
-- [Continuous-time ICP factor](https://youtu.be/Xv2-qDlzQYM)
+- [Multi-scan registration of 5 frames (10 factors)](https://youtu.be/HCXCWlx_VOM)
 - [Bundle adjustment factor](https://youtu.be/tuDV0GCOZXg)
+- [Continuous-time ICP factor](https://youtu.be/Xv2-qDlzQYM)
+- [Colored ICP factor](https://youtu.be/xEQmiFV79LU)
 - [Incremental voxel mapping and normal estimation](https://youtu.be/gDiKqQDc7yo)
 - [SE3 BSpline interpolation](https://youtu.be/etAI8go3b8U)
 

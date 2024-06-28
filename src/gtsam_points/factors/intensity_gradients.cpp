@@ -110,7 +110,7 @@ IntensityGradients::Ptr IntensityGradients::estimate(const PointCloud::ConstPtr&
 
 IntensityGradients::Ptr
 IntensityGradients::estimate(const gtsam_points::PointCloudCPU::Ptr& frame, int k_geom_neighbors, int k_photo_neighbors, int num_threads) {
-  gtsam_points::KdTree2<PointCloud> kdtree(frame);
+  gtsam_points::KdTree2<PointCloud> kdtree(frame, num_threads);
 
   bool estimate_normals = frame->normals == nullptr;
   bool estimate_covs = frame->covs == nullptr;
