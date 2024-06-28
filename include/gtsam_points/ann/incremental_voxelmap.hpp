@@ -28,6 +28,9 @@ public:
 /// @brief Incremental voxelmap.
 ///        This class supports incremental point cloud insertion and LRU-based voxel deletion.
 /// @note  This class can be used as a point cloud as well as a neighbor search structure.
+/// @note  For the compatibility with other nearest neighbor search methods, this implementation returns indices that encode the voxel and point IDs.
+///        The first ```point_id_bits``` (e.g., 32) bits of a point index represent the point ID, and the rest ```voxel_id_bits``` (e.g., 32) bits
+///        represent the voxel ID that contains the point. The specified point can be looked up by `voxelmap.point(index)`;
 template <typename VoxelContents>
 struct IncrementalVoxelMap : public NearestNeighborSearch {
 public:

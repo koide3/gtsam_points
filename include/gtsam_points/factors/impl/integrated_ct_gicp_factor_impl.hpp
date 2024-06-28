@@ -170,11 +170,10 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
       const long target_index = this->correspondences[i];
       const auto& cov_A = frame::cov(*this->source, i);
       const auto& cov_B = frame::cov(*this->target, target_index);
-      Eigen::Matrix4d RCR = (cov_B + pose * cov_A * pose.transpose());
-      RCR(3, 3) = 1.0;
+      const Eigen::Matrix4d RCR = (cov_B + pose * cov_A * pose.transpose());
 
-      mahalanobis[i] = RCR.inverse();
-      mahalanobis[i](3, 3) = 0.0;
+      mahalanobis[i].setZero();
+      mahalanobis[i].block<3, 3>(0, 0) = RCR.block<3, 3>(0, 0).inverse();
     }
   }
 }

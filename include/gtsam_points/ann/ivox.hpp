@@ -13,6 +13,11 @@
 
 namespace gtsam_points {
 
+/**
+ * @brief Voxel-based incremental nearest neighbor search
+ *        Bai et al., "Faster-LIO: Lightweight Tightly Coupled Lidar-Inertial Odometry Using Parallel Sparse Incremental Voxels", IEEE RA-L, 2022
+ * @note  Only the linear iVox is implemented
+ */
 using iVox = IncrementalVoxelMap<FlatContainer>;
 
 }  // namespace gtsam_points

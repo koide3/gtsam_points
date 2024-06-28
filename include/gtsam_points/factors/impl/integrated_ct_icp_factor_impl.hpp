@@ -6,8 +6,6 @@
 #include <gtsam/linear/HessianFactor.h>
 #include <gtsam_points/ann/kdtree2.hpp>
 
-#include <gtsam_points/util/expressions.hpp>
-
 namespace gtsam_points {
 
 template <typename TargetFrame, typename SourceFrame>
