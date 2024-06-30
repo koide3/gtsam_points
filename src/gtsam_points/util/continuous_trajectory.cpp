@@ -16,25 +16,25 @@
 
 namespace gtsam_points {
 
-ContinuousTrajectory::ContinuousTrajectory(const char symbol, const double start_time, const double end_time, const double knot_interval)
+ContinuousTrajectory::ContinuousTrajectory(char symbol, double start_time, double end_time, double knot_interval)
 : symbol(symbol),
   start_time(start_time - knot_interval / 2),
   end_time(end_time + knot_interval / 2),
   knot_interval(knot_interval) {}
 
-const double ContinuousTrajectory::knot_stamp(const int i) const {
+double ContinuousTrajectory::knot_stamp(int i) const {
   return start_time + (i - 1) * knot_interval;
 }
 
-const int ContinuousTrajectory::knot_id(const double t) const {
+int ContinuousTrajectory::knot_id(double t) const {
   return static_cast<int>(std::floor((t - start_time) / knot_interval)) + 1;
 }
 
-const int ContinuousTrajectory::knot_max_id() const {
+int ContinuousTrajectory::knot_max_id() const {
   return knot_id(end_time) + 2;
 }
 
-const gtsam::Pose3_ ContinuousTrajectory::pose(const double t, const gtsam::Double_& t_) {
+gtsam::Pose3_ ContinuousTrajectory::pose(double t, const gtsam::Double_& t_) {
   const int knot_i = knot_id(t);
   const double knot_t = knot_stamp(knot_i);
   const gtsam::Double_ p_ = (1.0 / knot_interval) * (t_ - gtsam::Double_(knot_t));
@@ -42,12 +42,12 @@ const gtsam::Pose3_ ContinuousTrajectory::pose(const double t, const gtsam::Doub
   return gtsam_points::bspline(gtsam::Symbol(symbol, knot_i), p_);
 }
 
-const gtsam::Pose3 ContinuousTrajectory::pose(const gtsam::Values& values, const double t) {
+gtsam::Pose3 ContinuousTrajectory::pose(const gtsam::Values& values, double t) {
   const auto pose_ = pose(t, gtsam::Double_(t));
   return pose_.value(values);
 }
 
-const gtsam::Vector6_ ContinuousTrajectory::imu(const double t, const gtsam::Double_& t_, const Eigen::Vector3d& g) {
+gtsam::Vector6_ ContinuousTrajectory::imu(double t, const gtsam::Double_& t_, const Eigen::Vector3d& g) {
   const int knot_i = knot_id(t);
   const double knot_t = knot_stamp(knot_i);
   const gtsam::Double_ p_ = (1.0 / knot_interval) * (t_ - gtsam::Double_(knot_t));
@@ -55,7 +55,7 @@ const gtsam::Vector6_ ContinuousTrajectory::imu(const double t, const gtsam::Dou
   return gtsam_points::bspline_imu(gtsam::Symbol(symbol, knot_i), p_, knot_interval, g);
 }
 
-const gtsam::Vector6 ContinuousTrajectory::imu(const gtsam::Values& values, const double t, const Eigen::Vector3d& g) {
+gtsam::Vector6 ContinuousTrajectory::imu(const gtsam::Values& values, double t, const Eigen::Vector3d& g) {
   const auto imu_ = imu(t, gtsam::Double_(t), g);
   return imu_.value(values);
 }
