@@ -1,6 +1,6 @@
-ARG BASE_IMAGE=jammy
+ARG BASE_IMAGE=koide3/gtsam_docker:jammy
 
-FROM koide3/gtsam_docker:${BASE_IMAGE}
+FROM ${BASE_IMAGE}
 
 RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 50
 

@@ -1,6 +1,6 @@
-ARG BASE_IMAGE=jammy
+ARG BASE_IMAGE=koide3/gtsam_docker:jammy
 
-FROM koide3/gtsam_docker:${BASE_IMAGE}
+FROM ${BASE_IMAGE}
 
 COPY . /root/gtsam_points
 WORKDIR /root/gtsam_points/build
