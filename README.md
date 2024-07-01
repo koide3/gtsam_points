@@ -1,6 +1,6 @@
 # gtsam_points
 
-This is a collection of GTSAM factors and optimizers for range-based SLAM.
+This is a collection of [GTSAM](https://gtsam.org/) factors and optimizers for range-based SLAM.
 
 Tested on Ubuntu 22.04 and CUDA 12.2 / NVIDIA Jetson Xavier and Orin (JetPack 5.0.1) with **GTSAM 4.2a9**.
 
@@ -49,7 +49,7 @@ Tested on Ubuntu 22.04 and CUDA 12.2 / NVIDIA Jetson Xavier and Orin (JetPack 5.
 
 ## Optimizers for GPU Factors
 
-All the following optimizers were derived from the implementations in GTSAM
+All the following optimizers were derived from the implementations in GTSAM.
 
 - **LevenbergMarquardtOptimizerExt**
 - **ISAM2Ext**
@@ -59,15 +59,17 @@ All the following optimizers were derived from the implementations in GTSAM
 ## Nearest Neighbor Search
 - **KdTree**
     KdTree with parallel tree construction. Derived from [nanoflann](https://github.com/jlblancoc/nanoflann).
-- **iVox**
-    Incremental voxel-based nearest neighbor search [[11]](#IVOX).
+- **IncrementalVoxelMap**
+    Incremental voxel-based nearest neighbor search (iVox) [[11]](#IVOX).
+- **IncrementalCovarianceVoxelMap**
+    Incremental voxelmap with online normal and covariance estimation.
 
 
 ## Continuous-Time Trajectory (Under development)
 - **B-Spline**
-    Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[12]](#BSPLINE_D)
+    Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[12]](#BSPLINE_D).
 - **ContinuousTrajectory**
-    Cubic B-Spline-based continuous trajectory representation for offline batch optimization
+    Cubic B-Spline-based continuous trajectory representation for offline batch optimization.
 
 
 ## Installation
@@ -99,7 +101,7 @@ sudo make install
 
 ## Build gtsam_points
 git clone https://github.com/koide3/gtsam_points --recursive
-mkdir gtsam_points/build && cd gtsam/build
+mkdir gtsam_points/build && cd gtsam_points/build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 
 # Optional cmake arguments
@@ -111,6 +113,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 #   -DBUILD_WITH_SYSTEM_EIGEN=ON
 
 make -j$(nproc)
+sudo make install
 ```
 
 ## Demo
@@ -121,11 +124,12 @@ cd gtsam_points
 ./build/demo_bundle_adjustment
 ./build/demo_continuous_time
 ./build/demo_continuous_trajectory
+./build/demo_colored_registration
 ```
 
 ## Videos
 
-- [Multi-scan registration of 5 frames (10 factors)](https://youtu.be/HCXCWlx_VOM)
+- [Multi-scan registration of 5 frames (= A graph with 10 registration factors)](https://youtu.be/HCXCWlx_VOM)
 - [Bundle adjustment factor](https://youtu.be/tuDV0GCOZXg)
 - [Continuous-time ICP factor](https://youtu.be/Xv2-qDlzQYM)
 - [Colored ICP factor](https://youtu.be/xEQmiFV79LU)
