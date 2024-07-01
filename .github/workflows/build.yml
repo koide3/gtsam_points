@@ -42,7 +42,7 @@ jobs:
       - name: Docker build
         uses: docker/build-push-action@v2
         with:
-          file: ${{github.workspace}}/docker/ubuntu/Dockerfile.${{ matrix.DISTRO.suffix }}
+          file: ${{github.workspace}}/docker/ubuntu/Dockerfile${{ matrix.DISTRO.suffix }}
           build-args: |
             BASE_IMAGE=koide3/gtsam_docker:${{ matrix.DISTRO.ubuntu }}
           context: .
