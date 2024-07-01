@@ -274,13 +274,55 @@ PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& points, const int
 PointCloud::Ptr
 merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution);
 
+/// @brief Merge a set of frames into one frame
+template <typename PointCloudPtr>
+std::enable_if_t<!std::is_same_v<PointCloudPtr, PointCloud::ConstPtr>, PointCloud::Ptr>
+merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloudPtr>& frames, double downsample_resolution) {
+  std::vector<PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
+  return merge_frames(poses, frames_, downsample_resolution);
+}
+
+/**
+ * @brief Merge a set of frames into one frame on the GPU
+ * @note  This function only merges points and covs and discard other point attributes.
+ * @param poses                  Poses of input frames
+ * @param frames                 Input frames (must be PointCloudGPU)
+ * @param downsample_resolution  Downsampling resolution
+ * @param stream                 CUDA stream
+ * @return                       Merged frame (PointCloudGPU)
+ */
 PointCloud::Ptr merge_frames_gpu(
   const std::vector<Eigen::Isometry3d>& poses,
   const std::vector<PointCloud::ConstPtr>& frames,
   double downsample_resolution,
   CUstream_st* stream = 0);
 
+template <typename PointCloudPtr>
+std::enable_if_t<!std::is_same_v<PointCloudPtr, PointCloud::ConstPtr>, PointCloud::Ptr> merge_frames_gpu(
+  const std::vector<Eigen::Isometry3d>& poses,
+  const std::vector<PointCloudPtr>& frames,
+  double downsample_resolution,
+  CUstream_st* stream = 0) {
+  std::vector<PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
+  return merge_frames_gpu(poses, frames_, downsample_resolution, stream);
+}
+
+/**
+ * @brief Merge a set of frames into one frame. The device (CPU or GPU) to run the algorithm is automatically selected.
+ * @note  This function only merges points and covs and discard other point attributes.
+ * @param poses                  Poses of input frames
+ * @param frames                 Input frames
+ * @param downsample_resolution  Downsampling resolution
+ * @return                       Merged frame
+ */
 PointCloud::Ptr
 merge_frames_auto(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution);
+
+template <typename PointCloudPtr>
+std::enable_if_t<!std::is_same_v<PointCloudPtr, PointCloud::ConstPtr>, PointCloud::Ptr>
+merge_frames_auto(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution) {
+  std::vector<PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
+  return merge_frames_auto(poses, frames_, downsample_resolution);
+}
 
 }  // namespace gtsam_points

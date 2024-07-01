@@ -6,7 +6,6 @@
 #include <iostream>
 #include <thrust/remove.h>
 #include <thrust/host_vector.h>
-#include <thrust/async/transform.h>
 #include <thrust/iterator/transform_iterator.h>
 
 #include <cub/device/device_reduce.cuh>
@@ -44,8 +43,6 @@ void IntegratedVGICPDerivatives::update_inliers(
     check_error << cudaMallocAsync(&inliers, sizeof(int) * source->size(), stream);
     check_error << cudaMallocAsync(&valid_inliers, sizeof(int) * source->size(), stream);
 
-    thrust::system::cuda::unique_eager_event transform_result;
-
     if (enable_surface_validation) {
       lookup_voxels_kernel<true> kernel(
         *target,
@@ -54,8 +51,7 @@ void IntegratedVGICPDerivatives::update_inliers(
         x_ptr);
       auto corr_first = thrust::make_transform_iterator(thrust::counting_iterator<int>(0), kernel);
       auto corr_last = thrust::make_transform_iterator(thrust::counting_iterator<int>(source->size()), kernel);
-      transform_result =
-        thrust::async::transform(thrust::cuda::par.on(stream), corr_first, corr_last, thrust::device_ptr<int>(inliers), untie_pair_first<int, int>());
+      thrust::transform(thrust::cuda::par_nosync.on(stream), corr_first, corr_last, thrust::device_ptr<int>(inliers), untie_pair_first<int, int>());
     } else {
       lookup_voxels_kernel<false> kernel(
         *target,
@@ -64,8 +60,7 @@ void IntegratedVGICPDerivatives::update_inliers(
         x_ptr);
       auto corr_first = thrust::make_transform_iterator(thrust::counting_iterator<int>(0), kernel);
       auto corr_last = thrust::make_transform_iterator(thrust::counting_iterator<int>(source->size()), kernel);
-      transform_result =
-        thrust::async::transform(thrust::cuda::par.on(stream), corr_first, corr_last, thrust::device_ptr<int>(inliers), untie_pair_first<int, int>());
+      thrust::transform(thrust::cuda::par_nosync.on(stream), corr_first, corr_last, thrust::device_ptr<int>(inliers), untie_pair_first<int, int>());
     }
 
     void* temp_storage = nullptr;

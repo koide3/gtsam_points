@@ -4,8 +4,6 @@
 #include <thrust/transform.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
-#include <thrust/async/reduce.h>
-#include <thrust/async/transform.h>
 
 #include <cub/device/device_reduce.cuh>
 #include <cub/iterator/transform_input_iterator.cuh>
@@ -69,8 +67,6 @@ PointCloud::Ptr merge_frames_gpu(
   const thrust::device_ptr<Eigen::Vector3f> all_points_ptr(all_points);
   const thrust::device_ptr<Eigen::Matrix3f> all_covs_ptr(all_covs);
 
-  std::vector<thrust::system::cuda::unique_eager_event> results(frames.size());
-
   size_t begin = 0;
   for (int i = 0; i < frames.size(); i++) {
     const auto& frame = frames[i];
@@ -78,8 +74,8 @@ PointCloud::Ptr merge_frames_gpu(
     const thrust::device_ptr<const Eigen::Vector3f> points_ptr(frame->points_gpu);
     const thrust::device_ptr<const Eigen::Matrix3f> covs_ptr(frame->covs_gpu);
 
-    results[i] = thrust::async::transform(
-      thrust::cuda::par.on(stream),
+    thrust::transform(
+      thrust::cuda::par_nosync.on(stream),
       points_ptr,
       points_ptr + frame->size(),
       all_points_ptr + begin,
@@ -89,10 +85,6 @@ PointCloud::Ptr merge_frames_gpu(
   }
 
   check_error << cudaStreamSynchronize(stream);
-
-  for (auto& result : results) {
-    result.wait();
-  }
 
   PointCloud all_frames;
   all_frames.num_points = num_all_points;
@@ -179,8 +171,8 @@ overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const PointCloud::ConstPt
   check_error << cudaMallocAsync(&overlap, sizeof(bool) * source->size(), stream);
   thrust::device_ptr<bool> overlap_ptr(overlap);
 
-  auto trans_result = thrust::async::transform(
-    thrust::cuda::par.on(stream),
+  thrust::transform(
+    thrust::cuda::par_nosync.on(stream),
     thrust::device_ptr<Eigen::Vector3f>(source->points_gpu),
     thrust::device_ptr<Eigen::Vector3f>(source->points_gpu) + source->size(),
     overlap_ptr,
@@ -260,31 +252,17 @@ double overlap_gpu(
   check_error << cudaMemsetAsync(overlap, 0, sizeof(bool) * source->size(), stream);
   thrust::device_ptr<bool> overlap_ptr(overlap);
 
-  std::vector<thrust::system::cuda::unique_eager_event> results(targets.size());
   for (int i = 0; i < targets.size(); i++) {
     overlap_count_kernel overlap_kernel(*targets[i], deltas_ptr + i);
     auto first = thrust::make_transform_iterator(thrust::device_ptr<Eigen::Vector3f>(source->points_gpu), overlap_kernel);
     auto last = thrust::make_transform_iterator(thrust::device_ptr<Eigen::Vector3f>(source->points_gpu) + source->size(), overlap_kernel);
 
-    if (i == 0) {
-      auto result = thrust::async::transform(
-        thrust::cuda::par.on(stream),
-        thrust::make_zip_iterator(thrust::make_tuple(overlap_ptr, first)),
-        thrust::make_zip_iterator(thrust::make_tuple(overlap_ptr + source->size(), last)),
-        overlap_ptr,
-        bool_or_kernel());
-
-      results[i] = std::move(result);
-    } else {
-      auto result = thrust::async::transform(
-        thrust::cuda::par.on(stream),
-        thrust::make_zip_iterator(thrust::make_tuple(overlap_ptr, first)),
-        thrust::make_zip_iterator(thrust::make_tuple(overlap_ptr + source->size(), last)),
-        overlap_ptr,
-        bool_or_kernel());
-
-      results[i] = std::move(result);
-    }
+    thrust::transform(
+      thrust::cuda::par_nosync.on(stream),
+      thrust::make_zip_iterator(thrust::make_tuple(overlap_ptr, first)),
+      thrust::make_zip_iterator(thrust::make_tuple(overlap_ptr + source->size(), last)),
+      overlap_ptr,
+      bool_or_kernel());
   }
 
   int* num_inliers;

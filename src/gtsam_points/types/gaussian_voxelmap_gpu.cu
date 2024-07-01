@@ -6,8 +6,6 @@
 #include <thrust/pair.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
-#include <thrust/async/for_each.h>
-#include <thrust/async/transform.h>
 
 #include <set>
 #include <chrono>
@@ -212,28 +210,27 @@ void GaussianVoxelMapGPU::insert(const PointCloud& frame) {
   thrust::device_ptr<Eigen::Vector3f> points_ptr(frame.points_gpu);
   thrust::device_ptr<Eigen::Matrix3f> covs_ptr(frame.covs_gpu);
 
-  auto accum_result = thrust::async::for_each(
-    thrust::cuda::par.on(stream),
+  thrust::for_each(
+    thrust::cuda::par_nosync.on(stream),
     thrust::make_zip_iterator(thrust::make_tuple(points_ptr, covs_ptr)),
     thrust::make_zip_iterator(thrust::make_tuple(points_ptr + frame.size(), covs_ptr + frame.size())),
     accumulate_points_kernel(voxelmap_info_ptr, buckets, num_points, voxel_means, voxel_covs));
 
-  auto finalize_result = thrust::async::for_each(
-    thrust::cuda::par.on(stream),
+  thrust::for_each(
+    thrust::cuda::par_nosync.on(stream),
     thrust::counting_iterator<int>(0),
     thrust::counting_iterator<int>(voxelmap_info.num_voxels),
     finalize_voxels_kernel(num_points, voxel_means, voxel_covs));
 
   cudaStreamSynchronize(stream);
-  finalize_result.wait();
 }
 
 void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCloud& frame) {
   // transform points(Vector3f) to voxel coords(Vector3i)
   Eigen::Vector3i* coords;
   check_error << cudaMallocAsync(&coords, sizeof(Eigen::Vector3i) * frame.size(), stream);
-  auto coords_result = thrust::async::transform(
-    thrust::cuda::par.on(stream),
+  thrust::transform(
+    thrust::cuda::par_nosync.on(stream),
     thrust::device_ptr<Eigen::Vector3f>(frame.points_gpu),
     thrust::device_ptr<Eigen::Vector3f>(frame.points_gpu + frame.size()),
     coords,
@@ -253,8 +250,8 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCl
     check_error << cudaMemsetAsync(index_buckets, -1, sizeof(thrust::pair<int, int>) * num_buckets, stream);
     check_error << cudaMemsetAsync(voxels_failures, 0, sizeof(int) * 2, stream);
 
-    auto assign_result = thrust::async::for_each(
-      thrust::cuda::par.on(stream),
+    thrust::for_each(
+      thrust::cuda::par_nosync.on(stream),
       thrust::counting_iterator<int>(0),
       thrust::counting_iterator<int>(frame.size()),
       voxel_bucket_assignment_kernel(voxelmap_info_ptr, coords, index_buckets, voxels_failures));
@@ -272,8 +269,8 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCl
 
   check_error << cudaFreeAsync(buckets, stream);
   check_error << cudaMallocAsync(&buckets, sizeof(thrust::pair<Eigen::Vector3i, int>) * voxelmap_info.num_buckets, stream);
-  auto select_result = thrust::async::transform(
-    thrust::cuda::par.on(stream),
+  thrust::transform(
+    thrust::cuda::par_nosync.on(stream),
     thrust::device_ptr<thrust::pair<int, int>>(index_buckets),
     thrust::device_ptr<thrust::pair<int, int>>(index_buckets) + voxelmap_info.num_buckets,
     thrust::device_ptr<thrust::pair<Eigen::Vector3i, int>>(buckets),

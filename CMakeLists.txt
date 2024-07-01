@@ -114,7 +114,6 @@ add_library(gtsam_points SHARED
   # util
   src/gtsam_points/util/covariance_estimation.cpp
   src/gtsam_points/util/normal_estimation.cpp
-  src/gtsam_points/util/edge_plane_extraction.cpp
   src/gtsam_points/util/bspline.cpp
   src/gtsam_points/util/continuous_trajectory.cpp
   # ann
