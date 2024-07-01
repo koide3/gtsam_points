@@ -1,4 +1,6 @@
-FROM koide3/gtsam_docker:jammy_cuda11.8
+ARG BASE_IMAGE=jammy
+
+FROM koide3/gtsam_docker:${BASE_IMAGE}
 
 COPY . /root/gtsam_points
 WORKDIR /root/gtsam_points/build
@@ -6,10 +8,10 @@ RUN rm -rf *
 RUN cmake .. \
   -DBUILD_DEMO=ON \
   -DBUILD_TESTS=ON \
-  -DBUILD_WITH_CUDA=ON \
   -DBUILD_EXAMPLE=ON \
-  -DBUILD_WITH_CUDA_MULTIARCH=ON \
+  -DBUILD_WITH_CUDA=OFF \
   -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
+RUN make test
 
 CMD ["bash"]
