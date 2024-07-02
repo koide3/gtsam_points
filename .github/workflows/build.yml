@@ -19,8 +19,6 @@ jobs:
         DISTRO: [
           { "ubuntu": "jammy", "suffix": "gcc" },
           { "ubuntu": "jammy", "suffix": "llvm" },
-          { "ubuntu": "jammy_cuda11.8", "suffix": "gcc.cuda" },
-          { "ubuntu": "jammy_cuda11.8", "suffix": "llvm.cuda" },
           { "ubuntu": "jammy_cuda12.2", "suffix": "gcc.cuda" },
           { "ubuntu": "jammy_cuda12.2", "suffix": "llvm.cuda" },
           { "ubuntu": "noble", "suffix": "gcc" },
