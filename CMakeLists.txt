@@ -159,6 +159,7 @@ add_library(gtsam_points SHARED
 target_include_directories(gtsam_points PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include>
+  $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(gtsam_points
   Boost::boost
@@ -203,6 +204,7 @@ if(BUILD_WITH_CUDA)
   )
   target_include_directories(gtsam_points_cuda PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
   )
   target_link_libraries(gtsam_points_cuda
     Boost::boost
@@ -273,7 +275,7 @@ endif()
 #############
 
 include(GNUInstallDirs)
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(DIRECTORY include/ thirdparty/nanoflann/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
 list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points)
 if(BUILD_WITH_CUDA)
