@@ -100,7 +100,7 @@ make -j$(nproc)
 sudo make install
 
 ## Build gtsam_points
-git clone https://github.com/koide3/gtsam_points --recursive
+git clone https://github.com/koide3/gtsam_points
 mkdir gtsam_points/build && cd gtsam_points/build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 
@@ -109,8 +109,7 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 #   -DBUILD_DEMO=OFF \
 #   -DBUILD_TESTS=OFF \
 #   -DBUILD_WITH_CUDA=OFF \
-#   -DBUILD_WITH_MARCH_NATIVE=OFF \
-#   -DBUILD_WITH_SYSTEM_EIGEN=ON
+#   -DBUILD_WITH_MARCH_NATIVE=OFF
 
 make -j$(nproc)
 sudo make install
