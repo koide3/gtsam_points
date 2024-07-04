@@ -393,18 +393,24 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
     return PointCloudCPU::Ptr(new PointCloudCPU());
   }
 
+  constexpr std::int64_t invalid_coord = std::numeric_limits<std::int64_t>::max();
+  constexpr int coord_bit_size = 21;                       // Bits to represent each voxel coordinate (pack 21x3=63bits in 64bit int)
+  constexpr size_t coord_bit_mask = (1 << 21) - 1;         // Bit mask
+  constexpr int coord_offset = 1 << (coord_bit_size - 1);  // Coordinate offset to make values positive
   const double inv_resolution = 1.0 / voxel_resolution;
-  const int coord_bit_size = 21;                       // Bits to represent each voxel coordinate (pack 21x3=63bits in 64bit int)
-  const size_t coord_bit_mask = (1 << 21) - 1;         // Bit mask
-  const int coord_offset = 1 << (coord_bit_size - 1);  // Coordinate offset to make values positive
 
   std::vector<std::pair<std::uint64_t, size_t>> coord_pt(frame->size());
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
   for (std::int64_t i = 0; i < frame->size(); i++) {
+    if (!frame->points[i].array().isFinite().all()) {
+      coord_pt[i] = {invalid_coord, i};
+      continue;
+    }
+
     const Eigen::Array4i coord = fast_floor(frame->points[i] * inv_resolution) + coord_offset;
     if ((coord < 0).any() || (coord > coord_bit_mask).any()) {
       std::cerr << "warning: voxel coord is out of range!!" << std::endl;
-      coord_pt[i] = {0, i};
+      coord_pt[i] = {invalid_coord, i};
       continue;
     }
 
@@ -533,18 +539,24 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
     return PointCloudCPU::clone(*frame);
   }
 
+  constexpr std::uint64_t invalid_coord = std::numeric_limits<std::uint64_t>::max();
+  constexpr int coord_bit_size = 21;                       // Bits to represent each voxel coordinate (pack 21x3=63bits in 64bit int)
+  constexpr size_t coord_bit_mask = (1 << 21) - 1;         // Bit mask
+  constexpr int coord_offset = 1 << (coord_bit_size - 1);  // Coordinate offset to make values positive
   const double inv_resolution = 1.0 / voxel_resolution;
-  const int coord_bit_size = 21;                       // Bits to represent each voxel coordinate (pack 21x3=63bits in 64bit int)
-  const size_t coord_bit_mask = (1 << 21) - 1;         // Bit mask
-  const int coord_offset = 1 << (coord_bit_size - 1);  // Coordinate offset to make values positive
 
   std::vector<std::pair<std::uint64_t, size_t>> coord_pt(frame->size());
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
   for (std::int64_t i = 0; i < frame->size(); i++) {
+    if (!frame->points[i].array().isFinite().all()) {
+      coord_pt[i] = {invalid_coord, i};
+      continue;
+    }
+
     const Eigen::Array4i coord = fast_floor(frame->points[i] * inv_resolution) + coord_offset;
     if ((coord < 0).any() || (coord > coord_bit_mask).any()) {
       std::cerr << "warning: voxel coord is out of range!!" << std::endl;
-      coord_pt[i] = {0, i};
+      coord_pt[i] = {invalid_coord, i};
       continue;
     }
 
@@ -600,7 +612,10 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
       if (i != block_begin && coord_pt[i - 1].first != coord_pt[i].first) {
         flush_block_indices();
       }
-      block_indices.emplace_back(coord_pt[i].second);
+
+      if (coord_pt[i].first != invalid_coord) {
+        block_indices.emplace_back(coord_pt[i].second);
+      }
     }
     flush_block_indices();
 
