@@ -5,7 +5,6 @@
 
 #include <memory>
 #include <Eigen/Core>
-#include <nanoflann.hpp>
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
 
 // forward declaration
