@@ -4,7 +4,7 @@
 
 #include <Eigen/Core>
 #include <gtsam_points/util/vector3i_hash.hpp>
-#include <gtsam_points/types/point_cloud.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
 
 namespace gtsam_points {
@@ -59,6 +59,9 @@ public:
   /// @brief Number of voxels in the voxelmap.
   size_t num_voxels() const { return flat_voxels.size(); }
 
+  /// @brief Clear the voxelmap.
+  virtual void clear();
+
   /// @brief Insert points to the voxelmap.
   /// @param points Point cloud
   /// @param T      Transformation matrix
@@ -91,6 +94,8 @@ public:
   virtual std::vector<Eigen::Vector4d> voxel_normals() const;
   virtual std::vector<Eigen::Matrix4d> voxel_covs() const;
   virtual std::vector<double> voxel_intensities() const;
+
+  virtual PointCloudCPU::Ptr voxel_data() const;
 
 protected:
   std::vector<Eigen::Vector3i> neighbor_offsets(const int neighbor_voxel_mode) const;

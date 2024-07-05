@@ -60,6 +60,12 @@ void IncrementalCovarianceVoxelMap::set_num_threads(int num_threads) {
   this->num_threads = num_threads;
 }
 
+void IncrementalCovarianceVoxelMap::clear() {
+  IncrementalVoxelMap<IncrementalCovarianceContainer>::clear();
+  eig_stats.clear();
+  eig_stats.resize(10);
+}
+
 void IncrementalCovarianceVoxelMap::insert(const PointCloud& points) {
   EasyProfiler prof("IncrementalCovarianceVoxelMap::insert");
 

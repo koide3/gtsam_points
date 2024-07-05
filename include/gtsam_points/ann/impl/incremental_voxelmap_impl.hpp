@@ -21,6 +21,13 @@ template <typename VoxelContents>
 IncrementalVoxelMap<VoxelContents>::~IncrementalVoxelMap() {}
 
 template <typename VoxelContents>
+void IncrementalVoxelMap<VoxelContents>::clear() {
+  lru_counter = 0;
+  flat_voxels.clear();
+  voxels.clear();
+}
+
+template <typename VoxelContents>
 void IncrementalVoxelMap<VoxelContents>::insert(const PointCloud& points) {
   // Insert points to the voxelmap
   for (size_t i = 0; i < points.size(); i++) {
@@ -182,6 +189,42 @@ std::vector<double> IncrementalVoxelMap<VoxelContents>::voxel_intensities() cons
   intensities.reserve(flat_voxels.size() * 10);
   visit_points([&](const auto& voxel, const int i) { intensities.emplace_back(frame::intensity(voxel, i)); });
   return intensities;
+}
+
+template <typename VoxelContents>
+PointCloudCPU::Ptr IncrementalVoxelMap<VoxelContents>::voxel_data() const {
+  auto frame = std::make_shared<PointCloudCPU>();
+  frame->points_storage.reserve(flat_voxels.size() * 10);
+  if (has_normals()) {
+    frame->normals_storage.reserve(flat_voxels.size() * 10);
+  }
+  if (has_covs()) {
+    frame->covs_storage.reserve(flat_voxels.size() * 10);
+  }
+  if (has_intensities()) {
+    frame->intensities_storage.reserve(flat_voxels.size() * 10);
+  }
+
+  visit_points([&](const auto& voxel, const int i) {
+    frame->points_storage.emplace_back(frame::point(voxel, i));
+    if (frame::has_normals(voxel)) {
+      frame->normals_storage.emplace_back(frame::normal(voxel, i));
+    }
+    if (frame::has_covs(voxel)) {
+      frame->covs_storage.emplace_back(frame::cov(voxel, i));
+    }
+    if (frame::has_intensities(voxel)) {
+      frame->intensities_storage.emplace_back(frame::intensity(voxel, i));
+    }
+  });
+
+  frame->num_points = frame->points_storage.size();
+  frame->points = frame->points_storage.data();
+  frame->normals = frame->normals_storage.empty() ? nullptr : frame->normals_storage.data();
+  frame->covs = frame->covs_storage.empty() ? nullptr : frame->covs_storage.data();
+  frame->intensities = frame->intensities_storage.empty() ? nullptr : frame->intensities_storage.data();
+
+  return frame;
 }
 
 }  // namespace gtsam_points

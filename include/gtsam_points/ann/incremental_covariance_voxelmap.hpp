@@ -32,6 +32,9 @@ public:
   /// @brief Set the number of threads for normal estimation.
   void set_num_threads(int num_threads);
 
+  /// @brief Clear the voxelmap.
+  virtual void clear() override;
+
   /// @brief Insert point into the voxelmap.
   virtual void insert(const PointCloud& points) override;
 
