@@ -58,6 +58,13 @@ public:
   ///       and setting n>1 can rather affect the processing speed.
   void set_num_threads(int n) { num_threads = n; }
 
+  /// @brief Compute the fraction of inlier points that have correspondences with a distance smaller than the trimming threshold.
+  double inlier_fraction() const {
+    const int outliers = std::count(correspondences.begin(), correspondences.end(), nullptr);
+    const int inliers = correspondences.size() - outliers;
+    return static_cast<double>(inliers) / correspondences.size();
+  }
+
 private:
   virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
 
