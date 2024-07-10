@@ -13,5 +13,6 @@ RUN cmake .. \
   -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
 RUN make test
+RUN make install
 
 CMD ["bash"]
