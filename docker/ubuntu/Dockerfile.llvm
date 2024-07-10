@@ -16,5 +16,6 @@ RUN CC=clang CXX=clang++ \
   -DCMAKE_BUILD_TYPE=Release
 RUN make -j$(nproc)
 RUN make test
+RUN make install
 
 CMD ["bash"]
