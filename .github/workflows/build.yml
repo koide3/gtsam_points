@@ -32,17 +32,31 @@ jobs:
 
       - name: Docker login
         continue-on-error: true
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_TOKEN }}
 
       - name: Docker build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v6
         with:
-          tag: koide3/gtsam_points:${{ matrix.DISTRO.ubuntu }}.${{ matrix.DISTRO.suffix }}
+          tags: koide3/gtsam_points:${{ matrix.DISTRO.ubuntu }}
           file: ${{github.workspace}}/docker/ubuntu/Dockerfile.${{ matrix.DISTRO.suffix }}
           build-args: |
             BASE_IMAGE=koide3/gtsam_docker:${{ matrix.DISTRO.ubuntu }}
           context: .
-          push: ${{ github.event_name != 'push' }}
+          push: ${{ github.event_name == 'push' && contains(matrix.DISTRO.suffix, 'gcc') }}
+
+  dispatch:
+    needs: build
+    strategy:
+      matrix:
+        repo: ['koide3/glim']
+    runs-on: ubuntu-latest
+    steps:
+      - name: Repository Dispatch
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.PAT }}
+          repository: ${{ matrix.repo }}
+          event-type: trigger-event

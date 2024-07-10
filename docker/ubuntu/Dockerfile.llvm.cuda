@@ -16,6 +16,7 @@ RUN CC=clang CXX=clang++ \
   -DBUILD_WITH_CUDA_MULTIARCH=ON \
   -DCMAKE_BUILD_TYPE=Release && \
   make -j$(nproc) && \
-  make install
+  make install && \
+  rm -rf /root/gtsam_points/build
 
 CMD ["bash"]

@@ -16,6 +16,7 @@ RUN CC=clang CXX=clang++ \
   -DCMAKE_BUILD_TYPE=Release && \
   make -j$(nproc) && \
   make test && \
-  make install
+  make install && \
+  rm -rf /root/gtsam_points/build
 
 CMD ["bash"]
