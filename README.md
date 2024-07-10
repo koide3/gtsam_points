@@ -2,7 +2,7 @@
 
 This is a collection of [GTSAM](https://gtsam.org/) factors and optimizers for range-based SLAM.
 
-Tested on Ubuntu 22.04 and CUDA 12.2 / NVIDIA Jetson Xavier and Orin (JetPack 5.0.1) with **GTSAM 4.2a9**.
+Tested on Ubuntu 22.04 / 24.04 and CUDA 12.2, and NVIDIA Jetson Orin with **GTSAM 4.2a9**.
 
 [![Build](https://github.com/koide3/gtsam_points/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_points/actions/workflows/build.yml)
 
