@@ -39,6 +39,7 @@
  *************************************************************************/
 #pragma once
 
+#include <atomic>
 #include <memory>
 #include <numeric>
 #include <Eigen/Core>

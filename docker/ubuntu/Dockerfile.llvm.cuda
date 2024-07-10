@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=koide3/gtsam_docker:jammy
+ARG BASE_IMAGE=koide3/gtsam_docker:jammy_cuda12.2
 
 FROM ${BASE_IMAGE}
 

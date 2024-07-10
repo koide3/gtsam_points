@@ -29,7 +29,7 @@ find_package(GTSAM REQUIRED)
 find_package(OpenMP REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-if(${BUILD_WITH_CUDA} AND ${EIGEN3_VERSION_STRING} VERSION_LESS "3.3.90")
+if(${BUILD_WITH_CUDA} AND ${EIGEN3_VERSION_STRING} AND ${EIGEN3_VERSION_STRING} VERSION_LESS "3.3.90")
   message(WARNING "Detected Eigen ${EIGEN3_VERSION_STRING} is not compatible with CUDA")
   message(WARNING "Use Eigen 3.3.90 or later (3.4.0 is recommended)")
 endif()
