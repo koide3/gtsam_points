@@ -2,7 +2,6 @@ name: gendoc
 
 on:
   push:
-    branches: [ gendoc ]
     tags:
       - '*'
   # Allows you to run this workflow manually from the Actions tab
