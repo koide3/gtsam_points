@@ -8,11 +8,11 @@
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
-#include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
-#include <gtsam_ext/factors/bundle_adjustment_factor_lsq.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/factors/bundle_adjustment_factor_evm.hpp>
+#include <gtsam_points/factors/bundle_adjustment_factor_lsq.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/pointcloud_buffer.hpp>
 #include <glk/primitives/primitives.hpp>
@@ -45,13 +45,13 @@ public:
       const std::string plane_path = (boost::format("%s/planes_%06d.bin") % data_path % (i * 10)).str();
 
       std::cout << "loading " << edge_path << std::endl;
-      const auto edge_points = gtsam_ext::read_points(edge_path);
+      const auto edge_points = gtsam_points::read_points(edge_path);
 
       std::cout << "loading " << plane_path << std::endl;
-      const auto plane_points = gtsam_ext::read_points(plane_path);
+      const auto plane_points = gtsam_points::read_points(plane_path);
 
-      edge_frames.push_back(std::make_shared<gtsam_ext::FrameCPU>(edge_points));
-      plane_frames.push_back(std::make_shared<gtsam_ext::FrameCPU>(plane_points));
+      edge_frames.push_back(std::make_shared<gtsam_points::PointCloudCPU>(edge_points));
+      plane_frames.push_back(std::make_shared<gtsam_points::PointCloudCPU>(plane_points));
 
       viewer->update_drawable("edge_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(edge_points), guik::Rainbow());
       viewer->update_drawable("plane_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(plane_points), guik::Rainbow());
@@ -157,14 +157,14 @@ public:
   void add_factor() {
     const auto& frames = edge_plane == 0 ? edge_frames : plane_frames;
 
-    gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor;
+    gtsam_points::BundleAdjustmentFactorBase::shared_ptr factor;
     if (edge_plane == 0) {
-      factor.reset(new gtsam_ext::EdgeEVMFactor());
+      factor.reset(new gtsam_points::EdgeEVMFactor());
     } else {
       if (factor_types[factor_type] == std::string("EVM")) {
-        factor.reset(new gtsam_ext::PlaneEVMFactor());
+        factor.reset(new gtsam_points::PlaneEVMFactor());
       } else if (factor_types[factor_type] == std::string("LSQ")) {
-        factor.reset(new gtsam_ext::LsqBundleAdjustmentFactor());
+        factor.reset(new gtsam_points::LsqBundleAdjustmentFactor());
       }
     }
 
@@ -192,18 +192,18 @@ public:
   }
 
   void run_optimization() {
-    gtsam_ext::LevenbergMarquardtExtParams lm_params;
-    lm_params.callback = [this](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+    gtsam_points::LevenbergMarquardtExtParams lm_params;
+    lm_params.callback = [this](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
       guik::LightViewer::instance()->append_text(status.to_string());
       update_viewer(values);
     };
-    gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, poses, lm_params);
+    gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, poses, lm_params);
     poses = optimizer.optimize();
   }
 
 private:
-  std::vector<gtsam_ext::Frame::Ptr> edge_frames;   // Frames containing edge points
-  std::vector<gtsam_ext::Frame::Ptr> plane_frames;  // Frames containing plane points
+  std::vector<gtsam_points::PointCloud::Ptr> edge_frames;   // Frames containing edge points
+  std::vector<gtsam_points::PointCloud::Ptr> plane_frames;  // Frames containing plane points
 
   float pose_noise_scale;
 

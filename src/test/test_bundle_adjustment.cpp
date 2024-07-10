@@ -13,25 +13,25 @@
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
 
-#include <gtsam_ext/types/frame_cpu.hpp>
-#include <gtsam_ext/factors/balm_feature.hpp>
-#include <gtsam_ext/factors/bundle_adjustment_factor_evm.hpp>
-#include <gtsam_ext/factors/bundle_adjustment_factor_lsq.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/util/numerical.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/factors/balm_feature.hpp>
+#include <gtsam_points/factors/bundle_adjustment_factor_evm.hpp>
+#include <gtsam_points/factors/bundle_adjustment_factor_lsq.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/util/numerical.hpp>
 
 TEST(BATest, DerivativeTest) {
   std::mt19937 mt(4096 - 1);
   std::normal_distribution<> ndist;
 
   for (int num_points = 6; num_points <= 32; num_points *= 2) {
-    std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points;
+    std::vector<Eigen::Vector3d> points;
     for (int i = 0; i < num_points; i++) {
       points.push_back(Eigen::Vector3d(ndist(mt) * 0.1, ndist(mt) * 0.4, ndist(mt)));
     }
 
-    gtsam_ext::BALMFeature feature(points);
+    gtsam_points::BALMFeature feature(points);
 
     Eigen::VectorXd Ja0(3 * num_points);
     Eigen::VectorXd Ja1(3 * num_points);
@@ -51,20 +51,20 @@ TEST(BATest, DerivativeTest) {
     }
 
     const auto calc_eigenvalue = [](int k, const Eigen::VectorXd& x) {
-      std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> points(x.size() / 3);
+      std::vector<Eigen::Vector3d> points(x.size() / 3);
       for (int i = 0; i < points.size(); i++) {
         points[i] = x.block<3, 1>(i * 3, 0);
       }
-      return gtsam_ext::BALMFeature(points).eigenvalues[k];
+      return gtsam_points::BALMFeature(points).eigenvalues[k];
     };
 
     Eigen::VectorXd x0 = Eigen::Map<Eigen::VectorXd>(points[0].data(), 3 * num_points);
-    Eigen::VectorXd Jn0 = gtsam_ext::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(0, x); }, x0);
-    Eigen::MatrixXd Hn0 = gtsam_ext::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(0, x); }, x0);
-    Eigen::VectorXd Jn1 = gtsam_ext::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(1, x); }, x0);
-    Eigen::MatrixXd Hn1 = gtsam_ext::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(1, x); }, x0);
-    Eigen::VectorXd Jn2 = gtsam_ext::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(2, x); }, x0);
-    Eigen::MatrixXd Hn2 = gtsam_ext::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(2, x); }, x0);
+    Eigen::VectorXd Jn0 = gtsam_points::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(0, x); }, x0);
+    Eigen::MatrixXd Hn0 = gtsam_points::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(0, x); }, x0);
+    Eigen::VectorXd Jn1 = gtsam_points::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(1, x); }, x0);
+    Eigen::MatrixXd Hn1 = gtsam_points::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(1, x); }, x0);
+    Eigen::VectorXd Jn2 = gtsam_points::numerical_jacobian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(2, x); }, x0);
+    Eigen::MatrixXd Hn2 = gtsam_points::numerical_hessian([&](const Eigen::VectorXd& x) { return calc_eigenvalue(2, x); }, x0);
 
     const double err_J0 = (Jn0 - Ja0).array().abs().maxCoeff();
     const double err_H0 = (Hn0 - Ha0).array().abs().maxCoeff();
@@ -113,19 +113,19 @@ struct BATestBase : public testing::Test {
       const std::string edge_path = (boost::format("%s/edges_%06d.bin") % data_path % (i * 10)).str();
       const std::string plane_path = (boost::format("%s/planes_%06d.bin") % data_path % (i * 10)).str();
 
-      auto edge_points = gtsam_ext::read_points(edge_path);
-      auto plane_points = gtsam_ext::read_points(plane_path);
+      auto edge_points = gtsam_points::read_points(edge_path);
+      auto plane_points = gtsam_points::read_points(plane_path);
 
       EXPECT_NE(edge_points.size(), true) << "Faile to read edge points";
       EXPECT_NE(plane_points.size(), true) << "Faile to read plane points";
 
-      edge_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(edge_points)));
-      plane_frames.push_back(gtsam_ext::Frame::Ptr(new gtsam_ext::FrameCPU(plane_points)));
+      edge_frames.push_back(gtsam_points::PointCloud::Ptr(new gtsam_points::PointCloudCPU(edge_points)));
+      plane_frames.push_back(gtsam_points::PointCloud::Ptr(new gtsam_points::PointCloudCPU(plane_points)));
     }
   }
 
-  std::vector<gtsam_ext::Frame::Ptr> edge_frames;
-  std::vector<gtsam_ext::Frame::Ptr> plane_frames;
+  std::vector<gtsam_points::PointCloud::Ptr> edge_frames;
+  std::vector<gtsam_points::PointCloud::Ptr> plane_frames;
   gtsam::Values poses;
   gtsam::Values poses_gt;
 };
@@ -164,14 +164,14 @@ public:
   }
 };
 
-INSTANTIATE_TEST_SUITE_P(gtsam_ext, BAFactorTest, testing::Values("EVM", "LSQ"), [](const auto& info) { return info.param; });
+INSTANTIATE_TEST_SUITE_P(gtsam_points, BAFactorTest, testing::Values("EVM", "LSQ"), [](const auto& info) { return info.param; });
 
 TEST_P(BAFactorTest, AlignmentTest) {
   gtsam::Values values = poses;
   gtsam::NonlinearFactorGraph graph;
   graph.add(gtsam::PriorFactor<gtsam::Pose3>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e3)));
 
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> plane_centers;
+  std::vector<Eigen::Vector3d> plane_centers;
   plane_centers.push_back(Eigen::Vector3d(3.16, 1.79, -1.30));
   plane_centers.push_back(Eigen::Vector3d(25.44, 8.26, 3.68));
   plane_centers.push_back(Eigen::Vector3d(25.41, 19.51, 4.36));
@@ -182,7 +182,7 @@ TEST_P(BAFactorTest, AlignmentTest) {
   plane_centers.push_back(Eigen::Vector3d(11.15, 12.25, -0.45));
   plane_centers.push_back(Eigen::Vector3d(11.17, -22.04, 4.52));
 
-  std::vector<Eigen::Vector3d, Eigen::aligned_allocator<Eigen::Vector3d>> edge_centers;
+  std::vector<Eigen::Vector3d> edge_centers;
   edge_centers.push_back(Eigen::Vector3d(12.11, -10.86, 1.07));
   edge_centers.push_back(Eigen::Vector3d(14.45, -7.17, 1.09));
   edge_centers.push_back(Eigen::Vector3d(22.30, 15.17, 2.38));
@@ -193,12 +193,12 @@ TEST_P(BAFactorTest, AlignmentTest) {
   // Create plane factors
   gtsam::NonlinearFactorGraph plane_factors;
   for (const auto& center : plane_centers) {
-    gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor;
+    gtsam_points::BundleAdjustmentFactorBase::shared_ptr factor;
 
     if (GetParam() == "EVM") {
-      factor.reset(new gtsam_ext::PlaneEVMFactor());
+      factor.reset(new gtsam_points::PlaneEVMFactor());
     } else if (GetParam() == "LSQ") {
-      factor.reset(new gtsam_ext::LsqBundleAdjustmentFactor());
+      factor.reset(new gtsam_points::LsqBundleAdjustmentFactor());
     }
 
     for (int i = 0; i < plane_frames.size(); i++) {
@@ -217,7 +217,7 @@ TEST_P(BAFactorTest, AlignmentTest) {
   // Create edge factors
   gtsam::NonlinearFactorGraph edge_factors;
   for (const auto& center : edge_centers) {
-    gtsam_ext::BundleAdjustmentFactorBase::shared_ptr factor(new gtsam_ext::EdgeEVMFactor());
+    gtsam_points::BundleAdjustmentFactorBase::shared_ptr factor(new gtsam_points::EdgeEVMFactor());
     for (int i = 0; i < edge_frames.size(); i++) {
       for (int j = 0; j < edge_frames[i]->size(); j++) {
         const Eigen::Vector3d pt = edge_frames[i]->points[j].head<3>();

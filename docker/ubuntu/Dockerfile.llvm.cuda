@@ -1,0 +1,20 @@
+ARG BASE_IMAGE=koide3/gtsam_docker:jammy
+
+FROM ${BASE_IMAGE}
+
+RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 50
+
+COPY . /root/gtsam_points
+WORKDIR /root/gtsam_points/build
+RUN rm -rf *
+RUN CC=clang CXX=clang++ \
+  cmake .. \
+  -DBUILD_DEMO=ON \
+  -DBUILD_TESTS=ON \
+  -DBUILD_EXAMPLE=ON \
+  -DBUILD_WITH_CUDA=ON \
+  -DBUILD_WITH_CUDA_MULTIARCH=ON \
+  -DCMAKE_BUILD_TYPE=Release
+RUN make -j$(nproc)
+
+CMD ["bash"]

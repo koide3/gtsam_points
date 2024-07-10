@@ -1,6 +1,6 @@
 #include <iostream>
 #include <gtsam/geometry/Pose3.h>
-#include <gtsam_ext/util/expressions.hpp>
+#include <gtsam_points/util/expressions.hpp>
 
 
 void eval_expr(const gtsam::Values& values) {
@@ -8,8 +8,8 @@ void eval_expr(const gtsam::Values& values) {
   gtsam::Pose3_ pose1(1);
 
   const double t = 0.25;
-  gtsam::Vector6_ vel = gtsam_ext::logmap(gtsam::between(pose0, pose1));
-  gtsam::Pose3_ inc = gtsam_ext::expmap(t * vel);
+  gtsam::Vector6_ vel = gtsam_points::logmap(gtsam::between(pose0, pose1));
+  gtsam::Pose3_ inc = gtsam_points::expmap(t * vel);
   gtsam::Pose3_ pose = gtsam::compose(pose0, inc);
 
   gtsam::Point3_ pt(gtsam::Point3(1, 2, 3));

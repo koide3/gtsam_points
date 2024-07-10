@@ -1,4 +1,4 @@
 syntaxError
 preprocessorErrorDirective
 
-uninitvar:include/gtsam_ext/optimizers/dogleg_optimizer_ext_impl.hpp
+uninitvar:include/gtsam_points/optimizers/dogleg_optimizer_ext_impl.hpp

@@ -7,15 +7,15 @@
 #include <gtsam/nonlinear/ExpressionFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/LevenbergMarquardtOptimizer.h>
-#include <gtsam_ext/util/expressions.hpp>
-#include <gtsam_ext/factors/pose3_interpolation_factor.hpp>
+#include <gtsam_points/util/expressions.hpp>
+#include <gtsam_points/factors/pose3_interpolation_factor.hpp>
 
 #include <glk/primitives/primitives.hpp>
 #include <guik/viewer/light_viewer.hpp>
 
 gtsam::Rot3_ interpolate_(const gtsam::Rot3_& X, const gtsam::Rot3_& Y, const double t) {
   const auto delta = gtsam::logmap(X, Y);
-  const auto Delta = gtsam_ext::expmap(t * delta);
+  const auto Delta = gtsam_points::expmap(t * delta);
   const auto result = gtsam::compose(X, Delta);
   return result;
 }
@@ -23,10 +23,10 @@ gtsam::Rot3_ interpolate_(const gtsam::Rot3_& X, const gtsam::Rot3_& Y, const do
 gtsam::Vector6_ interpolate_(const gtsam::Pose3_& xi_, const gtsam::Pose3_& xj_, const gtsam::Pose3_& xk_, const double t) {
   const auto Rint_ = interpolate_(gtsam::rotation(xi_), gtsam::rotation(xj_), t);
   const auto Re_ = gtsam::between(gtsam::rotation(xk_), Rint_);
-  const auto re_ = gtsam_ext::logmap(Re_);
+  const auto re_ = gtsam_points::logmap(Re_);
 
   const auto te_ = gtsam::translation(xk_) - (1.0 - t) * gtsam::translation(xi_) - t * gtsam::translation(xj_);
-  const auto error_ = gtsam_ext::concatenate(re_, te_);
+  const auto error_ = gtsam_points::concatenate(re_, te_);
 
   return error_;
 }
@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
   /*
   auto noise_model = gtsam::noiseModel::Isotropic::Precision(6, 1.0);
-  auto factor = gtsam::make_shared<gtsam_ext::Pose3InterpolationFactor>(0, 1, 2, t, noise_model);
+  auto factor = gtsam::make_shared<gtsam_points::Pose3InterpolationFactor>(0, 1, 2, t, noise_model);
 
   gtsam::Matrix H_xi, H_xj, H_xk;
   auto error = factor->evaluateError(values.at<gtsam::Pose3>(0), values.at<gtsam::Pose3>(1), values.at<gtsam::Pose3>(2), H_xi, H_xj, H_xk);
@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     auto noise_model = gtsam::noiseModel::Isotropic::Precision(6, 1.0);
 
     gtsam::NonlinearFactorGraph graph;
-    graph.emplace_shared<gtsam_ext::Pose3InterpolationFactor>(0, 1, 2, time, noise_model);
+    graph.emplace_shared<gtsam_points::Pose3InterpolationFactor>(0, 1, 2, time, noise_model);
     graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, values.at<gtsam::Pose3>(0), noise_model);
     graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(1, values.at<gtsam::Pose3>(1), noise_model);
 

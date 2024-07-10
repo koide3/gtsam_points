@@ -8,12 +8,12 @@
 
 #include <boost/format.hpp>
 
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/util/covariance_estimation.hpp>
-#include <gtsam_ext/ann/ivox.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
-#include <gtsam_ext/factors/integrated_gicp_factor.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/ann/ivox.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/factors/integrated_gicp_factor.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/pointcloud_buffer.hpp>
 #include <glk/primitives/primitives.hpp>
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
   auto viewer = guik::LightViewer::instance();
 
   // Create iVox
-  gtsam_ext::iVox::Ptr ivox(new gtsam_ext::iVox(voxel_resolution));
+  gtsam_points::iVox::Ptr ivox(new gtsam_points::iVox(voxel_resolution));
 
   // Estimated sensor pose
   gtsam::Pose3 T_world_lidar;
@@ -44,16 +44,16 @@ int main(int argc, char** argv) {
   for(int i=0; ; i++) {
     // Read points and replace the last element (w) with 1 for homogeneous transformation
     const std::string points_path = (boost::format("%s/%06d.bin") % seq_path % i).str();
-    auto points = gtsam_ext::read_points4(points_path);
+    auto points = gtsam_points::read_points4(points_path);
     if(points.empty()) {
       break;
     }
     std::for_each(points.begin(), points.end(), [](Eigen::Vector4f& p) { p.w() = 1.0f; });
 
     // Create a frame and do random sampling and covariance estimation
-    auto frame = std::make_shared<gtsam_ext::FrameCPU>(points);
-    frame = gtsam_ext::random_sampling(frame, randomsampling_rate, mt);
-    frame->add_covs(gtsam_ext::estimate_covariances(frame->points, frame->size(), 10, num_threads));
+    auto frame = std::make_shared<gtsam_points::PointCloudCPU>(points);
+    frame = gtsam_points::random_sampling(frame, randomsampling_rate, mt);
+    frame->add_covs(gtsam_points::estimate_covariances(frame->points, frame->size(), 10, num_threads));
 
     // If it is not the first frame, do frame-to-map scan matching
     if(i != 0) {
@@ -66,15 +66,15 @@ int main(int argc, char** argv) {
       graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
       // Create an ICP factor between target (iVox) and source (current frame)
-      auto icp_factor = gtsam::make_shared<gtsam_ext::IntegratedGICPFactor_<gtsam_ext::iVox, gtsam_ext::Frame>>(0, 1, ivox, frame, ivox);
+      auto icp_factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<gtsam_points::iVox, gtsam_points::PointCloud>>(0, 1, ivox, frame, ivox);
       icp_factor->set_num_threads(num_threads);
       graph.add(icp_factor);
 
       // Optimize
-      gtsam_ext::LevenbergMarquardtExtParams lm_params;
+      gtsam_points::LevenbergMarquardtExtParams lm_params;
       lm_params.setMaxIterations(20);
       lm_params.set_verbose();
-      gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+      gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
       values = optimizer.optimize();
 
       // Update the current pose

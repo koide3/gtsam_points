@@ -3,15 +3,15 @@
 #include <boost/format.hpp>
 
 #include <gtsam/slam/BetweenFactor.h>
-#include <gtsam_ext/util/read_points.hpp>
-#include <gtsam_ext/util/normal_estimation.hpp>
-#include <gtsam_ext/util/covariance_estimation.hpp>
-#include <gtsam_ext/types/frame.hpp>
-#include <gtsam_ext/types/frame_cpu.hpp>
-#include <gtsam_ext/factors/integrated_ct_icp_factor.hpp>
-#include <gtsam_ext/factors/integrated_ct_gicp_factor.hpp>
-#include <gtsam_ext/factors/experimental/continuous_time_icp_factor.hpp>
-#include <gtsam_ext/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/util/normal_estimation.hpp>
+#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/types/point_cloud.hpp>
+#include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/factors/integrated_ct_icp_factor.hpp>
+#include <gtsam_points/factors/integrated_ct_gicp_factor.hpp>
+#include <gtsam_points/factors/experimental/continuous_time_icp_factor.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 
 #include <glk/pointcloud_buffer.hpp>
 #include <glk/primitives/primitives.hpp>
@@ -29,9 +29,9 @@ public:
       const std::string raw_path = (boost::format("%s/raw_%02d.bin") % data_path % i).str();
       const std::string deskewed_path = (boost::format("%s/deskewed_%02d.bin") % data_path % i).str();
 
-      auto times = gtsam_ext::read_times(times_path);
-      auto raw_points = gtsam_ext::read_points(raw_path);
-      auto deskewed_points = gtsam_ext::read_points(deskewed_path);
+      auto times = gtsam_points::read_times(times_path);
+      auto raw_points = gtsam_points::read_points(raw_path);
+      auto deskewed_points = gtsam_points::read_points(deskewed_path);
 
       if (times.empty()) {
         std::cerr << "error: failed to read " << times_path << std::endl;
@@ -50,15 +50,15 @@ public:
       }
 
       // Source frames
-      auto raw_frame = std::make_shared<gtsam_ext::FrameCPU>(raw_points);
+      auto raw_frame = std::make_shared<gtsam_points::PointCloudCPU>(raw_points);
       raw_frame->add_times(times);
-      raw_frame->add_covs(gtsam_ext::estimate_covariances(raw_frame->points, raw_frame->size()));
+      raw_frame->add_covs(gtsam_points::estimate_covariances(raw_frame->points, raw_frame->size()));
       raw_frames.push_back(raw_frame);
 
       // Target frames
-      auto deskewed_frame = std::make_shared<gtsam_ext::FrameCPU>(deskewed_points);
-      deskewed_frame->add_covs(gtsam_ext::estimate_covariances(deskewed_frame->points, deskewed_frame->size()));
-      deskewed_frame->add_normals(gtsam_ext::estimate_normals(deskewed_frame->points, deskewed_frame->covs, deskewed_frame->size()));
+      auto deskewed_frame = std::make_shared<gtsam_points::PointCloudCPU>(deskewed_points);
+      deskewed_frame->add_covs(gtsam_points::estimate_covariances(deskewed_frame->points, deskewed_frame->size()));
+      deskewed_frame->add_normals(gtsam_points::estimate_normals(deskewed_frame->points, deskewed_frame->covs, deskewed_frame->size()));
       deskewed_frames.push_back(deskewed_frame);
     }
 
@@ -71,7 +71,7 @@ public:
     enable_pose_constraint = true;
     rot_noise_scale = 10.0f;
     trans_noise_scale = 1000.0f;
-    max_corresponding_distance = 1.0f;
+    max_correspondence_distance = 1.0f;
 
     data_id = 0;
     setup(data_id);
@@ -94,7 +94,7 @@ public:
       ImGui::Checkbox("enable pose constraint", &enable_pose_constraint);
       ImGui::DragFloat("pose rot noise scale", &rot_noise_scale, 0.1f, 0.0f);
       ImGui::DragFloat("pose trans noise scale", &trans_noise_scale, 10.0f, 0.0f);
-      ImGui::DragFloat("max corresponding distance", &max_corresponding_distance, 0.1f, 0.0f);
+      ImGui::DragFloat("max corresponding distance", &max_correspondence_distance, 0.1f, 0.0f);
 
       // Run optimization
       if (ImGui::Button("optimize")) {
@@ -143,35 +143,35 @@ public:
     // Create continuous time ICP factor
     gtsam::NonlinearFactor::shared_ptr factor;
     if (factor_types[factor_type] == std::string("CT-ICP")) {
-      auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
-      f->set_max_corresponding_distance(max_corresponding_distance);
+      auto f = gtsam::make_shared<gtsam_points::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+      f->set_max_correspondence_distance(max_correspondence_distance);
       factor = f;
     } else if (factor_types[factor_type] == std::string("CT-GICP")) {
-      auto f = gtsam::make_shared<gtsam_ext::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
-      f->set_max_corresponding_distance(max_corresponding_distance);
+      auto f = gtsam::make_shared<gtsam_points::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+      f->set_max_correspondence_distance(max_correspondence_distance);
       factor = f;
     } else if (factor_types[factor_type] == std::string("CT-ICP-EXPR")) {
       auto noise_model = gtsam::noiseModel::Isotropic::Precision(1, 1.0);
-      auto robust_model = gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(max_corresponding_distance), noise_model);
-      factor = gtsam_ext::create_integrated_cticp_factor(0, 1, deskewed_frames[data_id], raw_frames[data_id], robust_model);
+      auto robust_model = gtsam::noiseModel::Robust::Create(gtsam::noiseModel::mEstimator::Huber::Create(max_correspondence_distance), noise_model);
+      factor = gtsam_points::create_integrated_cticp_factor(0, 1, deskewed_frames[data_id], raw_frames[data_id], robust_model);
     } else {
       std::cerr << "error: unknown factor type " << factor_types[factor_type] << std::endl;
     }
 
     graph.add(factor);
 
-    gtsam_ext::LevenbergMarquardtExtParams lm_params;
-    lm_params.callback = [&](const gtsam_ext::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
+    gtsam_points::LevenbergMarquardtExtParams lm_params;
+    lm_params.callback = [&](const gtsam_points::LevenbergMarquardtOptimizationStatus& status, const gtsam::Values& values) {
       auto viewer = guik::LightViewer::instance();
       viewer->append_text(status.to_string());
 
       // Calculate deskewed source points
-      std::vector<Eigen::Vector4d, Eigen::aligned_allocator<Eigen::Vector4d>> points;
-      auto cticp_factor = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCT_ICPFactor>(factor);
+      std::vector<Eigen::Vector4d> points;
+      auto cticp_factor = boost::dynamic_pointer_cast<gtsam_points::IntegratedCT_ICPFactor>(factor);
       if (cticp_factor) {
         points = cticp_factor->deskewed_source_points(values);
       } else {
-        auto cticp_factor_expr = boost::dynamic_pointer_cast<gtsam_ext::IntegratedCTICPFactorExpr>(factor);
+        auto cticp_factor_expr = boost::dynamic_pointer_cast<gtsam_points::IntegratedCTICPFactorExpr>(factor);
         auto deskewed = cticp_factor_expr->deskewed_source_points(values);
         std::transform(deskewed.begin(), deskewed.end(), std::back_inserter(points), [](const Eigen::Vector3d& p) {
           return (Eigen::Vector4d() << p, 1.0).finished();
@@ -179,9 +179,9 @@ public:
       }
 
       // Calculate interpolated poses for visualization
-      std::vector<Eigen::Isometry3f, Eigen::aligned_allocator<Eigen::Isometry3f>> poses;
+      std::vector<Eigen::Isometry3f> poses;
       for (int i = 0; i < 4; i++) {
-        gtsam::Pose3 pose = gtsam_ext::interpolate_pose(values.at<gtsam::Pose3>(0), values.at<gtsam::Pose3>(1), static_cast<double>(i) / 3);
+        gtsam::Pose3 pose = gtsam_points::interpolate_pose(values.at<gtsam::Pose3>(0), values.at<gtsam::Pose3>(1), static_cast<double>(i) / 3);
         poses.push_back(Eigen::Isometry3f(pose.matrix().cast<float>()));
       }
 
@@ -202,13 +202,13 @@ public:
       });
     };
 
-    gtsam_ext::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
+    gtsam_points::LevenbergMarquardtOptimizerExt optimizer(graph, values, lm_params);
     optimizer.optimize();
   }
 
 private:
-  std::vector<gtsam_ext::Frame::Ptr> raw_frames;
-  std::vector<gtsam_ext::Frame::Ptr> deskewed_frames;
+  std::vector<gtsam_points::PointCloud::Ptr> raw_frames;
+  std::vector<gtsam_points::PointCloud::Ptr> deskewed_frames;
 
   float pose_noise_scale;
   gtsam::Pose3 pose_noise;
@@ -219,7 +219,7 @@ private:
   bool enable_pose_constraint;
   float rot_noise_scale;
   float trans_noise_scale;
-  float max_corresponding_distance;
+  float max_correspondence_distance;
 
   int data_id;
   std::thread optimization_thread;

@@ -1,55 +1,55 @@
-# gtsam_ext
+# gtsam_points
 
-This is a collection of GTSAM factors and optimizers for range-based SLAM.
+This is a collection of [GTSAM](https://gtsam.org/) factors and optimizers for range-based SLAM.
 
-Tested on Ubuntu 20.04 and CUDA 11.6 / Ubuntu 22.04 and CUDA 11.8 / NVIDIA Jetson Xavier and Orin (JetPack 5.0.1).
+Tested on Ubuntu 22.04 and CUDA 12.2 / NVIDIA Jetson Xavier and Orin (JetPack 5.0.1) with **GTSAM 4.2a9**.
 
-[![Build](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_ext/actions/workflows/build.yml)
+[![Build](https://github.com/koide3/gtsam_points/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_points/actions/workflows/build.yml)
 
 ## Factors
 
 ### Scan Matching Factors
 
 - **IntegratedICPFactor & IntegratedPointToPlaneICPFactor**  
-    The conventional point-to-point and point-to-plane ICP [[1]](#ICP)
+    The conventional point-to-point and point-to-plane ICP [[1]](#ICP).
 - **IntegratedGICPFactor**  
-    Generalized ICP based on the distribution-to-distribution distance [[2]](#GICP)
+    Generalized ICP based on the distribution-to-distribution distance [[2]](#GICP).
 - **IntegratedVGICPFactor**  
-    GICP with voxel-based data association and multi-distribution-correspondence [[3]](#VGICP1)[[4]](#VGICP2)
+    GICP with voxel-based data association and multi-distribution-correspondence [[3]](#VGICP1)[[4]](#VGICP2).
 - **IntegratedVGICPFactorGPU**  
-    GPU implementation of VGICP [[3]](#VGICP1)[[4]](#VGICP2)  
-    To enable this factor, set ```-DBUILD_WITH_CUDA=ON```
+    GPU implementation of VGICP [[3]](#VGICP1)[[4]](#VGICP2).  
+    To enable this factor, set ```-DBUILD_WITH_CUDA=ON```.
 - **IntegratedLOAMFactor**  
-    Matching cost factor based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO)
+    Matching cost factor based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO).
 
 
 ### Colored Scan Matching Factors
 
 - **IntegratedColorConsistencyFactor**  
-    Photometric ICP error [[7]](#COLORED)
+    Photometric ICP error [[7]](#COLORED).
 - **IntegratedColoredGICPFactor**  
-    Photometric ICP error + GICP geometric error [[2]](#GICP)[[7]](#COLORED)
+    Photometric ICP error + GICP geometric error [[2]](#GICP)[[7]](#COLORED).
 
 
 ### Continuous-time ICP Factors
 
 - **IntegratedCT_ICPFactor**  
-    Continuous Time ICP Factor [[8]](#CTICP)
+    Continuous Time ICP Factor [[8]](#CTICP).
 - **IntegratedCT_GICPFactor**  
-    Continuous Time ICP with GICP's D2D matching cost [[2]](#GICP)[[8]](#CTICP)
+    Continuous Time ICP with GICP's D2D matching cost [[2]](#GICP)[[8]](#CTICP).
 
 
 ### Bundle Adjustment Factors
 
 - **PlaneEVMFactor and EdgeEVMFactor**  
-    Bundle adjustment factor based on Eigenvalue minimization [[9]](#BA_EVM)
+    Bundle adjustment factor based on Eigenvalue minimization [[9]](#BA_EVM).
 - **LsqBundleAdjustmentFactor**  
-    Bundle adjustment factor based on EVM and EF optimal condition satisfaction [[10]](#BA_LSQ)
+    Bundle adjustment factor based on EVM and EF optimal condition satisfaction [[10]](#BA_LSQ).
 
 
 ## Optimizers for GPU Factors
 
-All the following optimizers were derived from the implementations in GTSAM
+All the following optimizers were derived from the implementations in GTSAM.
 
 - **LevenbergMarquardtOptimizerExt**
 - **ISAM2Ext**
@@ -58,16 +58,18 @@ All the following optimizers were derived from the implementations in GTSAM
 
 ## Nearest Neighbor Search
 - **KdTree**
-    Standard KdTree-based nearest neighbor search using [nanoflann](https://github.com/jlblancoc/nanoflann)
-- **iVox**
-    Incremental voxel-based nearest neighbor search [[11]](#IVOX)
+    KdTree with parallel tree construction. Derived from [nanoflann](https://github.com/jlblancoc/nanoflann).
+- **IncrementalVoxelMap**
+    Incremental voxel-based nearest neighbor search (iVox) [[11]](#IVOX).
+- **IncrementalCovarianceVoxelMap**
+    Incremental voxelmap with online normal and covariance estimation.
 
 
 ## Continuous-Time Trajectory (Under development)
 - **B-Spline**
-    Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[12]](#BSPLINE_D)
+    Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[12]](#BSPLINE_D).
 - **ContinuousTrajectory**
-    Cubic B-Spline-based continuous trajectory representation for offline batch optimization
+    Cubic B-Spline-based continuous trajectory representation for offline batch optimization.
 
 
 ## Installation
@@ -75,7 +77,10 @@ All the following optimizers were derived from the implementations in GTSAM
 ```bash
 # Install gtsam
 git clone https://github.com/borglab/gtsam
-mkdir gtsam/build && cd gtsam/build
+cd gtsam
+git checkout 4.2a9
+
+mkdir build && cd build
 cmake .. \
   -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
   -DGTSAM_BUILD_TESTS=OFF \
@@ -94,9 +99,9 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j$(nproc)
 sudo make install
 
-## Build gtsam_ext
-git clone https://github.com/koide3/gtsam_ext --recursive
-mkdir gtsam_ext/build && cd gtsam/build
+## Build gtsam_points
+git clone https://github.com/koide3/gtsam_points
+mkdir gtsam_points/build && cd gtsam_points/build
 cmake .. -DCMAKE_BUILD_TYPE=Release
 
 # Optional cmake arguments
@@ -104,21 +109,31 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 #   -DBUILD_DEMO=OFF \
 #   -DBUILD_TESTS=OFF \
 #   -DBUILD_WITH_CUDA=OFF \
-#   -DBUILD_WITH_MARCH_NATIVE=OFF \
-#   -DBUILD_WITH_SYSTEM_EIGEN=ON
+#   -DBUILD_WITH_MARCH_NATIVE=OFF
 
 make -j$(nproc)
+sudo make install
 ```
 
 ## Demo
 
 ```bash
-cd gtsam_ext
+cd gtsam_points
 ./build/demo_matching_cost_factors
 ./build/demo_bundle_adjustment
 ./build/demo_continuous_time
 ./build/demo_continuous_trajectory
+./build/demo_colored_registration
 ```
+
+## Videos
+
+- [Multi-scan registration of 5 frames (= A graph with 10 registration factors)](https://youtu.be/HCXCWlx_VOM)
+- [Bundle adjustment factor](https://youtu.be/tuDV0GCOZXg)
+- [Continuous-time ICP factor](https://youtu.be/Xv2-qDlzQYM)
+- [Colored ICP factor](https://youtu.be/xEQmiFV79LU)
+- [Incremental voxel mapping and normal estimation](https://youtu.be/gDiKqQDc7yo)
+- [SE3 BSpline interpolation](https://youtu.be/etAI8go3b8U)
 
 ## License
 

@@ -1,6 +1,6 @@
 #include <iostream>
 #include <gtsam/inference/Symbol.h>
-#include <gtsam_ext/util/continuous_trajectory.hpp>
+#include <gtsam_points/util/continuous_trajectory.hpp>
 
 #include <glk/primitives/primitives.hpp>
 #include <guik/viewer/light_viewer.hpp>
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
   }
 
   // Create continuous trajectory and optimize spline knots to fit the trajectory with the target poses
-  gtsam_ext::ContinuousTrajectory ct('x', stamps.front(), stamps.back(), 0.5);
+  gtsam_points::ContinuousTrajectory ct('x', stamps.front(), stamps.back(), 0.5);
   gtsam::Values values = ct.fit_knots(stamps, poses);
 
   for (int i = 0; i < ct.knot_max_id(); i++) {
