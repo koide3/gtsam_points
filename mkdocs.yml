@@ -1,0 +1,41 @@
+site_name: "gtsam_points"
+site_author: k.koide
+repo_url: https://github.com/koide3/gtsam_points
+site_url: https://github.com/koide3/gtsam_points
+site_description: "gtsam_points: A collection of GTSAM factors and optimizers for point-cloud-based SLAM"
+
+theme: 
+    name: material
+    palette:
+        primary: indigo
+    front:
+        text: Roboto
+
+use_directory_urls: false
+
+markdown_extensions:
+    - meta
+    - attr_list
+    - admonition
+    - pymdownx.highlight:
+        anchor_linenums: true
+    - pymdownx.inlinehilite
+    - pymdownx.snippets
+    - pymdownx.superfences
+
+copyright: Copyright &copy; 2024 Kenji Koide
+extra:
+    social:
+        - icon: material/home
+          link: https://staff.aist.go.jp/k.koide/
+        - icon: fontawesome/brands/github
+          link: https://github.com/koide3/gtsam_points
+        - icon: fontawesome/brands/twitter
+          link: https://twitter.com/k_koide3
+
+extra_css:
+    - "css/custom.css"
+    - "https://maxcdn.bootstrapcdn.com/font-awesome/4.6.1/css/font-awesome.min.css"
+
+nav:
+    - 'index.md'
