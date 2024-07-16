@@ -1,3 +1,5 @@
+include_guard()
+
 find_path(GTSAM_INCLUDE_DIRS gtsam/inference/FactorGraph.h
   HINTS /usr/local/include /usr/include
   DOC "GTSAM include directories")
