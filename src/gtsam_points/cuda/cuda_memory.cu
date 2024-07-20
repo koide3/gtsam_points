@@ -32,4 +32,8 @@ void cuda_device_to_host(void* dst, const void* src, size_t size, CUstream_st* s
   check_error << cudaMemcpyAsync(dst, src, size, cudaMemcpyDeviceToHost, stream);
 }
 
+void cuda_mem_get_info(size_t* free, size_t* total) {
+  check_error << cudaMemGetInfo(free, total);
+}
+
 }  // namespace gtsam_points
