@@ -3,24 +3,33 @@
 
 #include <gtsam_points/cuda/stream_temp_buffer_roundrobin.hpp>
 
+#include <gtsam_points/cuda/check_error.cuh>
 #include <thrust/device_vector.h>
 
 namespace gtsam_points {
 
+TempBufferManager::Buffer::Buffer(size_t buffer_size) : size(buffer_size) {
+  check_error << cudaMallocAsync(&buffer, buffer_size, 0);
+}
+
+TempBufferManager::Buffer::~Buffer() {
+  check_error << cudaFreeAsync(buffer, 0);
+}
+
 TempBufferManager::TempBufferManager(size_t init_buffer_size) {
   if (init_buffer_size) {
-    buffers.push_back(std::make_shared<thrust::device_vector<char>>(init_buffer_size));
+    buffers.emplace_back(new Buffer(init_buffer_size));
   }
 }
 
 TempBufferManager::~TempBufferManager() {}
 
 char* TempBufferManager::get_buffer(size_t buffer_size) {
-  if (buffers.empty() || buffers.back()->size() < buffer_size) {
-    buffers.push_back(std::make_shared<thrust::device_vector<char>>(buffer_size * 1.2));
+  if (buffers.empty() || buffers.back()->size < buffer_size) {
+    buffers.emplace_back(new Buffer(buffer_size * 1.2));
   }
 
-  return thrust::raw_pointer_cast(buffers.back()->data());
+  return buffers.back()->buffer;
 }
 
 void TempBufferManager::clear() {

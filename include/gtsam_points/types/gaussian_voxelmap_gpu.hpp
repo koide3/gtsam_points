@@ -11,12 +11,6 @@
 // forward declaration
 struct CUstream_st;
 
-namespace thrust {
-template <typename T1, typename T2>
-class pair;
-
-}  // namespace thrust
-
 namespace gtsam_points {
 
 /**
@@ -27,6 +21,14 @@ struct VoxelMapInfo {
   int num_buckets;            ///< Number of buckets
   int max_bucket_scan_count;  ///< Maximum bucket search count
   float voxel_resolution;     ///< Voxel resolution
+};
+
+/**
+ * @brief Voxel bucket (avoid using thrust::pair for CUDA compatibility)
+ */
+struct VoxelBucket {
+  Eigen::Vector3i first;
+  int second;
 };
 
 /**
@@ -71,7 +73,7 @@ public:
   VoxelMapInfo voxelmap_info;                   ///< Voxelmap information
   VoxelMapInfo* voxelmap_info_ptr;              ///< Voxelmap information on GPU memory
 
-  thrust::pair<Eigen::Vector3i, int>* buckets;  ///< Voxel buckets for hashing
+  VoxelBucket* buckets;                         ///< Voxel buckets for hashing
 
   // voxel data
   int* num_points;               ///< Number of points in eac voxel

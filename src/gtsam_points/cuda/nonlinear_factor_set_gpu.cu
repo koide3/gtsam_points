@@ -81,7 +81,7 @@ void NonlinearFactorSetGPU::linearize(const gtsam::Values& linearization_point) 
     auto input_cpu = linearization_input_buffer_cpu.data() + input_cursor;
     auto input_gpu = linearization_input_buffer_gpu.data() + input_cursor;
     auto output_gpu = linearization_output_buffer_gpu.data() + output_cursor;
-    factor->issue_linearize(input_cpu, input_gpu, output_gpu);
+    factor->issue_linearize(input_cpu, input_gpu.get(), output_gpu.get());
     input_cursor += factor->linearization_input_size();
     output_cursor += factor->linearization_output_size();
   }
@@ -159,7 +159,7 @@ void NonlinearFactorSetGPU::error(const gtsam::Values& values) {
     auto eval_input_gpu = evaluation_input_buffer_gpu.data() + eval_input_cursor;
     auto eval_output_gpu = evaluation_output_buffer_gpu.data() + eval_output_cursor;
 
-    factor->issue_compute_error(lin_input_cpu, eval_input_cpu, lin_input_gpu, eval_input_gpu, eval_output_gpu);
+    factor->issue_compute_error(lin_input_cpu, eval_input_cpu, lin_input_gpu.get(), eval_input_gpu.get(), eval_output_gpu.get());
 
     lin_input_cursor += factor->linearization_input_size();
     eval_input_cursor += factor->evaluation_input_size();
@@ -201,4 +201,5 @@ std::vector<gtsam::GaussianFactor::shared_ptr> NonlinearFactorSetGPU::calc_linea
 
   return linear_factors;
 }
+
 }  // namespace gtsam_points

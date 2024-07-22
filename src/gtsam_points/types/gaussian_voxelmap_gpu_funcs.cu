@@ -136,7 +136,7 @@ public:
   }
 
   thrust::device_ptr<const VoxelMapInfo> voxelmap_info_ptr;
-  thrust::device_ptr<const thrust::pair<Eigen::Vector3i, int>> buckets_ptr;
+  thrust::device_ptr<const VoxelBucket> buckets_ptr;
 
   thrust::device_ptr<const Eigen::Isometry3f> delta_ptr;
 };

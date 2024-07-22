@@ -9,17 +9,6 @@
 
 #include <gtsam_points/cuda/stream_roundrobin.hpp>
 
-// forward declaration
-namespace thrust {
-
-template <typename T>
-class device_allocator;
-
-template <typename T, typename Alloc>
-class device_vector;
-
-}  // namespace thrust
-
 namespace gtsam_points {
 
 /**
@@ -29,6 +18,17 @@ namespace gtsam_points {
  */
 class TempBufferManager {
 public:
+  struct Buffer {
+    Buffer(size_t size);
+    ~Buffer();
+
+    Buffer(const Buffer&) = delete;
+    Buffer& operator=(const Buffer&) = delete;
+
+    size_t size;
+    char* buffer;
+  };
+
   using Ptr = std::shared_ptr<TempBufferManager>;
 
   TempBufferManager(size_t init_buffer_size = 0);
@@ -40,7 +40,7 @@ public:
   void clear_all();
 
 private:
-  std::vector<std::shared_ptr<thrust::device_vector<char, thrust::device_allocator<char>>>> buffers;
+  std::vector<std::shared_ptr<Buffer>> buffers;
 };
 
 /**

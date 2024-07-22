@@ -203,8 +203,8 @@ void IntegratedVGICPFactorGPU::set_evaluation_point(const gtsam::Values& values,
 
 void IntegratedVGICPFactorGPU::issue_linearize(
   const void* lin_input_cpu,
-  const thrust::device_ptr<const void>& lin_input_gpu,
-  const thrust::device_ptr<void>& lin_output_gpu) {
+  const void* lin_input_gpu,
+  void* lin_output_gpu) {
   auto linearization_point = reinterpret_cast<const Eigen::Isometry3f*>(lin_input_cpu);
   auto linearization_point_gpu = thrust::reinterpret_pointer_cast<thrust::device_ptr<const Eigen::Isometry3f>>(lin_input_gpu);
   auto linearized_gpu = thrust::reinterpret_pointer_cast<thrust::device_ptr<LinearizedSystem6>>(lin_output_gpu);
@@ -222,9 +222,9 @@ void IntegratedVGICPFactorGPU::store_linearized(const void* lin_output_cpu) {
 void IntegratedVGICPFactorGPU::issue_compute_error(
   const void* lin_input_cpu,
   const void* eval_input_cpu,
-  const thrust::device_ptr<const void>& lin_input_gpu,
-  const thrust::device_ptr<const void>& eval_input_gpu,
-  const thrust::device_ptr<void>& eval_output_gpu) {
+  const void* lin_input_gpu,
+  const void* eval_input_gpu,
+  void* eval_output_gpu) {
   //
   auto linearization_point = reinterpret_cast<const Eigen::Isometry3f*>(lin_input_cpu);
   auto evaluation_point = reinterpret_cast<const Eigen::Isometry3f*>(eval_input_cpu);
