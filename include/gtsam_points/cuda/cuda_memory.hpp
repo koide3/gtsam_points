@@ -21,6 +21,8 @@ void cuda_host_to_device(void* dst, const void* src, size_t size, CUstream_st* s
 
 void cuda_device_to_host(void* dst, const void* src, size_t size, CUstream_st* stream = nullptr);
 
+void cuda_mem_get_info(size_t* free, size_t* total);
+
 template <typename T>
 T* cuda_new(CUstream_st* stream = nullptr) {
   return cuda_malloc(sizeof(T), stream);
