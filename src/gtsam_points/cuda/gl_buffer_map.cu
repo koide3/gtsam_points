@@ -3,6 +3,7 @@
 
 #include <gtsam_points/cuda/gl_buffer_map.hpp>
 
+#include <GL/gl.h>
 #include <cuda_runtime.h>
 #include <cuda_gl_interop.h>
 
