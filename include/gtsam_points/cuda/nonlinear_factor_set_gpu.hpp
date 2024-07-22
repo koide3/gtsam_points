@@ -6,12 +6,6 @@
 #include <memory>
 #include <vector>
 
-#include <thrust/host_vector.h>
-#include <thrust/device_vector.h>
-
-#include <boost/utility/in_place_factory.hpp>
-#include <boost/utility/typed_in_place_factory.hpp>
-
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam_points/factors/nonlinear_factor_gpu.hpp>
 #include <gtsam_points/optimizers/linearization_hook.hpp>
@@ -89,6 +83,24 @@ public:
   std::vector<gtsam::GaussianFactor::shared_ptr> calc_linear_factors(const gtsam::Values& linearization_point) override;
 
 private:
+  /// @brief Simple buffer class for device memory
+  struct DeviceBuffer {
+    DeviceBuffer();
+    ~DeviceBuffer();
+
+    DeviceBuffer(const DeviceBuffer&) = delete;
+    DeviceBuffer& operator=(const DeviceBuffer&) = delete;
+
+    void resize(size_t size, CUstream_st* stream);
+    unsigned char* data() { return buffer; }
+    const unsigned char* data() const { return buffer; }
+
+    size_t size;
+    unsigned char* buffer;
+  };
+
+
+private:
   CUstream_st* stream;
 
   int num_linearizations;
@@ -96,15 +108,15 @@ private:
 
   std::vector<boost::shared_ptr<NonlinearFactorGPU>> factors;
 
-  thrust::host_vector<unsigned char, Eigen::aligned_allocator<unsigned char>> linearization_input_buffer_cpu;
-  thrust::host_vector<unsigned char, Eigen::aligned_allocator<unsigned char>> linearization_output_buffer_cpu;
-  thrust::device_vector<unsigned char> linearization_input_buffer_gpu;
-  thrust::device_vector<unsigned char> linearization_output_buffer_gpu;
+  std::vector<unsigned char, Eigen::aligned_allocator<unsigned char>> linearization_input_buffer_cpu;
+  std::vector<unsigned char, Eigen::aligned_allocator<unsigned char>> linearization_output_buffer_cpu;
+  std::unique_ptr<DeviceBuffer> linearization_input_buffer_gpu;
+  std::unique_ptr<DeviceBuffer> linearization_output_buffer_gpu;
 
-  thrust::host_vector<unsigned char, Eigen::aligned_allocator<unsigned char>> evaluation_input_buffer_cpu;
-  thrust::host_vector<unsigned char, Eigen::aligned_allocator<unsigned char>> evaluation_output_buffer_cpu;
-  thrust::device_vector<unsigned char> evaluation_input_buffer_gpu;
-  thrust::device_vector<unsigned char> evaluation_output_buffer_gpu;
+  std::vector<unsigned char, Eigen::aligned_allocator<unsigned char>> evaluation_input_buffer_cpu;
+  std::vector<unsigned char, Eigen::aligned_allocator<unsigned char>> evaluation_output_buffer_cpu;
+  std::unique_ptr<DeviceBuffer> evaluation_input_buffer_gpu;
+  std::unique_ptr<DeviceBuffer> evaluation_output_buffer_gpu;
 };
 
 }  // namespace gtsam_points
