@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <thrust/pair.h>
 #include <thrust/count.h>
 #include <thrust/device_new.h>
 #include <thrust/device_vector.h>
@@ -86,7 +87,7 @@ struct lookup_voxels_kernel {
   thrust::device_ptr<const Eigen::Isometry3f> x_ptr;
 
   thrust::device_ptr<const VoxelMapInfo> voxelmap_info_ptr;
-  thrust::device_ptr<const thrust::pair<Eigen::Vector3i, int>> buckets_ptr;
+  thrust::device_ptr<const VoxelBucket> buckets_ptr;
 
   thrust::device_ptr<const Eigen::Vector3f> points_ptr;
   thrust::device_ptr<const Eigen::Vector3f> normals_ptr;

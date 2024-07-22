@@ -7,12 +7,6 @@
 #include <boost/utility/typed_in_place_factory.hpp>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
-namespace thrust {
-
-template <typename T>
-class device_ptr;
-}
-
 namespace gtsam_points {
 
 /**
@@ -83,7 +77,7 @@ public:
    * @param lin_output_gpu   Output data destination on the GPU memory (size == linearization_output_size)
    */
   virtual void
-  issue_linearize(const void* lin_input_cpu, const thrust::device_ptr<const void>& lin_input_gpu, const thrust::device_ptr<void>& lin_output_gpu) = 0;
+  issue_linearize(const void* lin_input_cpu, const void* lin_input_gpu, void* lin_output_gpu) = 0;
 
   /**
    * @brief Read linearization output data from the download buffer
@@ -109,9 +103,9 @@ public:
   virtual void issue_compute_error(
     const void* lin_input_cpu,
     const void* eval_input_cpu,
-    const thrust::device_ptr<const void>& lin_input_gpu,
-    const thrust::device_ptr<const void>& eval_input_gpu,
-    const thrust::device_ptr<void>& eval_output_gpu) = 0;
+    const void* lin_input_gpu,
+    const void* eval_input_gpu,
+    void* eval_output_gpu) = 0;
 
   /**
    * @brief Read cost evaluation output data from the download buffer

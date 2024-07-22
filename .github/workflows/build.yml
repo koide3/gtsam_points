@@ -19,12 +19,14 @@ jobs:
         DISTRO: [
           { "ubuntu": "noble", "suffix": "gcc" },
           { "ubuntu": "noble", "suffix": "llvm" },
+          { "ubuntu": "noble_cuda12.5", "suffix": "gcc.cuda" },
+          { "ubuntu": "noble_cuda12.5", "suffix": "llvm.cuda" },
           { "ubuntu": "jammy", "suffix": "gcc" },
-          { "ubuntu": "jammy", "suffix": "llvm" },
           { "ubuntu": "jammy_cuda12.2", "suffix": "gcc.cuda" },
-          { "ubuntu": "jammy_cuda12.2", "suffix": "llvm.cuda" },
+          { "ubuntu": "jammy_cuda12.5", "suffix": "gcc.cuda" },
           { "ubuntu": "focal", "suffix": "focal" },
           { "ubuntu": "focal_cuda12.2", "suffix": "focal.cuda" },
+          { "ubuntu": "focal_cuda12.5", "suffix": "focal.cuda" },
         ]
 
     steps:

@@ -72,12 +72,12 @@ struct voxel_bucket_assignment_kernel {
 struct voxel_coord_select_kernel {
   voxel_coord_select_kernel(const Eigen::Vector3i* point_coords) : point_coords_ptr(point_coords) {}
 
-  __device__ thrust::pair<Eigen::Vector3i, int> operator()(const thrust::pair<int, int>& index_bucket) const {
+  __device__ VoxelBucket operator()(const thrust::pair<int, int>& index_bucket) const {
     if (index_bucket.first < 0) {
-      return thrust::make_pair(Eigen::Vector3i(0, 0, 0), -1);
+      return {Eigen::Vector3i(0, 0, 0), -1};
     }
 
-    return thrust::make_pair(thrust::raw_pointer_cast(point_coords_ptr)[index_bucket.first], index_bucket.second);
+    return {thrust::raw_pointer_cast(point_coords_ptr)[index_bucket.first], index_bucket.second};
   }
 
   thrust::device_ptr<const Eigen::Vector3i> point_coords_ptr;
@@ -87,7 +87,7 @@ struct voxel_coord_select_kernel {
 struct accumulate_points_kernel {
   accumulate_points_kernel(
     const VoxelMapInfo* voxelmap_info_ptr,
-    const thrust::pair<Eigen::Vector3i, int>* buckets,
+    const VoxelBucket* buckets,
     int* num_points,
     Eigen::Vector3f* voxel_means,
     Eigen::Matrix3f* voxel_covs)
@@ -108,7 +108,7 @@ struct accumulate_points_kernel {
 
     for (int i = 0; i < info.max_bucket_scan_count; i++) {
       uint64_t bucket_index = (hash + i) % info.num_buckets;
-      const thrust::pair<Eigen::Vector3i, int>& bucket = thrust::raw_pointer_cast(buckets_ptr)[bucket_index];
+      const VoxelBucket& bucket = thrust::raw_pointer_cast(buckets_ptr)[bucket_index];
 
       if (bucket.second < 0) {
         break;
@@ -132,7 +132,7 @@ struct accumulate_points_kernel {
   }
 
   thrust::device_ptr<const VoxelMapInfo> voxelmap_info_ptr;
-  thrust::device_ptr<const thrust::pair<Eigen::Vector3i, int>> buckets_ptr;
+  thrust::device_ptr<const VoxelBucket> buckets_ptr;
 
   thrust::device_ptr<int> num_points_ptr;
   thrust::device_ptr<Eigen::Vector3f> voxel_means_ptr;
@@ -268,12 +268,12 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCl
   }
 
   check_error << cudaFreeAsync(buckets, stream);
-  check_error << cudaMallocAsync(&buckets, sizeof(thrust::pair<Eigen::Vector3i, int>) * voxelmap_info.num_buckets, stream);
+  check_error << cudaMallocAsync(&buckets, sizeof(VoxelBucket) * voxelmap_info.num_buckets, stream);
   thrust::transform(
     thrust::cuda::par_nosync.on(stream),
     thrust::device_ptr<thrust::pair<int, int>>(index_buckets),
     thrust::device_ptr<thrust::pair<int, int>>(index_buckets) + voxelmap_info.num_buckets,
-    thrust::device_ptr<thrust::pair<Eigen::Vector3i, int>>(buckets),
+    thrust::device_ptr<VoxelBucket>(buckets),
     voxel_coord_select_kernel(coords));
 
   check_error << cudaFreeAsync(coords, stream);

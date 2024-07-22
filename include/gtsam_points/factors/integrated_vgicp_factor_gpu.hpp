@@ -100,17 +100,17 @@ public:
   virtual void set_linearization_point(const gtsam::Values& values, void* lin_input_cpu) override;
   virtual void issue_linearize(
     const void* lin_input_cpu,
-    const thrust::device_ptr<const void>& lin_input_gpu,
-    const thrust::device_ptr<void>& lin_output_gpu) override;
+    const void* lin_input_gpu,
+    void* lin_output_gpu) override;
   virtual void store_linearized(const void* lin_output_cpu) override;
 
   virtual void set_evaluation_point(const gtsam::Values& values, void* eval_input_cpu) override;
   virtual void issue_compute_error(
     const void* lin_input_cpu,
     const void* eval_input_cpu,
-    const thrust::device_ptr<const void>& lin_input_gpu,
-    const thrust::device_ptr<const void>& eval_input_gpu,
-    const thrust::device_ptr<void>& eval_output_gpu) override;
+    const void* lin_input_gpu,
+    const void* eval_input_gpu,
+    void* eval_output_gpu) override;
   virtual void store_computed_error(const void* eval_output_cpu) override;
 
   virtual void sync() override;
