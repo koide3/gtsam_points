@@ -182,7 +182,7 @@ if(BUILD_WITH_CUDA)
     src/gtsam_points/cuda/cuda_device_prop.cu
     src/gtsam_points/cuda/cuda_graph.cu
     src/gtsam_points/cuda/cuda_graph_exec.cu
-    src/gtsam_points/cuda/gl_buffer_map.cu
+    # src/gtsam_points/cuda/gl_buffer_map.cu
     src/gtsam_points/cuda/nonlinear_factor_set_gpu.cu
     src/gtsam_points/cuda/nonlinear_factor_set_gpu_create.cu
     src/gtsam_points/cuda/stream_roundrobin.cu
@@ -313,3 +313,22 @@ install(FILES
   "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGTSAM.cmake"
   DESTINATION ${CMAKE_CONFIG_INSTALL_DIR}
 )
+
+#############
+## Package ##
+#############
+
+set(CPACK_GENERATOR "DEB")
+set(CPACK_PACKAGE_NAME ${CMAKE_PROJECT_NAME})
+set(CPACK_SET_DESTDIR TRUE)
+set(CPACK_DEBIAN_FILE_NAME DEB-DEFAULT)
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "k.koide <k.koide@aist.go.jp>")
+set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
+
+set(GNUInstallDirs)
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A collection of GTSAM factors for point cloud registration")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
+set(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/LICENSE")
+set(CPACK_PACKAGE_VENDOR "k.koide")
+
+include(CPack)
