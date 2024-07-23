@@ -75,6 +75,8 @@ All the following optimizers were derived from the implementations in GTSAM.
 
 ## Installation
 
+### Install from source
+
 ```bash
 # Install gtsam
 git clone https://github.com/borglab/gtsam
@@ -114,6 +116,51 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 
 make -j$(nproc)
 sudo make install
+```
+
+### Install from [PPA](https://github.com/koide3/ppa) [AMD64, ARM64]
+
+#### Setup PPA
+
+##### Ubuntu 24.04
+
+```bash
+curl -s --compressed "https://koide3.github.io/ppa/ubuntu2404/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/koide3_ppa.gpg >/dev/null
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/koide3_ppa.gpg] https://koide3.github.io/ppa/ubuntu2404 ./" | sudo tee /etc/apt/sources.list.d/koide3_ppa.list
+```
+
+##### Ubuntu 22.04
+
+```bash
+curl -s --compressed "https://koide3.github.io/ppa/ubuntu2204/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/koide3_ppa.gpg >/dev/null
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/koide3_ppa.gpg] https://koide3.github.io/ppa/ubuntu2204 ./" | sudo tee /etc/apt/sources.list.d/koide3_ppa.list
+```
+
+##### Ubuntu 20.04
+
+```bash
+curl -s --compressed "https://koide3.github.io/ppa/ubuntu2004/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/koide3_ppa.gpg >/dev/null
+echo "deb [signed-by=/etc/apt/trusted.gpg.d/koide3_ppa.gpg] https://koide3.github.io/ppa/ubuntu2004 ./" | sudo tee /etc/apt/sources.list.d/koide3_ppa.list
+```
+
+#### Install GTSAM and gtsam_points
+
+##### Without CUDA
+
+```bash
+sudo apt update && sudo apt install -y libgtsam-points-dev
+```
+
+##### With CUDA 12.2
+
+```bash
+sudo apt update && sudo apt install -y libgtsam-points-cuda12.2-dev
+```
+
+##### With CUDA 12.5
+
+```bash
+sudo apt update && sudo apt install -y libgtsam-points-cuda12.5-dev
 ```
 
 ## Demo
