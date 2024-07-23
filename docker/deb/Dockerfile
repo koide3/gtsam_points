@@ -72,6 +72,7 @@ WORKDIR /root/gtsam_points/build
 RUN cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_WITH_CUDA=ON \
+  -DBUILD_WITH_CUDA_MULTIARCH=ON \
   -DCPACK_DEBIAN_PACKAGE_DEPENDS="libgtsam-dev" \
   -DCPACK_DEBIAN_PACKAGE_NAME="libgtsam-points-cuda${CUDA_LABEL}-dev"
 RUN make -j$(nproc)
