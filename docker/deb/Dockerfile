@@ -14,6 +14,9 @@ RUN apt-get install -y --no-install-recommends build-essential  \
 
 RUN git clone https://github.com/borglab/gtsam.git /root/gtsam -b 4.2a9
 WORKDIR /root/gtsam/build
+# Rename libgtsam-dev to libgtsam-notbb-dev
+RUN sed -i 's/libgtsam-dev/libgtsam-notbb-dev/g' ../cmake/HandleCPack.cmake
+# Build gtsam
 RUN cmake .. -DGTSAM_BUILD_EXAMPLES_ALWAYS=OFF \
   -DGTSAM_BUILD_TESTS=OFF \
   -DGTSAM_WITH_TBB=OFF \
@@ -45,7 +48,7 @@ COPY . /root/gtsam_points
 WORKDIR /root/gtsam_points/build
 RUN cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
-  -DCPACK_DEBIAN_PACKAGE_DEPENDS="libgtsam-dev" \
+  -DCPACK_DEBIAN_PACKAGE_DEPENDS="libgtsam-notbb-dev" \
   -DCPACK_DEBIAN_PACKAGE_NAME="libgtsam-points-dev"
 RUN make -j$(nproc)
 RUN cpack
@@ -74,7 +77,7 @@ RUN cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_WITH_CUDA=ON \
   -DBUILD_WITH_CUDA_MULTIARCH=ON \
-  -DCPACK_DEBIAN_PACKAGE_DEPENDS="libgtsam-dev" \
+  -DCPACK_DEBIAN_PACKAGE_DEPENDS="libgtsam-notbb-dev" \
   -DCPACK_DEBIAN_PACKAGE_NAME="libgtsam-points-cuda${CUDA_LABEL}-dev"
 RUN make -j$(nproc)
 RUN cpack
