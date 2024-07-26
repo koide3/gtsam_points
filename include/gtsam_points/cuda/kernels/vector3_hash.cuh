@@ -6,6 +6,8 @@
 #include <Eigen/Core>
 #include <thrust/device_ptr.h>
 
+#include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
+
 namespace gtsam_points {
 
 // taken from boost/hash.hpp
