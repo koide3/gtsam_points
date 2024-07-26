@@ -63,13 +63,6 @@ public:
     CUstream_st* stream = nullptr,
     std::shared_ptr<TempBufferManager> temp_buffer = nullptr);
 
-  /// Create a unary VGICP_GPU factor between a fixed target pose and an active source pose.
-  IntegratedVGICPFactorGPU(
-    const gtsam::Pose3& fixed_target_pose,
-    gtsam::Key source_key,
-    const GaussianVoxelMap::ConstPtr& target,
-    const PointCloud::ConstPtr& source);
-
   virtual ~IntegratedVGICPFactorGPU() override;
 
   /// @brief Enable or disable surface orientation validation for correspondence search

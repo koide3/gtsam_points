@@ -13,13 +13,6 @@
 namespace gtsam_points {
 
 IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
-  const gtsam::Pose3& fixed_target_pose,
-  gtsam::Key source_key,
-  const GaussianVoxelMap::ConstPtr& target,
-  const PointCloud::ConstPtr& source)
-: IntegratedVGICPFactorGPU(fixed_target_pose, source_key, target, source, nullptr, nullptr) {}
-
-IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
   gtsam::Key target_key,
   gtsam::Key source_key,
   const GaussianVoxelMap::ConstPtr& target,
