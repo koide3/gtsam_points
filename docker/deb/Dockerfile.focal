@@ -10,7 +10,7 @@ ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends
 RUN apt-get install -y --no-install-recommends build-essential  \
-    git cmake libeigen3-dev ca-certificates libboost-all-dev libmetis-dev
+    git cmake libeigen3-dev ca-certificates libboost-all-dev libmetis-dev file
 
 RUN git clone https://github.com/borglab/gtsam.git /root/gtsam -b 4.2a9
 WORKDIR /root/gtsam/build
