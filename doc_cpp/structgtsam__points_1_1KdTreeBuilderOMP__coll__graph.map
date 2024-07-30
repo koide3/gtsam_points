@@ -1,0 +1,4 @@
+<map id="gtsam_points::KdTreeBuilderOMP" name="gtsam_points::KdTreeBuilderOMP">
+<area shape="rect" id="node1" title="Kd&#45;tree builder with OpenMP." alt="" coords="5,109,244,136"/>
+<area shape="rect" id="node2" href="$structgtsam__points_1_1ProjectionSetting.html" title="Parameters to control the projection axis search." alt="" coords="33,5,216,47"/>
+</map>

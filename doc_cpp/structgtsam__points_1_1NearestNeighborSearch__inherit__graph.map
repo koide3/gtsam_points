@@ -1,0 +1,11 @@
+<map id="gtsam_points::NearestNeighborSearch" name="gtsam_points::NearestNeighborSearch">
+<area shape="rect" id="node1" title="Nearest neighbor search interface." alt="" coords="5,181,233,223"/>
+<area shape="rect" id="node2" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title=" " alt="" coords="301,5,512,47"/>
+<area shape="rect" id="node4" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title=" " alt="" coords="281,71,532,127"/>
+<area shape="rect" id="node6" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title="Incremental voxelmap. This class supports incremental point cloud insertion and LRU&#45;based voxel delet..." alt="" coords="303,152,511,193"/>
+<area shape="rect" id="node7" href="$structgtsam__points_1_1IntensityKdTree.html" title="KdTree on intensity augmented coordinates. This class concatenates point coordinates (x,..." alt="" coords="297,218,516,245"/>
+<area shape="rect" id="node8" href="$structgtsam__points_1_1KdTree.html" title="KdTree&#45;based nearest neighbor search." alt="" coords="325,269,488,295"/>
+<area shape="rect" id="node9" href="$structgtsam__points_1_1KdTree2.html" title="KdTree&#45;based nearest neighbor search." alt="" coords="321,320,492,361"/>
+<area shape="rect" id="node3" href="$classgtsam__points_1_1GaussianVoxelMapCPU.html" title=" " alt="" coords="580,5,793,47"/>
+<area shape="rect" id="node5" href="$structgtsam__points_1_1IncrementalCovarianceVoxelMap.html" title="Incremental voxelmap with online covariance and normal estimation." alt="" coords="589,79,785,120"/>
+</map>

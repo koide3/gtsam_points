@@ -1,0 +1,5 @@
+<map id="gtsam_points::IntegratedVGICPFactorGPU" name="gtsam_points::IntegratedVGICPFactorGPU">
+<area shape="rect" id="node1" title="GPU&#45;accelerated Voxelized GICP matching cost factor Koide et al., &quot;Voxelized GICP for Fast and Accura..." alt="" coords="37,155,222,196"/>
+<area shape="rect" id="node2" href="$classgtsam__points_1_1NonlinearFactorGPU.html" title="Base class for GPU&#45;based nonlinear factors." alt="" coords="5,80,253,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="43,5,216,32"/>
+</map>

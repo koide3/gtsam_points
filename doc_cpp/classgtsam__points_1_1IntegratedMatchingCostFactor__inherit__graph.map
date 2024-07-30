@@ -1,0 +1,14 @@
+<map id="gtsam_points::IntegratedMatchingCostFactor" name="gtsam_points::IntegratedMatchingCostFactor">
+<area shape="rect" id="node1" title="Abstraction of LSQ&#45;based scan matching constraints between point clouds." alt="" coords="227,363,412,404"/>
+<area shape="rect" id="node3" href="$classgtsam__points_1_1IntegratedICPFactor__.html" title=" " alt="" coords="489,5,685,76"/>
+<area shape="rect" id="node5" href="$classgtsam__points_1_1IntegratedColorConsistencyFactor__.html" title="Photometric consistency factor between point clouds." alt="" coords="476,100,699,171"/>
+<area shape="rect" id="node6" href="$classgtsam__points_1_1IntegratedColoredGICPFactor__.html" title="Colored GICP matching cost factor." alt="" coords="460,195,715,251"/>
+<area shape="rect" id="node7" href="$classgtsam__points_1_1IntegratedGICPFactor__.html" title="Generalized ICP matching cost factor Segal et al., &quot;Generalized&#45;ICP&quot;, RSS2005." alt="" coords="488,275,687,331"/>
+<area shape="rect" id="node8" href="$classgtsam__points_1_1IntegratedICPFactor__.html" title="Naive point&#45;to&#45;point ICP matching cost factor Zhang, &quot;Iterative Point Matching for Registration of Fr..." alt="" coords="493,355,682,411"/>
+<area shape="rect" id="node9" href="$classgtsam__points_1_1IntegratedLOAMFactor__.html" title="Scan matching factor based on the combination of point&#45;to&#45;plane and point&#45;to&#45;edge distances." alt="" coords="484,435,691,491"/>
+<area shape="rect" id="node10" href="$classgtsam__points_1_1IntegratedPointToEdgeFactor__.html" title=" " alt="" coords="464,515,711,571"/>
+<area shape="rect" id="node11" href="$classgtsam__points_1_1IntegratedPointToPlaneFactor__.html" title=" " alt="" coords="462,595,713,651"/>
+<area shape="rect" id="node12" href="$classgtsam__points_1_1IntegratedVGICPFactor__.html" title="Voxelized GICP matching cost factor Koide et al., &quot;Voxelized GICP for Fast and Accurate 3D Point Clou..." alt="" coords="476,676,699,717"/>
+<area shape="rect" id="node2" title=" " alt="" coords="5,370,179,397"/>
+<area shape="rect" id="node4" href="$classgtsam__points_1_1IntegratedPointToPlaneICPFactor__.html" title="Point&#45;to&#45;plane ICP factor." alt="" coords="763,13,996,69"/>
+</map>
