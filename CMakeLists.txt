@@ -183,8 +183,8 @@ if(BUILD_WITH_CUDA)
     src/gtsam_points/cuda/cuda_graph.cu
     src/gtsam_points/cuda/cuda_graph_exec.cu
     # src/gtsam_points/cuda/gl_buffer_map.cu
-    src/gtsam_points/cuda/nonlinear_factor_set_gpu.cu
-    src/gtsam_points/cuda/nonlinear_factor_set_gpu_create.cu
+    src/gtsam_points/cuda/nonlinear_factor_set_gpu.cpp
+    src/gtsam_points/cuda/nonlinear_factor_set_gpu_create.cpp
     src/gtsam_points/cuda/stream_roundrobin.cu
     src/gtsam_points/cuda/stream_temp_buffer_roundrobin.cu
     # types
@@ -197,7 +197,7 @@ if(BUILD_WITH_CUDA)
     src/gtsam_points/factors/integrated_vgicp_derivatives_inliers.cu
     src/gtsam_points/factors/integrated_vgicp_derivatives_compute.cu
     src/gtsam_points/factors/integrated_vgicp_derivatives_linearize.cu
-    src/gtsam_points/factors/integrated_vgicp_factor_gpu.cu
+    src/gtsam_points/factors/integrated_vgicp_factor_gpu.cpp
     # util
     src/gtsam_points/util/easy_profiler_cuda.cu
   )

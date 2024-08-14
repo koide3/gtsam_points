@@ -12,14 +12,14 @@ namespace gtsam_points {
 NonlinearFactorSetGPU::DeviceBuffer::DeviceBuffer() : size(0), buffer(nullptr) {}
 
 NonlinearFactorSetGPU::DeviceBuffer::~DeviceBuffer() {
-  if(buffer) {
+  if (buffer) {
     check_error << cudaFreeAsync(buffer, 0);
   }
 }
 
 void NonlinearFactorSetGPU::DeviceBuffer::resize(size_t size, CUstream_st* stream) {
-  if(this->size < size) {
-    if(buffer) {
+  if (this->size < size) {
+    if (buffer) {
       check_error << cudaFreeAsync(buffer, stream);
     }
     check_error << cudaMallocAsync(&buffer, size, stream);
@@ -163,12 +163,8 @@ void NonlinearFactorSetGPU::error(const gtsam::Values& values) {
   }
 
   // copy input buffer from cpu to gpu
-  check_error << cudaMemcpyAsync(
-    evaluation_input_buffer_gpu->data(),
-    evaluation_input_buffer_cpu.data(),
-    input_buffer_size,
-    cudaMemcpyHostToDevice,
-    stream);
+  check_error
+    << cudaMemcpyAsync(evaluation_input_buffer_gpu->data(), evaluation_input_buffer_cpu.data(), input_buffer_size, cudaMemcpyHostToDevice, stream);
   check_error << cudaStreamSynchronize(stream);
 
   // issue error computation
@@ -195,12 +191,8 @@ void NonlinearFactorSetGPU::error(const gtsam::Values& values) {
   }
 
   // copy output buffer from gpu to cpu
-  check_error << cudaMemcpyAsync(
-    evaluation_output_buffer_cpu.data(),
-    evaluation_output_buffer_gpu->data(),
-    output_buffer_size,
-    cudaMemcpyDeviceToHost,
-    stream);
+  check_error
+    << cudaMemcpyAsync(evaluation_output_buffer_cpu.data(), evaluation_output_buffer_gpu->data(), output_buffer_size, cudaMemcpyDeviceToHost, stream);
   check_error << cudaStreamSynchronize(stream);
 
   // store computed results

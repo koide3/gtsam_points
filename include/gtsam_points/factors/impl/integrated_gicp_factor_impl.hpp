@@ -105,6 +105,10 @@ void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(con
     }
   }
 
+  if (do_update) {
+    last_correspondence_point = delta;
+  }
+
   correspondences.resize(frame::size(*source));
   mahalanobis.resize(frame::size(*source));
 
@@ -130,8 +134,6 @@ void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(con
       mahalanobis[i](3, 3) = 0.0;
     }
   }
-
-  last_correspondence_point = delta;
 }
 
 template <typename TargetFrame, typename SourceFrame>
