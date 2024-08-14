@@ -7,10 +7,6 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
-#include <thrust/device_ptr.h>
-#include <thrust/device_vector.h>
-#include <thrust/system/cuda/future.h>
-
 #include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
 
 struct CUstream_st;
@@ -41,24 +37,18 @@ public:
   // synchronized interface
   LinearizedSystem6 linearize(const Eigen::Isometry3f& x);
   double compute_error(const Eigen::Isometry3f& xl, const Eigen::Isometry3f& xe);
-  void update_inliers(const Eigen::Isometry3f& x, const thrust::device_ptr<const Eigen::Isometry3f>& x_ptr, bool force_update = false);
+  void update_inliers(const Eigen::Isometry3f& x, const Eigen::Isometry3f* d_x, bool force_update = false);
 
   // async interface
   void sync_stream();
-  void issue_linearize(const thrust::device_ptr<const Eigen::Isometry3f>& x, const thrust::device_ptr<LinearizedSystem6>& output);
-  void issue_compute_error(
-    const thrust::device_ptr<const Eigen::Isometry3f>& xl,
-    const thrust::device_ptr<const Eigen::Isometry3f>& xe,
-    const thrust::device_ptr<float>& output);
+  void issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
+  void issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output);
 
   template <bool enable_surface_validation>
-  void issue_linearize_impl(const thrust::device_ptr<const Eigen::Isometry3f>& x, const thrust::device_ptr<LinearizedSystem6>& output);
+  void issue_linearize_impl(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
 
   template <bool enable_surface_validation>
-  void issue_compute_error_impl(
-    const thrust::device_ptr<const Eigen::Isometry3f>& xl,
-    const thrust::device_ptr<const Eigen::Isometry3f>& xe,
-    const thrust::device_ptr<float>& output);
+  void issue_compute_error_impl(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output);
 
 private:
   bool enable_surface_validation;

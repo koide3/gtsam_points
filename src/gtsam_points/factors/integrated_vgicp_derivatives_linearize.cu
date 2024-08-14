@@ -22,22 +22,12 @@
 namespace gtsam_points {
 
 template <bool enable_surface_validation_>
-void IntegratedVGICPDerivatives::issue_linearize_impl(
-  const thrust::device_ptr<const Eigen::Isometry3f>& x,
-  const thrust::device_ptr<LinearizedSystem6>& output) {
+void IntegratedVGICPDerivatives::issue_linearize_impl(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output) {
   //
-  lookup_voxels_kernel<enable_surface_validation_> corr_kernel(
-    *target,
-    thrust::device_ptr<const Eigen::Vector3f>(source->points_gpu),
-    thrust::device_ptr<const Eigen::Vector3f>(source->normals_gpu),
-    x);
+  lookup_voxels_kernel<enable_surface_validation_> corr_kernel(*target, source->points_gpu, source->normals_gpu, d_x);
   cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel<enable_surface_validation_>, int*> corr_first(source_inliers, corr_kernel);
 
-  vgicp_derivatives_kernel deriv_kernel(
-    x,
-    *target,
-    thrust::device_ptr<const Eigen::Vector3f>(source->points_gpu),
-    thrust::device_ptr<const Eigen::Matrix3f>(source->covs_gpu));
+  vgicp_derivatives_kernel deriv_kernel(d_x, *target, source->points_gpu, source->covs_gpu);
   cub::TransformInputIterator<LinearizedSystem6, vgicp_derivatives_kernel, decltype(corr_first)> first(corr_first, deriv_kernel);
 
   void* temp_storage = nullptr;
@@ -47,7 +37,7 @@ void IntegratedVGICPDerivatives::issue_linearize_impl(
     temp_storage,
     temp_storage_bytes,
     first,
-    thrust::raw_pointer_cast(output),
+    d_output,
     num_inliers,
     thrust::plus<LinearizedSystem6>(),
     LinearizedSystem6::zero(),
@@ -59,18 +49,14 @@ void IntegratedVGICPDerivatives::issue_linearize_impl(
     temp_storage,
     temp_storage_bytes,
     first,
-    thrust::raw_pointer_cast(output),
+    d_output,
     num_inliers,
     thrust::plus<LinearizedSystem6>(),
     LinearizedSystem6::zero(),
     stream);
 }
 
-template void IntegratedVGICPDerivatives::issue_linearize_impl<true>(
-  const thrust::device_ptr<const Eigen::Isometry3f>& x,
-  const thrust::device_ptr<LinearizedSystem6>& output);
-template void IntegratedVGICPDerivatives::issue_linearize_impl<false>(
-  const thrust::device_ptr<const Eigen::Isometry3f>& x,
-  const thrust::device_ptr<LinearizedSystem6>& output);
+template void IntegratedVGICPDerivatives::issue_linearize_impl<true>(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
+template void IntegratedVGICPDerivatives::issue_linearize_impl<false>(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
 
 }  // namespace gtsam_points

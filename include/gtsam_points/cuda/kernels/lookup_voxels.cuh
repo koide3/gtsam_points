@@ -22,9 +22,9 @@ struct lookup_voxels_kernel {
 
   lookup_voxels_kernel(
     const GaussianVoxelMapGPU& voxelmap,
-    const thrust::device_ptr<const Eigen::Vector3f>& points,
-    const thrust::device_ptr<const Eigen::Vector3f>& normals,
-    const thrust::device_ptr<const Eigen::Isometry3f>& x_ptr)
+    const Eigen::Vector3f* points,
+    const Eigen::Vector3f* normals,
+    const Eigen::Isometry3f* x_ptr)
   : x_ptr(x_ptr),
     voxelmap_info_ptr(voxelmap.voxelmap_info_ptr),
     buckets_ptr(voxelmap.buckets),
@@ -32,14 +32,14 @@ struct lookup_voxels_kernel {
     normals_ptr(normals) {}
 
   __host__ __device__ thrust::pair<int, int> operator()(int point_idx) const {
-    const auto& info = *thrust::raw_pointer_cast(voxelmap_info_ptr);
+    const auto& info = *voxelmap_info_ptr;
 
-    const Eigen::Isometry3f& trans = *thrust::raw_pointer_cast(x_ptr);
-    const Eigen::Vector3f& x = thrust::raw_pointer_cast(points_ptr)[point_idx];
+    const Eigen::Isometry3f& trans = *x_ptr;
+    const Eigen::Vector3f& x = points_ptr[point_idx];
     const Eigen::Vector3f transed_x = trans.linear() * x + trans.translation();
 
     if (enable_surface_validation) {
-      const Eigen::Vector3f& normal = thrust::raw_pointer_cast(normals_ptr)[point_idx];
+      const Eigen::Vector3f& normal = normals_ptr[point_idx];
       const Eigen::Vector3f transed_normal = trans.linear() * normal;
 
       // 0.17 = cos(10 deg)
@@ -57,17 +57,17 @@ struct lookup_voxels_kernel {
   }
 
   __host__ __device__ void operator()(thrust::pair<int, int>& point_voxel_indices) const {
-    const auto& info = *thrust::raw_pointer_cast(voxelmap_info_ptr);
+    const auto& info = *voxelmap_info_ptr;
 
     const int point_idx = thrust::get<0>(point_voxel_indices);
     int& voxel_idx = thrust::get<1>(point_voxel_indices);
 
-    const Eigen::Isometry3f& trans = *thrust::raw_pointer_cast(x_ptr);
-    const Eigen::Vector3f& x = thrust::raw_pointer_cast(points_ptr)[point_idx];
+    const Eigen::Isometry3f& trans = *x_ptr;
+    const Eigen::Vector3f& x = points_ptr[point_idx];
     const Eigen::Vector3f transed_x = trans.linear() * x + trans.translation();
 
     if (enable_surface_validation) {
-      const Eigen::Vector3f& normal = thrust::raw_pointer_cast(normals_ptr)[point_idx];
+      const Eigen::Vector3f& normal = normals_ptr[point_idx];
       const Eigen::Vector3f transed_normal = trans.linear() * normal;
 
       if (transed_x.normalized().dot(transed_normal) > surface_validation_thresh) {
@@ -84,13 +84,13 @@ struct lookup_voxels_kernel {
   // f(50) = 0.643   f(40) = 0.766   f(30) = 0.866   f(20) = 0.940
   static const float constexpr surface_validation_thresh = 0.174;  // cos(80.0 * M_PI / 180.0)
 
-  thrust::device_ptr<const Eigen::Isometry3f> x_ptr;
+  const Eigen::Isometry3f* x_ptr;
 
-  thrust::device_ptr<const VoxelMapInfo> voxelmap_info_ptr;
-  thrust::device_ptr<const VoxelBucket> buckets_ptr;
+  const VoxelMapInfo* voxelmap_info_ptr;
+  const VoxelBucket* buckets_ptr;
 
-  thrust::device_ptr<const Eigen::Vector3f> points_ptr;
-  thrust::device_ptr<const Eigen::Vector3f> normals_ptr;
+  const Eigen::Vector3f* points_ptr;
+  const Eigen::Vector3f* normals_ptr;
 };
 
 struct invalid_correspondence_kernel {

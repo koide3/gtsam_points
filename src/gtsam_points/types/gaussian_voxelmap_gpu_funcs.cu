@@ -130,7 +130,7 @@ public:
     const auto& trans = *thrust::raw_pointer_cast(delta_ptr);
 
     Eigen::Vector3f x_ = trans.linear() * x + trans.translation();
-    int voxel_index = lookup_voxel(info.max_bucket_scan_count, info.num_buckets, buckets_ptr, info.voxel_resolution, x_);
+    int voxel_index = lookup_voxel(info.max_bucket_scan_count, info.num_buckets, thrust::raw_pointer_cast(buckets_ptr), info.voxel_resolution, x_);
 
     return voxel_index >= 0;
   }
