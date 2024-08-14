@@ -3,6 +3,8 @@
 
 #include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
 
+#include <cuda_runtime.h>
+
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/HessianFactor.h>
 

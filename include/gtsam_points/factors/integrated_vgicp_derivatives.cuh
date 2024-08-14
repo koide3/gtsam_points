@@ -56,7 +56,7 @@ private:
   double inlier_update_thresh_angle;
 
   bool external_stream;
-  cudaStream_t stream;
+  CUstream_st* stream;
   std::shared_ptr<TempBufferManager> temp_buffer;
 
   GaussianVoxelMapGPU::ConstPtr target;
