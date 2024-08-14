@@ -6,7 +6,6 @@
 #include <gtsam_points/cuda/nonlinear_factor_set_gpu_create.hpp>
 
 #include <cuda_runtime.h>
-#include <thrust/device_vector.h>
 #include <gtsam_points/cuda/check_error.cuh>
 #include <gtsam_points/cuda/nonlinear_factor_set_gpu.hpp>
 
