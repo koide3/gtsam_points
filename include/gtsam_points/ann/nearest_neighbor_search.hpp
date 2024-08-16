@@ -4,6 +4,7 @@
 #pragma once
 
 #include <vector>
+#include <limits>
 
 namespace gtsam_points {
 
@@ -25,6 +26,9 @@ public:
    * @param k_indices   Indices of k-nearest neighbors
    * @param k_sq_dists  Squared distances to the neighbors
    */
-  virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const { return 0; };
+  virtual size_t
+  knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists, double max_sq_dist = std::numeric_limits<double>::max()) const {
+    return 0;
+  };
 };
 }  // namespace gtsam_points

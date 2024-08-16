@@ -159,7 +159,7 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
 
     size_t k_index = -1;
     double k_sq_dist = std::numeric_limits<double>::max();
-    size_t num_found = this->target_tree->knn_search(transed_pt.data(), 1, &k_index, &k_sq_dist);
+    size_t num_found = this->target_tree->knn_search(transed_pt.data(), 1, &k_index, &k_sq_dist, this->max_correspondence_distance_sq);
 
     if (num_found == 0 || k_sq_dist > this->max_correspondence_distance_sq) {
       this->correspondences[i] = -1;

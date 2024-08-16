@@ -309,7 +309,7 @@ public:
   /// @return             Number of found neighbors
   size_t knn_search(const Eigen::Vector3d& query_, int k, size_t* k_indices, double* k_sq_dists, const KnnSetting& setting = KnnSetting()) const {
     const Eigen::Vector4d query = (Eigen::Vector4d() << query_, 1.0).finished();
-    KnnResult<-1> result(k_indices, k_sq_dists, k);
+    KnnResult<-1> result(k_indices, k_sq_dists, k, identity_transform(), setting.max_sq_dist);
     knn_search(query, root, result, setting);
     return result.num_found();
   }
@@ -323,7 +323,7 @@ public:
   template <int N>
   size_t knn_search(const Eigen::Vector3d& query_, size_t* k_indices, double* k_sq_dists, const KnnSetting& setting = KnnSetting()) const {
     const Eigen::Vector4d query = (Eigen::Vector4d() << query_, 1.0).finished();
-    KnnResult<N> result(k_indices, k_sq_dists);
+    KnnResult<N> result(k_indices, k_sq_dists, -1, identity_transform(), setting.max_sq_dist);
     knn_search(query, root, result, setting);
     return result.num_found();
   }

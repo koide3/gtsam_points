@@ -70,7 +70,7 @@ void IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::update_corresponde
 
     std::array<size_t, 3> k_indices;
     std::array<double, 3> k_sq_dists;
-    size_t num_found = target_tree->knn_search(pt.data(), 3, k_indices.data(), k_sq_dists.data());
+    size_t num_found = target_tree->knn_search(pt.data(), 3, k_indices.data(), k_sq_dists.data(), max_correspondence_distance_sq);
 
     if (num_found < 3 || k_sq_dists.back() > max_correspondence_distance_sq) {
       correspondences[i] = std::make_tuple(-1, -1, -1);
@@ -236,7 +236,7 @@ void IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::update_corresponden
 
     std::array<size_t, 2> k_indices;
     std::array<double, 2> k_sq_dists;
-    size_t num_found = target_tree->knn_search(pt.data(), 2, k_indices.data(), k_sq_dists.data());
+    size_t num_found = target_tree->knn_search(pt.data(), 2, k_indices.data(), k_sq_dists.data(), max_correspondence_distance_sq);
 
     if (num_found < 2 || k_sq_dists.back() > max_correspondence_distance_sq) {
       correspondences[i] = std::make_tuple(-1, -1);

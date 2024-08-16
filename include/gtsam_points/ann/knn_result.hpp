@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 
+#include <limits>
 #include <iostream>
 
 namespace gtsam_points {
@@ -16,7 +17,8 @@ public:
   }
 
 public:
-  double epsilon = 0.0;  ///< Early termination threshold
+  double max_sq_dist = std::numeric_limits<double>::max();  ///< Maximum squared distance to search
+  double epsilon = 0.0;                                     ///< Early termination threshold
 };
 
 /// @brief Identity transformation function. (use std::identity instead in C++20)
@@ -39,7 +41,12 @@ public:
   /// @param distances        Buffer to store distances (must be larger than k=max(N, num_neighbors))
   /// @param num_neighbors    Number of neighbors to search (must be -1 for static case N > 0)
   /// @param index_transform  Index transformation function (e.g., local point index -> global voxel + point index)
-  explicit KnnResult(size_t* indices, double* distances, int num_neighbors = -1, const IndexTransform& index_transform = IndexTransform())
+  explicit KnnResult(
+    size_t* indices,
+    double* distances,
+    int num_neighbors = -1,
+    const IndexTransform& index_transform = IndexTransform(),
+    double max_sq_dist = std::numeric_limits<double>::max())
   : index_transform(index_transform),
     capacity(num_neighbors),
     num_found_neighbors(0),
@@ -59,7 +66,7 @@ public:
     }
 
     std::fill(this->indices, this->indices + buffer_size(), INVALID);
-    std::fill(this->distances, this->distances + buffer_size(), std::numeric_limits<double>::max());
+    std::fill(this->distances, this->distances + buffer_size(), max_sq_dist);
   }
 
   /// @brief  Buffer size (i.e., Maximum number of neighbors)

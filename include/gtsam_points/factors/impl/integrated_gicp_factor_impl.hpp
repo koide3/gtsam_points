@@ -119,7 +119,7 @@ void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(con
 
       size_t k_index = -1;
       double k_sq_dist = -1;
-      size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist);
+      size_t num_found = target_tree->knn_search(pt.data(), 1, &k_index, &k_sq_dist, max_correspondence_distance_sq);
       correspondences[i] = (num_found && k_sq_dist < max_correspondence_distance_sq) ? k_index : -1;
     }
 
