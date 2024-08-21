@@ -14,10 +14,10 @@ namespace gtsam_points {
 
 struct vgicp_derivatives_kernel {
   vgicp_derivatives_kernel(
-    const thrust::device_ptr<const Eigen::Isometry3f>& linearization_point_ptr,
+    const Eigen::Isometry3f* linearization_point_ptr,
     const GaussianVoxelMapGPU& voxelmap,
-    const thrust::device_ptr<const Eigen::Vector3f>& source_means,
-    const thrust::device_ptr<const Eigen::Matrix3f>& source_covs)
+    const Eigen::Vector3f* source_means,
+    const Eigen::Matrix3f* source_covs)
   : linearization_point_ptr(linearization_point_ptr),
     voxel_num_points_ptr(voxelmap.num_points),
     voxel_means_ptr(voxelmap.voxel_means),
@@ -32,18 +32,18 @@ struct vgicp_derivatives_kernel {
       return LinearizedSystem6::zero();
     }
 
-    const Eigen::Isometry3f& x = *thrust::raw_pointer_cast(linearization_point_ptr);
+    const Eigen::Isometry3f& x = *linearization_point_ptr;
     const Eigen::Matrix3f R = x.linear();
     const Eigen::Vector3f t = x.translation();
 
-    const Eigen::Vector3f& mean_A = thrust::raw_pointer_cast(source_means_ptr)[source_idx];
-    const Eigen::Matrix3f& cov_A = thrust::raw_pointer_cast(source_covs_ptr)[source_idx];
+    const Eigen::Vector3f& mean_A = source_means_ptr[source_idx];
+    const Eigen::Matrix3f& cov_A = source_covs_ptr[source_idx];
     const Eigen::Vector3f transed_mean_A = R * mean_A + t;
 
-    const Eigen::Vector3f& mean_B = thrust::raw_pointer_cast(voxel_means_ptr)[target_idx];
-    const Eigen::Matrix3f& cov_B = thrust::raw_pointer_cast(voxel_covs_ptr)[target_idx];
+    const Eigen::Vector3f& mean_B = voxel_means_ptr[target_idx];
+    const Eigen::Matrix3f& cov_B = voxel_covs_ptr[target_idx];
 
-    const int num_points = thrust::raw_pointer_cast(voxel_num_points_ptr)[target_idx];
+    const int num_points = voxel_num_points_ptr[target_idx];
 
     const Eigen::Matrix3f RCR = (R * cov_A * R.transpose());
     const Eigen::Matrix3f RCR_inv = (cov_B + RCR).inverse();
@@ -71,23 +71,23 @@ struct vgicp_derivatives_kernel {
     return linearized;
   }
 
-  thrust::device_ptr<const Eigen::Isometry3f> linearization_point_ptr;
+  const Eigen::Isometry3f* linearization_point_ptr;
 
-  thrust::device_ptr<const int> voxel_num_points_ptr;
-  thrust::device_ptr<const Eigen::Vector3f> voxel_means_ptr;
-  thrust::device_ptr<const Eigen::Matrix3f> voxel_covs_ptr;
+  const int* voxel_num_points_ptr;
+  const Eigen::Vector3f* voxel_means_ptr;
+  const Eigen::Matrix3f* voxel_covs_ptr;
 
-  thrust::device_ptr<const Eigen::Vector3f> source_means_ptr;
-  thrust::device_ptr<const Eigen::Matrix3f> source_covs_ptr;
+  const Eigen::Vector3f* source_means_ptr;
+  const Eigen::Matrix3f* source_covs_ptr;
 };
 
 struct vgicp_error_kernel {
   vgicp_error_kernel(
-    const thrust::device_ptr<const Eigen::Isometry3f>& linearization_point_ptr,
-    const thrust::device_ptr<const Eigen::Isometry3f>& evaluation_point_ptr,
+    const Eigen::Isometry3f* linearization_point_ptr,
+    const Eigen::Isometry3f* evaluation_point_ptr,
     const GaussianVoxelMapGPU& voxelmap,
-    const thrust::device_ptr<const Eigen::Vector3f>& source_means,
-    const thrust::device_ptr<const Eigen::Matrix3f>& source_covs)
+    const Eigen::Vector3f* source_means,
+    const Eigen::Matrix3f* source_covs)
   : linearization_point_ptr(linearization_point_ptr),
     evaluation_point_ptr(evaluation_point_ptr),
     voxel_num_points_ptr(voxelmap.num_points),
@@ -103,21 +103,21 @@ struct vgicp_error_kernel {
       return 0.0f;
     }
 
-    const Eigen::Isometry3f& xl = *thrust::raw_pointer_cast(linearization_point_ptr);
+    const Eigen::Isometry3f& xl = *linearization_point_ptr;
     const Eigen::Matrix3f Rl = xl.linear();
 
-    const Eigen::Isometry3f& xe = *thrust::raw_pointer_cast(evaluation_point_ptr);
+    const Eigen::Isometry3f& xe = *evaluation_point_ptr;
     const Eigen::Matrix3f Re = xe.linear();
     const Eigen::Vector3f te = xe.translation();
 
-    const Eigen::Vector3f& mean_A = thrust::raw_pointer_cast(source_means_ptr)[source_idx];
-    const Eigen::Matrix3f& cov_A = thrust::raw_pointer_cast(source_covs_ptr)[source_idx];
+    const Eigen::Vector3f& mean_A = source_means_ptr[source_idx];
+    const Eigen::Matrix3f& cov_A = source_covs_ptr[source_idx];
     const Eigen::Vector3f transed_mean_A = Re * mean_A + te;
 
-    const Eigen::Vector3f& mean_B = thrust::raw_pointer_cast(voxel_means_ptr)[target_idx];
-    const Eigen::Matrix3f& cov_B = thrust::raw_pointer_cast(voxel_covs_ptr)[target_idx];
+    const Eigen::Vector3f& mean_B = voxel_means_ptr[target_idx];
+    const Eigen::Matrix3f& cov_B = voxel_covs_ptr[target_idx];
 
-    const int num_points = thrust::raw_pointer_cast(voxel_num_points_ptr)[target_idx];
+    const int num_points = voxel_num_points_ptr[target_idx];
 
     const Eigen::Matrix3f RCR = (Rl * cov_A * Rl.transpose());
     const Eigen::Matrix3f RCR_inv = (cov_B + RCR).inverse();
@@ -126,15 +126,15 @@ struct vgicp_error_kernel {
     return 0.5f * error.transpose() * RCR_inv * error;
   }
 
-  thrust::device_ptr<const Eigen::Isometry3f> linearization_point_ptr;
-  thrust::device_ptr<const Eigen::Isometry3f> evaluation_point_ptr;
+  const Eigen::Isometry3f* linearization_point_ptr;
+  const Eigen::Isometry3f* evaluation_point_ptr;
 
-  thrust::device_ptr<const int> voxel_num_points_ptr;
-  thrust::device_ptr<const Eigen::Vector3f> voxel_means_ptr;
-  thrust::device_ptr<const Eigen::Matrix3f> voxel_covs_ptr;
+  const int* voxel_num_points_ptr;
+  const Eigen::Vector3f* voxel_means_ptr;
+  const Eigen::Matrix3f* voxel_covs_ptr;
 
-  thrust::device_ptr<const Eigen::Vector3f> source_means_ptr;
-  thrust::device_ptr<const Eigen::Matrix3f> source_covs_ptr;
+  const Eigen::Vector3f* source_means_ptr;
+  const Eigen::Matrix3f* source_covs_ptr;
 };
 
 }  // namespace gtsam_points

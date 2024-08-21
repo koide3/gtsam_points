@@ -68,14 +68,14 @@ void IncrementalVoxelMap<VoxelContents>::insert(const PointCloud& points) {
 }
 
 template <typename VoxelContents>
-size_t IncrementalVoxelMap<VoxelContents>::knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const {
+size_t IncrementalVoxelMap<VoxelContents>::knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists, double max_sq_dist) const {
   const Eigen::Vector4d query = (Eigen::Vector4d() << pt[0], pt[1], pt[2], 1.0).finished();
   const Eigen::Vector3i center = fast_floor(query * inv_leaf_size).template head<3>();
 
   size_t voxel_index = 0;
   const auto index_transform = [&](const size_t point_index) { return calc_index(voxel_index, point_index); };
 
-  KnnResult<-1, decltype(index_transform)> result(k_indices, k_sq_dists, k, index_transform);
+  KnnResult<-1, decltype(index_transform)> result(k_indices, k_sq_dists, k, index_transform, max_sq_dist);
   for (const auto& offset : offsets) {
     const Eigen::Vector3i coord = center + offset;
     const auto found = voxels.find(coord);

@@ -64,8 +64,8 @@ LinearizedSystem6 IntegratedVGICPDerivatives::linearize(const Eigen::Isometry3f&
 
   x_ptr[0] = x;
 
-  update_inliers(x, x_ptr.data());
-  issue_linearize(x_ptr.data(), output_ptr.data());
+  update_inliers(x, thrust::raw_pointer_cast(x_ptr.data()));
+  issue_linearize(thrust::raw_pointer_cast(x_ptr.data()), thrust::raw_pointer_cast(output_ptr.data()));
   sync_stream();
 
   LinearizedSystem6 linearized = output_ptr[0];
@@ -73,38 +73,36 @@ LinearizedSystem6 IntegratedVGICPDerivatives::linearize(const Eigen::Isometry3f&
   return linearized;
 }
 
-double IntegratedVGICPDerivatives::compute_error(const Eigen::Isometry3f& xl, const Eigen::Isometry3f& xe) {
+double IntegratedVGICPDerivatives::compute_error(const Eigen::Isometry3f& d_xl, const Eigen::Isometry3f& d_xe) {
   thrust::device_vector<Eigen::Isometry3f> xs_ptr(2);
-  xs_ptr[0] = xl;
-  xs_ptr[1] = xe;
+  xs_ptr[0] = d_xl;
+  xs_ptr[1] = d_xe;
   thrust::device_vector<float> output_ptr(1);
 
-  issue_compute_error(xs_ptr.data(), xs_ptr.data() + 1, output_ptr.data());
+  issue_compute_error(
+    thrust::raw_pointer_cast(xs_ptr.data()),
+    thrust::raw_pointer_cast(xs_ptr.data() + 1),
+    thrust::raw_pointer_cast(output_ptr.data()));
   sync_stream();
 
   float error = output_ptr[0];
   return error;
 }
 
-void IntegratedVGICPDerivatives::issue_linearize(
-  const thrust::device_ptr<const Eigen::Isometry3f>& x,
-  const thrust::device_ptr<LinearizedSystem6>& output) {
+void IntegratedVGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output) {
   if (enable_surface_validation) {
-    issue_linearize_impl<true>(x, output);
+    issue_linearize_impl<true>(d_x, d_output);
   } else {
-    issue_linearize_impl<false>(x, output);
+    issue_linearize_impl<false>(d_x, d_output);
   }
 }
 
-void IntegratedVGICPDerivatives::issue_compute_error(
-  const thrust::device_ptr<const Eigen::Isometry3f>& xl,
-  const thrust::device_ptr<const Eigen::Isometry3f>& xe,
-  const thrust::device_ptr<float>& output) {
+void IntegratedVGICPDerivatives::issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output) {
   //
   if (enable_surface_validation) {
-    issue_compute_error_impl<true>(xl, xe, output);
+    issue_compute_error_impl<true>(d_xl, d_xe, d_output);
   } else {
-    issue_compute_error_impl<false>(xl, xe, output);
+    issue_compute_error_impl<false>(d_xl, d_xe, d_output);
   }
 }
 

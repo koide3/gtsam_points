@@ -18,7 +18,7 @@ IntensityKdTree::IntensityKdTree(const Eigen::Vector4d* points, const double* in
 
 IntensityKdTree::~IntensityKdTree() {}
 
-size_t IntensityKdTree::knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const {
+size_t IntensityKdTree::knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists, double max_sq_dist) const {
   if (search_eps > 0.0) {
     nanoflann::KNNResultSet<double, size_t> result_set(k);
     result_set.init(k_indices, k_sq_dists);

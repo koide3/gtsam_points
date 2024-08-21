@@ -39,10 +39,16 @@ public:
   virtual void insert(const PointCloud& points) override;
 
   /// @brief Find k-nearest neighbors. This only finds neighbors with valid covariances.
-  virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const override;
+  virtual size_t knn_search(
+    const double* pt,
+    size_t k,
+    size_t* k_indices,
+    double* k_sq_dists,
+    double max_sq_dist = std::numeric_limits<double>::max()) const override;
 
   /// @brief Find k-nearest neighbors. This finds neighbors regardless of the validity of covariances.
-  size_t knn_search_force(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const;
+  size_t knn_search_force(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists, double max_sq_dist = std::numeric_limits<double>::max())
+    const;
 
   /// @brief Get valid point indices. If num_threads is -1, the member variable num_threads is used.
   std::vector<size_t> valid_indices(int num_threads = -1) const;

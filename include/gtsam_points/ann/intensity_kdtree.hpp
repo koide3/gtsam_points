@@ -52,7 +52,12 @@ public:
     return false;
   }
 
-  virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const override;
+  virtual size_t knn_search(
+    const double* pt,
+    size_t k,
+    size_t* k_indices,
+    double* k_sq_dists,
+    double max_sq_dist = std::numeric_limits<double>::max()) const override;
 
 public:
   const int num_points;

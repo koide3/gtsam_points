@@ -53,7 +53,7 @@ inline __host__ __device__ Eigen::Vector3i calc_voxel_coord(const Eigen::Vector3
 inline __host__ __device__ int lookup_voxel(
   const int max_bucket_scan_count,
   const int num_buckets,
-  const thrust::device_ptr<const VoxelBucket>& buckets_ptr,
+  const VoxelBucket* buckets_ptr,
   const float resolution,
   const Eigen::Vector3f& x) {
   Eigen::Vector3i coord = calc_voxel_coord(x, resolution);
@@ -61,7 +61,7 @@ inline __host__ __device__ int lookup_voxel(
 
   for (int i = 0; i < max_bucket_scan_count; i++) {
     uint64_t bucket_index = (hash + i) % num_buckets;
-    const auto& bucket = thrust::raw_pointer_cast(buckets_ptr)[bucket_index];
+    const auto& bucket = buckets_ptr[bucket_index];
 
     if (bucket.second < 0) {
       return -1;

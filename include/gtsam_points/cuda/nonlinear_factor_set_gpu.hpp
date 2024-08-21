@@ -99,7 +99,6 @@ private:
     unsigned char* buffer;
   };
 
-
 private:
   CUstream_st* stream;
 

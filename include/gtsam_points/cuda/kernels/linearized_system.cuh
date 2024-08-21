@@ -4,7 +4,6 @@
 #pragma once
 
 #include <Eigen/Core>
-#include <thrust/device_ptr.h>
 
 namespace gtsam_points {
 

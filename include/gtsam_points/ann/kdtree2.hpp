@@ -38,8 +38,15 @@ public:
   /// @param k_indices    Indices of k nearest neighbors
   /// @param k_sq_dists   Squared distances of k nearest neighbors
   /// @return             Number of neighbors found
-  virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const override {
-    return index->knn_search(Eigen::Map<const Eigen::Vector3d>(pt), k, k_indices, k_sq_dists);
+  virtual size_t knn_search(
+    const double* pt,
+    size_t k,
+    size_t* k_indices,
+    double* k_sq_dists,
+    double max_sq_dist = std::numeric_limits<double>::max()) const override {
+    KnnSetting setting;
+    setting.max_sq_dist = max_sq_dist;
+    return index->knn_search(Eigen::Map<const Eigen::Vector3d>(pt), k, k_indices, k_sq_dists, setting);
   }
 
 public:

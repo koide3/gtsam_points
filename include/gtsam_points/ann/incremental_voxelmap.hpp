@@ -73,7 +73,12 @@ public:
   /// @param k_indices    Indices of the k nearest neighbors
   /// @param k_sq_dists   Squared distances of the k nearest neighbors
   /// @return             Number of found neighbors
-  virtual size_t knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists) const override;
+  virtual size_t knn_search(
+    const double* pt,
+    size_t k,
+    size_t* k_indices,
+    double* k_sq_dists,
+    double max_sq_dist = std::numeric_limits<double>::max()) const override;
 
   /// @brief Calculate the global point index from the voxel index and the point index.
   inline size_t calc_index(const size_t voxel_id, const size_t point_id) const { return (voxel_id << point_id_bits) | point_id; }
