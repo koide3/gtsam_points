@@ -41,6 +41,8 @@ public:
   virtual double error(const gtsam::Values& values) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
+  const Eigen::Isometry3d& get_fixed_target_pose() const { return fixed_target_pose; }
+
 public:
   Eigen::Isometry3d calc_delta(const gtsam::Values& values) const;
 
