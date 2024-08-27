@@ -5,7 +5,7 @@ This is a collection of [GTSAM](https://gtsam.org/) factors and optimizers for r
 Tested on Ubuntu 22.04 / 24.04 and CUDA 12.2, and NVIDIA Jetson Orin with **GTSAM 4.2a9**.
 
 
-[![Doc](https://img.shields.io/badge/API_list-Doxygen-blue)](https://koide3.github.io/gtsam_points/doc_cpp/index.html) [![Build](https://github.com/koide3/gtsam_points/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_points/actions/workflows/build.yml)
+[![DOI](https://zenodo.org/badge/819211095.svg)](https://zenodo.org/doi/10.5281/zenodo.13378351) [![Doc](https://img.shields.io/badge/API_list-Doxygen-blue)](https://koide3.github.io/gtsam_points/doc_cpp/index.html) [![Build](https://github.com/koide3/gtsam_points/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_points/actions/workflows/build.yml)
 
 ## Factors
 
@@ -186,6 +186,21 @@ cd gtsam_points
 ## License
 
 This library is released under the MIT license.
+
+## Citation
+
+```
+@software{gtsam_points,
+  author       = {Kenji Koide},
+  title        = {gtsam_points : A collection of GTSAM factors and optimizers for point cloud SLAM},
+  month        = Aug,
+  year         = 2024,
+  publisher    = {Zenodo},
+  version      = {1.0.4},
+  doi          = {10.5281/zenodo.13378352},
+  url          = {https://github.com/koide3/gtsam_points)}}
+}
+```
 
 ## Dependencies
 - [Eigen](https://eigen.tuxfamily.org/index.php)
