@@ -131,6 +131,20 @@ std::enable_if_t<!std::is_same_v<VoxelMapPtr, GaussianVoxelMap::ConstPtr>, doubl
   return overlap_gpu(targets_, source, Ts_target_source, stream);
 }
 
+/// @brief Calculate the fraction of points fell in targets' voxels on GPU
+template <typename VoxelMapPtr, typename PointCloudPtr>
+std::
+  enable_if_t<!std::is_same_v<VoxelMapPtr, GaussianVoxelMap::ConstPtr> || !std::is_same_v<PointCloudPtr, PointCloud::ConstPtr>, std::vector<double>>
+  overlap_gpu(
+    const std::vector<VoxelMapPtr>& targets,
+    const std::vector<PointCloudPtr>& sources,
+    const std::vector<Eigen::Isometry3d>& Ts_target_source,
+    CUstream_st* stream = 0) {
+  const std::vector<GaussianVoxelMap::ConstPtr> targets_(targets.begin(), targets.end());
+  const std::vector<PointCloud::ConstPtr> sources_(sources.begin(), sources.end());
+  return overlap_gpu(targets_, sources_, Ts_target_source, stream);
+}
+
 // Automatically select CPU or GPU method
 double overlap_auto(const GaussianVoxelMap::ConstPtr& target, const PointCloud::ConstPtr& source, const Eigen::Isometry3d& T_target_source);
 
