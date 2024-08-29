@@ -10,7 +10,7 @@
 
 namespace gtsam_points {
 
-std::vector<float> read_times(const std::string& path) {
+static std::vector<float> read_times(const std::string& path) {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
     std::cerr << "error: failed to open " << path << std::endl;
@@ -27,7 +27,7 @@ std::vector<float> read_times(const std::string& path) {
   return times;
 }
 
-std::vector<Eigen::Vector3f> read_points(const std::string& path) {
+static std::vector<Eigen::Vector3f> read_points(const std::string& path) {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
     std::cerr << "error: failed to open " << path << std::endl;
@@ -44,7 +44,7 @@ std::vector<Eigen::Vector3f> read_points(const std::string& path) {
   return points;
 }
 
-std::vector<Eigen::Vector4f> read_points4(const std::string& path) {
+static std::vector<Eigen::Vector4f> read_points4(const std::string& path) {
   std::ifstream ifs(path, std::ios::binary | std::ios::ate);
   if (!ifs) {
     std::cerr << "error: failed to open " << path << std::endl;
