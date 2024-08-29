@@ -31,7 +31,7 @@ public:
     gtsam::Key source_t1_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree);
 
   /**
    * @brief Constructor

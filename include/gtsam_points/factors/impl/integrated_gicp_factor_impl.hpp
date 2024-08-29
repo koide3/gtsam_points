@@ -16,7 +16,7 @@ IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
   gtsam::Key source_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree)
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree)
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -56,7 +56,7 @@ IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
   gtsam::Key source_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree)
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree)
 : gtsam_points::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),

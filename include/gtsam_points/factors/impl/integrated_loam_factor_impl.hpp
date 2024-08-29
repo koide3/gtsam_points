@@ -14,7 +14,7 @@ IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::IntegratedPointToPlaneF
   gtsam::Key source_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree)
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree)
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -185,7 +185,7 @@ IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::IntegratedPointToEdgeFac
   gtsam::Key source_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree)
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree)
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
@@ -358,8 +358,8 @@ IntegratedLOAMFactor_<TargetFrame, SourceFrame>::IntegratedLOAMFactor_(
   const std::shared_ptr<const TargetFrame>& target_planes,
   const std::shared_ptr<const SourceFrame>& source_edges,
   const std::shared_ptr<const SourceFrame>& source_planes,
-  const std::shared_ptr<NearestNeighborSearch>& target_edges_tree,
-  const std::shared_ptr<NearestNeighborSearch>& target_planes_tree)
+  const std::shared_ptr<const NearestNeighborSearch>& target_edges_tree,
+  const std::shared_ptr<const NearestNeighborSearch>& target_planes_tree)
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   enable_correspondence_validation(false) {
   //

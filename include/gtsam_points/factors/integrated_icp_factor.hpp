@@ -37,7 +37,7 @@ public:
     gtsam::Key source_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree,
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     bool use_point_to_plane = false);
 
   /// Create a binary ICP factor between two poses.
@@ -62,7 +62,7 @@ public:
     gtsam::Key source_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree,
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree,
     bool use_point_to_plane = false);
 
   /// Create a unary ICP factor between a fixed target pose and an active source pose.
@@ -110,7 +110,7 @@ private:
   double max_correspondence_distance_sq;
   bool use_point_to_plane;
 
-  std::shared_ptr<NearestNeighborSearch> target_tree;
+  std::shared_ptr<const NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   double correspondence_update_tolerance_rot;
@@ -135,7 +135,7 @@ public:
     gtsam::Key source_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree)
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree)
   : IntegratedICPFactor_<TargetFrame, SourceFrame>(target_key, source_key, target, source, target_tree, true) {}
 
   IntegratedPointToPlaneICPFactor_(

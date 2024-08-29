@@ -17,7 +17,7 @@ IntegratedICPFactor_<TargetFrame, SourceFrame>::IntegratedICPFactor_(
   gtsam::Key source_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree,
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree,
   bool use_point_to_plane)
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
@@ -60,7 +60,7 @@ IntegratedICPFactor_<TargetFrame, SourceFrame>::IntegratedICPFactor_(
   gtsam::Key source_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree,
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree,
   bool use_point_to_plane)
 : gtsam_points::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),

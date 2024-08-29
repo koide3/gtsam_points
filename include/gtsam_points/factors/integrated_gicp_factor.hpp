@@ -36,7 +36,7 @@ public:
     gtsam::Key source_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree);
 
   ///< Create a binary ICP factor between target and source poses.
   IntegratedGICPFactor_(
@@ -58,7 +58,7 @@ public:
     gtsam::Key source_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree);
 
   ///< Create a unary GICP factor between a fixed target pose and an active source pose.
   IntegratedGICPFactor_(
@@ -107,7 +107,7 @@ private:
   int num_threads;
   double max_correspondence_distance_sq;
 
-  std::shared_ptr<NearestNeighborSearch> target_tree;
+  std::shared_ptr<const NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   double correspondence_update_tolerance_rot;

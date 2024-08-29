@@ -14,7 +14,7 @@ IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_ICPFactor_(
   gtsam::Key source_t1_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree)
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree)
 : gtsam::NonlinearFactor(gtsam::KeyVector{source_t0_key, source_t1_key}),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
