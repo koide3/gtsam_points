@@ -14,7 +14,7 @@ IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::IntegratedCT_GICPFactor_(
   gtsam::Key source_t1_key,
   const std::shared_ptr<const TargetFrame>& target,
   const std::shared_ptr<const SourceFrame>& source,
-  const std::shared_ptr<NearestNeighborSearch>& target_tree)
+  const std::shared_ptr<const NearestNeighborSearch>& target_tree)
 : IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>(source_t0_key, source_t1_key, target, source, target_tree) {
   //
   if (!frame::has_points(*target) || !frame::has_covs(*target)) {

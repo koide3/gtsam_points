@@ -38,8 +38,8 @@ public:
     const std::shared_ptr<const TargetFrame>& target_planes,
     const std::shared_ptr<const SourceFrame>& source_edges,
     const std::shared_ptr<const SourceFrame>& source_planes,
-    const std::shared_ptr<NearestNeighborSearch>& target_edges_tree,
-    const std::shared_ptr<NearestNeighborSearch>& target_planes_tree);
+    const std::shared_ptr<const NearestNeighborSearch>& target_edges_tree,
+    const std::shared_ptr<const NearestNeighborSearch>& target_planes_tree);
 
   IntegratedLOAMFactor_(
     gtsam::Key target_key,
@@ -95,7 +95,7 @@ public:
     gtsam::Key source_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree);
 
   IntegratedPointToPlaneFactor_(
     gtsam::Key target_key,
@@ -127,7 +127,7 @@ private:
   int num_threads;
   double max_correspondence_distance_sq;
 
-  std::shared_ptr<NearestNeighborSearch> target_tree;
+  std::shared_ptr<const NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   double correspondence_update_tolerance_rot;
@@ -153,7 +153,7 @@ public:
     gtsam::Key source_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree);
 
   IntegratedPointToEdgeFactor_(
     gtsam::Key target_key,
@@ -185,7 +185,7 @@ private:
   int num_threads;
   double max_correspondence_distance_sq;
 
-  std::shared_ptr<NearestNeighborSearch> target_tree;
+  std::shared_ptr<const NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   double correspondence_update_tolerance_rot;

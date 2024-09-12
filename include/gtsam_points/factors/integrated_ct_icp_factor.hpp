@@ -35,7 +35,7 @@ public:
     gtsam::Key source_t1_key,
     const std::shared_ptr<const TargetFrame>& target,
     const std::shared_ptr<const SourceFrame>& source,
-    const std::shared_ptr<NearestNeighborSearch>& target_tree);
+    const std::shared_ptr<const NearestNeighborSearch>& target_tree);
 
   /**
    * @brief Constructor
@@ -75,7 +75,7 @@ protected:
   int num_threads;
   double max_correspondence_distance_sq;
 
-  std::shared_ptr<NearestNeighborSearch> target_tree;
+  std::shared_ptr<const NearestNeighborSearch> target_tree;
 
   std::vector<double> time_table;
   mutable std::vector<gtsam::Pose3> source_poses;
