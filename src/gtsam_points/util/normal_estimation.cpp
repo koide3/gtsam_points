@@ -5,14 +5,18 @@
 
 #include <Eigen/Eigen>
 #include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+
+#ifdef GTSAM_POINTS_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
 std::vector<Eigen::Vector4d> estimate_normals(const Eigen::Vector4d* points, const Eigen::Matrix4d* covs, int num_points, int num_threads) {
   std::vector<Eigen::Vector4d> normals(num_points, Eigen::Vector4d::Zero());
 
-#pragma omp parallel for num_threads(num_threads)
-  for (int i = 0; i < num_points; i++) {
+  const auto perpoint_task = [&](int i) {
     Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig;
     eig.computeDirect(covs[i].block<3, 3>(0, 0));
     normals[i].head<3>() = eig.eigenvectors().col(0);
@@ -20,6 +24,24 @@ std::vector<Eigen::Vector4d> estimate_normals(const Eigen::Vector4d* points, con
     if (points[i].dot(normals[i]) > 1.0) {
       normals[i] = -normals[i];
     }
+  };
+
+  if (is_omp_default()) {
+#pragma omp parallel for num_threads(num_threads)
+    for (int i = 0; i < num_points; i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, num_points, 64), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error : TBB is not enabled" << std::endl;
+    abort();
+#endif
   }
 
   return normals;
