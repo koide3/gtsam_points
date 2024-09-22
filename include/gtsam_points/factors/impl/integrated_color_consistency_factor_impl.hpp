@@ -99,7 +99,9 @@ void IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGradie
     }
   }
 
-  last_correspondence_point = delta;
+  if (do_update) {
+    last_correspondence_point = delta;
+  }
 }
 
 template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>

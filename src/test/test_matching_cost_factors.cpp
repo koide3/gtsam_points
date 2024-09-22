@@ -14,6 +14,7 @@
 
 #include <gtsam_points/util/read_points.hpp>
 #include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/util/parallelism.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/types/point_cloud_gpu.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
@@ -114,7 +115,7 @@ TEST_F(MatchingCostFactorsTestBase, LoadCheck) {
   ASSERT_EQ(poses_gt.size(), 5) << "Failed to load submap poses";
 }
 
-class MatchingCostFactorTest : public MatchingCostFactorsTestBase, public testing::WithParamInterface<std::string> {
+class MatchingCostFactorTest : public MatchingCostFactorsTestBase, public testing::WithParamInterface<std::tuple<std::string, std::string>> {
 public:
   gtsam::NonlinearFactor::shared_ptr create_factor(
     gtsam::Key target_key,
@@ -123,15 +124,25 @@ public:
     const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap,
     const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
     const gtsam_points::PointCloud::ConstPtr& source) {
-    std::string method = GetParam();
+    const auto param = GetParam();
+    std::string method = std::get<0>(param);
+    std::string parallelism = std::get<1>(param);
+
+    const int num_threads = parallelism == "NONE" ? 1 : 2;
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      factor.reset(new gtsam_points::IntegratedICPFactor(target_key, source_key, target, source));
+      auto f = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
+      f->set_num_threads(num_threads);
+      factor = f;
     } else if (method == "GICP") {
-      factor.reset(new gtsam_points::IntegratedGICPFactor(target_key, source_key, target, source));
+      auto f = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(target_key, source_key, target, source);
+      f->set_num_threads(num_threads);
+      factor = f;
     } else if (method == "VGICP") {
-      factor.reset(new gtsam_points::IntegratedVGICPFactor(target_key, source_key, target_voxelmap, source));
+      auto f = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
+      f->set_num_threads(num_threads);
+      factor = f;
     } else if (method == "VGICP_CUDA") {
 #ifdef BUILD_GTSAM_POINTS_GPU
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
@@ -151,7 +162,9 @@ public:
     const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap,
     const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
     const gtsam_points::PointCloud::ConstPtr& source) {
-    std::string method = GetParam();
+    const auto param = GetParam();
+    std::string method = std::get<0>(param);
+    std::string parallelism = std::get<1>(param);
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
@@ -209,14 +222,33 @@ public:
   }
 };
 
-INSTANTIATE_TEST_SUITE_P(gtsam_points, MatchingCostFactorTest, testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), [](const auto& info) {
-  return info.param;
-});
+INSTANTIATE_TEST_SUITE_P(
+  gtsam_points,
+  MatchingCostFactorTest,
+  testing::Combine(
+    testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"),
+#ifdef GTSAM_POINTS_TBB
+    testing::Values("NONE", "OMP", "TBB")
+#else
+    testing::Values("NONE", "OMP")
+#endif
+      ),
+  [](const auto& info) { return std::get<0>(info.param) + "_" + std::get<1>(info.param); });
 
 TEST_P(MatchingCostFactorTest, AlignmentTest) {
+  const auto param = GetParam();
+  const auto method = std::get<0>(param);
+  const auto parallelism = std::get<1>(param);
+
+  if (parallelism == "TBB") {
+    gtsam_points::set_tbb_as_default();
+  } else {
+    gtsam_points::set_omp_as_default();
+  }
+
   auto f = create_factor(0, 1, frames[0], voxelmaps[0], voxelmaps_gpu[0], frames[1]);
   if (f == nullptr) {
-    std::cerr << "[          ] SKIP:" << GetParam() << std::endl;
+    std::cerr << "[          ] SKIP:" << method + "_" + parallelism << std::endl;
     return;
   }
 

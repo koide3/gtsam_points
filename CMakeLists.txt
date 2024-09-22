@@ -12,6 +12,8 @@ endif()
 option(BUILD_TESTS "Build test" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
 option(BUILD_EXAMPLE "Build example programs" OFF)
+option(BUILD_WITH_TBB "Build with TBB support" ON)
+option(BUILD_WITH_OPENMP "Build with OpenMP support" ON)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_CUDA_MULTIARCH "Build with CUDA multi-architecture support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
@@ -26,8 +28,16 @@ endif()
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(GTSAM REQUIRED)
-find_package(OpenMP REQUIRED)
 find_package(Eigen3 REQUIRED)
+
+if(BUILD_WITH_TBB)
+  find_package(TBB REQUIRED)
+  add_definitions(-DGTSAM_POINTS_TBB)
+endif()
+
+if(BUILD_WITH_OPENMP)
+  find_package(OpenMP REQUIRED)
+endif()
 
 if(${BUILD_WITH_CUDA} AND ${EIGEN3_VERSION_STRING} AND ${EIGEN3_VERSION_STRING} VERSION_LESS "3.3.90")
   message(WARNING "Detected Eigen ${EIGEN3_VERSION_STRING} is not compatible with CUDA")
@@ -115,6 +125,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/util/normal_estimation.cpp
   src/gtsam_points/util/bspline.cpp
   src/gtsam_points/util/continuous_trajectory.cpp
+  src/gtsam_points/util/parallelism.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
   src/gtsam_points/ann/intensity_kdtree.cpp
@@ -165,7 +176,8 @@ target_link_libraries(gtsam_points
   Boost::filesystem
   Eigen3::Eigen
   GTSAM::GTSAM
-  OpenMP::OpenMP_CXX
+  $<TARGET_NAME_IF_EXISTS:TBB::tbb>
+  $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
 )
 
 # GPU-related
@@ -206,11 +218,12 @@ if(BUILD_WITH_CUDA)
     $<INSTALL_INTERFACE:include>
   )
   target_link_libraries(gtsam_points_cuda
+    CUDA::cudart
     Boost::boost
     Eigen3::Eigen
     GTSAM::GTSAM
-    OpenMP::OpenMP_CXX
-    CUDA::cudart
+    $<TARGET_NAME_IF_EXISTS:TBB::tbb>
+    $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
   )
 
   target_link_libraries(gtsam_points

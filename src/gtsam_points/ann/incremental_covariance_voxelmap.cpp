@@ -139,8 +139,13 @@ void IncrementalCovarianceVoxelMap::insert(const PointCloud& points) {
       Eigen::SelfAdjointEigenSolver<Eigen::Matrix3d> eig;
       eig.computeDirect(cov.block<3, 3>(0, 0));
 
+      int thread_num = 0;
+#ifdef _OPENMP
+      thread_num = omp_get_thread_num();
+#endif
+
       if (in_warmup) {
-        new_stats[omp_get_thread_num()].add(eig.eigenvalues());
+        new_stats[thread_num].add(eig.eigenvalues());
       }
 
       // Check if the normal is valid.
@@ -232,7 +237,11 @@ std::vector<size_t> IncrementalCovarianceVoxelMap::valid_indices(int num_threads
     const auto& voxel = flat_voxels[i];
     for (int j = 0; j < voxel->second.size(); j++) {
       if (voxel->second.valid(j)) {
-        valid_indices[omp_get_thread_num()].push_back(calc_index(i, j));
+        int thread_num = 0;
+#ifdef _OPENMP
+        thread_num = omp_get_thread_num();
+#endif
+        valid_indices[thread_num].push_back(calc_index(i, j));
       }
     }
   }

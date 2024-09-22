@@ -602,7 +602,11 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
       if (block_indices.size() < points_per_voxel) {
         sub_indices.insert(sub_indices.end(), block_indices.begin(), block_indices.end());
       } else {
-        std::sample(block_indices.begin(), block_indices.end(), std::back_inserter(sub_indices), points_per_voxel, mts[omp_get_thread_num()]);
+        int thread_num = 0;
+#ifdef _OPENMP
+        thread_num = omp_get_thread_num();
+#endif
+        std::sample(block_indices.begin(), block_indices.end(), std::back_inserter(sub_indices), points_per_voxel, mts[thread_num]);
       }
       block_indices.clear();
     };
