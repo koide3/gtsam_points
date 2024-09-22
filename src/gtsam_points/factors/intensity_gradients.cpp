@@ -110,7 +110,7 @@ IntensityGradients::Ptr IntensityGradients::estimate(const PointCloud::ConstPtr&
     gradients->intensity_gradients[i] << H.inverse() * e, 0.0;
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
     for (int i = 0; i < frame->size(); i++) {
       perpoint_task(i);
@@ -219,7 +219,7 @@ IntensityGradients::estimate(const gtsam_points::PointCloudCPU::Ptr& frame, int 
     gradients->intensity_gradients[i] << H.inverse() * e, 0.0;
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
     for (int i = 0; i < frame->size(); i++) {
       perpoint_task(i);

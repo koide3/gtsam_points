@@ -77,7 +77,7 @@ double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Va
     return error;
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
     return scan_matching_reduce_omp(perpoint_task, frame::size(*this->source), this->num_threads, nullptr, nullptr, nullptr, nullptr, nullptr);
   } else {
     return scan_matching_reduce_tbb(perpoint_task, frame::size(*this->source), nullptr, nullptr, nullptr, nullptr, nullptr);
@@ -142,7 +142,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
   gtsam::Vector6 b_0;
   gtsam::Vector6 b_1;
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
     error = scan_matching_reduce_omp(perpoint_task, frame::size(*this->source), this->num_threads, &H_00, &H_11, &H_01, &b_0, &b_1);
   } else {
     error = scan_matching_reduce_tbb(perpoint_task, frame::size(*this->source), &H_00, &H_11, &H_01, &b_0, &b_1);
@@ -184,7 +184,7 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
     }
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(this->num_threads) schedule(guided, 8)
     for (int i = 0; i < frame::size(*this->source); i++) {
       perpoint_task(i);

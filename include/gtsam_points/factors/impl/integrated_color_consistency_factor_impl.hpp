@@ -107,7 +107,7 @@ void IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGradie
     correspondences[i] = (num_found && k_sq_dist < max_correspondence_distance_sq) ? k_index : -1;
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
     for (int i = 0; i < frame::size(*source); i++) {
       perpoint_task(i);
@@ -218,7 +218,7 @@ double IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGrad
     bs_source.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
   }
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
     return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
   } else {
     return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);

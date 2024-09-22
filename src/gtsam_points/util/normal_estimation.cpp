@@ -26,7 +26,7 @@ std::vector<Eigen::Vector4d> estimate_normals(const Eigen::Vector4d* points, con
     }
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads)
     for (int i = 0; i < num_points; i++) {
       perpoint_task(i);

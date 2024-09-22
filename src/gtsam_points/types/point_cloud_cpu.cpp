@@ -425,7 +425,7 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
     return bits;
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
     for (std::int64_t i = 0; i < frame->size(); i++) {
       coord_pt[i] = {calc_coord(i), i};
@@ -522,7 +522,7 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
     }
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 4)
     for (std::int64_t block_begin = 0; block_begin < coord_pt.size(); block_begin += block_size) {
       perblock_task(block_begin);
@@ -608,7 +608,7 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
   size_t num_voxels = 0;
   std::vector<std::pair<std::uint64_t, size_t>> coord_pt(frame->size());
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
     for (std::int64_t i = 0; i < frame->size(); i++) {
       coord_pt[i] = {calc_coord(i), i};
@@ -698,7 +698,7 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
     std::copy(sub_indices.begin(), sub_indices.end(), indices.begin() + num_points.fetch_add(sub_indices.size()));
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 4)
     for (std::int64_t block_begin = 0; block_begin < coord_pt.size(); block_begin += block_size) {
       perblock_task(block_begin);
@@ -906,7 +906,7 @@ PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& frame, const int 
     std::copy(k_neighbors.begin(), k_neighbors.end(), neighbors.begin() + i * k);
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for schedule(guided, 8) num_threads(num_threads)
     for (int i = 0; i < frame->size(); i++) {
       perpoint_task(i);

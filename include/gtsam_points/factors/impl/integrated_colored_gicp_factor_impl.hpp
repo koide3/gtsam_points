@@ -119,7 +119,7 @@ void IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients>:
     }
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
 #pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
     for (int i = 0; i < frame::size(*source); i++) {
       perpoint_task(i);
@@ -232,7 +232,7 @@ double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients
     return error_geom + error_photo;
   };
 
-  if (is_omp_default()) {
+  if (is_omp_default() || num_threads == 1) {
     return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
   } else {
     return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);
