@@ -3,6 +3,7 @@
 
 #include <gtsam_points/util/normal_estimation.hpp>
 
+#include <iostream>
 #include <Eigen/Eigen>
 #include <gtsam_points/util/covariance_estimation.hpp>
 #include <gtsam_points/util/parallelism.hpp>
