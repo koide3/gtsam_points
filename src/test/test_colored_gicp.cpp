@@ -10,6 +10,7 @@
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/factors/integrated_colored_gicp_factor.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
+#include <gtsam_points/util/parallelism.hpp>
 #include <gtsam_points/util/normal_estimation.hpp>
 #include <gtsam_points/util/covariance_estimation.hpp>
 
@@ -104,16 +105,35 @@ public:
   std::vector<Eigen::Vector4d> source_points;
 };
 
-TEST_F(ColoredGICPTestBase, Check) {
+class ColoredGICPTest : public ColoredGICPTestBase, public testing::WithParamInterface<std::tuple<std::string, std::string>> {};
+
+INSTANTIATE_TEST_SUITE_P(
+  gtsam_points,
+  ColoredGICPTest,
+  testing::Combine(testing::Values("GICP"), testing::Values("NONE", "OMP", "TBB")),
+  [](const auto& info) { return std::get<0>(info.param) + "_" + std::get<1>(info.param); });
+
+TEST_P(ColoredGICPTest, AlignmentTest) {
+  const auto param = GetParam();
+  const std::string method = std::get<0>(param);
+  const std::string parallelism = std::get<1>(param);
+  const int num_threads = parallelism == "OMP" ? 2 : 1;
+
+  if (parallelism == "TBB") {
+    gtsam_points::set_tbb_as_default();
+  } else {
+    gtsam_points::set_omp_as_default();
+  }
+
   gtsam_points::PointCloudCPU::Ptr target(new gtsam_points::PointCloudCPU(target_points));
   target->add_intensities(target_intensities);
-  auto target_gradients = gtsam_points::IntensityGradients::estimate(target, 10, 50, 1);
+  auto target_gradients = gtsam_points::IntensityGradients::estimate(target, 10, 50, num_threads);
 
   EXPECT_NE(target->normals, nullptr);
   EXPECT_NE(target->covs, nullptr);
 
   gtsam_points::PointCloud::Ptr target_ = target;
-  auto target_gradients2 = gtsam_points::IntensityGradients::estimate(target_, 50, 1);
+  auto target_gradients2 = gtsam_points::IntensityGradients::estimate(target_, 50, num_threads);
 
   gtsam_points::PointCloudCPU::Ptr source(new gtsam_points::PointCloudCPU(source_points));
   source->add_intensities(source_intensities);
@@ -123,13 +143,17 @@ TEST_F(ColoredGICPTestBase, Check) {
   std::shared_ptr<gtsam_points::IntensityKdTree> target_intensity_tree(
     new gtsam_points::IntensityKdTree(target->points, target->intensities, target->size()));
 
-  test_factor(gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients), "DEFAULT");
-  test_factor(
-    gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients),
-    "ESTIMATE_PHOTO_AND_GEOM");
-  test_factor(
-    gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients2),
-    "ESTIMATE_PHOTO_ONLY");
+  auto f1 = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
+  f1->set_num_threads(num_threads);
+  test_factor(f1, "DEFAULT");
+
+  auto f2 = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients);
+  f2->set_num_threads(num_threads);
+  test_factor(f2, "ESTIMATE_PHOTO_AND_GEOM");
+
+  auto f3 = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients2);
+  f3->set_num_threads(num_threads);
+  test_factor(f3, "ESTIMATE_PHOTO_ONLY");
 }
 
 int main(int argc, char** argv) {

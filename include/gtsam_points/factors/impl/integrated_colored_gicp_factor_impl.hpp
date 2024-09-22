@@ -5,6 +5,12 @@
 
 #include <vector>
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+#include <gtsam_points/factors/impl/scan_matching_reduction.hpp>
+
+#ifdef GTSAM_POINTS_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
@@ -83,11 +89,14 @@ void IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients>:
     }
   }
 
+  if (do_update) {
+    last_correspondence_point = delta;
+  }
+
   correspondences.resize(frame::size(*source));
   mahalanobis.resize(frame::size(*source));
 
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](int i) {
     if (do_update) {
       Eigen::Vector4d pt = delta * frame::point(*source, i);
       pt[3] = frame::intensity(*source, i);
@@ -108,9 +117,25 @@ void IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients>:
       mahalanobis[i] = RCR.inverse();
       mahalanobis[i](3, 3) = 0.0;
     }
-  }
+  };
 
-  last_correspondence_point = delta;
+  if (is_omp_default()) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame::size(*source); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
+  }
 }
 
 template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>
@@ -128,28 +153,16 @@ double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients
 
   const double geometric_term_weight = 1.0 - photometric_term_weight;
 
-  double sum_errors_geom = 0.0;
-  double sum_errors_photo = 0.0;
-
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target;
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_source;
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target_source;
-  std::vector<Eigen::Matrix<double, 6, 1>> bs_target;
-  std::vector<Eigen::Matrix<double, 6, 1>> bs_source;
-
-  if (H_target && H_source && H_target_source && b_target && b_source) {
-    Hs_target.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    Hs_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    Hs_target_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    bs_target.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
-    bs_source.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
-  }
-
-#pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors_geom) reduction(+ : sum_errors_photo) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](
+                               int i,
+                               Eigen::Matrix<double, 6, 6>* H_target,
+                               Eigen::Matrix<double, 6, 6>* H_source,
+                               Eigen::Matrix<double, 6, 6>* H_target_source,
+                               Eigen::Matrix<double, 6, 1>* b_target,
+                               Eigen::Matrix<double, 6, 1>* b_source) {
     const long target_index = correspondences[i];
     if (target_index < 0) {
-      continue;
+      return 0.0;
     }
 
     // source atributes
@@ -167,24 +180,19 @@ double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients
     const Eigen::Vector4d transed_A = delta * mean_A;
 
     // geometric error
-    const Eigen::Vector4d error_geom = transed_A - mean_B;
-    sum_errors_geom += 0.5 * error_geom.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
+    const Eigen::Vector4d residual_geom = transed_A - mean_B;
+    const double error_geom = 0.5 * residual_geom.transpose() * geometric_term_weight * mahalanobis[i] * residual_geom;
 
     // photometric error
     const Eigen::Vector4d projected = transed_A - (transed_A - mean_B).dot(normal_B) * normal_B;
     const Eigen::Vector4d offset = projected - mean_B;
-    const double error_photo = intensity_B + gradient_B.dot(offset) - intensity_A;
+    const double residual_photo = intensity_B + gradient_B.dot(offset) - intensity_A;
 
-    sum_errors_photo += 0.5 * error_photo * photometric_term_weight * error_photo;
+    const double error_photo = 0.5 * residual_photo * photometric_term_weight * residual_photo;
 
     if (!H_target) {
-      continue;
+      return error_geom + error_photo;
     }
-
-    int thread_num = 0;
-#ifdef _OPENMP
-    thread_num = omp_get_thread_num();
-#endif
 
     Eigen::Matrix<double, 4, 6> J_transed_target = Eigen::Matrix<double, 4, 6>::Zero();
     J_transed_target.block<3, 3>(0, 0) = gtsam::SO3::Hat(transed_A.head<3>());
@@ -198,11 +206,11 @@ double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients
     const auto& J_egeom_target = J_transed_target;
     const auto& J_egeom_source = J_transed_source;
 
-    Hs_target[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_target;
-    Hs_source[thread_num] += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
-    Hs_target_source[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
-    bs_target[thread_num] += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
-    bs_source[thread_num] += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * error_geom;
+    *H_target += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_target;
+    *H_source += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
+    *H_target_source += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * J_egeom_source;
+    *b_target += J_egeom_target.transpose() * geometric_term_weight * mahalanobis[i] * residual_geom;
+    *b_source += J_egeom_source.transpose() * geometric_term_weight * mahalanobis[i] * residual_geom;
 
     // photometric error derivatives
     Eigen::Matrix<double, 4, 4> J_projected_transed = Eigen::Matrix4d::Identity() - normal_B * normal_B.transpose();
@@ -215,30 +223,20 @@ double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients
     Eigen::Matrix<double, 1, 6> J_ephoto_target = J_ephoto_transed * J_transed_target;
     Eigen::Matrix<double, 1, 6> J_ephoto_source = J_ephoto_transed * J_transed_source;
 
-    Hs_target[thread_num] += J_ephoto_target.transpose() * photometric_term_weight * J_ephoto_target;
-    Hs_source[thread_num] += J_ephoto_source.transpose() * photometric_term_weight * J_ephoto_source;
-    Hs_target_source[thread_num] += J_ephoto_target.transpose() * photometric_term_weight * J_ephoto_source;
-    bs_target[thread_num] += J_ephoto_target.transpose() * photometric_term_weight * error_photo;
-    bs_source[thread_num] += J_ephoto_source.transpose() * photometric_term_weight * error_photo;
+    *H_target += J_ephoto_target.transpose() * photometric_term_weight * J_ephoto_target;
+    *H_source += J_ephoto_source.transpose() * photometric_term_weight * J_ephoto_source;
+    *H_target_source += J_ephoto_target.transpose() * photometric_term_weight * J_ephoto_source;
+    *b_target += J_ephoto_target.transpose() * photometric_term_weight * residual_photo;
+    *b_source += J_ephoto_source.transpose() * photometric_term_weight * residual_photo;
+
+    return error_geom + error_photo;
+  };
+
+  if (is_omp_default()) {
+    return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
+  } else {
+    return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);
   }
-
-  if (H_target && H_source && H_target_source && b_target && b_source) {
-    H_target->setZero();
-    H_source->setZero();
-    H_target_source->setZero();
-    b_target->setZero();
-    b_source->setZero();
-
-    for (int i = 0; i < num_threads; i++) {
-      (*H_target) += Hs_target[i];
-      (*H_source) += Hs_source[i];
-      (*H_target_source) += Hs_target_source[i];
-      (*b_target) += bs_target[i];
-      (*b_source) += bs_source[i];
-    }
-  }
-
-  return sum_errors_geom + sum_errors_photo;
 }
 
 }  // namespace gtsam_points
