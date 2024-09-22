@@ -8,6 +8,7 @@
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/util/parallelism.hpp>
 
 class KdTreeTest : public testing::Test, public testing::WithParamInterface<std::string> {
   virtual void SetUp() {
@@ -65,21 +66,34 @@ TEST_F(KdTreeTest, LoadCheck) {
   ASSERT_EQ(gt_sq_dists.size(), queries.size());
 }
 
-INSTANTIATE_TEST_SUITE_P(gtsam_points, KdTreeTest, testing::Values("KdTree", "KdTreeMT", "KdTree2", "KdTree2MT"), [](const auto& info) {
-  return info.param;
-});
+INSTANTIATE_TEST_SUITE_P(
+  gtsam_points,
+  KdTreeTest,
+  testing::Values("KdTree", "KdTreeMT", "KdTreeTBB", "KdTree2", "KdTree2MT", "KdTree2TBB"),
+  [](const auto& info) { return info.param; });
 
 TEST_P(KdTreeTest, KdTreeTest) {
   gtsam_points::NearestNeighborSearch::ConstPtr kdtree;
+
+  if (GetParam().find("TBB") != std::string::npos) {
+    gtsam_points::set_tbb_as_default();
+  } else {
+    gtsam_points::set_omp_as_default();
+  }
 
   if (GetParam() == "KdTree") {
     kdtree = std::make_shared<gtsam_points::KdTree>(points.data(), points.size());
   } else if (GetParam() == "KdTreeMT") {
     kdtree = std::make_shared<gtsam_points::KdTree>(points.data(), points.size(), 2);
+  } else if (GetParam() == "KdTreeTBB") {
+    kdtree = std::make_shared<gtsam_points::KdTree>(points.data(), points.size(), 2);
   } else if (GetParam() == "KdTree2") {
     auto pts = std::make_shared<gtsam_points::PointCloudCPU>(points);
     kdtree = std::make_shared<gtsam_points::KdTree2<gtsam_points::PointCloud>>(pts);
   } else if (GetParam() == "KdTree2MT") {
+    auto pts = std::make_shared<gtsam_points::PointCloudCPU>(points);
+    kdtree = std::make_shared<gtsam_points::KdTree2<gtsam_points::PointCloud>>(pts, 2);
+  } else if (GetParam() == "KdTree2TBB") {
     auto pts = std::make_shared<gtsam_points::PointCloudCPU>(points);
     kdtree = std::make_shared<gtsam_points::KdTree2<gtsam_points::PointCloud>>(pts, 2);
   } else {

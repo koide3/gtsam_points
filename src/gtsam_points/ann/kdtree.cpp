@@ -4,6 +4,7 @@
 
 #include <gtsam_points/types/frame_traits.hpp>
 #include <gtsam_points/ann/small_kdtree.hpp>
+#include <gtsam_points/util/parallelism.hpp>
 
 namespace gtsam_points {
 
@@ -22,7 +23,17 @@ KdTree::KdTree(const Eigen::Vector4d* points, int num_points, int build_num_thre
 : num_points(num_points),
   points(points),
   search_eps(-1.0),
-  index(new Index(*this, KdTreeBuilderOMP(build_num_threads))) {}
+  index(
+    is_omp_default() || build_num_threads == 1 ?             //
+      new Index(*this, KdTreeBuilderOMP(build_num_threads))  //
+                                               :             //
+#ifdef GTSAM_POINTS_TBB                                      //
+      new Index(*this, KdTreeBuilderTBB())                   //
+#else                                                        //
+      new Index(*this, KdTreeBuilder())
+#endif
+  ) {
+}
 
 KdTree::~KdTree() {}
 
