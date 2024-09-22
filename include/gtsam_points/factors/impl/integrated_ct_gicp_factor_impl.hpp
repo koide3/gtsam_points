@@ -5,6 +5,12 @@
 
 #include <gtsam/linear/HessianFactor.h>
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+#include <gtsam_points/factors/impl/scan_matching_reduction.hpp>
+
+#ifdef GTSAM_POINTS_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
@@ -46,12 +52,16 @@ double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Va
     this->update_correspondences();
   }
 
-  double sum_errors = 0.0;
-#pragma omp parallel for reduction(+ : sum_errors) schedule(guided, 8) num_threads(this->num_threads)
-  for (int i = 0; i < frame::size(*this->source); i++) {
+  const auto perpoint_task = [&](
+                               int i,
+                               Eigen::Matrix<double, 6, 6>* H_target,
+                               Eigen::Matrix<double, 6, 6>* H_source,
+                               Eigen::Matrix<double, 6, 6>* H_target_source,
+                               Eigen::Matrix<double, 6, 1>* b_target,
+                               Eigen::Matrix<double, 6, 1>* b_source) {
     const long target_index = this->correspondences[i];
     if (target_index < 0) {
-      continue;
+      return 0.0;
     }
 
     const int time_index = this->time_indices[i];
@@ -60,13 +70,18 @@ double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Va
     const auto& source_pt = frame::point(*this->source, i);
     const auto& target_pt = frame::point(*this->target, target_index);
 
-    Eigen::Vector4d transed_source_pt = pose * source_pt;
-    Eigen::Vector4d error = transed_source_pt - target_pt;
+    const Eigen::Vector4d transed_source_pt = pose * source_pt;
+    const Eigen::Vector4d residual = transed_source_pt - target_pt;
+    const double error = 0.5 * residual.transpose() * mahalanobis[i] * residual;
 
-    sum_errors += 0.5 * error.transpose() * mahalanobis[i] * error;
+    return error;
+  };
+
+  if (is_omp_default()) {
+    return scan_matching_reduce_omp(perpoint_task, frame::size(*this->source), this->num_threads, nullptr, nullptr, nullptr, nullptr, nullptr);
+  } else {
+    return scan_matching_reduce_tbb(perpoint_task, frame::size(*this->source), nullptr, nullptr, nullptr, nullptr, nullptr);
   }
-
-  return sum_errors;
 }
 
 template <typename TargetFrame, typename SourceFrame>
@@ -74,24 +89,16 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
   this->update_poses(values);
   this->update_correspondences();
 
-  double sum_errors = 0.0;
-  std::vector<gtsam::Matrix6> Hs_00(this->num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Matrix6> Hs_01(this->num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Matrix6> Hs_11(this->num_threads, gtsam::Matrix6::Zero());
-  std::vector<gtsam::Vector6> bs_0(this->num_threads, gtsam::Vector6::Zero());
-  std::vector<gtsam::Vector6> bs_1(this->num_threads, gtsam::Vector6::Zero());
-
-  gtsam::Matrix6 H_00 = gtsam::Matrix6::Zero();
-  gtsam::Matrix6 H_01 = gtsam::Matrix6::Zero();
-  gtsam::Matrix6 H_11 = gtsam::Matrix6::Zero();
-  gtsam::Vector6 b_0 = gtsam::Vector6::Zero();
-  gtsam::Vector6 b_1 = gtsam::Vector6::Zero();
-
-#pragma omp parallel for reduction(+ : sum_errors) schedule(guided, 8) num_threads(this->num_threads)
-  for (int i = 0; i < frame::size(*this->source); i++) {
+  const auto perpoint_task = [&](
+                               int i,
+                               Eigen::Matrix<double, 6, 6>* H_00,
+                               Eigen::Matrix<double, 6, 6>* H_11,
+                               Eigen::Matrix<double, 6, 6>* H_01,
+                               Eigen::Matrix<double, 6, 1>* b_0,
+                               Eigen::Matrix<double, 6, 1>* b_1) {
     const long target_index = this->correspondences[i];
     if (target_index < 0) {
-      continue;
+      return 0.0;
     }
 
     const int time_index = this->time_indices[i];
@@ -108,39 +115,40 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
     H_transed_pose.block<3, 3>(0, 3) = pose.linear();
     const Eigen::Vector4d transed_source_pt = pose * source_pt;
 
-    const auto& H_error_pose = H_transed_pose;
-    const Eigen::Vector4d error = transed_source_pt - target_pt;
+    const auto& H_residual_pose = H_transed_pose;
+    const Eigen::Vector4d residual = transed_source_pt - target_pt;
 
-    const gtsam::Matrix46 H_0 = H_error_pose * H_pose_0;
-    const gtsam::Matrix46 H_1 = H_error_pose * H_pose_1;
+    const gtsam::Matrix46 H_0 = H_residual_pose * H_pose_0;
+    const gtsam::Matrix46 H_1 = H_residual_pose * H_pose_1;
 
-    int thread_num = 0;
-#ifdef _OPENMP
-    thread_num = omp_get_thread_num();
-#endif
-
-    const gtsam::Vector4 mahalanobis_error = mahalanobis[i] * error;
+    const gtsam::Vector4 mahalanobis_residual = mahalanobis[i] * residual;
     const gtsam::Matrix64 H_0_mahalanobis = H_0.transpose() * mahalanobis[i];
     const gtsam::Matrix64 H_1_mahalanobis = H_1.transpose() * mahalanobis[i];
 
-    sum_errors += 0.5 * error.transpose() * mahalanobis_error;
-    Hs_00[thread_num] += H_0_mahalanobis * H_0;
-    Hs_11[thread_num] += H_1_mahalanobis * H_1;
-    Hs_01[thread_num] += H_0_mahalanobis * H_1;
-    bs_0[thread_num] += H_0.transpose() * mahalanobis_error;
-    bs_1[thread_num] += H_1.transpose() * mahalanobis_error;
+    const double error = 0.5 * residual.transpose() * mahalanobis_residual;
+    *H_00 += H_0_mahalanobis * H_0;
+    *H_11 += H_1_mahalanobis * H_1;
+    *H_01 += H_0_mahalanobis * H_1;
+    *b_0 += H_0.transpose() * mahalanobis_residual;
+    *b_1 += H_1.transpose() * mahalanobis_residual;
+
+    return error;
+  };
+
+  double error = 0.0;
+  gtsam::Matrix6 H_00;
+  gtsam::Matrix6 H_01;
+  gtsam::Matrix6 H_11;
+  gtsam::Vector6 b_0;
+  gtsam::Vector6 b_1;
+
+  if (is_omp_default()) {
+    error = scan_matching_reduce_omp(perpoint_task, frame::size(*this->source), this->num_threads, &H_00, &H_11, &H_01, &b_0, &b_1);
+  } else {
+    error = scan_matching_reduce_tbb(perpoint_task, frame::size(*this->source), &H_00, &H_11, &H_01, &b_0, &b_1);
   }
 
-  for (int i = 1; i < Hs_00.size(); i++) {
-    Hs_00[0] += Hs_00[i];
-    Hs_11[0] += Hs_11[i];
-    Hs_01[0] += Hs_01[i];
-    bs_0[0] += bs_0[i];
-    bs_1[0] += bs_1[i];
-  }
-
-  auto factor = gtsam::HessianFactor::shared_ptr(
-    new gtsam::HessianFactor(this->keys_[0], this->keys_[1], Hs_00[0], Hs_01[0], -bs_0[0], Hs_11[0], -bs_1[0], sum_errors));
+  auto factor = gtsam::HessianFactor::shared_ptr(new gtsam::HessianFactor(this->keys_[0], this->keys_[1], H_00, H_01, -b_0, H_11, -b_1, error));
   return factor;
 }
 
@@ -149,8 +157,7 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
   this->correspondences.resize(frame::size(*this->source));
   this->mahalanobis.resize(frame::size(*this->source));
 
-#pragma omp parallel for schedule(guided, 8) num_threads(this->num_threads)
-  for (int i = 0; i < frame::size(*this->source); i++) {
+  const auto perpoint_task = [&](int i) {
     const int time_index = this->time_indices[i];
     const Eigen::Matrix4d pose = this->source_poses[time_index].matrix();
 
@@ -175,6 +182,24 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
       mahalanobis[i].setZero();
       mahalanobis[i].block<3, 3>(0, 0) = RCR.block<3, 3>(0, 0).inverse();
     }
+  };
+
+  if (is_omp_default()) {
+#pragma omp parallel for num_threads(this->num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame::size(*this->source); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*this->source), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 }
 }  // namespace gtsam_points
