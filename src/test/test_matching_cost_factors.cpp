@@ -234,7 +234,7 @@ INSTANTIATE_TEST_SUITE_P(
   MatchingCostFactorTest,
   testing::Combine(
     testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"),
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
     testing::Values("NONE", "OMP", "TBB")
 #else
     testing::Values("NONE", "OMP")

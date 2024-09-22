@@ -32,7 +32,7 @@ find_package(Eigen3 REQUIRED)
 
 if(BUILD_WITH_TBB)
   find_package(TBB REQUIRED)
-  add_definitions(-DGTSAM_POINTS_TBB)
+  add_definitions(-DGTSAM_USE_TBB)
 endif()
 
 if(BUILD_WITH_OPENMP)

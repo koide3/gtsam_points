@@ -47,7 +47,7 @@
 #include <gtsam_points/ann/knn_result.hpp>
 #include <gtsam_points/types/frame_traits.hpp>
 
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
 #include <tbb/parallel_invoke.h>
 #endif
 
@@ -270,7 +270,7 @@ public:
   ProjectionSetting projection_setting;  ///< Projection setting.
 };
 
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
 /// @brief Kd-tree builder with TBB.
 struct KdTreeBuilderTBB {
 public:

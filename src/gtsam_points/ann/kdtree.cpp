@@ -27,7 +27,7 @@ KdTree::KdTree(const Eigen::Vector4d* points, int num_points, int build_num_thre
     is_omp_default() || build_num_threads == 1 ?             //
       new Index(*this, KdTreeBuilderOMP(build_num_threads))  //
                                                :             //
-#ifdef GTSAM_POINTS_TBB                                      //
+#ifdef GTSAM_USE_TBB                                      //
       new Index(*this, KdTreeBuilderTBB())                   //
 #else                                                        //
       new Index(*this, KdTreeBuilder())

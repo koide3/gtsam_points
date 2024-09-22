@@ -8,7 +8,7 @@
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/util/parallelism.hpp>
 
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
 #include <tbb/parallel_for.h>
 #endif
 
@@ -60,7 +60,7 @@ std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points,
       perpoint_task(i);
     }
   } else {
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
     tbb::parallel_for(tbb::blocked_range<int>(0, num_points, 8), [&](const tbb::blocked_range<int>& range) {
       for (int i = range.begin(); i < range.end(); i++) {
         perpoint_task(i);

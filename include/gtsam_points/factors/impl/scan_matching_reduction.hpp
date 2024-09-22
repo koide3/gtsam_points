@@ -4,7 +4,7 @@
 
 #include <Eigen/Core>
 
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_reduce.h>
 #endif
@@ -66,7 +66,7 @@ double scan_matching_reduce_omp(
   return sum_errors;
 }
 
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
 
 template <typename Transform>
 struct ScanMatchingReductionTBBError {

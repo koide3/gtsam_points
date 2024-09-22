@@ -29,7 +29,7 @@ public:
       is_omp_default() || build_num_threads == 1 ?                    //
         new Index(*this->frame, KdTreeBuilderOMP(build_num_threads))  //
                                                  :                    //
-#ifdef GTSAM_POINTS_TBB                                               //
+#ifdef GTSAM_USE_TBB                                                  //
         new Index(*this->frame, KdTreeBuilderTBB())                   //
 #else                                                                 //
         new Index(*this->frame, KdTreeBuilder())

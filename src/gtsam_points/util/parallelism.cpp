@@ -23,7 +23,7 @@ void set_default_parallelism(ParallelismBackend parallelism) {
   }
 #endif
 
-#ifndef GTSAM_POINTS_TBB
+#ifndef GTSAM_USE_TBB
   if (parallelism == ParallelismBackend::TBB) {
     std::cerr << "warning: Intel TBB is not available" << std::endl;
     return;

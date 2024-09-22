@@ -8,7 +8,7 @@
 #include <gtsam_points/util/parallelism.hpp>
 #include <gtsam_points/factors/impl/scan_matching_reduction.hpp>
 
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
 #include <tbb/parallel_for.h>
 #endif
 
@@ -91,7 +91,7 @@ void IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::update_corresponde
       perpoint_task(i);
     }
   } else {
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
     tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
       for (int i = range.begin(); i < range.end(); i++) {
         perpoint_task(i);
@@ -246,7 +246,7 @@ void IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::update_corresponden
       perpoint_task(i);
     }
   } else {
-#ifdef GTSAM_POINTS_TBB
+#ifdef GTSAM_USE_TBB
     tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
       for (int i = range.begin(); i < range.end(); i++) {
         perpoint_task(i);
