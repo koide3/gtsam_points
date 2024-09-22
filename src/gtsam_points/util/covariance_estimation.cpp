@@ -54,7 +54,7 @@ std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points,
     }
   };
 
-  if (is_omp_default() || num_threads == 1) {
+  if (is_omp_default() || params.num_threads == 1) {
 #pragma omp parallel for num_threads(params.num_threads) schedule(guided, 8)
     for (int i = 0; i < num_points; i++) {
       perpoint_task(i);

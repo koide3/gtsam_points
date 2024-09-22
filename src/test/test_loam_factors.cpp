@@ -80,7 +80,7 @@ public:
     const auto param = GetParam();
     const std::string method = std::get<0>(param);
     const std::string parallelism = std::get<1>(param);
-    const int num_threads = parallelism == "OMP" ? 2 : 1;
+    const int num_threads = parallelism == "NONE" ? 1 : 2;
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "LOAM") {

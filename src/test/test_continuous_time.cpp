@@ -83,7 +83,7 @@ TEST_P(ContinuousTimeFactorTest, AlignmentTest) {
   const auto param = GetParam();
   const std::string method = std::get<0>(param);
   const std::string parallelism = std::get<1>(param);
-  const int num_threads = parallelism == "OMP" ? 2 : 1;
+  const int num_threads = parallelism == "NONE" ? 1 : 2;
 
   if (parallelism == "TBB") {
     gtsam_points::set_tbb_as_default();
