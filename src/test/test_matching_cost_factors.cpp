@@ -163,16 +163,23 @@ public:
     const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
     const gtsam_points::PointCloud::ConstPtr& source) {
     const auto param = GetParam();
-    std::string method = std::get<0>(param);
-    std::string parallelism = std::get<1>(param);
+    const std::string method = std::get<0>(param);
+    const std::string parallelism = std::get<1>(param);
+    const int num_threads = parallelism == "OMP" ? 2 : 1;
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      factor.reset(new gtsam_points::IntegratedICPFactor(fixed_target_pose, source_key, target, source));
+      auto f = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(fixed_target_pose, source_key, target, source);
+      f->set_num_threads(num_threads);
+      factor = f;
     } else if (method == "GICP") {
-      factor.reset(new gtsam_points::IntegratedGICPFactor(fixed_target_pose, source_key, target, source));
+      auto f = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(fixed_target_pose, source_key, target, source);
+      f->set_num_threads(num_threads);
+      factor = f;
     } else if (method == "VGICP") {
-      factor.reset(new gtsam_points::IntegratedVGICPFactor(fixed_target_pose, source_key, target_voxelmap, source));
+      auto f = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(fixed_target_pose, source_key, target_voxelmap, source);
+      f->set_num_threads(num_threads);
+      factor = f;
     } else if (method == "VGICP_CUDA") {
 #ifdef BUILD_GTSAM_POINTS_GPU
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();

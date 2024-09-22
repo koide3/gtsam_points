@@ -16,6 +16,7 @@
 #include <gtsam_points/factors/integrated_loam_factor.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/util/parallelism.hpp>
 
 struct LOAMTestBase : public testing::Test {
   virtual void SetUp() {
@@ -67,7 +68,7 @@ TEST_F(LOAMTestBase, LoadCheck) {
   EXPECT_EQ(poses_gt.size(), 5) << "Failed to load GT poses";
 }
 
-class LOAMFactorTest : public LOAMTestBase, public testing::WithParamInterface<std::string> {
+class LOAMFactorTest : public LOAMTestBase, public testing::WithParamInterface<std::tuple<std::string, std::string>> {
 public:
   gtsam::NonlinearFactor::shared_ptr create_factor(
     gtsam::Key target_key,
@@ -76,15 +77,25 @@ public:
     const gtsam_points::PointCloud::ConstPtr& target_planes,
     const gtsam_points::PointCloud::ConstPtr& source_edges,
     const gtsam_points::PointCloud::ConstPtr& source_planes) {
-    std::string method = GetParam();
+    const auto param = GetParam();
+    const std::string method = std::get<0>(param);
+    const std::string parallelism = std::get<1>(param);
+    const int num_threads = parallelism == "OMP" ? 2 : 1;
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "LOAM") {
-      factor.reset(new gtsam_points::IntegratedLOAMFactor(target_key, source_key, target_edges, target_planes, source_edges, source_planes));
+      auto f =
+        gtsam::make_shared<gtsam_points::IntegratedLOAMFactor>(target_key, source_key, target_edges, target_planes, source_edges, source_planes);
+      f->set_num_threads(num_threads);
+      factor = f;
     } else if (method == "EDGE") {
-      factor.reset(new gtsam_points::IntegratedPointToEdgeFactor(target_key, source_key, target_edges, source_edges));
+      auto f = gtsam::make_shared<gtsam_points::IntegratedPointToEdgeFactor>(target_key, source_key, target_edges, source_edges);
+      f->set_num_threads(num_threads);
+      factor = f;
     } else if (method == "PLANE") {
-      factor.reset(new gtsam_points::IntegratedPointToPlaneFactor(target_key, source_key, target_planes, source_planes));
+      auto f = gtsam::make_shared<gtsam_points::IntegratedPointToPlaneFactor>(target_key, source_key, target_planes, source_planes);
+      f->set_num_threads(num_threads);
+      factor = f;
     }
 
     return factor;
@@ -120,12 +131,26 @@ public:
   }
 };
 
-INSTANTIATE_TEST_SUITE_P(gtsam_points, LOAMFactorTest, testing::Values("EDGE", "PLANE", "LOAM"), [](const auto& info) { return info.param; });
+INSTANTIATE_TEST_SUITE_P(
+  gtsam_points,
+  LOAMFactorTest,
+  testing::Combine(testing::Values("EDGE", "PLANE", "LOAM"), testing::Values("NONE", "OMP", "TBB")),
+  [](const auto& info) { return std::get<0>(info.param) + "_" + std::get<1>(info.param); });
 
 TEST_P(LOAMFactorTest, AlignmentTest) {
+  const auto param = GetParam();
+  const std::string method = std::get<0>(param);
+  const std::string parallelism = std::get<1>(param);
+
+  if (parallelism == "TBB") {
+    gtsam_points::set_tbb_as_default();
+  } else {
+    gtsam_points::set_omp_as_default();
+  }
+
   auto f = create_factor(0, 1, edge_frames[0], plane_frames[0], edge_frames[1], plane_frames[1]);
   if (f == nullptr) {
-    std::cerr << "[          ] SKIP:" << GetParam() << std::endl;
+    std::cerr << "[          ] SKIP:" << std::get<0>(GetParam()) << std::endl;
     return;
   }
 
