@@ -12,6 +12,8 @@ endif()
 option(BUILD_TESTS "Build test" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
 option(BUILD_EXAMPLE "Build example programs" OFF)
+option(BUILD_WITH_TBB "Build with TBB support" ON)
+option(BUILD_WITH_OPENMP "Build with OpenMP support" ON)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_CUDA_MULTIARCH "Build with CUDA multi-architecture support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
@@ -19,6 +21,7 @@ option(ENABLE_CPPCHECK "Enable cppcheck" OFF)
 option(ENABLE_COVERAGE "Enable coverage check" OFF)
 
 if(BUILD_WITH_MARCH_NATIVE)
+  set(GTSAM_POINTS_WITH_MARCH_NATIVE 1)
   add_compile_options(-march=native)
   set(CMAKE_C_FLAGS "-march=native ${CMAKE_C_FLAGS}")
   set(CMAKE_CXX_FLAGS "-march=native ${CMAKE_CXX_FLAGS}")
@@ -26,8 +29,17 @@ endif()
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(GTSAM REQUIRED)
-find_package(OpenMP REQUIRED)
 find_package(Eigen3 REQUIRED)
+
+if(BUILD_WITH_TBB)
+  find_package(TBB REQUIRED)
+  set(GTSAM_POINTS_USE_TBB 1)
+endif()
+
+if(BUILD_WITH_OPENMP)
+  find_package(OpenMP REQUIRED)
+  set(GTSAM_POINTS_USE_OPENMP 1)
+endif()
 
 if(${BUILD_WITH_CUDA} AND ${EIGEN3_VERSION_STRING} AND ${EIGEN3_VERSION_STRING} VERSION_LESS "3.3.90")
   message(WARNING "Detected Eigen ${EIGEN3_VERSION_STRING} is not compatible with CUDA")
@@ -36,6 +48,7 @@ endif()
 
 # GPU-related
 if(BUILD_WITH_CUDA)
+  set(GTSAM_POINTS_USE_CUDA 1)
   add_definitions(-DBUILD_GTSAM_POINTS_GPU)
 
   find_package(CUDAToolkit REQUIRED)
@@ -105,6 +118,8 @@ if(ENABLE_COVERAGE)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 
+configure_file(include/gtsam_points/config.hpp.in include/gtsam_points/config.hpp)
+
 ###########
 ## Build ##
 ###########
@@ -115,6 +130,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/util/normal_estimation.cpp
   src/gtsam_points/util/bspline.cpp
   src/gtsam_points/util/continuous_trajectory.cpp
+  src/gtsam_points/util/parallelism.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
   src/gtsam_points/ann/intensity_kdtree.cpp
@@ -158,6 +174,7 @@ add_library(gtsam_points SHARED
 target_include_directories(gtsam_points PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/nanoflann/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
 target_link_libraries(gtsam_points
@@ -165,7 +182,8 @@ target_link_libraries(gtsam_points
   Boost::filesystem
   Eigen3::Eigen
   GTSAM::GTSAM
-  OpenMP::OpenMP_CXX
+  $<TARGET_NAME_IF_EXISTS:TBB::tbb>
+  $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
 )
 
 # GPU-related
@@ -206,11 +224,12 @@ if(BUILD_WITH_CUDA)
     $<INSTALL_INTERFACE:include>
   )
   target_link_libraries(gtsam_points_cuda
+    CUDA::cudart
     Boost::boost
     Eigen3::Eigen
     GTSAM::GTSAM
-    OpenMP::OpenMP_CXX
-    CUDA::cudart
+    $<TARGET_NAME_IF_EXISTS:TBB::tbb>
+    $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
   )
 
   target_link_libraries(gtsam_points
@@ -274,7 +293,10 @@ endif()
 #############
 
 include(GNUInstallDirs)
-install(DIRECTORY include/ thirdparty/nanoflann/include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+  DIRECTORY include/ thirdparty/nanoflann/include/ ${CMAKE_CURRENT_BINARY_DIR}/include/
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+)
 
 list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points)
 if(BUILD_WITH_CUDA)

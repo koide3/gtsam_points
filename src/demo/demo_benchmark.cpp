@@ -6,6 +6,7 @@
 #include <boost/format.hpp>
 
 #include <gtsam/nonlinear/Values.h>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/factors/integrated_gicp_factor.hpp>
@@ -14,7 +15,7 @@
 #include <gtsam_points/util/covariance_estimation.hpp>
 #include <gtsam_points/util/read_points.hpp>
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
 #include <gtsam_points/types/point_cloud_gpu.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
 #include <gtsam_points/cuda/stream_temp_buffer_roundrobin.hpp>
@@ -137,7 +138,7 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
       frame->add_covs(gtsam_points::estimate_covariances(frame->points, frame->size(), 10, num_threads));
       frames.emplace_back(frame);
     } else {
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       auto frame = std::make_shared<gtsam_points::PointCloudGPU>(points);
       frame->add_covs(gtsam_points::estimate_covariances(frame->points, frame->size(), 10, num_threads));
       frames.emplace_back(frame);
@@ -162,7 +163,7 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
     }
     stopwatch.stop("voxelmap creation");
   } else if (factor_type == "VGICP_GPU") {
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
     stopwatch.start();
     for (int i = 0; i < 5; i++) {
       voxels.emplace_back(std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0));
@@ -176,7 +177,7 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
     std::cerr << "error: unknown factor type " << factor_type << std::endl;
   }
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
   gtsam_points::StreamTempBufferRoundRobin stream_buffer_roundrobin;
 #endif
 
@@ -194,7 +195,7 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
           factor->set_num_threads(num_threads);
           graph.add(factor);
         } else if (factor_type == "VGICP_GPU") {
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
           const auto stream_buffer = stream_buffer_roundrobin.get_stream_buffer();
           const auto stream = stream_buffer.first;
           const auto buffer = stream_buffer.second;
@@ -242,7 +243,7 @@ void print_info() {
     }
   }
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
   const auto cuda_devices = gtsam_points::cuda_device_names();
   for (int i = 0; i < cuda_devices.size(); i++) {
     std::cout << boost::format("GPU model%d : %s") % i % cuda_devices[i] << std::endl;
@@ -281,7 +282,7 @@ int main(int argc, char** argv) {
   benchmark_alignment("VGICP", max_num_threads, 10);
   std::cout << std::endl;
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
   benchmark_alignment("VGICP_GPU", 1, 1);
   benchmark_alignment("VGICP_GPU", max_num_threads, 1);
   benchmark_alignment("VGICP_GPU", max_num_threads, 10);

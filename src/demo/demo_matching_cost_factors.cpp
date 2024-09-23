@@ -8,14 +8,14 @@
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/util/read_points.hpp>
 #include <gtsam_points/util/normal_estimation.hpp>
 #include <gtsam_points/util/covariance_estimation.hpp>
-
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
 #include <gtsam_points/types/point_cloud_gpu.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
 #include <gtsam_points/cuda/nonlinear_factor_set_gpu_create.hpp>
@@ -47,7 +47,7 @@ public:
       abort();
     }
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
     std::cout << "Register GPU linearization hook" << std::endl;
     gtsam_points::LinearizationHook::register_hook([] { return gtsam_points::create_nonlinear_factor_set_gpu(); });
 #endif
@@ -83,7 +83,7 @@ public:
       });
       auto covs = gtsam_points::estimate_covariances(points);
 
-#ifndef BUILD_GTSAM_POINTS_GPU
+#ifndef GTSAM_POINTS_USE_CUDA
       std::cout << "Create CPU frame" << std::endl;
       auto frame = std::make_shared<gtsam_points::PointCloudCPU>();
 #else
@@ -99,7 +99,7 @@ public:
       voxelmap->insert(*frame);
       voxelmaps[i] = voxelmap;
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(2.0);
       voxelmap_gpu->insert(*frame);
       voxelmaps_gpu[i] = voxelmap_gpu;
@@ -121,11 +121,12 @@ public:
     factor_types.push_back("ICP_PLANE");
     factor_types.push_back("GICP");
     factor_types.push_back("VGICP");
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
     factor_types.push_back("VGICP_GPU");
 #endif
 
     full_connection = true;
+    num_threads = 1;
 
     correspondence_update_tolerance_rot = 0.0f;
     correspondence_update_tolerance_trans = 0.0f;
@@ -144,6 +145,7 @@ public:
       // Optimization configurations
       ImGui::Separator();
       ImGui::Checkbox("full connection", &full_connection);
+      ImGui::DragInt("num threads", &num_threads, 1, 1, 128);
       ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
       ImGui::Combo("optimizer type", &optimizer_type, optimizer_types.data(), optimizer_types.size());
 
@@ -202,19 +204,24 @@ public:
     if (factor_types[factor_type] == std::string("ICP")) {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("ICP_PLANE")) {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("GICP")) {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
+      factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("VGICP")) {
-      return gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
+      auto factor = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
+      factor->set_num_threads(num_threads);
+      return factor;
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       return gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap_gpu, source);
 #endif
     }
@@ -279,6 +286,7 @@ private:
   std::vector<const char*> factor_types;
   int factor_type;
   bool full_connection;
+  int num_threads;
 
   std::vector<const char*> optimizer_types;
   int optimizer_type;

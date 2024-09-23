@@ -5,9 +5,15 @@
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/HessianFactor.h>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
-
 #include <gtsam_points/types/frame_traits.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+#include <gtsam_points/factors/impl/scan_matching_reduction.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
@@ -102,19 +108,24 @@ IntegratedICPFactor_<TargetFrame, SourceFrame>::~IntegratedICPFactor_() {}
 
 template <typename TargetFrame, typename SourceFrame>
 void IntegratedICPFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+  bool do_update = true;
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
     double diff_rot = Eigen::AngleAxisd(diff.linear()).angle();
     double diff_trans = diff.translation().norm();
     if (diff_rot < correspondence_update_tolerance_rot && diff_trans < correspondence_update_tolerance_trans) {
-      return;
+      do_update = false;
     }
   }
 
+  if (!do_update) {
+    return;
+  }
+
+  last_correspondence_point = delta;
   correspondences.resize(frame::size(*source));
 
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](int i) {
     Eigen::Vector4d pt = delta * frame::point(*source, i);
 
     size_t k_index = -1;
@@ -126,9 +137,25 @@ void IntegratedICPFactor_<TargetFrame, SourceFrame>::update_correspondences(cons
     } else {
       correspondences[i] = k_index;
     }
-  }
+  };
 
-  last_correspondence_point = delta;
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame::size(*source); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
+  }
 }
 
 template <typename TargetFrame, typename SourceFrame>
@@ -144,45 +171,32 @@ double IntegratedICPFactor_<TargetFrame, SourceFrame>::evaluate(
     update_correspondences(delta);
   }
 
-  //
-  double sum_errors = 0.0;
-
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target;
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_source;
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target_source;
-  std::vector<Eigen::Matrix<double, 6, 1>> bs_target;
-  std::vector<Eigen::Matrix<double, 6, 1>> bs_source;
-
-  if (H_target && H_source && H_target_source && b_target && b_source) {
-    Hs_target.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    Hs_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    Hs_target_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    bs_target.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
-    bs_source.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
-  }
-
-#pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](
+                               int i,
+                               Eigen::Matrix<double, 6, 6>* H_target,
+                               Eigen::Matrix<double, 6, 6>* H_source,
+                               Eigen::Matrix<double, 6, 6>* H_target_source,
+                               Eigen::Matrix<double, 6, 1>* b_target,
+                               Eigen::Matrix<double, 6, 1>* b_source) {
     long target_index = correspondences[i];
     if (target_index < 0) {
-      continue;
+      return 0.0;
     }
 
     const auto& mean_A = frame::point(*source, i);
     const auto& mean_B = frame::point(*target, target_index);
 
-    Eigen::Vector4d transed_mean_A = delta * mean_A;
-    Eigen::Vector4d error = mean_B - transed_mean_A;
+    const Eigen::Vector4d transed_mean_A = delta * mean_A;
+    Eigen::Vector4d residual = mean_B - transed_mean_A;
 
     if (use_point_to_plane) {
       const auto& normal_B = frame::normal(*target, target_index);
-      error = normal_B.array() * error.array();
+      residual = normal_B.array() * residual.array();
     }
 
-    sum_errors += 0.5 * error.transpose() * error;
-
-    if (Hs_target.empty()) {
-      continue;
+    const double error = 0.5 * residual.transpose() * residual;
+    if (H_target == nullptr) {
+      return error;
     }
 
     Eigen::Matrix<double, 4, 6> J_target = Eigen::Matrix<double, 4, 6>::Zero();
@@ -199,35 +213,20 @@ double IntegratedICPFactor_<TargetFrame, SourceFrame>::evaluate(
       J_source = normal_B.asDiagonal() * J_source;
     }
 
-    int thread_num = 0;
-#ifdef _OPENMP
-    thread_num = omp_get_thread_num();
-#endif
+    *H_target += J_target.transpose() * J_target;
+    *H_source += J_source.transpose() * J_source;
+    *H_target_source += J_target.transpose() * J_source;
+    *b_target += J_target.transpose() * residual;
+    *b_source += J_source.transpose() * residual;
 
-    Hs_target[thread_num] += J_target.transpose() * J_target;
-    Hs_source[thread_num] += J_source.transpose() * J_source;
-    Hs_target_source[thread_num] += J_target.transpose() * J_source;
-    bs_target[thread_num] += J_target.transpose() * error;
-    bs_source[thread_num] += J_source.transpose() * error;
+    return error;
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+    return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
+  } else {
+    return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);
   }
-
-  if (H_target && H_source && H_target_source && b_target && b_source) {
-    H_target->setZero();
-    H_source->setZero();
-    H_target_source->setZero();
-    b_target->setZero();
-    b_source->setZero();
-
-    for (int i = 0; i < num_threads; i++) {
-      (*H_target) += Hs_target[i];
-      (*H_source) += Hs_source[i];
-      (*H_target_source) += Hs_target_source[i];
-      (*b_target) += bs_target[i];
-      (*b_source) += bs_source[i];
-    }
-  }
-
-  return sum_errors;
 }
 
 }  // namespace gtsam_points

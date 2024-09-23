@@ -4,7 +4,14 @@
 #include <gtsam_points/factors/integrated_loam_factor.hpp>
 
 #include <gtsam/geometry/SO3.h>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+#include <gtsam_points/factors/impl/scan_matching_reduction.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
@@ -62,10 +69,10 @@ void IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::update_corresponde
     }
   }
 
+  last_correspondence_point = delta;
   correspondences.resize(frame::size(*source));
 
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](int i) {
     Eigen::Vector4d pt = delta * frame::point(*source, i);
 
     std::array<size_t, 3> k_indices;
@@ -77,9 +84,25 @@ void IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::update_corresponde
     } else {
       correspondences[i] = std::make_tuple(k_indices[0], k_indices[1], k_indices[2]);
     }
-  }
+  };
 
-  last_correspondence_point = delta;
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame::size(*source); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
+  }
 }
 
 template <typename TargetFrame, typename SourceFrame>
@@ -95,28 +118,16 @@ double IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::evaluate(
     update_correspondences(delta);
   }
 
-  //
-  double sum_errors = 0.0;
-
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target;
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_source;
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target_source;
-  std::vector<Eigen::Matrix<double, 6, 1>> bs_target;
-  std::vector<Eigen::Matrix<double, 6, 1>> bs_source;
-
-  if (H_target && H_source && H_target_source && b_target && b_source) {
-    Hs_target.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    Hs_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    Hs_target_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    bs_target.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
-    bs_source.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
-  }
-
-#pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](
+                               int i,
+                               Eigen::Matrix<double, 6, 6>* H_target,
+                               Eigen::Matrix<double, 6, 6>* H_source,
+                               Eigen::Matrix<double, 6, 6>* H_target_source,
+                               Eigen::Matrix<double, 6, 1>* b_target,
+                               Eigen::Matrix<double, 6, 1>* b_source) {
     auto target_indices = correspondences[i];
     if (std::get<0>(target_indices) < 0) {
-      continue;
+      return 0.0;
     }
 
     const auto& x_i = frame::point(*source, i);
@@ -129,12 +140,12 @@ double IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::evaluate(
     normal.head<3>() = (x_j - x_l).template head<3>().cross((x_j - x_m).template head<3>());
     normal = normal / normal.norm();
 
-    Eigen::Vector4d error = x_j - transed_x_i;
-    Eigen::Vector4d plane_error = error.array() * normal.array();
-    sum_errors += 0.5 * plane_error.transpose() * plane_error;
+    Eigen::Vector4d residual = x_j - transed_x_i;
+    Eigen::Vector4d plane_residual = residual.array() * normal.array();
+    const double error = 0.5 * plane_residual.transpose() * plane_residual;
 
-    if (Hs_target.empty()) {
-      continue;
+    if (H_target == nullptr) {
+      return error;
     }
 
     Eigen::Matrix<double, 4, 6> J_target = Eigen::Matrix<double, 4, 6>::Zero();
@@ -148,35 +159,20 @@ double IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::evaluate(
     J_target = normal.asDiagonal() * J_target;
     J_source = normal.asDiagonal() * J_source;
 
-    int thread_num = 0;
-#ifdef _OPENMP
-    thread_num = omp_get_thread_num();
-#endif
+    *H_target += J_target.transpose() * J_target;
+    *H_source += J_source.transpose() * J_source;
+    *H_target_source += J_target.transpose() * J_source;
+    *b_target += J_target.transpose() * plane_residual;
+    *b_source += J_source.transpose() * plane_residual;
 
-    Hs_target[thread_num] += J_target.transpose() * J_target;
-    Hs_source[thread_num] += J_source.transpose() * J_source;
-    Hs_target_source[thread_num] += J_target.transpose() * J_source;
-    bs_target[thread_num] += J_target.transpose() * plane_error;
-    bs_source[thread_num] += J_source.transpose() * plane_error;
+    return error;
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+    return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
+  } else {
+    return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);
   }
-
-  if (H_target && H_source && H_target_source && b_target && b_source) {
-    H_target->setZero();
-    H_source->setZero();
-    H_target_source->setZero();
-    b_target->setZero();
-    b_source->setZero();
-
-    for (int i = 0; i < num_threads; i++) {
-      (*H_target) += Hs_target[i];
-      (*H_source) += Hs_source[i];
-      (*H_target_source) += Hs_target_source[i];
-      (*b_target) += bs_target[i];
-      (*b_source) += bs_source[i];
-    }
-  }
-
-  return sum_errors;
 }
 
 template <typename TargetFrame, typename SourceFrame>
@@ -229,9 +225,9 @@ void IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::update_corresponden
   }
 
   correspondences.resize(frame::size(*source));
+  last_correspondence_point = delta;
 
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](int i) {
     Eigen::Vector4d pt = delta * frame::point(*source, i);
 
     std::array<size_t, 2> k_indices;
@@ -243,9 +239,25 @@ void IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::update_corresponden
     } else {
       correspondences[i] = std::make_tuple(k_indices[0], k_indices[1]);
     }
-  }
+  };
 
-  last_correspondence_point = delta;
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame::size(*source); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
+  }
 }
 
 template <typename TargetFrame, typename SourceFrame>
@@ -261,28 +273,16 @@ double IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::evaluate(
     update_correspondences(delta);
   }
 
-  //
-  double sum_errors = 0.0;
-
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target;
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_source;
-  std::vector<Eigen::Matrix<double, 6, 6>> Hs_target_source;
-  std::vector<Eigen::Matrix<double, 6, 1>> bs_target;
-  std::vector<Eigen::Matrix<double, 6, 1>> bs_source;
-
-  if (H_target && H_source && H_target_source && b_target && b_source) {
-    Hs_target.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    Hs_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    Hs_target_source.resize(num_threads, Eigen::Matrix<double, 6, 6>::Zero());
-    bs_target.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
-    bs_source.resize(num_threads, Eigen::Matrix<double, 6, 1>::Zero());
-  }
-
-#pragma omp parallel for num_threads(num_threads) reduction(+ : sum_errors) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](
+                               int i,
+                               Eigen::Matrix<double, 6, 6>* H_target,
+                               Eigen::Matrix<double, 6, 6>* H_source,
+                               Eigen::Matrix<double, 6, 6>* H_target_source,
+                               Eigen::Matrix<double, 6, 1>* b_target,
+                               Eigen::Matrix<double, 6, 1>* b_source) {
     auto target_indices = correspondences[i];
     if (std::get<0>(target_indices) < 0) {
-      continue;
+      return 0.0;
     }
 
     const auto& x_i = frame::point(*source, i);
@@ -295,12 +295,12 @@ double IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::evaluate(
     Eigen::Vector4d x_ij = transed_x_i - x_j;
     Eigen::Vector4d x_il = transed_x_i - x_l;
 
-    Eigen::Vector4d error = Eigen::Vector4d::Zero();
-    error.head<3>() = x_ij.head<3>().cross(x_il.head<3>()) * c_inv;
-    sum_errors += 0.5 * error.dot(error);
+    Eigen::Vector4d residual = Eigen::Vector4d::Zero();
+    residual.head<3>() = x_ij.head<3>().cross(x_il.head<3>()) * c_inv;
+    const double error = 0.5 * residual.dot(residual);
 
-    if (Hs_target.empty()) {
-      continue;
+    if (H_target == nullptr) {
+      return error;
     }
 
     Eigen::Matrix<double, 4, 6> J_target = Eigen::Matrix<double, 4, 6>::Zero();
@@ -319,35 +319,20 @@ double IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::evaluate(
     J_target = c_inv * J_e * J_target;
     J_source = c_inv * J_e * J_source;
 
-    int thread_num = 0;
-#ifdef _OPENMP
-    thread_num = omp_get_thread_num();
-#endif
+    *H_target += J_target.transpose() * J_target;
+    *H_source += J_source.transpose() * J_source;
+    *H_target_source += J_target.transpose() * J_source;
+    *b_target += J_target.transpose() * residual;
+    *b_source += J_source.transpose() * residual;
 
-    Hs_target[thread_num] += J_target.transpose() * J_target;
-    Hs_source[thread_num] += J_source.transpose() * J_source;
-    Hs_target_source[thread_num] += J_target.transpose() * J_source;
-    bs_target[thread_num] += J_target.transpose() * error;
-    bs_source[thread_num] += J_source.transpose() * error;
+    return error;
+  };
+
+  if (is_omp_default()|| num_threads == 1) {
+    return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
+  } else {
+    return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);
   }
-
-  if (H_target && H_source && H_target_source && b_target && b_source) {
-    H_target->setZero();
-    H_source->setZero();
-    H_target_source->setZero();
-    b_target->setZero();
-    b_source->setZero();
-
-    for (int i = 0; i < num_threads; i++) {
-      (*H_target) += Hs_target[i];
-      (*H_source) += Hs_source[i];
-      (*H_target_source) += Hs_target_source[i];
-      (*b_target) += bs_target[i];
-      (*b_source) += bs_source[i];
-    }
-  }
-
-  return sum_errors;
 }
 
 template <typename TargetFrame, typename SourceFrame>

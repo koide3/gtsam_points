@@ -11,10 +11,17 @@
 #include <boost/filesystem.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/util/sort_omp.hpp>
 #include <gtsam_points/util/fast_floor.hpp>
 #include <gtsam_points/util/vector3i_hash.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#include <tbb/parallel_sort.h>
+#endif
 
 namespace gtsam_points {
 
@@ -400,18 +407,15 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
   const double inv_resolution = 1.0 / voxel_resolution;
 
   std::vector<std::pair<std::uint64_t, size_t>> coord_pt(frame->size());
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
-  for (std::int64_t i = 0; i < frame->size(); i++) {
+  const auto calc_coord = [&](std::int64_t i) -> std::uint64_t {
     if (!frame->points[i].array().isFinite().all()) {
-      coord_pt[i] = {invalid_coord, i};
-      continue;
+      return invalid_coord;
     }
 
     const Eigen::Array4i coord = fast_floor(frame->points[i] * inv_resolution) + coord_offset;
     if ((coord < 0).any() || (coord > coord_bit_mask).any()) {
       std::cerr << "warning: voxel coord is out of range!!" << std::endl;
-      coord_pt[i] = {invalid_coord, i};
-      continue;
+      return invalid_coord;
     }
 
     // Compute voxel coord bits (0|1bit, z|21bit, y|21bit, x|21bit)
@@ -419,11 +423,31 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
       (static_cast<std::uint64_t>(coord[0] & coord_bit_mask) << (coord_bit_size * 0)) |  //
       (static_cast<std::uint64_t>(coord[1] & coord_bit_mask) << (coord_bit_size * 1)) |  //
       (static_cast<std::uint64_t>(coord[2] & coord_bit_mask) << (coord_bit_size * 2));
-    coord_pt[i] = {bits, i};
-  }
+    return bits;
+  };
 
-  // Sort by voxel coords
-  quick_sort_omp(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; }, num_threads);
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
+    for (std::int64_t i = 0; i < frame->size(); i++) {
+      coord_pt[i] = {calc_coord(i), i};
+    }
+    // Sort by voxel coords
+    quick_sort_omp(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; }, num_threads);
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<std::int64_t>(0, frame->size(), 32), [&](const tbb::blocked_range<std::int64_t>& range) {
+      for (std::int64_t i = range.begin(); i < range.end(); i++) {
+        coord_pt[i] = {calc_coord(i), i};
+      }
+    });
+
+    // Sort by voxel coords
+    tbb::parallel_sort(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
+  }
 
   PointCloudCPU::Ptr downsampled(new PointCloudCPU);
   downsampled->points_storage.resize(frame->size());
@@ -443,8 +467,7 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
   const int block_size = 1024;
   std::atomic_uint64_t num_points = 0;
 
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 4)
-  for (std::int64_t block_begin = 0; block_begin < coord_pt.size(); block_begin += block_size) {
+  const auto perblock_task = [&](std::int64_t block_begin) {
     std::vector<std::pair<std::uint64_t, size_t>*> sub_blocks;
     sub_blocks.reserve(block_size);
 
@@ -498,6 +521,25 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
         downsampled->intensities_storage[point_index_begin + i] = intensity_average.average();
       }
     }
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 4)
+    for (std::int64_t block_begin = 0; block_begin < coord_pt.size(); block_begin += block_size) {
+      perblock_task(block_begin);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    const size_t num_blocks = (coord_pt.size() + block_size - 1) / block_size;
+    tbb::parallel_for(tbb::blocked_range<std::int64_t>(0, num_blocks), [&](const tbb::blocked_range<std::int64_t>& range) {
+      for (std::int64_t block_begin = range.begin() * block_size; block_begin < range.end() * block_size; block_begin += block_size) {
+        perblock_task(block_begin);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 
   downsampled->num_points = num_points;
@@ -545,19 +587,15 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
   constexpr int coord_offset = 1 << (coord_bit_size - 1);  // Coordinate offset to make values positive
   const double inv_resolution = 1.0 / voxel_resolution;
 
-  std::vector<std::pair<std::uint64_t, size_t>> coord_pt(frame->size());
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
-  for (std::int64_t i = 0; i < frame->size(); i++) {
+  const auto calc_coord = [&](std::int64_t i) -> std::uint64_t {
     if (!frame->points[i].array().isFinite().all()) {
-      coord_pt[i] = {invalid_coord, i};
-      continue;
+      return invalid_coord;
     }
 
     const Eigen::Array4i coord = fast_floor(frame->points[i] * inv_resolution) + coord_offset;
     if ((coord < 0).any() || (coord > coord_bit_mask).any()) {
       std::cerr << "warning: voxel coord is out of range!!" << std::endl;
-      coord_pt[i] = {invalid_coord, i};
-      continue;
+      return invalid_coord;
     }
 
     // Compute voxel coord bits (0|1bit, z|21bit, y|21bit, x|21bit)
@@ -565,18 +603,54 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
       (static_cast<std::uint64_t>(coord[0] & coord_bit_mask) << (coord_bit_size * 0)) |  //
       (static_cast<std::uint64_t>(coord[1] & coord_bit_mask) << (coord_bit_size * 1)) |  //
       (static_cast<std::uint64_t>(coord[2] & coord_bit_mask) << (coord_bit_size * 2));
-    coord_pt[i] = {bits, i};
-  }
-
-  // Sort by voxel coords
-  quick_sort_omp(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; }, num_threads);
+    return bits;
+  };
 
   size_t num_voxels = 0;
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 128) reduction(+ : num_voxels)
-  for (size_t i = 1; i < coord_pt.size(); i++) {
-    if (coord_pt[i - 1].first != coord_pt[i].first) {
-      num_voxels++;
+  std::vector<std::pair<std::uint64_t, size_t>> coord_pt(frame->size());
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 32)
+    for (std::int64_t i = 0; i < frame->size(); i++) {
+      coord_pt[i] = {calc_coord(i), i};
     }
+
+    // Sort by voxel coords
+    quick_sort_omp(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; }, num_threads);
+
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 128) reduction(+ : num_voxels)
+    for (size_t i = 1; i < coord_pt.size(); i++) {
+      if (coord_pt[i - 1].first != coord_pt[i].first) {
+        num_voxels++;
+      }
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<std::int64_t>(0, frame->size(), 32), [&](const tbb::blocked_range<std::int64_t>& range) {
+      for (std::int64_t i = range.begin(); i < range.end(); i++) {
+        coord_pt[i] = {calc_coord(i), i};
+      }
+    });
+
+    // Sort by voxel coords
+    tbb::parallel_sort(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
+
+    std::atomic_uint64_t num_voxels_ = 0;
+    tbb::parallel_for(tbb::blocked_range<std::int64_t>(1, coord_pt.size(), 128), [&](const tbb::blocked_range<std::int64_t>& range) {
+      size_t local_num_voxels = 0;
+      for (size_t i = range.begin(); i < range.end(); i++) {
+        if (coord_pt[i - 1].first != coord_pt[i].first) {
+          local_num_voxels++;
+        }
+      }
+      num_voxels_ += local_num_voxels;
+    });
+
+    num_voxels = num_voxels_;
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 
   const size_t points_per_voxel = std::ceil((sampling_rate * frame->size()) / num_voxels);
@@ -590,8 +664,7 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
 
   std::vector<int> indices(frame->size());
 
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 4)
-  for (std::int64_t block_begin = 0; block_begin < coord_pt.size(); block_begin += block_size) {
+  const auto perblock_task = [&](std::int64_t block_begin) {
     std::vector<size_t> sub_indices;
     sub_indices.reserve(block_size);
 
@@ -602,7 +675,11 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
       if (block_indices.size() < points_per_voxel) {
         sub_indices.insert(sub_indices.end(), block_indices.begin(), block_indices.end());
       } else {
-        std::sample(block_indices.begin(), block_indices.end(), std::back_inserter(sub_indices), points_per_voxel, mts[omp_get_thread_num()]);
+        int thread_num = 0;
+#ifdef _OPENMP
+        thread_num = omp_get_thread_num();
+#endif
+        std::sample(block_indices.begin(), block_indices.end(), std::back_inserter(sub_indices), points_per_voxel, mts[thread_num]);
       }
       block_indices.clear();
     };
@@ -620,6 +697,26 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
     flush_block_indices();
 
     std::copy(sub_indices.begin(), sub_indices.end(), indices.begin() + num_points.fetch_add(sub_indices.size()));
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 4)
+    for (std::int64_t block_begin = 0; block_begin < coord_pt.size(); block_begin += block_size) {
+      perblock_task(block_begin);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    const size_t num_blocks = (coord_pt.size() + block_size - 1) / block_size;
+    tbb::parallel_for(tbb::blocked_range<std::int64_t>(0, num_blocks), [&](const tbb::blocked_range<std::int64_t>& range) {
+      for (std::int64_t block_begin = range.begin() * block_size; block_begin < range.end() * block_size; block_begin += block_size) {
+        perblock_task(block_begin);
+      }
+    });
+
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 
   indices.resize(num_points);
@@ -803,14 +900,29 @@ PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& frame, const int 
 
   std::vector<int> neighbors(frame->size() * k, -1);
 
-#pragma omp parallel for schedule(guided, 8) num_threads(num_threads)
-  for (int i = 0; i < frame->size(); i++) {
+  const auto perpoint_task = [&](int i) {
     std::vector<size_t> k_neighbors(k);
     std::vector<double> k_sq_dists(k);
-
     kdtree.knn_search(frame->points[i].data(), k, k_neighbors.data(), k_sq_dists.data());
-
     std::copy(k_neighbors.begin(), k_neighbors.end(), neighbors.begin() + i * k);
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for schedule(guided, 8) num_threads(num_threads)
+    for (int i = 0; i < frame->size(); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame->size(), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i != range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error : TBB is not available" << std::endl;
+    abort();
+#endif
   }
 
   return remove_outliers(frame, neighbors, k, std_thresh);

@@ -4,6 +4,12 @@
 #include <gtsam_points/factors/intensity_gradients_ivox.hpp>
 
 #include <Eigen/Eigen>
+#include <gtsam_points/config.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
@@ -44,9 +50,7 @@ void IntensityGradientsiVox::insert(const PointCloud& frame) {
     grads[voxel.second->serial_id] = found->second;
   }
 
-  // Add new points and estimate their normal and gradients
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
-  for (int i = 0; i < flat_voxels.size(); i++) {
+  const auto pervoxel_task = [&](int i) {
     const auto& voxel = flat_voxels[i];
     const auto& gradients = flat_grads[i];
     gradients->points.reserve(voxel.second->size());
@@ -66,6 +70,25 @@ void IntensityGradientsiVox::insert(const PointCloud& frame) {
       gradients->normals.push_back(normal);
       gradients->points.push_back(gradient);
     }
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+    // Add new points and estimate their normal and gradients
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
+    for (int i = 0; i < flat_voxels.size(); i++) {
+      pervoxel_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, flat_voxels.size(), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        pervoxel_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 }
 

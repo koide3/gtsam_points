@@ -4,7 +4,14 @@
 #include <gtsam_points/factors/integrated_ct_icp_factor.hpp>
 
 #include <gtsam/linear/HessianFactor.h>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+#include <gtsam_points/factors/impl/scan_matching_reduction.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
@@ -72,11 +79,16 @@ double IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Val
     update_correspondences();
   }
 
-  double sum_errors = 0.0;
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](
+                               int i,
+                               Eigen::Matrix<double, 6, 6>* H_target,
+                               Eigen::Matrix<double, 6, 6>* H_source,
+                               Eigen::Matrix<double, 6, 6>* H_target_source,
+                               Eigen::Matrix<double, 6, 1>* b_target,
+                               Eigen::Matrix<double, 6, 1>* b_source) {
     const long target_index = correspondences[i];
     if (target_index < 0) {
-      continue;
+      return 0.0;
     }
 
     const int time_index = time_indices[i];
@@ -90,10 +102,14 @@ double IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Val
     gtsam::Point3 residual = transed_source_pt - target_pt.template head<3>();
     double error = gtsam::dot(residual, target_normal.template head<3>());
 
-    sum_errors += 0.5 * error * error;
-  }
+    return 0.5 * error * error;
+  };
 
-  return sum_errors;
+  if (is_omp_default() || num_threads == 1) {
+    return scan_matching_reduce_omp(perpoint_task, frame::size(*this->source), this->num_threads, nullptr, nullptr, nullptr, nullptr, nullptr);
+  } else {
+    return scan_matching_reduce_tbb(perpoint_task, frame::size(*this->source), nullptr, nullptr, nullptr, nullptr, nullptr);
+  }
 }
 
 template <typename TargetFrame, typename SourceFrame>
@@ -106,17 +122,16 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor_<TargetFrame, So
   update_poses(values);
   update_correspondences();
 
-  double sum_errors = 0.0;
-  gtsam::Matrix6 H_00 = gtsam::Matrix6::Zero();
-  gtsam::Matrix6 H_01 = gtsam::Matrix6::Zero();
-  gtsam::Matrix6 H_11 = gtsam::Matrix6::Zero();
-  gtsam::Vector6 b_0 = gtsam::Vector6::Zero();
-  gtsam::Vector6 b_1 = gtsam::Vector6::Zero();
-
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](
+                               int i,
+                               Eigen::Matrix<double, 6, 6>* H_00,
+                               Eigen::Matrix<double, 6, 6>* H_11,
+                               Eigen::Matrix<double, 6, 6>* H_01,
+                               Eigen::Matrix<double, 6, 1>* b_0,
+                               Eigen::Matrix<double, 6, 1>* b_1) {
     const long target_index = correspondences[i];
     if (target_index < 0) {
-      continue;
+      return 0.0;
     }
 
     const int time_index = time_indices[i];
@@ -141,15 +156,29 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor_<TargetFrame, So
     gtsam::Matrix16 H_0 = H_error_pose * H_pose_0;
     gtsam::Matrix16 H_1 = H_error_pose * H_pose_1;
 
-    sum_errors += 0.5 * error * error;
-    H_00 += H_0.transpose() * H_0;
-    H_11 += H_1.transpose() * H_1;
-    H_01 += H_0.transpose() * H_1;
-    b_0 += H_0.transpose() * error;
-    b_1 += H_1.transpose() * error;
+    *H_00 += H_0.transpose() * H_0;
+    *H_11 += H_1.transpose() * H_1;
+    *H_01 += H_0.transpose() * H_1;
+    *b_0 += H_0.transpose() * error;
+    *b_1 += H_1.transpose() * error;
+
+    return 0.5 * error * error;
+  };
+
+  double error = 0.0;
+  gtsam::Matrix6 H_00;
+  gtsam::Matrix6 H_01;
+  gtsam::Matrix6 H_11;
+  gtsam::Vector6 b_0;
+  gtsam::Vector6 b_1;
+
+  if (is_omp_default() || num_threads == 1) {
+    error = scan_matching_reduce_omp(perpoint_task, frame::size(*this->source), this->num_threads, &H_00, &H_11, &H_01, &b_0, &b_1);
+  } else {
+    error = scan_matching_reduce_tbb(perpoint_task, frame::size(*this->source), &H_00, &H_11, &H_01, &b_0, &b_1);
   }
 
-  auto factor = gtsam::HessianFactor::shared_ptr(new gtsam::HessianFactor(keys_[0], keys_[1], H_00, H_01, -b_0, H_11, -b_1, sum_errors));
+  auto factor = gtsam::HessianFactor::shared_ptr(new gtsam::HessianFactor(this->keys_[0], this->keys_[1], H_00, H_01, -b_0, H_11, -b_1, error));
   return factor;
 }
 
@@ -188,7 +217,7 @@ template <typename TargetFrame, typename SourceFrame>
 void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::update_correspondences() const {
   correspondences.resize(frame::size(*source));
 
-  for (int i = 0; i < frame::size(*source); i++) {
+  const auto perpoint_task = [&](int i) {
     const int time_index = time_indices[i];
 
     const auto& pt = frame::point(*source, i);
@@ -203,6 +232,24 @@ void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::update_correspondences()
     } else {
       correspondences[i] = k_index;
     }
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(this->num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame::size(*this->source); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*this->source), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 }
 

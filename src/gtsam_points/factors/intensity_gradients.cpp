@@ -6,7 +6,14 @@
 #include <Eigen/Eigen>
 
 #include <iostream>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+#include <gtsam_points/types/frame_traits.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
@@ -72,8 +79,7 @@ IntensityGradients::Ptr IntensityGradients::estimate(const PointCloud::ConstPtr&
   IntensityGradients::Ptr gradients(new IntensityGradients);
   gradients->intensity_gradients.resize(frame::size(*frame));
 
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
-  for (int i = 0; i < frame::size(*frame); i++) {
+  const auto perpoint_task = [&](int i) {
     std::vector<size_t> k_indices(k_neighbors);
     std::vector<double> k_sq_dists(k_neighbors);
     kdtree.knn_search(frame::point(*frame, i).data(), k_neighbors, k_indices.data(), k_sq_dists.data());
@@ -103,6 +109,24 @@ IntensityGradients::Ptr IntensityGradients::estimate(const PointCloud::ConstPtr&
     Eigen::Matrix3d H = (A.transpose() * A).block<3, 3>(0, 0);
     Eigen::Vector3d e = (A.transpose() * b).head<3>();
     gradients->intensity_gradients[i] << H.inverse() * e, 0.0;
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame->size(); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame->size(), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 
   return gradients;
@@ -130,8 +154,7 @@ IntensityGradients::estimate(const gtsam_points::PointCloudCPU::Ptr& frame, int 
 
   const int k_neighbors = std::max(k_geom_neighbors, k_photo_neighbors);
 
-#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
-  for (int i = 0; i < frame->size(); i++) {
+  const auto perpoint_task = [&](int i) {
     std::vector<size_t> k_indices(k_neighbors);
     std::vector<double> k_sq_dists(k_neighbors);
     kdtree.knn_search(frame->points[i].data(), k_neighbors, k_indices.data(), k_sq_dists.data());
@@ -195,6 +218,24 @@ IntensityGradients::estimate(const gtsam_points::PointCloudCPU::Ptr& frame, int 
     Eigen::Matrix3d H = (A.transpose() * A).block<3, 3>(0, 0);
     Eigen::Vector3d e = (A.transpose() * b).head<3>();
     gradients->intensity_gradients[i] << H.inverse() * e, 0.0;
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(num_threads) schedule(guided, 8)
+    for (int i = 0; i < frame->size(); i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, frame->size(), 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 
   return gradients;

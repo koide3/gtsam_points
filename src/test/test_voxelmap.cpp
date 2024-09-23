@@ -7,6 +7,7 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/Values.h>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/util/read_points.hpp>
 #include <gtsam_points/util/covariance_estimation.hpp>
 #include <gtsam_points/util/easy_profiler.hpp>
@@ -57,7 +58,7 @@ struct VoxelMapTestBase : public testing::Test {
       frame->add_covs(gtsam_points::estimate_covariances(frame->points, frame->size()));
       frames.push_back(frame);
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       frames.back() = gtsam_points::PointCloudGPU::clone(*frames.back());
 #endif
 
@@ -65,7 +66,7 @@ struct VoxelMapTestBase : public testing::Test {
       voxelmap->insert(*frames.back());
       voxelmaps.push_back(voxelmap);
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
       voxelmap_gpu->insert(*frames.back());
       voxelmaps_gpu.push_back(voxelmap_gpu);
@@ -163,7 +164,7 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
   validate_frame(merged2);
 }
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
 
 TEST_F(VoxelMapTestBase, VoxelMapGPU) {
   for (int i = 0; i < frames.size(); i++) {

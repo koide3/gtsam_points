@@ -7,9 +7,11 @@
 #include <iostream>
 #include <Eigen/Core>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/small_kdtree.hpp>
 #include <gtsam_points/types/frame_traits.hpp>
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
+#include <gtsam_points/util/parallelism.hpp>
 
 namespace gtsam_points {
 
@@ -24,7 +26,16 @@ public:
   KdTree2(const std::shared_ptr<const Frame>& frame, int build_num_threads = 1)
   : frame(frame),
     search_eps(-1.0),
-    index(new Index(*this->frame, KdTreeBuilderOMP(build_num_threads))) {
+    index(
+      is_omp_default() || build_num_threads == 1 ?                    //
+        new Index(*this->frame, KdTreeBuilderOMP(build_num_threads))  //
+                                                 :                    //
+#ifdef GTSAM_POINTS_USE_TBB                                           //
+        new Index(*this->frame, KdTreeBuilderTBB())                   //
+#else                                                                 //
+        new Index(*this->frame, KdTreeBuilder())
+#endif
+    ) {
     if (frame::size(*frame) == 0) {
       std::cerr << "error: empty frame is given for KdTree2" << std::endl;
       std::cerr << "     : frame::size() may not be implemented" << std::endl;

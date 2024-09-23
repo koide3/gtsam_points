@@ -5,7 +5,13 @@
 
 #include <Eigen/Eigen>
 #include <Eigen/Geometry>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 namespace gtsam_points {
 
@@ -13,8 +19,7 @@ std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points,
   KdTree tree(points, num_points, params.num_threads);
   std::vector<Eigen::Matrix4d> covs(num_points);
 
-#pragma omp parallel for num_threads(params.num_threads) schedule(guided, 8)
-  for (int i = 0; i < num_points; i++) {
+  const auto perpoint_task = [&](int i) {
     std::vector<size_t> k_indices(params.k_neighbors);
     std::vector<double> k_sq_dists(params.k_neighbors);
     size_t num_found = tree.knn_search(points[i].data(), params.k_neighbors, &k_indices[0], &k_sq_dists[0]);
@@ -22,7 +27,7 @@ std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points,
     if (num_found < params.k_neighbors) {
       std::cerr << "warning: fewer than k neighbors found for point " << i << std::endl;
       covs[i].setIdentity();
-      continue;
+      return;
     }
 
     Eigen::Vector4d sum_points = Eigen::Vector4d::Zero();
@@ -48,6 +53,24 @@ std::vector<Eigen::Matrix4d> estimate_covariances(const Eigen::Vector4d* points,
         covs[i].block<3, 3>(0, 0) = eig.eigenvectors() * params.eigen_values.asDiagonal() * eig.eigenvectors().inverse();
       } break;
     }
+  };
+
+  if (is_omp_default() || params.num_threads == 1) {
+#pragma omp parallel for num_threads(params.num_threads) schedule(guided, 8)
+    for (int i = 0; i < num_points; i++) {
+      perpoint_task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, num_points, 8), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        perpoint_task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 
   return covs;
