@@ -3,8 +3,9 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <gtsam_points/config.hpp>
 
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_reduce.h>
 #endif
@@ -66,7 +67,7 @@ double scan_matching_reduce_omp(
   return sum_errors;
 }
 
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
 
 template <typename Transform>
 struct ScanMatchingReductionTBBError {

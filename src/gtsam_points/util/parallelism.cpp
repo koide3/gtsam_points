@@ -3,6 +3,7 @@
 #include <gtsam_points/util/parallelism.hpp>
 
 #include <iostream>
+#include <gtsam_points/config.hpp>
 
 namespace gtsam_points {
 
@@ -23,7 +24,7 @@ void set_default_parallelism(ParallelismBackend parallelism) {
   }
 #endif
 
-#ifndef GTSAM_USE_TBB
+#ifndef GTSAM_POINTS_USE_TBB
   if (parallelism == ParallelismBackend::TBB) {
     std::cerr << "warning: Intel TBB is not available" << std::endl;
     return;

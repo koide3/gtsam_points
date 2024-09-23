@@ -11,13 +11,14 @@
 #include <boost/filesystem.hpp>
 #include <boost/iterator/counting_iterator.hpp>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/util/sort_omp.hpp>
 #include <gtsam_points/util/fast_floor.hpp>
 #include <gtsam_points/util/vector3i_hash.hpp>
 #include <gtsam_points/util/parallelism.hpp>
 
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
 #include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
 #endif
@@ -433,7 +434,7 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
     // Sort by voxel coords
     quick_sort_omp(coord_pt.begin(), coord_pt.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; }, num_threads);
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     tbb::parallel_for(tbb::blocked_range<std::int64_t>(0, frame->size(), 32), [&](const tbb::blocked_range<std::int64_t>& range) {
       for (std::int64_t i = range.begin(); i < range.end(); i++) {
         coord_pt[i] = {calc_coord(i), i};
@@ -528,7 +529,7 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
       perblock_task(block_begin);
     }
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     const size_t num_blocks = (coord_pt.size() + block_size - 1) / block_size;
     tbb::parallel_for(tbb::blocked_range<std::int64_t>(0, num_blocks), [&](const tbb::blocked_range<std::int64_t>& range) {
       for (std::int64_t block_begin = range.begin() * block_size; block_begin < range.end() * block_size; block_begin += block_size) {
@@ -624,7 +625,7 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
       }
     }
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     tbb::parallel_for(tbb::blocked_range<std::int64_t>(0, frame->size(), 32), [&](const tbb::blocked_range<std::int64_t>& range) {
       for (std::int64_t i = range.begin(); i < range.end(); i++) {
         coord_pt[i] = {calc_coord(i), i};
@@ -704,7 +705,7 @@ randomgrid_sampling(const PointCloud::ConstPtr& frame, const double voxel_resolu
       perblock_task(block_begin);
     }
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     const size_t num_blocks = (coord_pt.size() + block_size - 1) / block_size;
     tbb::parallel_for(tbb::blocked_range<std::int64_t>(0, num_blocks), [&](const tbb::blocked_range<std::int64_t>& range) {
       for (std::int64_t block_begin = range.begin() * block_size; block_begin < range.end() * block_size; block_begin += block_size) {
@@ -912,7 +913,7 @@ PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& frame, const int 
       perpoint_task(i);
     }
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     tbb::parallel_for(tbb::blocked_range<int>(0, frame->size(), 8), [&](const tbb::blocked_range<int>& range) {
       for (int i = range.begin(); i != range.end(); i++) {
         perpoint_task(i);

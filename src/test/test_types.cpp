@@ -4,6 +4,7 @@
 #include <boost/filesystem.hpp>
 
 #include <gtest/gtest.h>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/types/point_cloud_gpu.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
@@ -97,7 +98,7 @@ TEST(TestTypes, TestPointCloudCPU) {
   creation_test<double, 4>();
 }
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
 
 template <typename T, int D>
 void creation_test_gpu() {

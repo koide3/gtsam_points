@@ -6,11 +6,12 @@
 #include <Eigen/Eigen>
 
 #include <iostream>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
 #include <gtsam_points/util/parallelism.hpp>
 #include <gtsam_points/types/frame_traits.hpp>
 
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
 #include <tbb/parallel_for.h>
 #endif
 
@@ -116,7 +117,7 @@ IntensityGradients::Ptr IntensityGradients::estimate(const PointCloud::ConstPtr&
       perpoint_task(i);
     }
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     tbb::parallel_for(tbb::blocked_range<int>(0, frame->size(), 8), [&](const tbb::blocked_range<int>& range) {
       for (int i = range.begin(); i < range.end(); i++) {
         perpoint_task(i);
@@ -225,7 +226,7 @@ IntensityGradients::estimate(const gtsam_points::PointCloudCPU::Ptr& frame, int 
       perpoint_task(i);
     }
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     tbb::parallel_for(tbb::blocked_range<int>(0, frame->size(), 8), [&](const tbb::blocked_range<int>& range) {
       for (int i = range.begin(); i < range.end(); i++) {
         perpoint_task(i);

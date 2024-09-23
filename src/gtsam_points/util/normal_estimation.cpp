@@ -5,10 +5,11 @@
 
 #include <iostream>
 #include <Eigen/Eigen>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/util/covariance_estimation.hpp>
 #include <gtsam_points/util/parallelism.hpp>
 
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
 #include <tbb/parallel_for.h>
 #endif
 
@@ -33,7 +34,7 @@ std::vector<Eigen::Vector4d> estimate_normals(const Eigen::Vector4d* points, con
       perpoint_task(i);
     }
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     tbb::parallel_for(tbb::blocked_range<int>(0, num_points, 64), [&](const tbb::blocked_range<int>& range) {
       for (int i = range.begin(); i < range.end(); i++) {
         perpoint_task(i);

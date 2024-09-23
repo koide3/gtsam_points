@@ -11,10 +11,11 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/util/fast_floor.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
 #include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
 #endif
 
@@ -104,7 +105,7 @@ merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<Poin
 PointCloud::Ptr
 merge_frames_auto(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution) {
 //
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
   if (frames[0]->points_gpu && frames[0]->covs_gpu) {
     return merge_frames_gpu(poses, frames, downsample_resolution);
   }
@@ -163,7 +164,7 @@ double overlap(
 }
 
 double overlap_auto(const GaussianVoxelMap::ConstPtr& target, const PointCloud::ConstPtr& source, const Eigen::Isometry3d& delta) {
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
   if (source->points_gpu && std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(target)) {
     return overlap_gpu(target, source, delta);
   }
@@ -175,7 +176,7 @@ double overlap_auto(
   const std::vector<GaussianVoxelMap::ConstPtr>& targets,
   const PointCloud::ConstPtr& source,
   const std::vector<Eigen::Isometry3d>& deltas) {
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
   if (source->points_gpu && !targets.empty() && std::dynamic_pointer_cast<const GaussianVoxelMapGPU>(targets[0])) {
     return overlap_gpu(targets, source, deltas);
   }

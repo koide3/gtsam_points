@@ -39,6 +39,7 @@ using namespace boost::adaptors;
 #include <limits>
 #include <string>
 #include <utility>
+#include <gtsam_points/config.hpp>
 
 namespace gtsam_points {
 

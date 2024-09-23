@@ -1,6 +1,7 @@
 #pragma once
 
 #include <gtest/gtest.h>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/types/point_cloud.hpp>
 
 void validate_frame(const gtsam_points::PointCloud::ConstPtr& frame) {
@@ -39,7 +40,7 @@ void validate_frame(const gtsam_points::PointCloud::ConstPtr& frame) {
   }
 }
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
 void validate_frame_gpu(const gtsam_points::PointCloud::ConstPtr& frame) {
   if (frame->points_gpu) {
     const auto points = gtsam_points::download_points_gpu(*frame);

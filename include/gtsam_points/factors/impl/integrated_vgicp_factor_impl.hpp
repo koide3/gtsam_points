@@ -5,11 +5,12 @@
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/linear/HessianFactor.h>
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_points/util/parallelism.hpp>
 #include <gtsam_points/factors/impl/scan_matching_reduction.hpp>
 
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
 #include <tbb/parallel_for.h>
 #endif
 
@@ -103,7 +104,7 @@ void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Is
       perpoint_task(i);
     }
   } else {
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     tbb::parallel_for(tbb::blocked_range<int>(0, frame::size(*source), 8), [&](const tbb::blocked_range<int>& range) {
       for (int i = range.begin(); i < range.end(); i++) {
         perpoint_task(i);

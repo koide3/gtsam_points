@@ -7,6 +7,7 @@
 #include <iostream>
 #include <Eigen/Core>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/small_kdtree.hpp>
 #include <gtsam_points/types/frame_traits.hpp>
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
@@ -29,7 +30,7 @@ public:
       is_omp_default() || build_num_threads == 1 ?                    //
         new Index(*this->frame, KdTreeBuilderOMP(build_num_threads))  //
                                                  :                    //
-#ifdef GTSAM_USE_TBB                                                  //
+#ifdef GTSAM_POINTS_USE_TBB                                           //
         new Index(*this->frame, KdTreeBuilderTBB())                   //
 #else                                                                 //
         new Index(*this->frame, KdTreeBuilder())

@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 #include <gtsam_points/ann/kdtree.hpp>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/types/frame_traits.hpp>
 #include <gtsam_points/ann/small_kdtree.hpp>
 #include <gtsam_points/util/parallelism.hpp>
@@ -27,7 +28,7 @@ KdTree::KdTree(const Eigen::Vector4d* points, int num_points, int build_num_thre
     is_omp_default() || build_num_threads == 1 ?             //
       new Index(*this, KdTreeBuilderOMP(build_num_threads))  //
                                                :             //
-#ifdef GTSAM_USE_TBB                                      //
+#ifdef GTSAM_POINTS_USE_TBB                                  //
       new Index(*this, KdTreeBuilderTBB())                   //
 #else                                                        //
       new Index(*this, KdTreeBuilder())

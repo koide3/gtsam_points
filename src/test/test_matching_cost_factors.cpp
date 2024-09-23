@@ -12,6 +12,7 @@
 #include <gtsam/slam/PriorFactor.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
+#include <gtsam_points/config.hpp>
 #include <gtsam_points/util/read_points.hpp>
 #include <gtsam_points/util/covariance_estimation.hpp>
 #include <gtsam_points/util/parallelism.hpp>
@@ -76,7 +77,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       frame->add_covs(covs);
       frames.push_back(frame);
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       frames.back() = gtsam_points::PointCloudGPU::clone(*frames.back());
 #endif
 
@@ -84,7 +85,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       voxelmap->insert(*frames.back());
       voxelmaps.push_back(voxelmap);
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
       voxelmap_gpu->insert(*frames.back());
       voxelmaps_gpu.push_back(voxelmap_gpu);
@@ -93,7 +94,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
 #endif
     }
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
     gtsam_points::LinearizationHook::register_hook([] { return gtsam_points::create_nonlinear_factor_set_gpu(); });
     stream_buffer_roundrobin.reset(new gtsam_points::StreamTempBufferRoundRobin(32));
 #endif
@@ -105,7 +106,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
   gtsam::Values poses;
   gtsam::Values poses_gt;
 
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
   std::unique_ptr<gtsam_points::StreamTempBufferRoundRobin> stream_buffer_roundrobin;
 #endif
 };
@@ -144,7 +145,7 @@ public:
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "VGICP_CUDA") {
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
       const auto& stream = stream_buffer.first;
       const auto& buffer = stream_buffer.second;
@@ -181,7 +182,7 @@ public:
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "VGICP_CUDA") {
-#ifdef BUILD_GTSAM_POINTS_GPU
+#ifdef GTSAM_POINTS_USE_CUDA
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
       const auto& stream = stream_buffer.first;
       const auto& buffer = stream_buffer.second;
@@ -234,7 +235,7 @@ INSTANTIATE_TEST_SUITE_P(
   MatchingCostFactorTest,
   testing::Combine(
     testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"),
-#ifdef GTSAM_USE_TBB
+#ifdef GTSAM_POINTS_USE_TBB
     testing::Values("NONE", "OMP", "TBB")
 #else
     testing::Values("NONE", "OMP")
