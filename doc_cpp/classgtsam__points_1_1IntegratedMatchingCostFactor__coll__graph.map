@@ -1,0 +1,4 @@
+<map id="gtsam_points::IntegratedMatchingCostFactor" name="gtsam_points::IntegratedMatchingCostFactor">
+<area shape="rect" id="node1" title="Abstraction of LSQ&#45;based scan matching constraints between point clouds." alt="" coords="5,80,191,121"/>
+<area shape="rect" id="node2" title=" " alt="" coords="11,5,185,32"/>
+</map>

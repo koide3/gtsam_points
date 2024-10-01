@@ -1,0 +1,5 @@
+<map id="gtsam_points::IntegratedCT_GICPFactor_&lt; TargetFrame, SourceFrame &gt;" name="gtsam_points::IntegratedCT_GICPFactor_&lt; TargetFrame, SourceFrame &gt;">
+<area shape="rect" id="node1" title="Continuous Time ICP with GICP&#39;s D2D cost Bellenbach et al., &quot;CT&#45;ICP: Real&#45;time Elastic LiDAR Odometry..." alt="" coords="491,13,713,69"/>
+<area shape="rect" id="node2" href="$classgtsam__points_1_1IntegratedCT__ICPFactor__.html" title=" " alt="" coords="227,5,443,76"/>
+<area shape="rect" id="node3" title=" " alt="" coords="5,27,179,54"/>
+</map>

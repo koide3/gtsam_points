@@ -1,0 +1,6 @@
+<map id="gtsam_points::GaussianVoxelMapCPU" name="gtsam_points::GaussianVoxelMapCPU">
+<area shape="rect" id="node1" title=" " alt="" coords="145,184,358,225"/>
+<area shape="rect" id="node2" href="$classgtsam__points_1_1GaussianVoxelMap.html" title="Gaussian distribution voxelmap." alt="" coords="5,102,247,129"/>
+<area shape="rect" id="node3" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title=" " alt="" coords="271,95,482,136"/>
+<area shape="rect" id="node4" href="$structgtsam__points_1_1NearestNeighborSearch.html" title="Nearest neighbor search interface." alt="" coords="263,5,491,47"/>
+</map>

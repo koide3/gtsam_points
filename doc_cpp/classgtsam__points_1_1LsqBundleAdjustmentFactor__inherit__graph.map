@@ -1,0 +1,5 @@
+<map id="gtsam_points::LsqBundleAdjustmentFactor" name="gtsam_points::LsqBundleAdjustmentFactor">
+<area shape="rect" id="node1" title="Bundle adjustment factor based on EVM and EF optimal condition satisfaction." alt="" coords="5,169,265,211"/>
+<area shape="rect" id="node2" href="$classgtsam__points_1_1BundleAdjustmentFactorBase.html" title="Base class of range&#45;based bundle adjustment factors." alt="" coords="16,80,255,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="49,5,222,32"/>
+</map>

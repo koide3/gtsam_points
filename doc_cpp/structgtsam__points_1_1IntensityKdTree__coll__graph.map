@@ -1,0 +1,4 @@
+<map id="gtsam_points::IntensityKdTree" name="gtsam_points::IntensityKdTree">
+<area shape="rect" id="node1" title="KdTree on intensity augmented coordinates. This class concatenates point coordinates (x,..." alt="" coords="10,95,229,121"/>
+<area shape="rect" id="node2" href="$structgtsam__points_1_1NearestNeighborSearch.html" title="Nearest neighbor search interface." alt="" coords="5,5,233,47"/>
+</map>

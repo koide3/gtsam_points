@@ -1,0 +1,6 @@
+<map id="gtsam_points::EdgeEVMFactor" name="gtsam_points::EdgeEVMFactor">
+<area shape="rect" id="node1" title="Edge EVM factor that minimizes lambda_0 + lambda_1." alt="" coords="29,259,248,285"/>
+<area shape="rect" id="node2" href="$classgtsam__points_1_1EVMBundleAdjustmentFactorBase.html" title="Bundle adjustment factor based on Eigenvalue minimization One EVMFactor represents one feature (plane..." alt="" coords="5,169,272,211"/>
+<area shape="rect" id="node3" href="$classgtsam__points_1_1BundleAdjustmentFactorBase.html" title="Base class of range&#45;based bundle adjustment factors." alt="" coords="19,80,258,121"/>
+<area shape="rect" id="node4" title=" " alt="" coords="52,5,225,32"/>
+</map>

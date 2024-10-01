@@ -1,0 +1,4 @@
+<map id="gtsam_points::IncrementalVoxelMap&lt; VoxelContents &gt;" name="gtsam_points::IncrementalVoxelMap&lt; VoxelContents &gt;">
+<area shape="rect" id="node1" title="Incremental voxelmap. This class supports incremental point cloud insertion and LRU&#45;based voxel delet..." alt="" coords="15,95,223,136"/>
+<area shape="rect" id="node2" href="$structgtsam__points_1_1NearestNeighborSearch.html" title="Nearest neighbor search interface." alt="" coords="5,5,233,47"/>
+</map>

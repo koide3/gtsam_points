@@ -1,0 +1,5 @@
+<map id="gtsam_points::IntegratedLOAMFactor_&lt; TargetFrame, SourceFrame &gt;" name="gtsam_points::IntegratedLOAMFactor_&lt; TargetFrame, SourceFrame &gt;">
+<area shape="rect" id="node1" title="Scan matching factor based on the combination of point&#45;to&#45;plane and point&#45;to&#45;edge distances." alt="" coords="5,169,212,225"/>
+<area shape="rect" id="node2" href="$classgtsam__points_1_1IntegratedMatchingCostFactor.html" title="Abstraction of LSQ&#45;based scan matching constraints between point clouds." alt="" coords="16,80,201,121"/>
+<area shape="rect" id="node3" title=" " alt="" coords="22,5,195,32"/>
+</map>
