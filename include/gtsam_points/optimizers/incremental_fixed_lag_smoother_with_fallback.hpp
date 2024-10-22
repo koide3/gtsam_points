@@ -26,13 +26,13 @@ public:
   template <class VALUE>
   VALUE calculateEstimate(Key key) const {
     try {
-      const auto& value = smoother->calculateEstimate(key);
+      const VALUE value = smoother->calculateEstimate<VALUE>(key);
       auto found = values.find(key);
       if (found != values.end()) {
-        found->value = value;
+        values.insert_or_assign(key, value);
       }
 
-      return value.cast<VALUE>();
+      return value;
     } catch (std::exception& e) {
       std::cerr << "warning: an exception was caught in fixed-lag smoother update!!" << std::endl;
       std::cerr << "       : " << e.what() << std::endl;
