@@ -11,6 +11,7 @@
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/slam/PriorFactor.h>
+#include <gtsam_points/factors/linear_damping_factor.hpp>
 
 namespace gtsam_points {
 
@@ -151,8 +152,9 @@ void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
   std::cout << "falling back!!" << std::endl;
   std::cout << "smoother_lag:" << smoother->smootherLag() << std::endl;
 
+  // Find basic value statistics
   std::unordered_map<char, double> min_stamps;
-  std::unordered_map<char, size_t> max_ids;
+  std::unordered_map<char, std::pair<size_t, size_t>> minmax_ids;
   for (const auto& value : values) {
     const auto found = stamps.find(value.key);
     if (found == stamps.end()) {
@@ -170,19 +172,23 @@ void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
       min_stamp->second = std::min(min_stamp->second, stamp);
     }
 
-    auto max_id = max_ids.find(symbol.chr());
-    if (max_id == max_ids.end()) {
-      max_ids.emplace_hint(max_id, symbol.chr(), symbol.index());
+    auto minmax_id = minmax_ids.find(symbol.chr());
+    if (minmax_id == minmax_ids.end()) {
+      minmax_ids.emplace_hint(minmax_id, symbol.chr(), std::make_pair(symbol.index(), symbol.index()));
     } else {
-      max_id->second = std::max<size_t>(max_id->second, max_id->second);
+      minmax_id->second.first = std::min(minmax_id->second.first, symbol.index());
+      minmax_id->second.second = std::max(minmax_id->second.second, symbol.index());
     }
   }
 
   std::cout << boost::format("current_stamp:%.6f") % current_stamp << std::endl;
   const double fixation_duration = 1.0;
   for (const auto& min_stamp : min_stamps) {
-    std::cout << boost::format("- symbol=%c min_stamp=%.6f fixation=%.6f") % min_stamp.first % min_stamp.second %
-                   (min_stamp.second + fixation_duration)
+    const char chr = min_stamp.first;
+    const auto minmax_id = minmax_ids[chr];
+
+    std::cout << boost::format("- symbol=%c min_id=%d max_id=%d min_stamp=%.6f fixation=%.6f") % chr % minmax_id.first % minmax_id.second %
+                   min_stamp.second % (min_stamp.second + fixation_duration)
               << std::endl;
   }
 
@@ -196,12 +202,16 @@ void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
 
   std::unordered_set<gtsam::Key> traversed_keys;
   std::vector<gtsam::NonlinearFactor*> traverse_queue;
-  for (const auto& max_id : max_ids) {
-    const gtsam::Symbol symbol(max_id.first, max_id.second);
+  for (const auto& minmax_id : minmax_ids) {
+    const auto chr = minmax_id.first;
+    const auto max_id = minmax_id.second.second;
+    const gtsam::Symbol symbol(chr, max_id);
     const auto found = factormap.find(symbol);
     if (found != factormap.end()) {
       traversed_keys.insert(symbol);
       traverse_queue.insert(traverse_queue.end(), found->second.begin(), found->second.end());
+    } else {
+      std::cerr << "symbol not found:" << symbol << std::endl;
     }
   }
 
@@ -235,8 +245,22 @@ void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
     stamps.erase(key);
   }
 
+  // Copy only valid factors
+  gtsam::NonlinearFactorGraph new_factors;
+  new_factors.reserve(factors.size());
+  for (const auto& factor : factors) {
+    if (std::all_of(factor->keys().begin(), factor->keys().end(), [&](const auto key) { return values.exists(key); })) {
+      new_factors.add(factor);
+    } else {
+      std::cerr << "remove factor:";
+      for (const auto key : factor->keys()) {
+        std::cerr << " " << gtsam::Symbol(key);
+      }
+      std::cerr << std::endl;
+    }
+  }
+
   // Create fixation factors
-  gtsam::NonlinearFactorGraph new_factors = factors;
   for (const auto& value : values) {
     const gtsam::Symbol symbol(value.key);
     const double fixation_time = min_stamps[symbol.chr()] + fixation_duration;
@@ -247,11 +271,7 @@ void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
     }
 
     const int dim = value.value.dim();
-    gtsam::Matrix G = 1e6 * gtsam::Matrix::Identity(dim, dim);
-    gtsam::Vector g = gtsam::Vector::Zero(dim);
-
-    const gtsam::HessianFactor factor(value.key, G, g, 0.0);
-    new_factors.emplace_shared<gtsam::LinearContainerFactor>(factor, values);
+    new_factors.emplace_shared<gtsam_points::LinearDampingFactor>(value.key, dim, 1e6);
 
     if (symbol.chr() == 'x') {
       new_factors.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(
