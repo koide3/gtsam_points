@@ -928,4 +928,37 @@ PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& frame, const int 
   return remove_outliers(frame, neighbors, k, std_thresh);
 }
 
+std::vector<double> distances(const PointCloud::ConstPtr& points, size_t max_scan_count) {
+  std::vector<double> dists;
+  dists.reserve(points->size() < max_scan_count ? points->size() : max_scan_count * 2);
+
+  const size_t step = points->size() < max_scan_count ? 1 : points->size() / max_scan_count;
+  for (size_t i = 0; i < points->size(); i += step) {
+    const auto& p = points->points[i];
+    dists.emplace_back(p.head<3>().norm());
+  }
+
+  return dists;
+}
+
+std::pair<double, double> minmax_distance(const PointCloud::ConstPtr& points, size_t max_scan_count) {
+  const auto dists = distances(points, max_scan_count);
+  if (dists.empty()) {
+    return {0.0, 0.0};
+  }
+
+  const auto minmax = std::minmax_element(dists.begin(), dists.end());
+  return {*minmax.first, *minmax.second};
+}
+
+double median_distance(const PointCloud::ConstPtr& points, size_t max_scan_count) {
+  auto dists = distances(points, max_scan_count);
+  if (dists.empty()) {
+    return 0.0;
+  }
+
+  std::nth_element(dists.begin(), dists.begin() + dists.size() / 2, dists.end());
+  return dists[dists.size() / 2];
+}
+
 }  // namespace gtsam_points

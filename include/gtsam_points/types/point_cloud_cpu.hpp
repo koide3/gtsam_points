@@ -264,6 +264,30 @@ PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& points, const std
 PointCloudCPU::Ptr remove_outliers(const PointCloud::ConstPtr& points, const int k = 10, const double std_thresh = 1.0, const int num_threads = 1);
 
 /**
+ * @brief Compute point distances
+ * @param points          Input points
+ * @param max_scan_count  Maximum number of points to scan
+ * @return                Distances
+ */
+std::vector<double> distances(const PointCloud::ConstPtr& points, size_t max_scan_count = std::numeric_limits<size_t>::max());
+
+/**
+ * @brief Compute min and max point distances
+ * @param points          Input points
+ * @param max_scan_count  Maximum number of points to scan
+ * @return                Min and max distances
+ */
+std::pair<double, double> minmax_distance(const PointCloud::ConstPtr& points, size_t max_scan_count = std::numeric_limits<size_t>::max());
+
+/**
+ * @brief Compute median point distance
+ * @param points          Input points
+ * @param max_scan_count  Maximum number of points to scan
+ * @return                Median distance
+ */
+double median_distance(const PointCloud::ConstPtr& points, size_t max_scan_count = std::numeric_limits<size_t>::max());
+
+/**
  * @brief Merge a set of frames into one frame
  * @note  This function only merges points and covs and discard other point attributes.
  * @param poses                  Poses of input frames
