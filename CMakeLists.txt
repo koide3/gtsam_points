@@ -118,6 +118,14 @@ if(ENABLE_COVERAGE)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endif()
 
+execute_process(
+        COMMAND git log -1 --format=%h
+        WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
+        OUTPUT_VARIABLE GTSAM_POINTS_GIT_HASH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+message(STATUS "GTSAM_POINTS_GIT_HASH=${GTSAM_POINTS_GIT_HASH}")
+
 configure_file(include/gtsam_points/config.hpp.in include/gtsam_points/config.hpp)
 
 ###########
