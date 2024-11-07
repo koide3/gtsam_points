@@ -1,0 +1,5 @@
+<map id="gtsam_points::IncrementalCovarianceVoxelMap" name="gtsam_points::IncrementalCovarianceVoxelMap">
+<area shape="rect" id="node1" title="Incremental voxelmap with online covariance and normal estimation." alt="" coords="33,199,229,240"/>
+<area shape="rect" id="node2" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title=" " alt="" coords="5,95,256,151"/>
+<area shape="rect" id="node3" href="$structgtsam__points_1_1NearestNeighborSearch.html" title="Nearest neighbor search interface." alt="" coords="17,5,245,47"/>
+</map>

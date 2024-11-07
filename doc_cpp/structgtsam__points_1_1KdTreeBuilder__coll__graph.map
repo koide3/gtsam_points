@@ -1,0 +1,4 @@
+<map id="gtsam_points::KdTreeBuilder" name="gtsam_points::KdTreeBuilder">
+<area shape="rect" id="node1" title="Single thread Kd&#45;tree builder." alt="" coords="5,109,213,136"/>
+<area shape="rect" id="node2" href="$structgtsam__points_1_1ProjectionSetting.html" title="Parameters to control the projection axis search." alt="" coords="18,5,201,47"/>
+</map>

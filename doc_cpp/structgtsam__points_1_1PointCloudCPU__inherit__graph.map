@@ -1,0 +1,5 @@
+<map id="gtsam_points::PointCloudCPU" name="gtsam_points::PointCloudCPU">
+<area shape="rect" id="node1" title="Point cloud frame on CPU memory." alt="" coords="6,80,221,107"/>
+<area shape="rect" id="node3" href="$structgtsam__points_1_1PointCloudGPU.html" title="Point cloud frame on GPU memory." alt="" coords="5,155,221,181"/>
+<area shape="rect" id="node2" href="$structgtsam__points_1_1PointCloud.html" title="Standard point cloud class that holds only pointers to point attributes." alt="" coords="19,5,207,32"/>
+</map>
