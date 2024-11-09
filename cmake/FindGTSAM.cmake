@@ -12,16 +12,25 @@ find_library(GTSAM_UNSTABLE_LIB NAMES gtsam_unstable
   HINTS /usr/local/lib /usr/lib
   DOC "GTSAM_UNSTABLE libraries")
 
-find_library(TBB_LIB NAMES tbb
-  HINTS /usr/local/lib /usr/lib
-  DOC "TBB libraries")
 
-find_library(TBB_MALLOC_LIB NAMES tbbmalloc
-  HINTS /usr/local/lib /usr/lib
-  DOC "TBB malloc libraries")
+if(GTSAM_LIB AND GTSAM_UNSTABLE_LIB)
+  set(GTSAM_LIBRARIES ${GTSAM_LIB} ${GTSAM_UNSTABLE_LIB})
+endif()
 
-if(GTSAM_LIB AND GTSAM_UNSTABLE_LIB AND TBB_LIB)
-  set(GTSAM_LIBRARIES ${GTSAM_LIB} ${GTSAM_UNSTABLE_LIB} ${TBB_LIB} ${TBB_MALLOC_LIB})
+if(GTSAM_POINTS_USE_TBB)
+  find_library(TBB_LIB NAMES tbb
+    HINTS /usr/local/lib /usr/lib
+    DOC "TBB libraries")
+
+  find_library(TBB_MALLOC_LIB NAMES tbbmalloc
+    HINTS /usr/local/lib /usr/lib
+    DOC "TBB malloc libraries")
+  
+  if(TBB_LIB AND TBB_MALLOC_LIB)
+    set(GTSAM_LIBRARIES ${GTSAM_LIBRARIES} ${TBB_LIB} ${TBB_MALLOC_LIB})
+  else()
+    message(FATAL_ERROR "TBB libraries not found")
+  endif()
 endif()
 
 add_library(GTSAM::GTSAM INTERFACE IMPORTED GLOBAL)
