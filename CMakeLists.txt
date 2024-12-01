@@ -155,6 +155,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/factors/integrated_ct_gicp_factor.cpp
   src/gtsam_points/factors/bundle_adjustment_factor_evm.cpp
   src/gtsam_points/factors/bundle_adjustment_factor_lsq.cpp
+  src/gtsam_points/factors/reintegrated_imu_factor.cpp
   # experimental
   src/gtsam_points/factors/experimental/continuous_time_icp_factor.cpp
   # optimizers
