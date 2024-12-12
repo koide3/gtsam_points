@@ -12,6 +12,8 @@ public:
   IncrementalFixedLagSmootherExtWithFallback(double smootherLag, const ISAM2Params& parameters);
   ~IncrementalFixedLagSmootherExtWithFallback() override;
 
+  void set_fix_variable_types(const std::vector<std::pair<char, int>>& var_types) { fix_variable_types = var_types; }
+
   Result update(
     const gtsam::NonlinearFactorGraph& newFactors = gtsam::NonlinearFactorGraph(),
     const gtsam::Values& newTheta = gtsam::Values(),  //
@@ -69,5 +71,7 @@ private:
   mutable gtsam::FixedLagSmootherKeyTimestampMap stamps;
 
   mutable std::unique_ptr<IncrementalFixedLagSmootherExt> smoother;
+
+  std::vector<std::pair<char, int>> fix_variable_types;  // (chr, type)  type: 0=Pose3, 1=Point3
 };
 }  // namespace gtsam_points
