@@ -194,7 +194,7 @@ double IntegratedICPFactor_<TargetFrame, SourceFrame>::evaluate(
       residual = normal_B.array() * residual.array();
     }
 
-    const double error = 0.5 * residual.transpose() * residual;
+    const double error = residual.transpose() * residual;
     if (H_target == nullptr) {
       return error;
     }
