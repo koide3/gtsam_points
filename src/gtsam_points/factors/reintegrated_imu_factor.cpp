@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2024  Kenji Koide (k.koide@aist.go.jp)
-#include <reintegrated_imu_factor.hpp>
+#include <gtsam_points/factors/reintegrated_imu_factor.hpp>
 
 namespace gtsam_points {
 
