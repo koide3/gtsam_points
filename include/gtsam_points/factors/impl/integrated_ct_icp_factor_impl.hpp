@@ -102,7 +102,7 @@ double IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Val
     gtsam::Point3 residual = transed_source_pt - target_pt.template head<3>();
     double error = gtsam::dot(residual, target_normal.template head<3>());
 
-    return 0.5 * error * error;
+    return error * error;
   };
 
   if (is_omp_default() || num_threads == 1) {
@@ -162,7 +162,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_ICPFactor_<TargetFrame, So
     *b_0 += H_0.transpose() * error;
     *b_1 += H_1.transpose() * error;
 
-    return 0.5 * error * error;
+    return error * error;
   };
 
   double error = 0.0;

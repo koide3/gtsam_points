@@ -153,7 +153,7 @@ double IntegratedVGICPFactor_<SourceFrame>::evaluate(
     Eigen::Vector4d transed_mean_A = delta * mean_A;
     Eigen::Vector4d residual = mean_B - transed_mean_A;
 
-    const double error = 0.5 * residual.transpose() * mahalanobis[i] * residual;
+    const double error = residual.transpose() * mahalanobis[i] * residual;
 
     if (!H_target) {
       return error;

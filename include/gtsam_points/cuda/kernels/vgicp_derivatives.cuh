@@ -61,7 +61,7 @@ struct vgicp_derivatives_kernel {
     Eigen::Matrix<float, 6, 3> J_source_RCR_inv = J_source.transpose() * RCR_inv;
 
     LinearizedSystem6 linearized;
-    linearized.error = 0.5f * error.transpose() * RCR_inv * error;
+    linearized.error = error.transpose() * RCR_inv * error;
     linearized.H_target = J_target_RCR_inv * J_target;
     linearized.H_source = J_source_RCR_inv * J_source;
     linearized.H_target_source = J_target_RCR_inv * J_source;
@@ -123,7 +123,7 @@ struct vgicp_error_kernel {
     const Eigen::Matrix3f RCR_inv = (cov_B + RCR).inverse();
     Eigen::Vector3f error = mean_B - transed_mean_A;
 
-    return 0.5f * error.transpose() * RCR_inv * error;
+    return error.transpose() * RCR_inv * error;
   }
 
   const Eigen::Isometry3f* linearization_point_ptr;

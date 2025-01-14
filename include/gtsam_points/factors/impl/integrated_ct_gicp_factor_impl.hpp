@@ -73,7 +73,7 @@ double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Va
 
     const Eigen::Vector4d transed_source_pt = pose * source_pt;
     const Eigen::Vector4d residual = transed_source_pt - target_pt;
-    const double error = 0.5 * residual.transpose() * mahalanobis[i] * residual;
+    const double error = residual.transpose() * mahalanobis[i] * residual;
 
     return error;
   };
@@ -126,7 +126,7 @@ boost::shared_ptr<gtsam::GaussianFactor> IntegratedCT_GICPFactor_<TargetFrame, S
     const gtsam::Matrix64 H_0_mahalanobis = H_0.transpose() * mahalanobis[i];
     const gtsam::Matrix64 H_1_mahalanobis = H_1.transpose() * mahalanobis[i];
 
-    const double error = 0.5 * residual.transpose() * mahalanobis_residual;
+    const double error = residual.transpose() * mahalanobis_residual;
     *H_00 += H_0_mahalanobis * H_0;
     *H_11 += H_1_mahalanobis * H_1;
     *H_01 += H_0_mahalanobis * H_1;
