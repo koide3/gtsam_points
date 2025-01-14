@@ -128,8 +128,8 @@ TEST_P(CompactMahalanobisTest, FactorTest) {
 
   for (int i = 0; i < 3; i++) {
     gtsam::Vector6 noise1, noise2;
-    std::generate(noise1.begin(), noise1.end(), [&] { return dist(mt) * 0.5; });
-    std::generate(noise2.begin(), noise2.end(), [&] { return dist(mt) * 0.5; });
+    std::generate(noise1.data(), noise1.data() + noise1.size(), [&] { return dist(mt) * 0.5; });
+    std::generate(noise2.data(), noise2.data() + noise2.size(), [&] { return dist(mt) * 0.5; });
 
     gtsam::Values values;
     values.insert(0, gtsam::Pose3::Expmap(noise1));
@@ -147,7 +147,7 @@ TEST_P(CompactMahalanobisTest, FactorTest) {
     EXPECT_NEAR((info_full - info_none).cwiseAbs2().maxCoeff(), 0.0, 1e-3) << "Large augmented info error (full vs. none)";
 
     gtsam::Vector6 noise3;
-    std::generate(noise3.begin(), noise3.end(), [&] { return dist(mt) * 0.1; });
+    std::generate(noise3.data(), noise3.data() + noise3.size(), [&] { return dist(mt) * 0.1; });
     values.insert_or_assign(0, gtsam::Pose3::Expmap(noise2) * gtsam::Pose3::Expmap(noise3));
 
     const double error_full = factor_full->error(values);
