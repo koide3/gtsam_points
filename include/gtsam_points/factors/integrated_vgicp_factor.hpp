@@ -9,6 +9,7 @@
 #include <gtsam_points/types/point_cloud.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
 #include <gtsam_points/factors/integrated_matching_cost_factor.hpp>
+#include <gtsam_points/factors/integrated_gicp_factor.hpp>
 
 namespace gtsam_points {
 
@@ -58,6 +59,9 @@ public:
   ///       and setting n>1 can rather affect the processing speed.
   void set_num_threads(int n) { num_threads = n; }
 
+  /// @brief Set the cache mode for fused covariance matrices (i.e., mahalanobis).
+  void set_fused_cov_cache_mode(FusedCovCacheMode mode) { mahalanobis_cache_mode = mode; }
+
   /// @brief Compute the fraction of inlier points that have correspondences with a distance smaller than the trimming threshold.
   double inlier_fraction() const {
     const int outliers = std::count(correspondences.begin(), correspondences.end(), nullptr);
@@ -78,10 +82,13 @@ private:
 
 private:
   int num_threads;
+  FusedCovCacheMode mahalanobis_cache_mode;
 
   // I'm unhappy to have mutable members...
+  mutable Eigen::Isometry3d linearization_point;
   mutable std::vector<const GaussianVoxel*> correspondences;
-  mutable std::vector<Eigen::Matrix4d> mahalanobis;
+  mutable std::vector<Eigen::Matrix4d> mahalanobis_full;
+  mutable std::vector<Eigen::Matrix<float, 6, 1>> mahalanobis_compact;
 
   std::shared_ptr<const GaussianVoxelMapCPU> target_voxels;
   std::shared_ptr<const SourceFrame> source;

@@ -7,6 +7,7 @@
 #include <gtsam/linear/HessianFactor.h>
 #include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
+#include <gtsam_points/util/compact.hpp>
 #include <gtsam_points/util/parallelism.hpp>
 #include <gtsam_points/types/frame_traits.hpp>
 #include <gtsam_points/factors/impl/scan_matching_reduction.hpp>
@@ -27,6 +28,7 @@ IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
 : gtsam_points::IntegratedMatchingCostFactor(target_key, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
+  mahalanobis_cache_mode(FusedCovCacheMode::FULL),
   correspondence_update_tolerance_rot(0.0),
   correspondence_update_tolerance_trans(0.0),
   target(target),
@@ -67,6 +69,7 @@ IntegratedGICPFactor_<TargetFrame, SourceFrame>::IntegratedGICPFactor_(
 : gtsam_points::IntegratedMatchingCostFactor(fixed_target_pose, source_key),
   num_threads(1),
   max_correspondence_distance_sq(1.0),
+  mahalanobis_cache_mode(FusedCovCacheMode::FULL),
   correspondence_update_tolerance_rot(0.0),
   correspondence_update_tolerance_trans(0.0),
   target(target),
@@ -102,6 +105,8 @@ IntegratedGICPFactor_<TargetFrame, SourceFrame>::~IntegratedGICPFactor_() {}
 
 template <typename TargetFrame, typename SourceFrame>
 void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
+  linearization_point = delta;
+
   bool do_update = true;
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
@@ -117,7 +122,17 @@ void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(con
   }
 
   correspondences.resize(frame::size(*source));
-  mahalanobis.resize(frame::size(*source));
+
+  switch (mahalanobis_cache_mode) {
+    case FusedCovCacheMode::FULL:
+      mahalanobis_full.resize(frame::size(*source));
+      break;
+    case FusedCovCacheMode::COMPACT:
+      mahalanobis_compact.resize(frame::size(*source));
+      break;
+    case FusedCovCacheMode::NONE:
+      break;
+  }
 
   const auto perpoint_task = [&](int i) {
     if (do_update) {
@@ -129,15 +144,29 @@ void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(con
       correspondences[i] = (num_found && k_sq_dist < max_correspondence_distance_sq) ? k_index : -1;
     }
 
-    if (correspondences[i] < 0) {
-      mahalanobis[i].setZero();
-    } else {
-      const auto& target_cov = frame::cov(*target, correspondences[i]);
-      Eigen::Matrix4d RCR = (target_cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
-
-      RCR(3, 3) = 1.0;
-      mahalanobis[i] = RCR.inverse();
-      mahalanobis[i](3, 3) = 0.0;
+    switch (mahalanobis_cache_mode) {
+      case FusedCovCacheMode::FULL:
+        if (correspondences[i] < 0) {
+          mahalanobis_full[i].setZero();
+        } else {
+          const auto& target_cov = frame::cov(*target, correspondences[i]);
+          const Eigen::Matrix4d RCR = (target_cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
+          mahalanobis_full[i].setZero();
+          mahalanobis_full[i].topLeftCorner<3, 3>() = RCR.topLeftCorner<3, 3>().inverse();
+        }
+        break;
+      case FusedCovCacheMode::COMPACT:
+        if (correspondences[i] < 0) {
+          mahalanobis_compact[i].setZero();
+        } else {
+          const auto& target_cov = frame::cov(*target, correspondences[i]);
+          const Eigen::Matrix4d RCR = (target_cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
+          const Eigen::Matrix3d maha = RCR.topLeftCorner<3, 3>().inverse();
+          mahalanobis_compact[i] = compact_cov(maha);
+        }
+        break;
+      case FusedCovCacheMode::NONE:
+        break;
     }
   };
 
@@ -193,7 +222,23 @@ double IntegratedGICPFactor_<TargetFrame, SourceFrame>::evaluate(
     const Eigen::Vector4d transed_mean_A = delta * mean_A;
     const Eigen::Vector4d residual = mean_B - transed_mean_A;
 
-    const double error = residual.transpose() * mahalanobis[i] * residual;
+    Eigen::Matrix4d mahalanobis;
+    switch (mahalanobis_cache_mode) {
+      case FusedCovCacheMode::FULL:
+        mahalanobis = mahalanobis_full[i];
+        break;
+      case FusedCovCacheMode::COMPACT:
+        mahalanobis = uncompact_cov(mahalanobis_compact[i]);
+        break;
+      case FusedCovCacheMode::NONE: {
+        const auto& delta_l = linearization_point;  // Delta at the linearization point
+        const Eigen::Matrix4d RCR = (cov_B + delta_l.matrix() * cov_A * delta_l.matrix().transpose());
+        mahalanobis.setZero();
+        mahalanobis.topLeftCorner<3, 3>() = RCR.topLeftCorner<3, 3>().inverse();
+      } break;
+    }
+
+    const double error = residual.transpose() * mahalanobis * residual;
     if (H_target == nullptr) {
       return error;
     }
@@ -206,8 +251,8 @@ double IntegratedGICPFactor_<TargetFrame, SourceFrame>::evaluate(
     J_source.block<3, 3>(0, 0) = delta.linear() * gtsam::SO3::Hat(mean_A.template head<3>());
     J_source.block<3, 3>(0, 3) = -delta.linear();
 
-    Eigen::Matrix<double, 6, 4> J_target_mahalanobis = J_target.transpose() * mahalanobis[i];
-    Eigen::Matrix<double, 6, 4> J_source_mahalanobis = J_source.transpose() * mahalanobis[i];
+    Eigen::Matrix<double, 6, 4> J_target_mahalanobis = J_target.transpose() * mahalanobis;
+    Eigen::Matrix<double, 6, 4> J_source_mahalanobis = J_source.transpose() * mahalanobis;
 
     *H_target += J_target_mahalanobis * J_target;
     *H_source += J_source_mahalanobis * J_source;

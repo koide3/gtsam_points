@@ -14,6 +14,15 @@ namespace gtsam_points {
 struct NearestNeighborSearch;
 
 /**
+ * @brief Cache mode for fused covariance matrices (i.e., mahalanobis)
+ */
+enum class FusedCovCacheMode {
+  FULL,     // Full matrix (4x4 double : 128 bit per point, fast)
+  COMPACT,  // Compact matrix (upper-trianguler of 3x3 float, 24 bit per point, intermediate)
+  NONE      // No cache (0 bit per point, slow)
+};
+
+/**
  * @brief Generalized ICP matching cost factor
  *        Segal et al., "Generalized-ICP", RSS2005
  */
@@ -85,6 +94,9 @@ public:
     correspondence_update_tolerance_trans = trans;
   }
 
+  /// @brief Set the cache mode for fused covariance matrices (i.e., mahalanobis).
+  void set_fused_cov_cache_mode(FusedCovCacheMode mode) { mahalanobis_cache_mode = mode; }
+
   /// @brief Compute the fraction of inlier points that have correspondences with a distance smaller than the trimming threshold.
   double inlier_fraction() const {
     const int outliers = std::count(correspondences.begin(), correspondences.end(), -1);
@@ -106,15 +118,18 @@ private:
 private:
   int num_threads;
   double max_correspondence_distance_sq;
+  FusedCovCacheMode mahalanobis_cache_mode;
 
   std::shared_ptr<const NearestNeighborSearch> target_tree;
 
   // I'm unhappy to have mutable members...
   double correspondence_update_tolerance_rot;
   double correspondence_update_tolerance_trans;
+  mutable Eigen::Isometry3d linearization_point;
   mutable Eigen::Isometry3d last_correspondence_point;
   mutable std::vector<long> correspondences;
-  mutable std::vector<Eigen::Matrix4d> mahalanobis;
+  mutable std::vector<Eigen::Matrix4d> mahalanobis_full;
+  mutable std::vector<Eigen::Matrix<float, 6, 1>> mahalanobis_compact;
 
   std::shared_ptr<const TargetFrame> target;
   std::shared_ptr<const SourceFrame> source;
