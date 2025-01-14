@@ -238,7 +238,7 @@ double IntegratedGICPFactor_<TargetFrame, SourceFrame>::evaluate(
       } break;
     }
 
-    const double error = 0.5 * residual.transpose() * mahalanobis * residual;
+    const double error = residual.transpose() * mahalanobis * residual;
     if (H_target == nullptr) {
       return error;
     }

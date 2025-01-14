@@ -169,7 +169,7 @@ double IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGrad
     const Eigen::Vector4d offset = projected - mean_B;
     const double error_photo = intensity_B + gradient_B.dot(offset) - intensity_A;
 
-    const double err = 0.5 * error_photo * photometric_term_weight * error_photo;
+    const double err = error_photo * photometric_term_weight * error_photo;
 
     if (!H_target) {
       return err;

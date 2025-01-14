@@ -16,7 +16,8 @@
 namespace gtsam_points {
 
 IncrementalFixedLagSmootherExtWithFallback::IncrementalFixedLagSmootherExtWithFallback(double smootherLag, const ISAM2Params& parameters)
-: IncrementalFixedLagSmootherExt(smootherLag, parameters) {
+: IncrementalFixedLagSmootherExt(smootherLag, parameters),
+  fix_variable_types({{'x', 0}}) {
   fallback_happend = false;
   current_stamp = 0.0;
   smoother.reset(new IncrementalFixedLagSmootherExt(smootherLag, parameters));
@@ -273,11 +274,28 @@ void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
     const int dim = value.value.dim();
     new_factors.emplace_shared<gtsam_points::LinearDampingFactor>(value.key, dim, 1e6);
 
-    if (symbol.chr() == 'x') {
-      new_factors.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(
-        value.key,
-        gtsam::Pose3(value.value.cast<gtsam::Pose3>()),
-        gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+    for (const auto var_type : fix_variable_types) {
+      if (symbol.chr() == var_type.first) {
+        std::cout << "fixing " << symbol << std::endl;
+        switch (var_type.second) {
+          case 0:
+            new_factors.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(
+              value.key,
+              value.value.cast<gtsam::Pose3>(),
+              gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+            break;
+          case 1:
+            new_factors.emplace_shared<gtsam::PriorFactor<gtsam::Vector3>>(
+              value.key,
+              value.value.cast<gtsam::Vector3>(),
+              gtsam::noiseModel::Isotropic::Precision(3, 1e6));
+            break;
+          default:
+            std::cerr << "error: unknown variable type!! (chr=" << static_cast<int>(var_type.first) << " type=" << var_type.second << ")"
+                      << std::endl;
+            break;
+        }
+      }
     }
   }
 

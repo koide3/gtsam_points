@@ -142,7 +142,7 @@ double IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::evaluate(
 
     Eigen::Vector4d residual = x_j - transed_x_i;
     Eigen::Vector4d plane_residual = residual.array() * normal.array();
-    const double error = 0.5 * plane_residual.transpose() * plane_residual;
+    const double error = plane_residual.transpose() * plane_residual;
 
     if (H_target == nullptr) {
       return error;
@@ -297,7 +297,7 @@ double IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::evaluate(
 
     Eigen::Vector4d residual = Eigen::Vector4d::Zero();
     residual.head<3>() = x_ij.head<3>().cross(x_il.head<3>()) * c_inv;
-    const double error = 0.5 * residual.dot(residual);
+    const double error = residual.dot(residual);
 
     if (H_target == nullptr) {
       return error;

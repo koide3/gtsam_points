@@ -182,14 +182,14 @@ double IntegratedColoredGICPFactor_<TargetFrame, SourceFrame, IntensityGradients
 
     // geometric error
     const Eigen::Vector4d residual_geom = transed_A - mean_B;
-    const double error_geom = 0.5 * residual_geom.transpose() * geometric_term_weight * mahalanobis[i] * residual_geom;
+    const double error_geom = residual_geom.transpose() * geometric_term_weight * mahalanobis[i] * residual_geom;
 
     // photometric error
     const Eigen::Vector4d projected = transed_A - (transed_A - mean_B).dot(normal_B) * normal_B;
     const Eigen::Vector4d offset = projected - mean_B;
     const double residual_photo = intensity_B + gradient_B.dot(offset) - intensity_A;
 
-    const double error_photo = 0.5 * residual_photo * photometric_term_weight * residual_photo;
+    const double error_photo = residual_photo * photometric_term_weight * residual_photo;
 
     if (!H_target) {
       return error_geom + error_photo;
