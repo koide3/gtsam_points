@@ -69,6 +69,14 @@ public:
     return static_cast<double>(inliers) / correspondences.size();
   }
 
+  gtsam::NonlinearFactor::shared_ptr clone() const override {
+    if (is_binary) {
+      return gtsam::make_shared<IntegratedVGICPFactor_>(keys()[0], keys()[1], target_voxels, source);
+    }
+
+    return gtsam::make_shared<IntegratedVGICPFactor_>(gtsam::Pose3(fixed_target_pose.cast<double>().matrix()), keys()[0], target_voxels, source);
+  }
+
 private:
   virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
 
