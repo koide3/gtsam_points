@@ -274,7 +274,6 @@ endif()
 
 #Example
 if(BUILD_TOOLS)
-  find_package(spdlog REQUIRED)
   find_package(Iridescence REQUIRED)
   find_package(Boost REQUIRED COMPONENTS filesystem program_options)
 
@@ -283,7 +282,7 @@ if(BUILD_TOOLS)
     get_filename_component(tool_name ${tool_src} NAME_WE)
 
     add_executable(${tool_name} ${tool_src})
-    target_link_libraries(${tool_name} gtsam_points spdlog::spdlog Iridescence::Iridescence Boost::program_options)
+    target_link_libraries(${tool_name} gtsam_points Iridescence::Iridescence Boost::program_options)
   endforeach()
 endif()
 

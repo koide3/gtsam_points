@@ -2,7 +2,7 @@
 #include <iostream>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <spdlog/spdlog.h>
+#include <boost/format.hpp>
 #include <boost/program_options.hpp>
 #include <gtsam_points/util/continuous_trajectory.hpp>
 #include <guik/viewer/light_viewer.hpp>
@@ -14,11 +14,11 @@ public:
    * @param filename Input file name (TUM format).
    */
   void load_input_poses(const std::string& filename) {
-    spdlog::info("loading {}", filename);
+    std::cout << "loading " << filename << std::endl;
 
     std::ifstream ifs(filename);
     if (!ifs) {
-      spdlog::error("Failed to open file: {}", filename);
+      std::cerr << "Failed to open file: " << filename << std::endl;
       abort();
     }
 
@@ -35,7 +35,7 @@ public:
     }
 
     if (!std::is_sorted(input_timestamps.begin(), input_timestamps.end())) {
-      spdlog::warn("timestamps are not sorted");
+      std::cerr << "timestamps are not sorted" << std::endl;
     }
   }
 
@@ -44,11 +44,11 @@ public:
    * @param filename Timestamp file name.
    */
   void load_timestamps(const std::string& filename) {
-    spdlog::info("loading timestamps from {}", filename);
+    std::cout << "loading timestamps from " << filename << std::endl;
 
     std::ifstream ifs(filename);
     if (!ifs) {
-      spdlog::error("Failed to open file: {}", filename);
+      std::cerr << "Failed to open file: " << filename << std::endl;
       abort();
     }
 
@@ -73,7 +73,7 @@ public:
       end = input_timestamps.back();
     }
 
-    spdlog::info("generating timestamps from {} to {} with step {}", start, end, step);
+    std::cout << "generating timestamps from " << start << " to " << end << " with step " << step << std::endl;
 
     for (double t = start; t <= end; t += step) {
       timestamps.push_back(t);
@@ -94,7 +94,7 @@ public:
       for (size_t i = 1; i < input_timestamps.size(); i++) {
         dts.push_back(input_timestamps[i] - input_timestamps[i - 1]);
         if (dts.back() <= 0.0) {
-          spdlog::warn("negative dt detected: i={} t1={} t2={}", i, input_timestamps[i - 1], input_timestamps[i]);
+          std::cerr << "negative dt detected: i=" << i << " t1=" << input_timestamps[i - 1] << " t2=" << input_timestamps[i] << std::endl;
         }
       }
 
@@ -104,24 +104,25 @@ public:
 
       for (int i = 0; i < dts.size(); i++) {
         if (dts[i] < 0.5 * knot_interval || dts[i] > 2.0 * knot_interval) {
-          spdlog::warn("unusual dt detected: i={} dt={} t1={} t2={}", i, dts[i], input_timestamps[i], input_timestamps[i + 1]);
+          std::cerr << "unusual dt detected: i=" << i << " dt=" << dts[i] << " t1=" << input_timestamps[i] << " t2=" << input_timestamps[i + 1]
+                    << std::endl;
         }
       }
     }
 
-    spdlog::info("interpolate trajectory (knot_interval={})", knot_interval);
-    spdlog::info("|input|={}", input_timestamps.size());
+    std::cout << "interpolating trajectory (knot_interval=" << knot_interval << ")" << std::endl;
+    std::cout << "|input|=" << input_timestamps.size() << std::endl;
 
     gtsam_points::ContinuousTrajectory traj('x', input_timestamps.front(), input_timestamps.back(), knot_interval);
     knots = traj.fit_knots(input_timestamps, input_poses, smoothness, true);
-    spdlog::info("|knots|={}", knots.size());
+    std::cout << "|knots|=" << knots.size() << std::endl;
 
-    spdlog::info("calculating interpolated poses");
-    spdlog::info("|timestamps|={}", timestamps.size());
+    std::cout << "calculating interpolated poses" << std::endl;
+    std::cout << "|timestamps|=" << timestamps.size() << std::endl;
     poses.resize(timestamps.size());
     std::transform(timestamps.begin(), timestamps.end(), poses.begin(), [&](double t) { return traj.pose(knots, t); });
 
-    spdlog::info("calculting IMU measurements on the interpolated trajectory");
+    std::cout << "calculating IMU measurements on the interpolated trajectory" << std::endl;
     imus.resize(timestamps.size());
     std::transform(timestamps.begin(), timestamps.end(), imus.begin(), [&](double t) { return traj.imu(knots, t); });
   }
@@ -131,10 +132,10 @@ public:
    * @param filename Output file name.
    */
   void save_poses(const std::string& filename) {
-    spdlog::info("saving poses to {}", filename);
+    std::cout << "saving poses to " << filename << std::endl;
     std::ofstream ofs(filename);
     if (!ofs) {
-      spdlog::error("Failed to open file: {}", filename);
+      std::cerr << "Failed to open file: " << filename << std::endl;
       abort();
     }
 
@@ -143,16 +144,8 @@ public:
       const Eigen::Vector3d trans = pose.translation();
       const Eigen::Quaterniond quat(pose.rotation().toQuaternion());
 
-      ofs << fmt::format(
-               "{:.9f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}",
-               timestamps[i],
-               trans.x(),
-               trans.y(),
-               trans.z(),
-               quat.x(),
-               quat.y(),
-               quat.z(),
-               quat.w())
+      ofs << boost::format("%.9f %.6f %.6f %.6f %.6f %.6f %.6f %.6f") % timestamps[i] % trans.x() % trans.y() % trans.z() % quat.x() % quat.y() %
+               quat.z() % quat.w()
           << std::endl;
     }
   }
@@ -162,17 +155,16 @@ public:
    * @param filename Output file name.
    */
   void save_imu(const std::string& filename) {
-    spdlog::info("saving IMU measurements to {}", filename);
+    std::cout << "saving IMU measurements to " << filename << std::endl;
     std::ofstream ofs(filename);
     if (!ofs) {
-      spdlog::error("Failed to open file: {}", filename);
+      std::cerr << "Failed to open file: " << filename << std::endl;
       abort();
     }
 
     for (int i = 0; i < timestamps.size(); i++) {
       const gtsam::Vector6& imu = imus[i];
-      ofs << fmt::format("{:.9f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f} {:.6f}", timestamps[i], imu[0], imu[1], imu[2], imu[3], imu[4], imu[5])
-          << std::endl;
+      ofs << boost::format("%.9f %.6f %.6f %.6f %.6f %.6f %.6f") % timestamps[i] % imu[0] % imu[1] % imu[2] % imu[3] % imu[4] % imu[5] << std::endl;
     }
   }
 
@@ -236,16 +228,16 @@ public:
 
     // Register drawables
     for (int i = 0; i < input_poses.size(); i++) {
-      viewer->update_coord(fmt::format("input_{}", i), guik::VertexColor(input_poses[i].matrix()));
+      viewer->update_coord("input_" + std::to_string(i), guik::VertexColor(input_poses[i].matrix()));
     }
 
     for (int i = 0; i < knots.size(); i++) {
       const gtsam::Pose3 pose = knots.at<gtsam::Pose3>(gtsam::Symbol('x', i));
-      viewer->update_coord(fmt::format("knot_{}", i), guik::FlatGray(pose.matrix()));
+      viewer->update_coord("knot_" + std::to_string(i), guik::FlatGray(pose.matrix()));
     }
 
     for (int i = 0; i < poses.size(); i++) {
-      viewer->update_coord(fmt::format("interpolated_pose_{}", i), guik::VertexColor(poses[i].matrix()));
+      viewer->update_coord("interpolated_pose_" + std::to_string(i), guik::VertexColor(poses[i].matrix()));
     }
 
     std::vector<Eigen::Vector3d> interpolated_traj(poses.size());
