@@ -9,6 +9,7 @@ RUN cmake .. \
   -DBUILD_DEMO=ON \
   -DBUILD_TESTS=ON \
   -DBUILD_EXAMPLE=ON \
+  -DBUILD_TOOLS=ON \
   -DBUILD_WITH_CUDA=OFF \
   -DCMAKE_BUILD_TYPE=Release && \
   make -j$(nproc) && \
