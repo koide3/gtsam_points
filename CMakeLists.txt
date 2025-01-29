@@ -12,6 +12,7 @@ endif()
 option(BUILD_TESTS "Build test" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
 option(BUILD_EXAMPLE "Build example programs" OFF)
+option(BUILD_TOOLS "Build tools" OFF)
 option(BUILD_WITH_TBB "Build with TBB support" ON)
 option(BUILD_WITH_OPENMP "Build with OpenMP support" ON)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
@@ -268,6 +269,21 @@ if(BUILD_EXAMPLE)
 
     add_executable(${example_name} ${example_src})
     target_link_libraries(${example_name} gtsam_points Iridescence::Iridescence)
+  endforeach()
+endif()
+
+#Example
+if(BUILD_TOOLS)
+  find_package(spdlog REQUIRED)
+  find_package(Iridescence REQUIRED)
+  find_package(Boost REQUIRED COMPONENTS filesystem program_options)
+
+  file(GLOB tool_sources "src/tools/*.cpp")
+  foreach(tool_src IN LISTS tool_sources)
+    get_filename_component(tool_name ${tool_src} NAME_WE)
+
+    add_executable(${tool_name} ${tool_src})
+    target_link_libraries(${tool_name} gtsam_points spdlog::spdlog Iridescence::Iridescence Boost::program_options)
   endforeach()
 endif()
 
