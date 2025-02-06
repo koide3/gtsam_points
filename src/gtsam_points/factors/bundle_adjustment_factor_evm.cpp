@@ -13,6 +13,19 @@ EVMBundleAdjustmentFactorBase::EVMBundleAdjustmentFactorBase() : error_scale(1.0
 
 EVMBundleAdjustmentFactorBase::~EVMBundleAdjustmentFactorBase() {}
 
+void EVMBundleAdjustmentFactorBase::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "EVMBundleAdjustmentFactorBase";
+  std::cout << "(";
+  for (int i = 0; i < keys.size(); i++) {
+    if (i) {
+      std::cout << ", ";
+    }
+    std::cout << keyFormatter(keys[i]);
+  }
+  std::cout << ")" << std::endl;
+  std::cout << "|points|=" << points.size() << ", error_scale=" << error_scale << std::endl;
+}
+
 void EVMBundleAdjustmentFactorBase::set_scale(double scale) {
   error_scale = scale;
 }
@@ -106,6 +119,19 @@ PlaneEVMFactor::PlaneEVMFactor() : EVMBundleAdjustmentFactorBase() {}
 
 PlaneEVMFactor::~PlaneEVMFactor() {}
 
+void PlaneEVMFactor::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "PlaneEVMFactor";
+  std::cout << "(";
+  for (int i = 0; i < keys.size(); i++) {
+    if (i) {
+      std::cout << ", ";
+    }
+    std::cout << keyFormatter(keys[i]);
+  }
+  std::cout << ")" << std::endl;
+  std::cout << "|points|=" << points.size() << ", error_scale=" << error_scale << std::endl;
+}
+
 double PlaneEVMFactor::error(const gtsam::Values& values) const {
   std::vector<Eigen::Vector3d> transed_points(points.size());
   for (int i = 0; i < points.size(); i++) {
@@ -138,6 +164,19 @@ boost::shared_ptr<gtsam::GaussianFactor> PlaneEVMFactor::linearize(const gtsam::
 EdgeEVMFactor::EdgeEVMFactor() : EVMBundleAdjustmentFactorBase() {}
 
 EdgeEVMFactor::~EdgeEVMFactor() {}
+
+void EdgeEVMFactor::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "EdgeEVMFactor";
+  std::cout << "(";
+  for (int i = 0; i < keys.size(); i++) {
+    if (i) {
+      std::cout << ", ";
+    }
+    std::cout << keyFormatter(keys[i]);
+  }
+  std::cout << ")" << std::endl;
+  std::cout << "|points|=" << points.size() << ", error_scale=" << error_scale << std::endl;
+}
 
 double EdgeEVMFactor::error(const gtsam::Values& values) const {
   std::vector<Eigen::Vector3d> transed_points(points.size());

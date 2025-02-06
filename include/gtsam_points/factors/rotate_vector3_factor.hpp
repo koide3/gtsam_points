@@ -16,11 +16,22 @@ public:
   using Base = gtsam::NoiseModelFactor2<gtsam::Pose3, gtsam::Vector3>;
 
   RotateVector3Factor() {}
-  RotateVector3Factor(gtsam::Key x, gtsam::Key v, const gtsam::Vector3& local_v, const gtsam::SharedNoiseModel& noise_model) : Base(noise_model, x, v), local_v(local_v) {}
+  RotateVector3Factor(gtsam::Key x, gtsam::Key v, const gtsam::Vector3& local_v, const gtsam::SharedNoiseModel& noise_model)
+  : Base(noise_model, x, v),
+    local_v(local_v) {}
 
   virtual ~RotateVector3Factor() {}
 
-  virtual gtsam::Vector evaluateError(const gtsam::Pose3& x, const gtsam::Vector3& v, boost::optional<gtsam::Matrix&> H_x, boost::optional<gtsam::Matrix&> H_v) const override {
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override {
+    std::cout << s << "RotateVector3Factor";
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  }
+
+  virtual gtsam::Vector evaluateError(
+    const gtsam::Pose3& x,
+    const gtsam::Vector3& v,
+    boost::optional<gtsam::Matrix&> H_x,
+    boost::optional<gtsam::Matrix&> H_v) const override {
     gtsam::Matrix36 H_x1;
     gtsam::Matrix33 H_x2;
     gtsam::Vector3 v_ = x.rotation(H_x1).rotate(local_v, H_x2);
@@ -50,4 +61,4 @@ private:
   gtsam::Vector3 local_v;
 };
 
-}  // namespace gtsam
+}  // namespace gtsam_points

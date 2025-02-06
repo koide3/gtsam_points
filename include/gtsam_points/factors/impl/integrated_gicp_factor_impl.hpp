@@ -104,6 +104,20 @@ template <typename TargetFrame, typename SourceFrame>
 IntegratedGICPFactor_<TargetFrame, SourceFrame>::~IntegratedGICPFactor_() {}
 
 template <typename TargetFrame, typename SourceFrame>
+void IntegratedGICPFactor_<TargetFrame, SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedGICPFactor";
+  if (is_binary) {
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  } else {
+    std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
+  }
+
+  std::cout << "|target|=" << frame::size(*target) << "pts, |source|=" << frame::size(*source) << "pts" << std::endl;
+  std::cout << "num_threads=" << num_threads << ", max_corr_dist=" << std::sqrt(max_correspondence_distance_sq)
+            << ", cache_mode=" << static_cast<int>(mahalanobis_cache_mode) << std::endl;
+}
+
+template <typename TargetFrame, typename SourceFrame>
 void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   linearization_point = delta;
 

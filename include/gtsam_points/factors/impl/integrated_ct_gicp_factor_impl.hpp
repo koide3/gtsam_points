@@ -47,6 +47,15 @@ template <typename TargetFrame, typename SourceFrame>
 IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::~IntegratedCT_GICPFactor_() {}
 
 template <typename TargetFrame, typename SourceFrame>
+void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedCT_GICPFactor";
+  std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+
+  std::cout << "|target|=" << frame::size(*this->target) << "pts, |source|=" << frame::size(*this->source) << "pts" << std::endl;
+  std::cout << "num_threads=" << this->num_threads << ", max_corr_dist=" << std::sqrt(this->max_correspondence_distance_sq) << std::endl;
+}
+
+template <typename TargetFrame, typename SourceFrame>
 double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Values& values) const {
   this->update_poses(values);
   if (this->correspondences.size() != frame::size(*this->source)) {

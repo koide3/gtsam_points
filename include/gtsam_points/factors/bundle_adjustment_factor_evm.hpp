@@ -30,6 +30,9 @@ public:
   virtual ~EVMBundleAdjustmentFactorBase() override;
   virtual size_t dim() const override { return 6; }
 
+  /// @brief Print the factor information.
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
+
   /**
    * @brief  Assign a point to the factor
    * @param  pt       Point to be added
@@ -74,6 +77,9 @@ public:
   PlaneEVMFactor();
   virtual ~PlaneEVMFactor() override;
 
+  /// @brief Print the factor information.
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
+
   virtual double error(const gtsam::Values& c) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
 
@@ -89,6 +95,9 @@ public:
 
   EdgeEVMFactor();
   virtual ~EdgeEVMFactor() override;
+
+  /// @brief Print the factor information.
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
   virtual double error(const gtsam::Values& c) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;

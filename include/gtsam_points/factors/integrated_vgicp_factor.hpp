@@ -54,6 +54,9 @@ public:
 
   virtual ~IntegratedVGICPFactor_() override;
 
+  /// @brief Print the factor information.
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
+
   /// @brief Set the number of thread used for linearization of this factor.
   /// @note If your GTSAM is built with TBB, linearization is already multi-threaded
   ///       and setting n>1 can rather affect the processing speed.

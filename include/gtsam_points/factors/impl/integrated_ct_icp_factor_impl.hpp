@@ -73,6 +73,15 @@ template <typename TargetFrame, typename SourceFrame>
 IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::~IntegratedCT_ICPFactor_() {}
 
 template <typename TargetFrame, typename SourceFrame>
+void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedCT_ICPFactor";
+  std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+
+  std::cout << "|target|=" << frame::size(*target) << "pts, |source|=" << frame::size(*source) << "pts" << std::endl;
+  std::cout << "num_threads=" << num_threads << ", max_corr_dist=" << std::sqrt(max_correspondence_distance_sq) << std::endl;
+}
+
+template <typename TargetFrame, typename SourceFrame>
 double IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Values& values) const {
   update_poses(values);
   if (correspondences.size() != frame::size(*source)) {

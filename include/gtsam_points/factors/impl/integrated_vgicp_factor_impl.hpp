@@ -77,6 +77,19 @@ template <typename SourceFrame>
 IntegratedVGICPFactor_<SourceFrame>::~IntegratedVGICPFactor_() {}
 
 template <typename SourceFrame>
+void IntegratedVGICPFactor_<SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedVGICPFactor";
+  if (is_binary) {
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  } else {
+    std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
+  }
+
+  std::cout << "target_resolusion=" << target_voxels->voxel_resolution() << ", |source|=" << frame::size(*source) << "pts" << std::endl;
+  std::cout << "num_threads=" << num_threads << std::endl;
+}
+
+template <typename SourceFrame>
 void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   linearization_point = delta;
   correspondences.resize(frame::size(*source));
