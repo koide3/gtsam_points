@@ -48,6 +48,8 @@ public:
     return error;
   }
 
+  gtsam::NonlinearFactor::shared_ptr clone() const override { return gtsam::NonlinearFactor::shared_ptr(new RotateVector3Factor(*this)); }
+
 private:
   /** Serialization function */
   friend class boost::serialization::access;
