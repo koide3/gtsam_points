@@ -107,6 +107,19 @@ template <typename TargetFrame, typename SourceFrame>
 IntegratedICPFactor_<TargetFrame, SourceFrame>::~IntegratedICPFactor_() {}
 
 template <typename TargetFrame, typename SourceFrame>
+void IntegratedICPFactor_<TargetFrame, SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedICPFactor";
+  if (is_binary) {
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  } else {
+    std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
+  }
+
+  std::cout << "|target|=" << frame::size(*target) << "pts, |source|=" << frame::size(*source) << "pts" << std::endl;
+  std::cout << "num_threads=" << num_threads << ", max_corr_dist=" << std::sqrt(max_correspondence_distance_sq) << std::endl;
+}
+
+template <typename TargetFrame, typename SourceFrame>
 void IntegratedICPFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   bool do_update = true;
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {

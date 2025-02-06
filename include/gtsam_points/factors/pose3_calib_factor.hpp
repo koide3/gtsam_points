@@ -18,6 +18,12 @@ public:
 
   virtual ~Pose3CalibFactor() override {}
 
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override {
+    std::cout << s << "Pose3CalibFactor";
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ", " << keyFormatter(this->keys()[2]) << ")"
+              << std::endl;
+  }
+
 public:
   virtual gtsam::Vector evaluateError(
     const gtsam::Pose3& xi,

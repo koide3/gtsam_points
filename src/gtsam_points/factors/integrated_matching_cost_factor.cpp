@@ -20,6 +20,15 @@ IntegratedMatchingCostFactor::IntegratedMatchingCostFactor(const gtsam::Pose3& f
 
 IntegratedMatchingCostFactor::~IntegratedMatchingCostFactor() {}
 
+void IntegratedMatchingCostFactor::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedMatchingCostFactor";
+  if (is_binary) {
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  } else {
+    std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
+  }
+}
+
 double IntegratedMatchingCostFactor::error(const gtsam::Values& values) const {
   Eigen::Isometry3d delta = calc_delta(values);
   return evaluate(delta);

@@ -80,6 +80,17 @@ IntegratedVGICPFactorGPU::IntegratedVGICPFactorGPU(
 
 IntegratedVGICPFactorGPU::~IntegratedVGICPFactorGPU() {}
 
+void IntegratedVGICPFactorGPU::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedVGICPFactorGPU";
+  if (is_binary) {
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  } else {
+    std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
+  }
+
+  std::cout << "target_resolusion=" << target->voxel_resolution() << ", |source|=" << frame::size(*source) << "pts" << std::endl;
+}
+
 void IntegratedVGICPFactorGPU::set_enable_surface_validation(bool enable) {
   derivatives->set_enable_surface_validation(enable);
 }

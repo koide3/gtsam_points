@@ -59,6 +59,19 @@ template <typename TargetFrame, typename SourceFrame>
 IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::~IntegratedPointToPlaneFactor_() {}
 
 template <typename TargetFrame, typename SourceFrame>
+void IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedPointToPlaneFactor";
+  if (is_binary) {
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  } else {
+    std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
+  }
+
+  std::cout << "|target|=" << frame::size(*target) << "pts, |source|=" << frame::size(*source) << "pts" << std::endl;
+  std::cout << "num_threads=" << num_threads << ", max_corr_dist=" << std::sqrt(max_correspondence_distance_sq) << std::endl;
+}
+
+template <typename TargetFrame, typename SourceFrame>
 void IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
@@ -261,6 +274,19 @@ void IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::update_corresponden
 }
 
 template <typename TargetFrame, typename SourceFrame>
+void IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedPointToEdgeFactor";
+  if (is_binary) {
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  } else {
+    std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
+  }
+
+  std::cout << "|target|=" << frame::size(*target) << "pts, |source|=" << frame::size(*source) << "pts" << std::endl;
+  std::cout << "num_threads=" << num_threads << ", max_corr_dist=" << std::sqrt(max_correspondence_distance_sq) << std::endl;
+}
+
+template <typename TargetFrame, typename SourceFrame>
 double IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
@@ -328,7 +354,7 @@ double IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::evaluate(
     return error;
   };
 
-  if (is_omp_default()|| num_threads == 1) {
+  if (is_omp_default() || num_threads == 1) {
     return scan_matching_reduce_omp(perpoint_task, frame::size(*source), num_threads, H_target, H_source, H_target_source, b_target, b_source);
   } else {
     return scan_matching_reduce_tbb(perpoint_task, frame::size(*source), H_target, H_source, H_target_source, b_target, b_source);
@@ -371,6 +397,16 @@ IntegratedLOAMFactor_<TargetFrame, SourceFrame>::IntegratedLOAMFactor_(
 
 template <typename TargetFrame, typename SourceFrame>
 IntegratedLOAMFactor_<TargetFrame, SourceFrame>::~IntegratedLOAMFactor_() {}
+
+template <typename TargetFrame, typename SourceFrame>
+void IntegratedLOAMFactor_<TargetFrame, SourceFrame>::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "IntegratedLOAMFactor";
+  if (is_binary) {
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ")" << std::endl;
+  } else {
+    std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
+  }
+}
 
 template <typename TargetFrame, typename SourceFrame>
 void IntegratedLOAMFactor_<TargetFrame, SourceFrame>::set_num_threads(int n) {

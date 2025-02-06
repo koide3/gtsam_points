@@ -62,6 +62,15 @@ LsqBundleAdjustmentFactor::LsqBundleAdjustmentFactor() {
 
 LsqBundleAdjustmentFactor::~LsqBundleAdjustmentFactor() {}
 
+void LsqBundleAdjustmentFactor::print(const std::string& s, const gtsam::KeyFormatter& keyFormatter) const {
+  std::cout << s << "LsqBundleAdjustmentFactor";
+  std::cout << "(";
+  for (const auto& frame : frame_dists) {
+    std::cout << keyFormatter(frame.first) << ", ";
+  }
+  std::cout << ")" << std::endl;
+}
+
 void LsqBundleAdjustmentFactor::add(const gtsam::Point3& pt, const gtsam::Key& key) {
   if (std::find(keys_.begin(), keys_.end(), key) == keys_.end()) {
     this->keys_.push_back(key);

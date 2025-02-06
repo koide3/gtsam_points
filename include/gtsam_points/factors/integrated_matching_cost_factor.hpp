@@ -6,6 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
+#include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
 
 namespace gtsam_points {
@@ -35,6 +36,9 @@ public:
   virtual ~IntegratedMatchingCostFactor() override;
 
   virtual size_t dim() const override { return 6; }
+
+  /// @brief Print the factor information.
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
   /// @note The following error and linearize methods are not thread-safe,
   ///       because we need to update correspondences (that may be mutable members) for every linearization

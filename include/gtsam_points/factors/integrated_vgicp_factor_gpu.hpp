@@ -65,6 +65,9 @@ public:
 
   virtual ~IntegratedVGICPFactorGPU() override;
 
+  /// @brief Print the factor information.
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
+
   /// @brief Enable or disable surface orientation validation for correspondence search
   /// @note  To enable surface orientation validation, source frame must have point normals
   void set_enable_surface_validation(bool enable);
@@ -91,10 +94,7 @@ public:
   virtual size_t evaluation_output_size() const override;
 
   virtual void set_linearization_point(const gtsam::Values& values, void* lin_input_cpu) override;
-  virtual void issue_linearize(
-    const void* lin_input_cpu,
-    const void* lin_input_gpu,
-    void* lin_output_gpu) override;
+  virtual void issue_linearize(const void* lin_input_cpu, const void* lin_input_gpu, void* lin_output_gpu) override;
   virtual void store_linearized(const void* lin_output_cpu) override;
 
   virtual void set_evaluation_point(const gtsam::Values& values, void* eval_input_cpu) override;

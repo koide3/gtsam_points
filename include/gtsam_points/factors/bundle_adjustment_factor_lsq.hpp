@@ -25,6 +25,9 @@ public:
   LsqBundleAdjustmentFactor();
   virtual ~LsqBundleAdjustmentFactor() override;
 
+  /// @brief Print the factor information.
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
+
   virtual size_t dim() const override { return 6; }
   virtual double error(const gtsam::Values& c) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;

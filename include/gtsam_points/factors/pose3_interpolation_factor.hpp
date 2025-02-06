@@ -14,9 +14,16 @@ namespace gtsam_points {
 class Pose3InterpolationFactor : public gtsam::NoiseModelFactor3<gtsam::Pose3, gtsam::Pose3, gtsam::Pose3> {
 public:
   Pose3InterpolationFactor(gtsam::Key xi, gtsam::Key xj, gtsam::Key xk, const double t, const gtsam::SharedNoiseModel& noise_model)
-  : gtsam::NoiseModelFactor3<gtsam::Pose3, gtsam::Pose3, gtsam::Pose3>(noise_model, xi, xj, xk), t(t) {}
+  : gtsam::NoiseModelFactor3<gtsam::Pose3, gtsam::Pose3, gtsam::Pose3>(noise_model, xi, xj, xk),
+    t(t) {}
 
   virtual ~Pose3InterpolationFactor() override {}
+
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override {
+    std::cout << s << "Pose3InterpolationFactor";
+    std::cout << "(" << keyFormatter(this->keys()[0]) << ", " << keyFormatter(this->keys()[1]) << ", " << keyFormatter(this->keys()[2]) << ")"
+              << std::endl;
+  }
 
 public:
   virtual gtsam::Vector evaluateError(
@@ -35,7 +42,7 @@ public:
     const auto& tj = xj.translation();
     const auto& tk = xk.translation();
 
-    if(!H_xi) {
+    if (!H_xi) {
       const gtsam::Rot3 Rint = gtsam::interpolate(Ri, Rj, t);
       const gtsam::Rot3 Re = Rk.between(Rint);
       const gtsam::Vector3 re = gtsam::Rot3::Logmap(Re);
@@ -66,8 +73,8 @@ public:
     H_xj->block<3, 3>(0, 0) = H_re_Rint * H_Rint_Rj;
     H_xk->block<3, 3>(0, 0) = H_re_Re * H_Re_Rk;
 
-    H_xi->block<3, 3>(3, 3) = - (1.0 - t) * Ri.matrix();
-    H_xj->block<3, 3>(3, 3) = - t * Rj.matrix();
+    H_xi->block<3, 3>(3, 3) = -(1.0 - t) * Ri.matrix();
+    H_xj->block<3, 3>(3, 3) = -t * Rj.matrix();
     H_xk->block<3, 3>(3, 3) = Rk.matrix();
 
     return (gtsam::Vector6() << re, te).finished();
