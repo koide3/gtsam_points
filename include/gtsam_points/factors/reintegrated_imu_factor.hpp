@@ -12,7 +12,9 @@ class ReintegratedImuMeasurements : public gtsam::PreintegratedImuMeasurements {
 public:
   friend class ReintegratedImuFactor;
 
-  ReintegratedImuMeasurements(const boost::shared_ptr<gtsam::PreintegrationParams>& p, const gtsam::imuBias::ConstantBias& biasHat = gtsam::imuBias::ConstantBias());
+  ReintegratedImuMeasurements(
+    const boost::shared_ptr<gtsam::PreintegrationParams>& p,
+    const gtsam::imuBias::ConstantBias& biasHat = gtsam::imuBias::ConstantBias());
   ~ReintegratedImuMeasurements() override;
 
   void resetIntegration() override;
@@ -30,10 +32,18 @@ public:
  */
 class ReintegratedImuFactor : public gtsam::NonlinearFactor {
 public:
-  ReintegratedImuFactor(gtsam::Key pose_i, gtsam::Key vel_i, gtsam::Key pose_j, gtsam::Key vel_j, gtsam::Key bias, const ReintegratedImuMeasurements& imu_measurements);
+  ReintegratedImuFactor(
+    gtsam::Key pose_i,
+    gtsam::Key vel_i,
+    gtsam::Key pose_j,
+    gtsam::Key vel_j,
+    gtsam::Key bias,
+    const ReintegratedImuMeasurements& imu_measurements);
   ~ReintegratedImuFactor() override;
 
   size_t dim() const override { return 9; }
+
+  virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
   boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
   double error(const gtsam::Values& values) const override;
