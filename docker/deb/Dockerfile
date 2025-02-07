@@ -41,13 +41,14 @@ RUN apt-get install -y --no-install-recommends
 RUN apt-get install -y --no-install-recommends build-essential  \
     git cmake libeigen3-dev ca-certificates libboost-all-dev libmetis-dev
 RUN apt-get install -y --no-install-recommends curl libomp-dev libtbb-dev file
+RUN apt-get install -y --no-install-recommends clang
 
 COPY --from=gtsam /root/gtsam/build/*.deb /root/gtsam/build/
 RUN apt install -y /root/gtsam/build/*.deb
 
 COPY . /root/gtsam_points
 WORKDIR /root/gtsam_points/build
-RUN cmake .. \
+RUN CC=clang CXX=clang++ cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
   -DCPACK_DEBIAN_PACKAGE_DEPENDS="libgtsam-notbb-dev" \
   -DCPACK_DEBIAN_PACKAGE_NAME="libgtsam-points-dev"
@@ -68,13 +69,15 @@ RUN apt-get install -y --no-install-recommends
 RUN apt-get install -y --no-install-recommends build-essential  \
     git cmake libeigen3-dev ca-certificates libboost-all-dev libmetis-dev
 RUN apt-get install -y --no-install-recommends libomp-dev libtbb-dev file
+RUN apt-get install -y --no-install-recommends clang
 
 COPY --from=gtsam /root/gtsam/build/*.deb /root/gtsam/build/
 RUN apt install -y /root/gtsam/build/*.deb
 
 COPY . /root/gtsam_points
 WORKDIR /root/gtsam_points/build
-RUN cmake .. \
+
+RUN CC=clang CXX=clang++ cmake .. \
   -DCMAKE_BUILD_TYPE=Release \
   -DBUILD_WITH_CUDA=ON \
   -DBUILD_WITH_CUDA_MULTIARCH=ON \
