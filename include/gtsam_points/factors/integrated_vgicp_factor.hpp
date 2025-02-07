@@ -72,6 +72,8 @@ public:
     return static_cast<double>(inliers) / correspondences.size();
   }
 
+  gtsam::NonlinearFactor::shared_ptr clone() const override { return gtsam::NonlinearFactor::shared_ptr(new IntegratedVGICPFactor_(*this)); }
+
 private:
   virtual void update_correspondences(const Eigen::Isometry3d& delta) const override;
 
