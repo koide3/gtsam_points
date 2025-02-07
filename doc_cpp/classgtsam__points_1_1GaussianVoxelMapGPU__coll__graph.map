@@ -1,0 +1,9 @@
+<map id="gtsam_points::GaussianVoxelMapGPU" name="gtsam_points::GaussianVoxelMapGPU">
+<area shape="rect" id="Node000001" title="Gaussian distribution voxelmap on GPU." alt="" coords="416,47,629,87"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1GaussianVoxelMap.html" title="Gaussian distribution voxelmap." alt="" coords="5,5,247,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="261,21,392,34,446,45,445,50,392,39,260,26"/>
+<area shape="rect" id="Node000003" href="$structgtsam__points_1_1VoxelMapInfo.html" title="Voxel hashmap information." alt="" coords="23,55,229,80"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="243,65,416,65,416,70,243,70"/>
+<area shape="rect" id="Node000004" href="$structgtsam__points_1_1VoxelBucket.html" title="Voxel bucket (avoid using thrust::pair for CUDA compatibility)" alt="" coords="27,104,225,129"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="238,103,392,85,415,81,416,87,392,90,239,108"/>
+</map>

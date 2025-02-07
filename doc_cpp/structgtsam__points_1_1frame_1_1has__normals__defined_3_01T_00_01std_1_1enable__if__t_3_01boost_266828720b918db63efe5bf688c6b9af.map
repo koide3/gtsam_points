@@ -1,0 +1,5 @@
+<map id="gtsam_points::frame::has_normals_defined&lt; T, std::enable_if_t&lt; boost::poly_collection::detail::is_invocable&lt; decltype(&amp;traits&lt; T &gt;::has_normals), const T &amp; &gt;::value &gt; &gt;" name="gtsam_points::frame::has_normals_defined&lt; T, std::enable_if_t&lt; boost::poly_collection::detail::is_invocable&lt; decltype(&amp;traits&lt; T &gt;::has_normals), const T &amp; &gt;::value &gt; &gt;">
+<area shape="rect" id="Node000001" title=" " alt="" coords="5,79,253,192"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="73,5,185,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="132,44,132,78,127,78,127,44"/>
+</map>
