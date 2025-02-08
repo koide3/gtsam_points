@@ -259,6 +259,7 @@ void IncrementalFixedLagSmootherExtWithFallback::fallback_smoother() const {
       std::cerr << std::endl;
     }
   }
+  this->factors = new_factors;
 
   // Create fixation factors
   for (const auto& value : values) {

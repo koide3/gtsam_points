@@ -447,7 +447,16 @@ struct GTSAM_EXPORT UpdateImpl {
     for (const auto& factor : newFactors) {
       for (const auto key : factor->keys()) {
         if (!theta.exists(key)) {
-          std::cerr << "warning: requesting a non-existing value!!" << std::endl;
+          std::cerr << "warning: requesting a non-existing value!! (key=" << gtsam::Symbol(key) << ")" << std::endl;
+
+          std::cerr << "       : factor : ";
+          for(const auto k : factor->keys()) {
+            std::cerr << gtsam::Symbol(k) << " ";
+          }
+          std::cerr << std::endl;
+
+          factor->print();
+          factor->printKeys();
         }
       }
     }
