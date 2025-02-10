@@ -47,6 +47,17 @@ PointCloudGPU::Ptr PointCloudGPU::clone(const PointCloud& frame, CUstream_st* st
     new_frame->add_intensities(frame.intensities, frame.size(), stream);
   }
 
+  for (const auto& aux : frame.aux_attributes) {
+    const auto& name = aux.first;
+    const auto& size_data = aux.second;
+
+    auto buffer = std::make_shared<std::vector<unsigned char, Eigen::aligned_allocator<unsigned char>>>(size_data.first * frame.size());
+    memcpy(buffer->data(), size_data.second, size_data.first * frame.size());
+
+    new_frame->aux_attributes_storage[name] = buffer;
+    new_frame->aux_attributes[name] = {size_data.first, buffer->data()};
+  }
+
   return new_frame;
 }
 
