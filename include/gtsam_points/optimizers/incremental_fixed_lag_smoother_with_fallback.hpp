@@ -65,8 +65,8 @@ private:
 private:
   double current_stamp;
   mutable gtsam::Values values;
+  mutable gtsam::NonlinearFactorGraph factors;
   mutable std::atomic_bool fallback_happend;
-  gtsam::NonlinearFactorGraph factors;
   std::unordered_map<gtsam::Key, std::vector<gtsam::NonlinearFactor::shared_ptr>> factor_map;
   mutable gtsam::FixedLagSmootherKeyTimestampMap stamps;
 
