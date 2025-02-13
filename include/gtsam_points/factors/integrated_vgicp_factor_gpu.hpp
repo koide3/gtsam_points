@@ -76,6 +76,8 @@ public:
   ///        Setting larger values reduces GPU sync but may affect the registration accuracy.
   void set_inlier_update_thresh(double trans, double angle);
 
+  int get_num_inliers() const;
+
   Eigen::Isometry3f get_fixed_target_pose() const { return fixed_target_pose; }
 
   // forbid copy

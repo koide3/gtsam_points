@@ -34,6 +34,8 @@ public:
 
   void set_enable_surface_validation(bool enable) { enable_surface_validation = enable; }
 
+  int get_num_inliers() const { return num_inliers; }
+
   // synchronized interface
   LinearizedSystem6 linearize(const Eigen::Isometry3f& x);
   double compute_error(const Eigen::Isometry3f& xl, const Eigen::Isometry3f& xe);

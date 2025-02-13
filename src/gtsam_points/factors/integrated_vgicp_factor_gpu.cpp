@@ -99,6 +99,10 @@ void IntegratedVGICPFactorGPU::set_inlier_update_thresh(double trans, double ang
   derivatives->set_inlier_update_thresh(trans, angle);
 }
 
+int IntegratedVGICPFactorGPU::get_num_inliers() const {
+  return derivatives->get_num_inliers();
+}
+
 gtsam::NonlinearFactor::shared_ptr IntegratedVGICPFactorGPU::clone() const {
   if (is_binary) {
     return gtsam::make_shared<IntegratedVGICPFactorGPU>(keys()[0], keys()[1], target, source, nullptr, nullptr);
