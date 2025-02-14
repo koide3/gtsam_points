@@ -162,7 +162,7 @@ std::vector<PFHSignature> estimate_pfh(
     }
   } else {
 #ifdef GTSAM_POINTS_USE_TBB
-    tbb::parallel_for(tbb::blocked_range<int>(0, num_points, 4), [&](const tbb::blocked_range<int>& range) {
+    tbb::parallel_for(tbb::blocked_range<int>(0, num_indices, 4), [&](const tbb::blocked_range<int>& range) {
       for (int k = range.begin(); k < range.end(); k++) {
         perpoint_task(k);
       }
@@ -206,7 +206,8 @@ std::vector<FPFHSignature> estimate_fpfh(
   std::vector<std::vector<size_t>> all_neighbors(num_points);
   std::vector<std::vector<double>> all_sq_dists(num_points);
   std::vector<Eigen::Matrix<double, BINS * 3, 1>> spfh(num_points);
-  for (size_t k = 0; k < num_points; k++) {
+
+  const auto perpoint_task_spfh = [&](size_t k) {
     const size_t pt_index = k;
     const auto& pt = points[pt_index];
 
@@ -216,7 +217,7 @@ std::vector<FPFHSignature> estimate_fpfh(
 
     if (neighbors.size() <= 1) {
       spfh[k] = Eigen::Matrix<double, BINS * 3, 1>::Zero();
-      continue;
+      return;
     }
 
     Eigen::Matrix<int, BINS * 3, 1> hist = Eigen::Matrix<int, BINS * 3, 1>::Zero();
@@ -238,10 +239,10 @@ std::vector<FPFHSignature> estimate_fpfh(
 
     const double hist_incr = 100.0 / static_cast<double>(neighbors.size() - 1);
     spfh[k] = hist.cast<double>() * hist_incr;
-  }
+  };
 
   std::vector<FPFHSignature> features(num_indices);
-  for (size_t k = 0; k < num_indices; k++) {
+  const auto perpoint_task_fpfh = [&](size_t k) {
     const size_t pt_index = indices[k];
     const auto& pt = points[pt_index];
     const auto& neighbors = all_neighbors[pt_index];
@@ -262,6 +263,34 @@ std::vector<FPFHSignature> estimate_fpfh(
     // const double norm3 = 100.0 / fpfh.middleRows<BINS>(BINS * 2).sum();
 
     features[k] = fpfh * norm1;
+  };
+
+  if (is_omp_default() || params.num_threads == 1) {
+#pragma omp parallel for num_threads(params.num_threads) schedule(guided, 4)
+    for (size_t k = 0; k < num_points; k++) {
+      perpoint_task_spfh(k);
+    }
+
+#pragma omp parallel for num_threads(params.num_threads) schedule(guided, 16)
+    for (size_t k = 0; k < num_indices; k++) {
+      perpoint_task_fpfh(k);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, num_points, 4), [&](const tbb::blocked_range<int>& range) {
+      for (int k = range.begin(); k < range.end(); k++) {
+        perpoint_task_spfh(k);
+      }
+    });
+    tbb::parallel_for(tbb::blocked_range<int>(0, num_indices, 4), [&](const tbb::blocked_range<int>& range) {
+      for (int k = range.begin(); k < range.end(); k++) {
+        perpoint_task_fpfh(k);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 
   return features;
