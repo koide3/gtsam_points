@@ -6,9 +6,9 @@
 
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/util/read_points.hpp>
-#include <gtsam_points/util/fpfh_estimation.hpp>
-#include <gtsam_points/util/normal_estimation.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/features/fpfh_estimation.hpp>
+#include <gtsam_points/features/normal_estimation.hpp>
 
 class FPFHTest : public testing::Test, public testing::WithParamInterface<std::string> {
   virtual void SetUp() {
@@ -21,6 +21,7 @@ class FPFHTest : public testing::Test, public testing::WithParamInterface<std::s
     target = std::make_shared<gtsam_points::PointCloudCPU>(target_raw);
     target = gtsam_points::randomgrid_sampling(target, 1.0, 5000.0 / target->size(), mt);
     target->add_normals(gtsam_points::estimate_normals(target->points, target->size(), 10));
+
     std::for_each(target->normals, target->normals + target->size(), [&](auto& n) {
       n = (n + Eigen::Vector4d(noise(mt), noise(mt), noise(mt), 0.0)).normalized();
     });

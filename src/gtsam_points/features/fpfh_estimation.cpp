@@ -41,7 +41,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <gtsam_points/util/fpfh_estimation.hpp>
+#include <gtsam_points/features/fpfh_estimation.hpp>
 
 #include <numeric>
 #include <Eigen/Geometry>

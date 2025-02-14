@@ -10,8 +10,8 @@
 
 #include <gtsam_points/config.hpp>
 #include <gtsam_points/util/read_points.hpp>
-#include <gtsam_points/util/normal_estimation.hpp>
-#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/features/normal_estimation.hpp>
+#include <gtsam_points/features/covariance_estimation.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
 

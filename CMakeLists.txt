@@ -136,12 +136,13 @@ configure_file(include/gtsam_points/config.hpp.in include/gtsam_points/config.hp
 
 add_library(gtsam_points SHARED
   # util
-  src/gtsam_points/util/covariance_estimation.cpp
-  src/gtsam_points/util/normal_estimation.cpp
-  src/gtsam_points/util/fpfh_estimation.cpp
   src/gtsam_points/util/bspline.cpp
   src/gtsam_points/util/continuous_trajectory.cpp
   src/gtsam_points/util/parallelism.cpp
+  # features
+  src/gtsam_points/features/covariance_estimation.cpp
+  src/gtsam_points/features/normal_estimation.cpp
+  src/gtsam_points/features/fpfh_estimation.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
   src/gtsam_points/ann/intensity_kdtree.cpp
@@ -151,6 +152,7 @@ add_library(gtsam_points SHARED
   # types
   src/gtsam_points/types/point_cloud.cpp
   src/gtsam_points/types/point_cloud_cpu.cpp
+  src/gtsam_points/types/point_cloud_cpu_funcs.cpp
   src/gtsam_points/types/gaussian_voxelmap_cpu.cpp
   src/gtsam_points/types/gaussian_voxelmap_cpu_funcs.cpp
   # factors
