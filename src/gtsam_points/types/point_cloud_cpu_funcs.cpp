@@ -1,5 +1,11 @@
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 
+#include <regex>
+#include <atomic>
+#include <numeric>
+#include <fstream>
+#include <iostream>
+
 #include <gtsam_points/config.hpp>
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/util/sort_omp.hpp>
