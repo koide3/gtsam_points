@@ -76,8 +76,18 @@ public:
   ///        Setting larger values reduces GPU sync but may affect the registration accuracy.
   void set_inlier_update_thresh(double trans, double angle);
 
-  int get_num_inliers() const;
+  /// @brief  Get the number of inlier points.
+  /// @note   This function must be called after the factor is linearized.
+  int num_inliers() const;
 
+  /// @brief Get the fraction of inlier points.
+  /// @note  This function must be called after the factor is linearized.
+  double inlier_fraction() const;
+
+  /// @brief Get the target voxelmap.
+  GaussianVoxelMapGPU::ConstPtr get_target() const { return target; }
+
+  /// @brief Get the pose of the fixed target. This function is only valid for unary factors.
   Eigen::Isometry3f get_fixed_target_pose() const { return fixed_target_pose; }
 
   // forbid copy
