@@ -65,12 +65,19 @@ public:
   /// @brief Set the cache mode for fused covariance matrices (i.e., mahalanobis).
   void set_fused_cov_cache_mode(FusedCovCacheMode mode) { mahalanobis_cache_mode = mode; }
 
-  /// @brief Compute the fraction of inlier points that have correspondences with a distance smaller than the trimming threshold.
-  double inlier_fraction() const {
+  /// @brief  Get the number of inlier points.
+  /// @note   This function must be called after the factor is linearized.
+  int num_inliers() const {
     const int outliers = std::count(correspondences.begin(), correspondences.end(), nullptr);
-    const int inliers = correspondences.size() - outliers;
-    return static_cast<double>(inliers) / correspondences.size();
+    return correspondences.size() - outliers;
   }
+
+  /// @brief Compute the fraction of inlier points that have correspondences fell in a voxel.
+  /// @note  This function must be called after the factor is linearized.
+  double inlier_fraction() const { return num_inliers() / static_cast<double>(correspondences.size()); }
+
+  /// @brief Get the target voxelmap.
+  const std::shared_ptr<const GaussianVoxelMapCPU>& get_target() const { return target_voxels; }
 
   gtsam::NonlinearFactor::shared_ptr clone() const override { return gtsam::NonlinearFactor::shared_ptr(new IntegratedVGICPFactor_(*this)); }
 
