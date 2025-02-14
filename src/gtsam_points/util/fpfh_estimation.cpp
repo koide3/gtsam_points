@@ -71,10 +71,11 @@ Eigen::Vector4d compute_pair_features(const Eigen::Vector4d& p1, const Eigen::Ve
   Eigen::Vector4d n1_copy = n1;
   Eigen::Vector4d n2_copy = n2;
 
-  // if (std::acos(std::fabs(angle1)) > std::acos(std::fabs(angle2))) {
+  // if (std::acos(std::abs(angle1)) > std::acos(std::abs(angle2))) {
   // acos is monotonic, so we can compare the cosines directly
   if (std::abs(angle1) < std::abs(angle2)) {
-    n1_copy.swap(n2_copy);
+    n1_copy = n2;
+    n2_copy = n1;
     ndp = -ndp;
     alpha = -angle2;
   }
@@ -88,7 +89,6 @@ Eigen::Vector4d compute_pair_features(const Eigen::Vector4d& p1, const Eigen::Ve
 
   const double phi = v.dot(n2_copy);
   const double theta = std::atan2(w.dot(n2_copy), n1_copy.dot(n2_copy));
-
   return Eigen::Vector4d(theta, phi, alpha, d);
 }
 
@@ -141,6 +141,11 @@ std::vector<PFHSignature> estimate_pfh(
     std::vector<size_t> neighbors;
     std::vector<double> sq_dists;
     search.radius_search(pt.data(), params.search_radius, neighbors, sq_dists, params.max_num_neighbors);
+
+    if (neighbors.size() <= 1) {
+      features[k].setZero();
+      return;
+    }
 
     Eigen::Matrix<int, PFH_DIM, 1> hist = Eigen::Matrix<int, PFH_DIM, 1>::Zero();
     for (size_t i = 0; i < neighbors.size(); i++) {
@@ -247,6 +252,11 @@ std::vector<FPFHSignature> estimate_fpfh(
     const auto& pt = points[pt_index];
     const auto& neighbors = all_neighbors[pt_index];
     const auto& sq_dists = all_sq_dists[pt_index];
+
+    if (neighbors.size() <= 1) {
+      features[k].setZero();
+      return;
+    }
 
     FPFHSignature fpfh = FPFHSignature::Zero();
     for (size_t i = 0; i < neighbors.size(); i++) {
