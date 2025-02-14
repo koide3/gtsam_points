@@ -60,6 +60,28 @@ public:
     return index->knn_search(Eigen::Map<const Eigen::Vector3d>(pt), k, k_indices, k_sq_dists, setting);
   }
 
+  /**
+   * @brief Radius search
+   * @note  There is no assumption and guarantee on points to be selected when `max_num_neighbors` is specified.
+   *        (KdTree tends to first pick closer points though).
+   * @param pt                 Point
+   * @param radius             Search radius
+   * @param indices            Indices of neighbors within the radius
+   * @param sq_dists           Squared distances to the neighbors
+   * @param max_num_neighbors  Maximum number of neighbors
+   * @return                   Number of neighbors
+   */
+  virtual size_t radius_search(
+    const double* pt,
+    double radius,
+    std::vector<size_t>& indices,
+    std::vector<double>& sq_dists,
+    int max_num_neighbors = std::numeric_limits<int>::max()) const override {
+    KnnSetting setting;
+    setting.max_nn = max_num_neighbors;
+    return index->radius_search(Eigen::Map<const Eigen::Vector3d>(pt), radius, indices, sq_dists, setting);
+  }
+
 public:
   const std::shared_ptr<const Frame> frame;
 
