@@ -24,7 +24,7 @@ align_points_4dof(const Eigen::Vector4d& target1, const Eigen::Vector4d& target2
 
 namespace impl {
 
-double sum_diffs(const Eigen::Isometry3d& T_target_source, const Eigen::Vector4d& target, const Eigen::Vector4d& source) {
+inline double sum_diffs(const Eigen::Isometry3d& T_target_source, const Eigen::Vector4d& target, const Eigen::Vector4d& source) {
   return (target - T_target_source * source).squaredNorm();
 }
 

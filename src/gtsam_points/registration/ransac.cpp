@@ -16,9 +16,7 @@
     const Features& source_features,                                      \
     const NearestNeighborSearch& target_tree,                             \
     const NearestNeighborSearch& target_features_tree,                    \
-    double inlier_threshold,                                              \
-    int max_iterations,                                                   \
-    std::mt19937& mt);
+    const RANSACParams& params);
 
 namespace gtsam_points {
 

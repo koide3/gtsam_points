@@ -8,11 +8,10 @@
 #include <gtsam_points/features/fpfh_estimation.hpp>
 #include <gtsam_points/features/normal_estimation.hpp>
 #include <gtsam_points/registration/ransac.hpp>
+#include <gtsam_points/util/easy_profiler.hpp>
 
 class GlobalRegistrationTest : public testing::Test, public testing::WithParamInterface<std::string> {
   virtual void SetUp() {
-    std::mt19937 mt;
-
     const std::string dataset_path = "data/kitti_00";
     const auto target_raw = gtsam_points::read_points(dataset_path + "/000000.bin");
     const auto source_raw = gtsam_points::read_points(dataset_path + "/000001.bin");
@@ -59,9 +58,20 @@ TEST_F(GlobalRegistrationTest, LoadCheck) {
 INSTANTIATE_TEST_SUITE_P(gtsam_points, GlobalRegistrationTest, testing::Values("RANSAC"), [](const auto& info) { return info.param; });
 
 TEST_P(GlobalRegistrationTest, RegistrationTest) {
+  gtsam_points::EasyProfiler prof("prof");
+  prof.push("ransac");
   std::mt19937 mt;
-  const auto result = gtsam_points::estimate_pose_ransac<
-    gtsam_points::PointCloud>(*target, *source, target_features, source_features, *target_tree, *target_features_tree, 1.0, 1000, mt);
+  gtsam_points::RANSACParams params;
+  params.early_stop_inlier_rate = 0.7;
+  const auto result = gtsam_points::estimate_pose_ransac<gtsam_points::PointCloud>(
+    *target,
+    *source,
+    target_features,
+    source_features,
+    *target_tree,
+    *target_features_tree,
+    params);
+  prof.push("done");
 
   std::cout << "inliers=" << result.inlier_rate << " / " << source->size() << std::endl;
 
