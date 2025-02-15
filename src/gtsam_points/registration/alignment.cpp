@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025  Kenji Koide (k.koide@aist.go.jp)
 #include <gtsam_points/registration/alignment.hpp>
 
 #include <iostream>
