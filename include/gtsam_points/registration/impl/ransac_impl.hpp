@@ -2,7 +2,9 @@
 // Copyright (c) 2025  Kenji Koide (k.koide@aist.go.jp)
 #include <gtsam_points/registration/ransac.hpp>
 
+#include <mutex>
 #include <atomic>
+#include <thread>
 #include <unordered_set>
 #include <gtsam_points/config.hpp>
 #include <gtsam_points/util/fast_floor.hpp>
