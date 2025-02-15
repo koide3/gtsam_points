@@ -145,6 +145,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/features/fpfh_estimation.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
+  src/gtsam_points/ann/kdtreex.cpp
   src/gtsam_points/ann/intensity_kdtree.cpp
   src/gtsam_points/ann/ivox.cpp
   src/gtsam_points/ann/incremental_covariance_container.cpp
