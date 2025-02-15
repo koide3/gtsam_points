@@ -62,7 +62,7 @@ TEST_P(GlobalRegistrationTest, RegistrationTest) {
   prof.push("ransac");
   std::mt19937 mt;
   gtsam_points::RANSACParams params;
-  params.early_stop_inlier_rate = 0.7;
+  params.early_stop_inlier_rate = 0.85;
   const auto result = gtsam_points::estimate_pose_ransac<gtsam_points::PointCloud>(
     *target,
     *source,
