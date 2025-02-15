@@ -8,5 +8,7 @@ namespace gtsam_points {
 
 template class KdTreeX<-1>;
 template class KdTreeX<4>;
+template class KdTreeX<33>;
+template class KdTreeX<125>;
 
 }  // namespace gtsam_points

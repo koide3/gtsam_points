@@ -143,6 +143,9 @@ add_library(gtsam_points SHARED
   src/gtsam_points/features/covariance_estimation.cpp
   src/gtsam_points/features/normal_estimation.cpp
   src/gtsam_points/features/fpfh_estimation.cpp
+  # registration
+  src/gtsam_points/registration/ransac.cpp
+  src/gtsam_points/registration/alignment.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
   src/gtsam_points/ann/kdtreex.cpp
