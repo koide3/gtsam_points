@@ -259,7 +259,6 @@ endif()
 
 #Demo
 if(BUILD_DEMO)
-  find_package(spdlog REQUIRED)
   find_package(Iridescence REQUIRED)
 
   file(GLOB demo_sources "src/demo/*.cpp")
@@ -267,7 +266,7 @@ if(BUILD_DEMO)
     get_filename_component(demo_name ${demo_src} NAME_WE)
 
     add_executable(${demo_name} ${demo_src})
-    target_link_libraries(${demo_name} gtsam_points spdlog::spdlog Iridescence::Iridescence)
+    target_link_libraries(${demo_name} gtsam_points Iridescence::Iridescence)
   endforeach()
 endif()
 

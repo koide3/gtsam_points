@@ -1,5 +1,4 @@
 #include <iostream>
-#include <spdlog/spdlog.h>
 #include <glk/io/ply_io.hpp>
 #include <guik/viewer/light_viewer.hpp>
 
@@ -19,7 +18,7 @@ int main(int argc, char** argv) {
 
   prof.push("read");
 
-  spdlog::info("load map1 and map2");
+  std::cout << "load map1 and map2" << std::endl;
   // const std::string map1_path = "/home/koide/map1.ply";
   // const std::string map2_path = "/home/koide/map2.ply";
   const auto target_raw = glk::load_ply("/home/koide/datasets/mmm/map1.ply")->vertices;
