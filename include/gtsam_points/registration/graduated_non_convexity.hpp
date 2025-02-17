@@ -11,20 +11,22 @@
 
 namespace gtsam_points {
 
+/// @brief Parameters for graduated non-convexity..
 struct GNCParams {
 public:
   // Feature matching parameters
   int max_init_samples = 5000;   ///< Maximum number of samples
   bool reciprocal_check = true;  ///< Reciprocal check
+  bool tuple_check = false;      ///< Length similarity check
   double tuple_thresh = 0.9;     ///< Length similarity threshold
   int max_num_tuples = 1000;     ///< Number of tuples to be sampled
 
   // Estimation praameters
   double div_factor = 1.4;     ///< Division factor for graduated non-convexity
   double max_corr_dist = 0.1;  ///< Maximum correspondence distance
-  int innter_iterations = 5;   ///< Number of inner iterations
+  int innter_iterations = 3;   ///< Number of inner iterations
   int max_iterations = 64;     ///< Maximum number of iterations
-  int dof = 6;                 ///< Degrees of freedom (must be 6 (SE3) or 4 (XYZ+RZ))
+  // int dof = 6;                 ///< Degrees of freedom (must be 6 (SE3) or 4 (XYZ+RZ))
 
   // Misc
   bool verbose = false;        ///< Verbose mode
@@ -32,6 +34,17 @@ public:
   int num_threads = 4;         ///< Number of threads
 };
 
+/// @brief Fast global registration with graduated non-convexity
+/// @ref   Zhou et al., "Fast Global Registration", ECCV2016
+/// @param target                   Target point cloud
+/// @param source                   Source point cloud
+/// @param target_features          Target features
+/// @param source_features          Source features
+/// @param target_tree              Target nearest neighbor search
+/// @param target_features_tree     Target features nearest neighbor search
+/// @param source_features_tree     Source features nearest neighbor search
+/// @param params                   GNC parameters
+/// @return                         Registration result
 template <typename PointCloud, typename Features>
 RegistrationResult estimate_pose_gnc(
   const PointCloud& target,

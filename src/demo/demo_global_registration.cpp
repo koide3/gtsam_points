@@ -8,7 +8,6 @@
 #include <gtsam_points/ann/kdtree2.hpp>
 #include <gtsam_points/ann/kdtreex.hpp>
 #include <gtsam_points/ann/fast_occupancy_grid.hpp>
-#include <gtsam_points/ann/locality_sensitive_hashing.hpp>
 #include <gtsam_points/features/normal_estimation.hpp>
 #include <gtsam_points/features/fpfh_estimation.hpp>
 #include <gtsam_points/registration/ransac.hpp>
@@ -21,10 +20,10 @@ int main(int argc, char** argv) {
   prof.push("read");
 
   spdlog::info("load map1 and map2");
-  const std::string map1_path = "/home/koide/map1.ply";
-  const std::string map2_path = "/home/koide/map2.ply";
-  const auto target_raw = glk::load_ply(map1_path)->vertices;
-  const auto source_raw = glk::load_ply(map2_path)->vertices;
+  // const std::string map1_path = "/home/koide/map1.ply";
+  // const std::string map2_path = "/home/koide/map2.ply";
+  const auto target_raw = glk::load_ply("/home/koide/datasets/mmm/map1.ply")->vertices;
+  const auto source_raw = glk::load_ply("/home/koide/datasets/mmm/map2.ply")->vertices;
 
   // const auto target_raw = gtsam_points::read_points("/home/koide/workspace/gtsam_points/data/kitti_00/000000.bin");
   // const auto source_raw = gtsam_points::read_points("/home/koide/workspace/gtsam_points/data/kitti_00/000001.bin");
@@ -33,11 +32,16 @@ int main(int argc, char** argv) {
 
   prof.push("preprocess");
   auto target = std::make_shared<gtsam_points::PointCloudCPU>(target_raw);
-  target = gtsam_points::voxelgrid_sampling(target, 0.5, num_threads);
+  target = gtsam_points::voxelgrid_sampling(target, 0.2, num_threads);
   target->add_normals(gtsam_points::estimate_normals(target->points, target->size(), 10, num_threads));
 
+  Eigen::Isometry3d trans = Eigen::Isometry3d::Identity();
+  trans.translation() = Eigen::Vector3d::Random() * 10.0;
+  trans.linear() = Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d(0.0, 0.0, 1.0).normalized()).toRotationMatrix();
+  gtsam_points::transform_inplace(target, trans);
+
   auto source = std::make_shared<gtsam_points::PointCloudCPU>(source_raw);
-  source = gtsam_points::voxelgrid_sampling(source, 0.5, num_threads);
+  source = gtsam_points::voxelgrid_sampling(source, 0.2, num_threads);
   source->add_normals(gtsam_points::estimate_normals(source->points, source->size(), 10, num_threads));
 
   auto target_tree = std::make_shared<gtsam_points::KdTree2<gtsam_points::PointCloud>>(target, num_threads);
@@ -45,7 +49,7 @@ int main(int argc, char** argv) {
 
   prof.push("fpfh");
   gtsam_points::FPFHEstimationParams fpfh_params;
-  fpfh_params.search_radius = 5.0;
+  fpfh_params.search_radius = 2.0;
   fpfh_params.num_threads = num_threads;
   auto target_fpfh = gtsam_points::estimate_fpfh(target->points, target->normals, target->size(), *target_tree, fpfh_params);
   auto source_fpfh = gtsam_points::estimate_fpfh(source->points, source->normals, source->size(), *source_tree, fpfh_params);
@@ -54,38 +58,16 @@ int main(int argc, char** argv) {
   auto target_fpfh_tree = std::make_shared<gtsam_points::KdTreeX<gtsam_points::FPFH_DIM>>(target_fpfh.data(), target_fpfh.size());
   auto source_fpfh_tree = std::make_shared<gtsam_points::KdTreeX<gtsam_points::FPFH_DIM>>(source_fpfh.data(), source_fpfh.size());
 
-  prof.push("lsh");
-  std::mt19937 mt;
-  // Eigen::ArrayXd offset = Eigen::ArrayXd::Zero(gtsam_points::FPFH_DIM);
-  // Eigen::ArrayXd scale = Eigen::ArrayXd::Ones(gtsam_points::FPFH_DIM) / 10.0;
-  // gtsam_points::LocalitySensitiveHashing<gtsam_points::FPFHSignature> lsh(target_fpfh, offset, scale, 8192 * 16, 128, mt);
-  gtsam_points::MultiProbeLocalitySensitiveHashing lsh;
-  lsh.create_tables(target_fpfh, mt);
-
-  prof.push("search");
-  for (int i = 0; i < source_fpfh.size(); i++) {
-    size_t index = 0;
-    double sq_dist = 0.0;
-    size_t num_found = lsh.knn_search(source_fpfh[i].data(), 1, &index, &sq_dist);
-
-    size_t gt_index = 0;
-    double gt_sq_dist = 0.0;
-    target_fpfh_tree->knn_search(source_fpfh[i].data(), 1, &gt_index, &gt_sq_dist);
-
-    if (num_found == 0) {
-      continue;
-    }
-    std::cout << i << " : " << index << " : " << sq_dist << " / " << gt_index << " : " << gt_sq_dist << std::endl;
-  }
-
   prof.push("done");
-  return 0;
+  // return 0;
 
   prof.push("gnc");
   gtsam_points::GNCParams gnc_params;
   gnc_params.verbose = true;
-  gnc_params.max_init_samples = 5000;
+  gnc_params.max_init_samples = 10000;
   gnc_params.reciprocal_check = false;
+  gnc_params.tuple_check = true;
+  gnc_params.max_num_tuples = 1000;
   gnc_params.num_threads = num_threads;
   auto result = gtsam_points::estimate_pose_gnc<gtsam_points::PointCloud>(
     *target,
