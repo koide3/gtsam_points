@@ -249,7 +249,7 @@ endif()
 
 #Demo
 if(BUILD_DEMO)
-  find_package(Iridescence REQUIRED)
+  find_package(iridescence REQUIRED)
 
   file(GLOB demo_sources "src/demo/*.cpp")
   foreach(demo_src IN LISTS demo_sources)
