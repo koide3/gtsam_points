@@ -12,6 +12,7 @@
 #include <gtsam_points/util/parallelism.hpp>
 #include <gtsam_points/types/frame_traits.hpp>
 #include <gtsam_points/registration/alignment.hpp>
+#include <gtsam_points/ann/fast_occupancy_grid.hpp>
 
 #ifdef GTSAM_POINTS_USE_TBB
 #include <tbb/parallel_for.h>
@@ -30,11 +31,9 @@ RegistrationResult estimate_pose_ransac(
   const RANSACParams& params) {
   //
   const double inv_resolution = 1.0 / params.inlier_voxel_resolution;
-  std::unordered_set<Eigen::Vector3i, Vector3iHash> target_voxels;
-  for (size_t i = 0; i < frame::size(target); i++) {
-    const Eigen::Array4i coord = fast_floor(frame::point(target, i) * inv_resolution);
-    target_voxels.emplace(coord.head<3>());
-  }
+
+  FastOccupancyGrid target_voxels(params.inlier_voxel_resolution);
+  target_voxels.insert(target);
 
   // Sample random source indices
   const auto sample_indices = [&](auto& samples, std::mt19937& mt) {
@@ -113,16 +112,8 @@ RegistrationResult estimate_pose_ransac(
   };
 
   // Count inliers based on an estimated transformation
-  const auto count_inliers = [&](const Eigen::Isometry3d& T_target_source) {
-    size_t inliers = 0;
-    for (size_t i = 0; i < frame::size(source); i++) {
-      const Eigen::Vector4d transformed = T_target_source * frame::point(source, i);
-      const Eigen::Array4i coord = fast_floor(transformed * inv_resolution);
-      if (target_voxels.count(coord.head<3>())) {
-        inliers++;
-      }
-    }
-    return inliers;
+  const auto count_inliers = [&](const Eigen::Isometry3d& T_target_source) {  //
+    return target_voxels.calc_overlap(source, T_target_source);
   };
 
   const int num_samples = params.dof == 6 ? 3 : 2;

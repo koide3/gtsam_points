@@ -144,8 +144,9 @@ add_library(gtsam_points SHARED
   src/gtsam_points/features/normal_estimation.cpp
   src/gtsam_points/features/fpfh_estimation.cpp
   # registration
-  src/gtsam_points/registration/ransac.cpp
   src/gtsam_points/registration/alignment.cpp
+  src/gtsam_points/registration/ransac.cpp
+  src/gtsam_points/registration/graduated_non_convexity.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
   src/gtsam_points/ann/kdtreex.cpp
@@ -153,6 +154,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/ann/ivox.cpp
   src/gtsam_points/ann/incremental_covariance_container.cpp
   src/gtsam_points/ann/incremental_covariance_voxelmap.cpp
+  src/gtsam_points/ann/fast_occupancy_grid.cpp
   # types
   src/gtsam_points/types/point_cloud.cpp
   src/gtsam_points/types/point_cloud_cpu.cpp
@@ -257,6 +259,7 @@ endif()
 
 #Demo
 if(BUILD_DEMO)
+  find_package(spdlog REQUIRED)
   find_package(Iridescence REQUIRED)
 
   file(GLOB demo_sources "src/demo/*.cpp")
@@ -264,7 +267,7 @@ if(BUILD_DEMO)
     get_filename_component(demo_name ${demo_src} NAME_WE)
 
     add_executable(${demo_name} ${demo_src})
-    target_link_libraries(${demo_name} gtsam_points Iridescence::Iridescence)
+    target_link_libraries(${demo_name} gtsam_points spdlog::spdlog Iridescence::Iridescence)
   endforeach()
 endif()
 
