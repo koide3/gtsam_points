@@ -12,7 +12,7 @@
 #include <gtsam_points/factors/integrated_gicp_factor.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
-#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/features/covariance_estimation.hpp>
 #include <gtsam_points/util/read_points.hpp>
 
 #ifdef GTSAM_POINTS_USE_CUDA

@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
-#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/features/covariance_estimation.hpp>
 
 #include <Eigen/Eigen>
 #include <Eigen/Geometry>

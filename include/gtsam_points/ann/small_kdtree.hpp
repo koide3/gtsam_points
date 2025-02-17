@@ -205,7 +205,9 @@ public:
 #pragma omp parallel num_threads(num_threads)
     {
 #pragma omp single nowait
-      { kdtree.root = create_node(kdtree, node_count, points, kdtree.indices.begin(), kdtree.indices.begin(), kdtree.indices.end()); }
+      {
+        kdtree.root = create_node(kdtree, node_count, points, kdtree.indices.begin(), kdtree.indices.begin(), kdtree.indices.end());
+      }
     }
 #else
     kdtree.root = create_node(kdtree, node_count, points, kdtree.indices.begin(), kdtree.indices.begin(), kdtree.indices.end());
@@ -372,8 +374,7 @@ public:
   /// @return             Number of found neighbors (0 or 1)
   size_t nearest_neighbor_search(const Eigen::Vector3d& query_, size_t* k_indices, double* k_sq_dists, const KnnSetting& setting = KnnSetting())
     const {
-    const Eigen::Vector4d query = (Eigen::Vector4d() << query_, 1.0).finished();
-    return knn_search<1>(query, k_indices, k_sq_dists, setting);
+    return knn_search<1>(query_, k_indices, k_sq_dists, setting);
   }
 
   /// @brief  Find k-nearest neighbors. This method uses dynamic memory allocation.
@@ -401,6 +402,32 @@ public:
     const Eigen::Vector4d query = (Eigen::Vector4d() << query_, 1.0).finished();
     KnnResult<N> result(k_indices, k_sq_dists, -1, identity_transform(), setting.max_sq_dist);
     knn_search(query, root, result, setting);
+    return result.num_found();
+  }
+
+  /// @brief Find neighbors in a search radius.
+  /// @param query        Query point
+  /// @param radius       Search radius
+  /// @param indices      Indices of neighbors
+  /// @param sq_dists     Squared distances to neighbors
+  /// @param setting      KNN search setting
+  /// @return             Number of found neighbors
+  size_t radius_search(
+    const Eigen::Vector3d& query_,
+    double radius,
+    std::vector<size_t>& indices,
+    std::vector<double>& sq_dists,
+    const KnnSetting& setting = KnnSetting()) const {
+    const Eigen::Vector4d query = (Eigen::Vector4d() << query_, 1.0).finished();
+    RadiusSearchResult result;
+    radius_search(query, root, result, radius * radius, setting);
+    result.sort();
+
+    indices.resize(result.num_found());
+    std::transform(result.neighbors.begin(), result.neighbors.end(), indices.begin(), [](const auto& p) { return p.first; });
+    sq_dists.resize(result.num_found());
+    std::transform(result.neighbors.begin(), result.neighbors.end(), sq_dists.begin(), [](const auto& p) { return p.second; });
+
     return result.num_found();
   }
 
@@ -443,6 +470,55 @@ private:
     // Check if the other child node needs to be tested.
     if (result.worst_distance() > cut_sq_dist) {
       return knn_search(query, other_child, result, setting);
+    }
+
+    return true;
+  }
+
+  /// @brief Find neighbors in a search radius.
+  template <typename Result>
+  bool radius_search(const Eigen::Vector4d& query, NodeIndexType node_index, Result& result, double sq_radius, const KnnSetting& setting) const {
+    const auto& node = nodes[node_index];
+
+    // Check if it's a leaf node.
+    if (node.left == INVALID_NODE) {
+      // Compare the query point with all points in the leaf node.
+      for (size_t i = node.node_type.lr.first; i < node.node_type.lr.last; i++) {
+        if (setting.fulfilled(result)) {
+          return false;
+        }
+
+        const double sq_dist = (frame::point(points, indices[i]) - query).squaredNorm();
+        if (sq_dist < sq_radius) {
+          result.push(indices[i], sq_dist);
+        }
+      }
+      return !setting.fulfilled(result);
+    }
+
+    const double val = node.node_type.sub.proj(query);
+    const double diff = val - node.node_type.sub.thresh;
+    const double cut_sq_dist = diff * diff;
+
+    NodeIndexType best_child;
+    NodeIndexType other_child;
+
+    if (diff < 0.0) {
+      best_child = node.left;
+      other_child = node.right;
+    } else {
+      best_child = node.right;
+      other_child = node.left;
+    }
+
+    // Check the best child node first.
+    if (!radius_search(query, best_child, result, sq_radius, setting)) {
+      return false;
+    }
+
+    // Check if the other child node needs to be tested.
+    if (sq_radius > cut_sq_dist) {
+      return radius_search(query, other_child, result, sq_radius, setting);
     }
 
     return true;

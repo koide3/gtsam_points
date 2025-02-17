@@ -6,7 +6,7 @@
 #include <gtsam/base/make_shared.h>
 #include <gtsam_points/util/compact.hpp>
 #include <gtsam_points/util/read_points.hpp>
-#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/features/covariance_estimation.hpp>
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>

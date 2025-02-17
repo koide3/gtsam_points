@@ -41,7 +41,18 @@ KdTree::~KdTree() {}
 size_t KdTree::knn_search(const double* pt, size_t k, size_t* k_indices, double* k_sq_dists, double max_sq_dist) const {
   KnnSetting setting;
   setting.max_sq_dist = max_sq_dist;
-  return index->knn_search(Eigen::Map<const Eigen::Vector3d>(pt), k, k_indices, k_sq_dists, setting);
+  if (k == 1) {
+    return index->nearest_neighbor_search(Eigen::Map<const Eigen::Vector3d>(pt), k_indices, k_sq_dists, setting);
+  } else {
+    return index->knn_search(Eigen::Map<const Eigen::Vector3d>(pt), k, k_indices, k_sq_dists, setting);
+  }
+}
+
+size_t KdTree::radius_search(const double* pt, double radius, std::vector<size_t>& indices, std::vector<double>& sq_dists, int max_num_neighbors)
+  const {
+  KnnSetting setting;
+  setting.max_nn = max_num_neighbors;
+  return index->radius_search(Eigen::Map<const Eigen::Vector3d>(pt), radius, indices, sq_dists, setting);
 }
 
 };  // namespace gtsam_points
