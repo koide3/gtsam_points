@@ -98,6 +98,103 @@ TEST(AlignmentTest, AlignPoints_4DoF) {
   }
 }
 
+TEST(AlignmentTest, AlignPointSets_6DoF) {
+  std::mt19937 mt;
+  std::vector<int> num_samples = {3, 5, 10, 100};
+
+  std::uniform_real_distribution<> wdist(1e-3, 1.0);
+  std::uniform_real_distribution<> udist(-1.0, 1.0);
+
+  for (int i = 0; i < 100; i++) {
+    for (int N : num_samples) {
+      std::vector<double> weights(N);
+      std::vector<Eigen::Vector4d> target(N);
+      std::vector<Eigen::Vector4d> source(N);
+
+      for (int j = 0; j < N; j++) {
+        weights[j] = wdist(mt);
+        target[j] = Eigen::Vector4d(udist(mt), udist(mt), udist(mt), 1.0);
+        source[j] = Eigen::Vector4d(udist(mt), udist(mt), udist(mt), 1.0);
+      }
+
+      const auto T_target_source = gtsam_points::align_points_se3(target.data(), source.data(), weights.data(), N);
+
+      const Eigen::Matrix3d R = T_target_source.linear();
+      EXPECT_NEAR(R.col(0).norm(), 1.0, 1e-6);
+      EXPECT_NEAR(R.col(1).norm(), 1.0, 1e-6);
+      EXPECT_NEAR(R.col(2).norm(), 1.0, 1e-6);
+      EXPECT_NEAR(R.col(0).dot(R.col(1)), 0.0, 1e-6);
+      EXPECT_NEAR(R.col(1).dot(R.col(2)), 0.0, 1e-6);
+      EXPECT_NEAR((R.col(0).cross(R.col(1)) - R.col(2)).cwiseAbs().maxCoeff(), 0.0, 1e-6);
+
+      const auto evaluate = [&](const Eigen::Isometry3d& T) {
+        double sum_errors = 0.0;
+        for (int j = 0; j < N; j++) {
+          sum_errors += weights[j] * (target[j] - T * source[j]).squaredNorm();
+        }
+        return sum_errors;
+      };
+      const auto retract = [&](const Eigen::Matrix<double, 6, 1>& delta) {
+        Eigen::Isometry3d T = Eigen::Isometry3d::Identity();
+        T.linear() = Eigen::AngleAxisd(delta.head<3>().norm(), delta.head<3>().normalized()).toRotationMatrix();
+        T.translation() = delta.tail<3>();
+        return T;
+      };
+
+      EXPECT_EQ(is_optimal<6>(T_target_source, evaluate, retract, mt), true);
+    }
+  }
+}
+
+TEST(AlignmentTest, AlignPointSets_4DoF) {
+  std::mt19937 mt;
+  std::vector<int> num_samples = {3, 5, 10, 100};
+
+  std::uniform_real_distribution<> wdist(1e-3, 1.0);
+  std::uniform_real_distribution<> udist(-1.0, 1.0);
+
+  for (int i = 0; i < 100; i++) {
+    for (int N : num_samples) {
+      std::vector<double> weights(N);
+      std::vector<Eigen::Vector4d> target(N);
+      std::vector<Eigen::Vector4d> source(N);
+
+      for (int j = 0; j < N; j++) {
+        weights[j] = wdist(mt);
+        target[j] = Eigen::Vector4d(udist(mt), udist(mt), udist(mt), 1.0);
+        source[j] = Eigen::Vector4d(udist(mt), udist(mt), udist(mt), 1.0);
+      }
+
+      const auto T_target_source = gtsam_points::align_points_4dof(target.data(), source.data(), weights.data(), N);
+
+      const Eigen::Matrix3d R = T_target_source.linear();
+      EXPECT_NEAR(R.col(0).norm(), 1.0, 1e-6);
+      EXPECT_NEAR(R.col(1).norm(), 1.0, 1e-6);
+      EXPECT_NEAR(R.col(2).norm(), 1.0, 1e-6);
+      EXPECT_NEAR(R.col(0).dot(R.col(1)), 0.0, 1e-6);
+      EXPECT_NEAR(R.col(1).dot(R.col(2)), 0.0, 1e-6);
+      EXPECT_NEAR((R.col(0).cross(R.col(1)) - R.col(2)).cwiseAbs().maxCoeff(), 0.0, 1e-6);
+      EXPECT_NEAR((R.col(2) - Eigen::Vector3d::UnitZ()).cwiseAbs().maxCoeff(), 0.0, 1e-6);
+
+      const auto evaluate = [&](const Eigen::Isometry3d& T) {
+        double sum_errors = 0.0;
+        for (int j = 0; j < N; j++) {
+          sum_errors += weights[j] * (target[j] - T * source[j]).squaredNorm();
+        }
+        return sum_errors;
+      };
+      const auto retract = [&](const Eigen::Matrix<double, 4, 1>& delta) {
+        Eigen::Isometry3d T = Eigen::Isometry3d::Identity();
+        T.linear().topLeftCorner<2, 2>() = Eigen::Rotation2Dd(delta(0)).toRotationMatrix();
+        T.translation() = delta.tail<3>();
+        return T;
+      };
+
+      EXPECT_EQ(is_optimal<4>(T_target_source, evaluate, retract, mt), true);
+    }
+  }
+}
+
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
   return RUN_ALL_TESTS();
