@@ -41,7 +41,7 @@ TEST(AlignmentTest, AlignPoints_6DoF) {
       target_source_pairs[j] = {target[j].head<3>(), source[j].head<3>()};
     }
 
-    const auto T_target_source = gtsam_points::align_points(target[0], target[1], target[2], source[0], source[1], source[2]);
+    const auto T_target_source = gtsam_points::align_points_se3(target[0], target[1], target[2], source[0], source[1], source[2]);
     const auto gt_T_target_source = gtsam::Pose3::Align(target_source_pairs).get();
 
     EXPECT_NEAR((T_target_source.matrix() - gt_T_target_source.matrix()).array().abs().maxCoeff(), 0.0, 1e-3);
