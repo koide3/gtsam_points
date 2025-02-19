@@ -91,7 +91,7 @@ RegistrationResult estimate_pose_ransac(
   const auto calc_T_target_source = [&](const auto& source_indices, const auto& target_indices) {
     switch (params.dof) {
       case 6:
-        return align_points(
+        return align_points_se3(
           frame::point(target, target_indices[0]),
           frame::point(target, target_indices[1]),
           frame::point(target, target_indices[2]),
@@ -146,6 +146,14 @@ RegistrationResult estimate_pose_ransac(
     }
 
     const Eigen::Isometry3d T_target_source = calc_T_target_source(source_indices, target_indices);
+    for (const auto& taboo : params.taboo_list) {
+      const Eigen::Isometry3d delta = taboo.inverse() * T_target_source;
+      const double delta_r = Eigen::AngleAxisd(delta.linear()).angle();
+      const double delta_t = delta.translation().norm();
+      if (delta_r < params.taboo_thresh_rot && delta_t < params.taboo_thresh_trans) {
+        return;
+      }
+    }
 
     const size_t inliers = count_inliers(T_target_source);
     if (inliers < best_inliers) {

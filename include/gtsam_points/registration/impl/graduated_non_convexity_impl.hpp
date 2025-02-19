@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam_points/types/frame_traits.hpp>
+#include <gtsam_points/registration/alignment.hpp>
 
 namespace gtsam_points {
 
@@ -139,38 +140,54 @@ RegistrationResult estimate_pose_gnc(
   double mu = (max_pt - min_pt).matrix().norm();
 
   // GNC loop
-  Eigen::Isometry3d T_target_source = Eigen::Isometry3d::Identity();
+  const double inlier_thresh_sq = std::pow(2.0 * params.max_corr_dist, 2);
+
+  RegistrationResult result;
+  result.inlier_rate = 0.0;
+  result.T_target_source.setIdentity();
+
   for (int i = 0; i < params.max_iterations; i++) {
     for (int j = 0; j < params.innter_iterations; j++) {
-      Eigen::Matrix<double, 6, 6> H = Eigen::Matrix<double, 6, 6>::Zero();
-      Eigen::Matrix<double, 6, 1> b = Eigen::Matrix<double, 6, 1>::Zero();
-      double sum_errors = 0.0;
-      double sum_weights = 0.0;
+      std::vector<double> weights(correspondences.size(), 1.0);
+      std::vector<Eigen::Vector4d> target_points(correspondences.size());
+      std::vector<Eigen::Vector4d> source_points(correspondences.size());
 
+      double sum_weights = 0.0;
+      double sum_errors = 0.0;
+      size_t num_inliers = 0;
       for (int j = 0; j < correspondences.size(); j++) {
         const auto& target_pt = frame::point(target, correspondences[j].first);
         const auto& source_pt = frame::point(source, correspondences[j].second);
-        const Eigen::Vector4d transformed = T_target_source * source_pt;
+        const Eigen::Vector4d transformed = result.T_target_source * source_pt;
         const Eigen::Vector4d residual = target_pt - transformed;
 
         const double error = residual.squaredNorm();
         const double weight = (i == 0 && j == 0) ? 1.0 : std::pow(mu / (mu + error), 2);
 
-        Eigen::Matrix<double, 4, 6> J = Eigen::Matrix<double, 4, 6>::Zero();
-        J.block<3, 3>(0, 0) = T_target_source.linear() * gtsam::SO3::Hat(source_pt.template head<3>());
-        J.block<3, 3>(0, 3) = -T_target_source.linear();
-
-        sum_weights += weight;
         sum_errors += error;
-        H += weight * J.transpose() * J;
-        b += weight * J.transpose() * residual;
+        sum_weights += weight;
+        num_inliers += error < inlier_thresh_sq;
+
+        weights[j] = weight;
+        target_points[j] = target_pt;
+        source_points[j] = source_pt;
       }
 
-      const Eigen::Matrix<double, 6, 1> delta = (H + Eigen::Matrix<double, 6, 6>::Identity() * 1e-6).ldlt().solve(-b);
-      T_target_source = T_target_source * Eigen::Isometry3d(gtsam::Pose3::Expmap(delta).matrix());
+      switch(params.dof) {
+        case 6:
+          result.T_target_source = align_points_se3(target_points.data(), source_points.data(), weights.data(), weights.size());
+          break;
+        case 4:
+          result.T_target_source = align_points_4dof(target_points.data(), source_points.data(), weights.data(), weights.size());
+          break;
+        default:
+          std::cerr << "error: invalid dof " << params.dof << std::endl;
+          abort();
+      }
+      result.inlier_rate = static_cast<double>(num_inliers) / static_cast<double>(correspondences.size());
 
       if (params.verbose) {
-        std::cout << i << "/" << j << " : mu=" << mu << " sum_weights=" << sum_weights << " sum_errors=" << sum_errors << std::endl;
+        std::cout << i << "/" << j << " : mu=" << mu << " sum_weights=" << sum_weights << " sum_errors=" << sum_errors << " num_inliers=" << num_inliers << std::endl;
       }
     }
 
@@ -180,7 +197,7 @@ RegistrationResult estimate_pose_gnc(
     }
   }
 
-  return RegistrationResult{1.0, T_target_source};
+  return result;
 }
 
 }  // namespace gtsam_points

@@ -8,7 +8,7 @@
 
 namespace gtsam_points {
 
-Eigen::Isometry3d align_points(
+Eigen::Isometry3d align_points_se3(
   const Eigen::Vector4d& target1,
   const Eigen::Vector4d& target2,
   const Eigen::Vector4d& target3,

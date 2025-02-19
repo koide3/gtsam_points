@@ -3,6 +3,7 @@
 #pragma once
 
 #include <random>
+#include <vector>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
@@ -20,6 +21,10 @@ struct RANSACParams {
   int dof = 6;                           ///< Degrees of freedom (must be 6 (SE3) or 4 (XYZ+RZ))
   std::uint64_t seed = 5489u;            ///< Random seed
   int num_threads = 4;                   ///< Number of threads
+
+  double taboo_thresh_rot = 0.5 * M_PI / 180.0;  ///< Taboo threshold in radian
+  double taboo_thresh_trans = 0.25;              ///< Taboo threshold in meter
+  std::vector<Eigen::Isometry3d> taboo_list;     ///< Taboo list
 };
 
 template <typename PointCloud, typename Features>

@@ -9,7 +9,7 @@ namespace gtsam_points {
 
 /// @brief  Find the 6-DoF transformation (SE3) that aligns three point pairs.
 /// @return T_target_source that minimizes the sum of squared errors.
-Eigen::Isometry3d align_points(
+Eigen::Isometry3d align_points_se3(
   const Eigen::Vector4d& target1,
   const Eigen::Vector4d& target2,
   const Eigen::Vector4d& target3,

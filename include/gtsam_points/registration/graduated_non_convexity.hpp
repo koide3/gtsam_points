@@ -23,10 +23,10 @@ public:
 
   // Estimation praameters
   double div_factor = 1.4;     ///< Division factor for graduated non-convexity
-  double max_corr_dist = 0.1;  ///< Maximum correspondence distance
+  double max_corr_dist = 0.25; ///< Maximum correspondence distance
   int innter_iterations = 3;   ///< Number of inner iterations
   int max_iterations = 64;     ///< Maximum number of iterations
-  // int dof = 6;                 ///< Degrees of freedom (must be 6 (SE3) or 4 (XYZ+RZ))
+  int dof = 6;                 ///< Degrees of freedom (must be 6 (SE3) or 4 (XYZ+RZ))
 
   // Misc
   bool verbose = false;        ///< Verbose mode
