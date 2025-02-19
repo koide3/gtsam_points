@@ -31,6 +31,7 @@ endif()
 
 find_package(Boost REQUIRED COMPONENTS filesystem)
 find_package(GTSAM REQUIRED)
+find_package(GTSAM_UNSTABLE REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 if(BUILD_WITH_TBB)
@@ -201,7 +202,8 @@ target_link_libraries(gtsam_points
   Boost::boost
   Boost::filesystem
   Eigen3::Eigen
-  GTSAM::GTSAM
+  gtsam
+  gtsam_unstable
   $<TARGET_NAME_IF_EXISTS:TBB::tbb>
   $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
 )
@@ -247,7 +249,8 @@ if(BUILD_WITH_CUDA)
     CUDA::cudart
     Boost::boost
     Eigen3::Eigen
-    GTSAM::GTSAM
+    gtsam
+    gtsam_unstable
     $<TARGET_NAME_IF_EXISTS:TBB::tbb>
     $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
   )
@@ -259,7 +262,7 @@ endif()
 
 #Demo
 if(BUILD_DEMO)
-  find_package(Iridescence REQUIRED)
+  find_package(iridescence REQUIRED)
 
   file(GLOB demo_sources "src/demo/*.cpp")
   foreach(demo_src IN LISTS demo_sources)
@@ -381,7 +384,6 @@ write_basic_package_version_file(
 install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/gtsam_points-config.cmake"
   "${CMAKE_CURRENT_BINARY_DIR}/gtsam_points-config-version.cmake"
-  "${CMAKE_CURRENT_SOURCE_DIR}/cmake/FindGTSAM.cmake"
   DESTINATION ${CMAKE_CONFIG_INSTALL_DIR}
 )
 

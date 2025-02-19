@@ -19,8 +19,13 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${gtsam_points_CURRENT_CONFIG_DIR}")
 include(CMakeFindDependencyMacro)
 find_dependency(Eigen3 REQUIRED)
 find_dependency(GTSAM REQUIRED)
+find_dependency(GTSAM_UNSTABLE REQUIRED)
 find_dependency(OpenMP REQUIRED)
 find_dependency(Boost REQUIRED COMPONENTS filesystem)
+
+if(GTSAM_POINTS_USE_TBB)
+  find_dependency(TBB REQUIRED)
+endif()
 
 if(BUILD_WITH_CUDA)
   find_dependency(CUDAToolkit REQUIRED)
