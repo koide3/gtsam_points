@@ -21,8 +21,16 @@ namespace gtsam_points {
 using PFHSignature = Eigen::Matrix<double, 125, 1>;
 using FPFHSignature = Eigen::Matrix<double, 33, 1>;
 
+using VextorXdPtr = const Eigen::VectorXd*;
+using PFHSignaturePtr = const PFHSignature*;
+using FPFHSignaturePtr = const FPFHSignature*;
+
+DEFINE_GNC(PointCloud, std::vector<Eigen::VectorXd>)
 DEFINE_GNC(PointCloud, std::vector<PFHSignature>)
 DEFINE_GNC(PointCloud, std::vector<FPFHSignature>)
-DEFINE_GNC(PointCloud, std::vector<Eigen::VectorXd>)
+
+DEFINE_GNC(PointCloud, VextorXdPtr)
+DEFINE_GNC(PointCloud, PFHSignaturePtr)
+DEFINE_GNC(PointCloud, FPFHSignaturePtr)
 
 }  // namespace gtsam_points

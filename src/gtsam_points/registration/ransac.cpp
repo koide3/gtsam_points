@@ -23,8 +23,17 @@ namespace gtsam_points {
 using PFHSignature = Eigen::Matrix<double, 125, 1>;
 using FPFHSignature = Eigen::Matrix<double, 33, 1>;
 
+using VextorXdPtr = const Eigen::VectorXd*;
+using PFHSignaturePtr = const PFHSignature*;
+using FPFHSignaturePtr = const FPFHSignature*;
+
 DEFINE_RANSAC(PointCloud, std::vector<Eigen::VectorXd>);
 DEFINE_RANSAC(PointCloud, std::vector<PFHSignature>);
 DEFINE_RANSAC(PointCloud, std::vector<FPFHSignature>);
 
+DEFINE_RANSAC(PointCloud, VextorXdPtr);
+DEFINE_RANSAC(PointCloud, FPFHSignaturePtr);
+DEFINE_RANSAC(PointCloud, PFHSignaturePtr);
+
+//
 }  // namespace gtsam_points
