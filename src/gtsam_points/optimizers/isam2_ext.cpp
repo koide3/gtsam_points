@@ -578,9 +578,7 @@ void ISAM2Ext::marginalizeLeaves(
         // because their information is already incorporated in the new
         // marginal factor.  So, now associate this marginal factor with the
         // parent of this clique. If the clique is a root and has no parent, then
-        marginalFactors[clique->parent()->conditional()->front()].push_back(
         // we can discard it without keeping track of the marginal factor.
-            marginalFactor);
         if (clique->parent()) {
             marginalFactors[clique->parent()->conditional()->front()].push_back(
                     marginalFactor);
