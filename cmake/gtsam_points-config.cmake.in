@@ -23,6 +23,10 @@ find_dependency(GTSAM_UNSTABLE REQUIRED)
 find_dependency(OpenMP REQUIRED)
 find_dependency(Boost REQUIRED COMPONENTS filesystem)
 
+if(GTSAM_POINTS_USE_TBB)
+  find_dependency(TBB REQUIRED)
+endif()
+
 if(BUILD_WITH_CUDA)
   find_dependency(CUDAToolkit REQUIRED)
 endif()
