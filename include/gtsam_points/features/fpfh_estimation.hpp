@@ -45,6 +45,7 @@
 
 #include <vector>
 #include <Eigen/Core>
+#include <gtsam_points/types/point_cloud.hpp>
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
 
 namespace gtsam_points {
@@ -131,5 +132,12 @@ std::vector<FPFHSignature> estimate_fpfh(
   int num_points,
   const NearestNeighborSearch& search,
   const FPFHEstimationParams& params = FPFHEstimationParams());
+
+/// @brief Estimate FPFH features.
+/// @param points       Input points (Needs to have normals)
+/// @param search       Nearest neighbor search
+/// @param params       FPFH estimation parameters
+std::vector<FPFHSignature>
+estimate_fpfh(const PointCloud& points, const NearestNeighborSearch& search, const FPFHEstimationParams& params = FPFHEstimationParams());
 
 }  // namespace gtsam_points

@@ -30,7 +30,7 @@ struct RANSACParams {
 
 /// @brief Estimate pose using RANSAC
 /// @param target                 Target point cloud
-/// @param source                 Source point cloud 
+/// @param source                 Source point cloud
 /// @param target_features        Target features
 /// @param source_features        Source features
 /// @param target_tree            Target nearest neighbor search
@@ -58,7 +58,13 @@ RegistrationResult estimate_pose_ransac(
   const RANSACParams& params = RANSACParams()) {
   using ConstFeaturePtr = const Eigen::Matrix<double, 33, 1>*;
   return estimate_pose_ransac_<PointCloud, ConstFeaturePtr>(
-    target, source, target_features, source_features, target_tree, target_features_tree, params);
+    target,
+    source,
+    target_features,
+    source_features,
+    target_tree,
+    target_features_tree,
+    params);
 }
 
 RegistrationResult estimate_pose_ransac(
@@ -71,7 +77,13 @@ RegistrationResult estimate_pose_ransac(
   const RANSACParams& params = RANSACParams()) {
   using ConstFeaturePtr = const Eigen::Matrix<double, 125, 1>*;
   return estimate_pose_ransac_<PointCloud, ConstFeaturePtr>(
-    target, source, target_features, source_features, target_tree, target_features_tree, params);
+    target,
+    source,
+    target_features,
+    source_features,
+    target_tree,
+    target_features_tree,
+    params);
 }
 
 RegistrationResult estimate_pose_ransac(
@@ -84,7 +96,13 @@ RegistrationResult estimate_pose_ransac(
   const RANSACParams& params = RANSACParams()) {
   using ConstFeaturePtr = const Eigen::VectorXd*;
   return estimate_pose_ransac_<PointCloud, ConstFeaturePtr>(
-    target, source, target_features, source_features, target_tree, target_features_tree, params);
+    target,
+    source,
+    target_features,
+    source_features,
+    target_tree,
+    target_features_tree,
+    params);
 }
 
 }  // namespace gtsam_points
