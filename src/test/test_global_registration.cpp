@@ -5,12 +5,14 @@
 #include <gtsam_points/ann/kdtreex.hpp>
 #include <gtsam_points/util/read_points.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/factors/integrated_icp_factor.hpp>
+#include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_points/features/fpfh_estimation.hpp>
 #include <gtsam_points/features/normal_estimation.hpp>
 #include <gtsam_points/registration/ransac.hpp>
-#include <gtsam_points/util/easy_profiler.hpp>
+#include <gtsam_points/registration/graduated_non_convexity.hpp>
 
-class GlobalRegistrationTest : public testing::Test, public testing::WithParamInterface<std::string> {
+class GlobalRegistrationTest : public testing::Test, public testing::WithParamInterface<std::tuple<std::string, int>> {
   virtual void SetUp() {
     const std::string dataset_path = "data/kitti_00";
     const auto target_raw = gtsam_points::read_points(dataset_path + "/000000.bin");
@@ -23,6 +25,20 @@ class GlobalRegistrationTest : public testing::Test, public testing::WithParamIn
     source = std::make_shared<gtsam_points::PointCloudCPU>(source_raw);
     source = gtsam_points::voxelgrid_sampling(source, 0.5);
     source->add_normals(gtsam_points::estimate_normals(source->points, source->size(), 10));
+
+    // Align source to target for ground truth
+    gtsam::NonlinearFactorGraph graph;
+    gtsam::Values values;
+    graph.emplace_shared<gtsam_points::IntegratedICPFactor>(gtsam::Pose3(), 0, target, source);
+    values.insert(0, gtsam::Pose3());
+    values = gtsam_points::LevenbergMarquardtOptimizerExt(graph, values).optimize();
+    gtsam_points::transform_inplace(source, Eigen::Isometry3d(values.at<gtsam::Pose3>(0).matrix()));
+
+    // Add some rotation and translation
+    T_target_source.setIdentity();
+    T_target_source.translation() << 20.0, 5.0, 1.0;
+    T_target_source.linear() = Eigen::AngleAxisd(M_PI_2, Eigen::Vector3d(0.01, 0.0, 1.0).normalized()).toRotationMatrix();
+    gtsam_points::transform_inplace(source, T_target_source.inverse());
 
     target_tree = std::make_shared<gtsam_points::KdTree2<gtsam_points::PointCloud>>(target);
     source_tree = std::make_shared<gtsam_points::KdTree2<gtsam_points::PointCloud>>(source);
@@ -37,6 +53,7 @@ class GlobalRegistrationTest : public testing::Test, public testing::WithParamIn
   }
 
 public:
+  Eigen::Isometry3d T_target_source;
   gtsam_points::PointCloudCPU::Ptr target;
   gtsam_points::PointCloudCPU::Ptr source;
   gtsam_points::NearestNeighborSearch::Ptr target_tree;
@@ -55,54 +72,55 @@ TEST_F(GlobalRegistrationTest, LoadCheck) {
   ASSERT_EQ(source->size(), source_features.size());
 }
 
-INSTANTIATE_TEST_SUITE_P(gtsam_points, GlobalRegistrationTest, testing::Values("RANSAC"), [](const auto& info) { return info.param; });
+INSTANTIATE_TEST_SUITE_P(
+  gtsam_points,
+  GlobalRegistrationTest,
+  testing::Combine(testing::Values("RANSAC", "GNC"), testing::Values(4, 6)),
+  [](const auto& info) { return std::get<0>(info.param) + "_" + std::to_string(std::get<1>(info.param)) + "DoF"; });
 
 TEST_P(GlobalRegistrationTest, RegistrationTest) {
-  gtsam_points::EasyProfiler prof("prof");
-  prof.push("ransac");
-  std::mt19937 mt;
-  gtsam_points::RANSACParams params;
-  params.early_stop_inlier_rate = 0.85;
-  const auto result = gtsam_points::estimate_pose_ransac(
-    *target,
-    *source,
-    target_features,
-    source_features,
-    *target_tree,
-    *target_features_tree,
-    params);
-  prof.push("done");
+  gtsam_points::RegistrationResult result;
 
-  std::cout << "inliers=" << result.inlier_rate << " / " << source->size() << std::endl;
+  const std::string method = std::get<0>(GetParam());
+  const int dof = std::get<1>(GetParam());
 
-  std::cout << "--- T_target_source ---" << std::endl;
-  std::cout << result.T_target_source.matrix() << std::endl;
-
-  size_t num_inliers = 0;
-  std::vector<Eigen::Vector4d> corr_lines;
-  std::vector<Eigen::Vector4d> corr_colors;
-  for (size_t i = 0; i < source->size(); i++) {
-    const auto& source_f = source_features[i];
-    if (source_f.norm() < 1.0) {
-      continue;
-    }
-
-    size_t target_index;
-    double sq_dist;
-    target_features_tree->knn_search(source_f.data(), 1, &target_index, &sq_dist);
-
-    const Eigen::Vector4d source_pt = result.T_target_source * source->points[i];
-    const double dist = (source_pt - target->points[target_index]).norm();
-    const Eigen::Vector4d color = dist < 5.0 ? Eigen::Vector4d(0.0, 1.0, 0.0, 0.5) : Eigen::Vector4d(1.0, 0.0, 0.0, 0.5);
-    num_inliers += dist < 5.0 ? 1 : 0;
-
-    corr_lines.emplace_back(source_pt);
-    corr_lines.emplace_back(target->points[target_index]);
-    corr_colors.emplace_back(color);
-    corr_colors.emplace_back(color);
+  if (method == "RANSAC") {
+    gtsam_points::RANSACParams params;
+    params.num_threads = 2;
+    params.dof = dof;
+    result = gtsam_points::estimate_pose_ransac(
+      *target,
+      *source,
+      target_features.data(),
+      source_features.data(),
+      *target_tree,
+      *target_features_tree,
+      params);
+  } else {
+    gtsam_points::GNCParams params;
+    params.num_threads = 2;
+    params.dof = dof;
+    result = gtsam_points::estimate_pose_gnc(
+      *target,
+      *source,
+      target_features.data(),
+      source_features.data(),
+      *target_tree,
+      *target_features_tree,
+      *source_features_tree,
+      params);
   }
 
-  std::cout << "inliers=" << num_inliers << " / " << source->size() << std::endl;
+  const Eigen::Isometry3d error = T_target_source.inverse() * result.T_target_source;
+  const double error_t = error.translation().norm();
+  const double error_r = Eigen::AngleAxisd(error.linear()).angle();
+  EXPECT_LE(error_t, 0.5);
+  EXPECT_LE(error_r, 0.1);
+
+  if (dof == 4) {
+    const Eigen::Vector3d z = result.T_target_source.linear().col(2);
+    EXPECT_NEAR((z - Eigen::Vector3d::UnitZ()).cwiseAbs().maxCoeff(), 0.0, 1e-6);
+  }
 }
 
 int main(int argc, char** argv) {
