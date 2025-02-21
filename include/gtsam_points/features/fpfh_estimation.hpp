@@ -133,6 +133,13 @@ std::vector<FPFHSignature> estimate_fpfh(
   const NearestNeighborSearch& search,
   const FPFHEstimationParams& params = FPFHEstimationParams());
 
+/// @brief Estimate PFH features.
+/// @param points       Input points (Needs to have normals)
+/// @param search       Nearest neighbor search
+/// @param params       PFH estimation parameters
+std::vector<PFHSignature>
+estimate_pfh(const PointCloud& points, const NearestNeighborSearch& search, const PFHEstimationParams& params = PFHEstimationParams());
+
 /// @brief Estimate FPFH features.
 /// @param points       Input points (Needs to have normals)
 /// @param search       Nearest neighbor search

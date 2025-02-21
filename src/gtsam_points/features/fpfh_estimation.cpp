@@ -318,6 +318,10 @@ std::vector<FPFHSignature> estimate_fpfh(
   return estimate_fpfh(points, normals, num_points, indices.data(), num_points, search, params);
 }
 
+std::vector<PFHSignature> estimate_pfh(const PointCloud& points, const NearestNeighborSearch& search, const PFHEstimationParams& params) {
+  return estimate_pfh(points.points, points.normals, points.size(), search, params);
+}
+
 std::vector<FPFHSignature> estimate_fpfh(const PointCloud& points, const NearestNeighborSearch& search, const FPFHEstimationParams& params) {
   return estimate_fpfh(points.points, points.normals, points.size(), search, params);
 }

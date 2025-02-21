@@ -54,4 +54,11 @@ std::vector<Eigen::Vector4d> estimate_normals(const Eigen::Vector4d* points, int
   return estimate_normals(points, covs.data(), num_points);
 }
 
+std::vector<Eigen::Vector4d> estimate_normals(const PointCloud& points, int k_neighbors, int num_threads) {
+  if (points.has_covs()) {
+    return gtsam_points::estimate_normals(points.points, points.covs, points.size(), num_threads);
+  }
+  return gtsam_points::estimate_normals(points.points, points.size(), k_neighbors, num_threads);
+}
+
 }  // namespace gtsam_points

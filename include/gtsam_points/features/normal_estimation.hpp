@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <Eigen/Core>
+#include <gtsam_points/types/point_cloud.hpp>
 
 namespace gtsam_points {
 
@@ -41,5 +42,7 @@ template <typename Alloc>
 std::vector<Eigen::Vector4d> estimate_normals(const std::vector<Eigen::Vector4d, Alloc>& points, int k_neighbors = 10, int num_threads = 1) {
   return estimate_normals(points.data(), points.size(), k_neighbors, num_threads);
 }
+
+std::vector<Eigen::Vector4d> estimate_normals(const PointCloud& points, int k_neighbors = 10, int num_threads = 1);
 
 }  // namespace gtsam_points
