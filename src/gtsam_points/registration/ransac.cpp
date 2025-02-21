@@ -9,7 +9,7 @@
 #include <gtsam_points/types/point_cloud.hpp>
 
 #define DEFINE_RANSAC(PointCloud, Features)                               \
-  template RegistrationResult estimate_pose_ransac<PointCloud, Features>( \
+  template RegistrationResult estimate_pose_ransac_<PointCloud, Features>( \
     const PointCloud& target,                                             \
     const PointCloud& source,                                             \
     const Features& target_features,                                      \
@@ -26,10 +26,6 @@ using FPFHSignature = Eigen::Matrix<double, 33, 1>;
 using VextorXdPtr = const Eigen::VectorXd*;
 using PFHSignaturePtr = const PFHSignature*;
 using FPFHSignaturePtr = const FPFHSignature*;
-
-DEFINE_RANSAC(PointCloud, std::vector<Eigen::VectorXd>);
-DEFINE_RANSAC(PointCloud, std::vector<PFHSignature>);
-DEFINE_RANSAC(PointCloud, std::vector<FPFHSignature>);
 
 DEFINE_RANSAC(PointCloud, VextorXdPtr);
 DEFINE_RANSAC(PointCloud, FPFHSignaturePtr);

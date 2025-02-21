@@ -8,7 +8,7 @@
 namespace gtsam_points {
 
 #define DEFINE_GNC(PointCloud, Features)               \
-  template RegistrationResult estimate_pose_gnc(       \
+  template RegistrationResult estimate_pose_gnc_(       \
     const PointCloud& target,                          \
     const PointCloud& source,                          \
     const Features& target_features,                   \
@@ -24,10 +24,6 @@ using FPFHSignature = Eigen::Matrix<double, 33, 1>;
 using VextorXdPtr = const Eigen::VectorXd*;
 using PFHSignaturePtr = const PFHSignature*;
 using FPFHSignaturePtr = const FPFHSignature*;
-
-DEFINE_GNC(PointCloud, std::vector<Eigen::VectorXd>)
-DEFINE_GNC(PointCloud, std::vector<PFHSignature>)
-DEFINE_GNC(PointCloud, std::vector<FPFHSignature>)
 
 DEFINE_GNC(PointCloud, VextorXdPtr)
 DEFINE_GNC(PointCloud, PFHSignaturePtr)

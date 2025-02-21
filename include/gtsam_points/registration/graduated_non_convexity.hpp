@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 #include <Eigen/Geometry>
 
+#include <gtsam_points/types/point_cloud.hpp>
 #include <gtsam_points/ann/nearest_neighbor_search.hpp>
 #include <gtsam_points/registration/registration_result.hpp>
 
@@ -46,7 +47,7 @@ public:
 /// @param params                   GNC parameters
 /// @return                         Registration result
 template <typename PointCloud, typename Features>
-RegistrationResult estimate_pose_gnc(
+RegistrationResult estimate_pose_gnc_(
   const PointCloud& target,
   const PointCloud& source,
   const Features& target_features,
@@ -55,5 +56,48 @@ RegistrationResult estimate_pose_gnc(
   const NearestNeighborSearch& target_features_tree,
   const NearestNeighborSearch& source_features_tree,
   const GNCParams& params = GNCParams());
+
+//
+RegistrationResult estimate_pose_gnc(
+  const PointCloud& target,
+  const PointCloud& source,
+  const Eigen::Matrix<double, 33, 1>* target_features,
+  const Eigen::Matrix<double, 33, 1>* source_features,
+  const NearestNeighborSearch& target_tree,
+  const NearestNeighborSearch& target_features_tree,
+  const NearestNeighborSearch& source_features_tree,
+  const GNCParams& params = GNCParams()) {
+  using ConstFeaturePtr = const Eigen::Matrix<double, 33, 1>*;
+  return estimate_pose_gnc_<PointCloud, ConstFeaturePtr>(
+    target, source, target_features, source_features, target_tree, target_features_tree, source_features_tree, params);
+}
+
+RegistrationResult estimate_pose_gnc(
+  const PointCloud& target,
+  const PointCloud& source,
+  const Eigen::Matrix<double, 125, 1>* target_features,
+  const Eigen::Matrix<double, 125, 1>* source_features,
+  const NearestNeighborSearch& target_tree,
+  const NearestNeighborSearch& target_features_tree,
+  const NearestNeighborSearch& source_features_tree,
+  const GNCParams& params = GNCParams()) {
+  using ConstFeaturePtr = const Eigen::Matrix<double, 125, 1>*;
+  return estimate_pose_gnc_<PointCloud, ConstFeaturePtr>(
+    target, source, target_features, source_features, target_tree, target_features_tree, source_features_tree, params);
+}
+
+RegistrationResult estimate_pose_gnc(
+  const PointCloud& target,
+  const PointCloud& source,
+  const Eigen::VectorXd* target_features,
+  const Eigen::VectorXd* source_features,
+  const NearestNeighborSearch& target_tree,
+  const NearestNeighborSearch& target_features_tree,
+  const NearestNeighborSearch& source_features_tree,
+  const GNCParams& params = GNCParams()) {
+  using ConstFeaturePtr = const Eigen::VectorXd*;
+  return estimate_pose_gnc_<PointCloud, ConstFeaturePtr>(
+    target, source, target_features, source_features, target_tree, target_features_tree, source_features_tree, params);
+}
 
 }  // namespace gtsam_points

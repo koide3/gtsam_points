@@ -21,7 +21,7 @@
 namespace gtsam_points {
 
 template <typename PointCloud, typename Features>
-RegistrationResult estimate_pose_ransac(
+RegistrationResult estimate_pose_ransac_(
   const PointCloud& target,
   const PointCloud& source,
   const Features& target_features,
