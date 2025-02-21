@@ -121,9 +121,6 @@ template <typename IndexTransform = identity_transform>
 struct RadiusSearchResult {
 public:
   /// @brief Constructor
-  /// @param indices          Buffer to store indices (must be larger than k=max(N, num_neighbors))
-  /// @param distances        Buffer to store distances (must be larger than k=max(N, num_neighbors))
-  /// @param num_neighbors    Number of neighbors to search (must be -1 for static case N > 0)
   /// @param index_transform  Index transformation function (e.g., local point index -> global voxel + point index)
   explicit RadiusSearchResult(const IndexTransform& index_transform = IndexTransform()) : index_transform(index_transform) { neighbors.reserve(32); }
 

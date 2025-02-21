@@ -36,7 +36,7 @@ public:
 
   /**
    * @brief Radius search
-   * @note  There is no assumption and guarantee on points to be selected when `max_num_neighbors` is specified.
+   * @note  There is no assumption and guarantee on the order of points to be selected when `max_num_neighbors` is specified.
    *        (Some algorithms like KdTree tend to first pick closer points though).
    * @param pt                 Point
    * @param radius             Search radius
