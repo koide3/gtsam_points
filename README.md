@@ -215,6 +215,7 @@ This library is released under the MIT license.
 - [Eigen](https://eigen.tuxfamily.org/index.php)
 - [nanoflann](https://github.com/jlblancoc/nanoflann)
 - [GTSAM](https://gtsam.org/)
+- [optional] [PCL]([https://www.openmp.org/](https://pointclouds.org/))
 - [optional] [OpenMP](https://www.openmp.org/)
 - [optional] [CUDA](https://developer.nvidia.com/cuda-toolkit)
 - [optional] [iridescence](https://github.com/koide3/iridescence)
