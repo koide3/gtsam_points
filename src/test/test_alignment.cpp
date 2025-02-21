@@ -4,6 +4,21 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam_points/registration/alignment.hpp>
 
+inline double sum_diffs(const Eigen::Isometry3d& T_target_source, const Eigen::Vector4d& target, const Eigen::Vector4d& source) {
+  return (target - T_target_source * source).squaredNorm();
+}
+
+template <typename... Rest>
+double sum_diffs(const Eigen::Isometry3d& T_target_source, const Eigen::Vector4d& target, const Eigen::Vector4d& source, const Rest&... rest) {
+  return (target - T_target_source * source).squaredNorm() + sum_diffs(T_target_source, rest...);
+}
+
+template <typename... Args>
+double sum_sq_errors(const Eigen::Isometry3d& T_target_source, const Args&... args) {
+  static_assert(sizeof...(Args) % 2 == 0, "number of arguments must be even");
+  return sum_diffs(T_target_source, args...);
+}
+
 template <int D, typename Evaluate, typename Retract>
 bool is_optimal(const Eigen::Isometry3d& init, const Evaluate& evaluate, const Retract& retract, std::mt19937& mt) {
   const double error0 = evaluate(init);
@@ -47,7 +62,7 @@ TEST(AlignmentTest, AlignPoints_6DoF) {
     EXPECT_NEAR((T_target_source.matrix() - gt_T_target_source.matrix()).array().abs().maxCoeff(), 0.0, 1e-3);
 
     const auto evaluate = [&](const Eigen::Isometry3d& T) {
-      return gtsam_points::impl::sum_sq_errors(T, target[0], source[0], target[1], source[1], target[2], source[2]);
+      return sum_sq_errors(T, target[0], source[0], target[1], source[1], target[2], source[2]);
     };
     const auto retract = [&](const Eigen::Matrix<double, 6, 1>& delta) {
       Eigen::Isometry3d T = Eigen::Isometry3d::Identity();
@@ -84,9 +99,7 @@ TEST(AlignmentTest, AlignPoints_4DoF) {
     EXPECT_NEAR((R.col(0).cross(R.col(1)) - R.col(2)).cwiseAbs().maxCoeff(), 0.0, 1e-6);
     EXPECT_NEAR((R.col(2) - Eigen::Vector3d::UnitZ()).cwiseAbs().maxCoeff(), 0.0, 1e-6);
 
-    const auto evaluate = [&](const Eigen::Isometry3d& T) {
-      return gtsam_points::impl::sum_sq_errors(T, target[0], source[0], target[1], source[1]);
-    };
+    const auto evaluate = [&](const Eigen::Isometry3d& T) { return sum_sq_errors(T, target[0], source[0], target[1], source[1]); };
     const auto retract = [&](const Eigen::Matrix<double, 4, 1>& delta) {
       Eigen::Isometry3d T = Eigen::Isometry3d::Identity();
       T.linear().topLeftCorner<2, 2>() = Eigen::Rotation2Dd(delta(0)).toRotationMatrix();

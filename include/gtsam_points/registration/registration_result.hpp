@@ -7,9 +7,10 @@
 
 namespace gtsam_points {
 
+/// @brief Registration result
 struct RegistrationResult {
-  double inlier_rate;
-  Eigen::Isometry3d T_target_source;
+  double inlier_rate;                 ///< Inlier rate (The population differs for each method)
+  Eigen::Isometry3d T_target_source;  ///< Estimated transformation
 };
 
 }  // namespace gtsam_points

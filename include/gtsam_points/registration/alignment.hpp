@@ -32,23 +32,4 @@ align_points_se3(const Eigen::Vector4d* target_points, const Eigen::Vector4d* so
 Eigen::Isometry3d
 align_points_4dof(const Eigen::Vector4d* target_points, const Eigen::Vector4d* source_points, const double* weights, size_t num_points);
 
-namespace impl {
-
-inline double sum_diffs(const Eigen::Isometry3d& T_target_source, const Eigen::Vector4d& target, const Eigen::Vector4d& source) {
-  return (target - T_target_source * source).squaredNorm();
-}
-
-template <typename... Rest>
-double sum_diffs(const Eigen::Isometry3d& T_target_source, const Eigen::Vector4d& target, const Eigen::Vector4d& source, const Rest&... rest) {
-  return (target - T_target_source * source).squaredNorm() + sum_diffs(T_target_source, rest...);
-}
-
-template <typename... Args>
-double sum_sq_errors(const Eigen::Isometry3d& T_target_source, const Args&... args) {
-  static_assert(sizeof...(Args) % 2 == 0, "number of arguments must be even");
-  return sum_diffs(T_target_source, args...);
-}
-
-}  // namespace impl
-
 }  // namespace gtsam_points
