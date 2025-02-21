@@ -6,8 +6,8 @@
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 
 #include <gtsam_points/util/read_points.hpp>
-#include <gtsam_points/util/covariance_estimation.hpp>
 #include <gtsam_points/util/edge_plane_extraction.hpp>
+#include <gtsam_points/features/covariance_estimation.hpp>
 
 #include <gtsam_points/factors/integrated_loam_factor.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>

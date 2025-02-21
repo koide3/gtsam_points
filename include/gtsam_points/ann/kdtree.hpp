@@ -38,6 +38,24 @@ public:
     double* k_sq_dists,
     double max_sq_dist = std::numeric_limits<double>::max()) const override;
 
+  /**
+   * @brief Radius search
+   * @note  There is no assumption and guarantee on the order of points to be selected when `max_num_neighbors` is specified.
+   *        (KdTree tends to first pick closer points though).
+   * @param pt                 Point
+   * @param radius             Search radius
+   * @param indices            Indices of neighbors within the radius
+   * @param sq_dists           Squared distances to the neighbors
+   * @param max_num_neighbors  Maximum number of neighbors
+   * @return                   Number of neighbors
+   */
+  virtual size_t radius_search(
+    const double* pt,
+    double radius,
+    std::vector<size_t>& indices,
+    std::vector<double>& sq_dists,
+    int max_num_neighbors = std::numeric_limits<int>::max()) const override;
+
 public:
   const int num_points;
   const Eigen::Vector4d* points;

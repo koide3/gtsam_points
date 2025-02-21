@@ -9,7 +9,8 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
   set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif()
 
-option(BUILD_TESTS "Build test" OFF)
+option(BUILD_TESTS "Build tests" OFF)
+option(BUILD_TESTS_PCL "Build tests that require PCL" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
 option(BUILD_EXAMPLE "Build example programs" OFF)
 option(BUILD_TOOLS "Build tools" OFF)
@@ -136,20 +137,29 @@ configure_file(include/gtsam_points/config.hpp.in include/gtsam_points/config.hp
 
 add_library(gtsam_points SHARED
   # util
-  src/gtsam_points/util/covariance_estimation.cpp
-  src/gtsam_points/util/normal_estimation.cpp
   src/gtsam_points/util/bspline.cpp
   src/gtsam_points/util/continuous_trajectory.cpp
   src/gtsam_points/util/parallelism.cpp
+  # features
+  src/gtsam_points/features/covariance_estimation.cpp
+  src/gtsam_points/features/normal_estimation.cpp
+  src/gtsam_points/features/fpfh_estimation.cpp
+  # registration
+  src/gtsam_points/registration/alignment.cpp
+  src/gtsam_points/registration/ransac.cpp
+  src/gtsam_points/registration/graduated_non_convexity.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
+  src/gtsam_points/ann/kdtreex.cpp
   src/gtsam_points/ann/intensity_kdtree.cpp
   src/gtsam_points/ann/ivox.cpp
   src/gtsam_points/ann/incremental_covariance_container.cpp
   src/gtsam_points/ann/incremental_covariance_voxelmap.cpp
+  src/gtsam_points/ann/fast_occupancy_grid.cpp
   # types
   src/gtsam_points/types/point_cloud.cpp
   src/gtsam_points/types/point_cloud_cpu.cpp
+  src/gtsam_points/types/point_cloud_cpu_funcs.cpp
   src/gtsam_points/types/gaussian_voxelmap_cpu.cpp
   src/gtsam_points/types/gaussian_voxelmap_cpu_funcs.cpp
   # factors
@@ -312,6 +322,21 @@ if(BUILD_TESTS)
     target_include_directories(${test_name} PRIVATE ${Boost_INCLUDE_DIRS} src/test/include)
     gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endforeach()
+
+  if(BUILD_TESTS_PCL)
+    enable_language(C)
+    find_package(PCL REQUIRED)
+
+    file(GLOB test_sources "src/test/pcl/*.cpp")
+    foreach(test_src IN LISTS test_sources)
+      get_filename_component(test_name ${test_src} NAME_WE)
+
+      add_executable(${test_name} ${test_src})
+      target_include_directories(${test_name} PRIVATE src/test/include ${Boost_INCLUDE_DIRS} ${PCL_INCLUDE_DIRS})
+      target_link_libraries(${test_name} gtsam_points gtest_main ${PCL_LIBRARIES})
+      gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+    endforeach()
+  endif()
 endif()
 
 

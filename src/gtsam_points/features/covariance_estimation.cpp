@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
-#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/features/covariance_estimation.hpp>
 
 #include <Eigen/Eigen>
 #include <Eigen/Geometry>
@@ -90,6 +90,10 @@ estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighb
   params.eigen_values = eigen_values;
   params.num_threads = num_threads;
   return estimate_covariances(points, num_points, params);
+}
+
+std::vector<Eigen::Matrix4d> estimate_covariances(const PointCloud& points, int k_neighbors, int num_threads) {
+  return estimate_covariances(points.points, k_neighbors, num_threads);
 }
 
 }  // namespace gtsam_points

@@ -13,10 +13,11 @@ public:
   /// @brief Check if the result satisfies the early termination condition.
   template <typename Result>
   bool fulfilled(const Result& result) const {
-    return result.worst_distance() < epsilon;
+    return result.worst_distance() < epsilon || result.num_found() >= max_nn;
   }
 
 public:
+  int max_nn = std::numeric_limits<int>::max();             ///< Maximum number of neighbors to search
   double max_sq_dist = std::numeric_limits<double>::max();  ///< Maximum squared distance to search
   double epsilon = 0.0;                                     ///< Early termination threshold
 };
@@ -113,6 +114,33 @@ public:
   int num_found_neighbors;  ///< Number of found neighbors
   size_t* indices;          ///< Indices of neighbors
   double* distances;        ///< Distances to neighbors
+};
+
+/// @brief Radius neighbor search result container.
+template <typename IndexTransform = identity_transform>
+struct RadiusSearchResult {
+public:
+  /// @brief Constructor
+  /// @param index_transform  Index transformation function (e.g., local point index -> global voxel + point index)
+  explicit RadiusSearchResult(const IndexTransform& index_transform = IndexTransform()) : index_transform(index_transform) { neighbors.reserve(32); }
+
+  /// @brief Number of found neighbors.
+  size_t num_found() const { return neighbors.size(); }
+
+  /// @brief Worst distance in the result.
+  constexpr double worst_distance() const { return std::numeric_limits<double>::max(); }
+
+  /// @brief Sort neighbors by distance.
+  void sort() {
+    std::sort(neighbors.begin(), neighbors.end(), [](const auto& a, const auto& b) { return a.second < b.second; });
+  }
+
+  /// @brief  Push a pair of point index and distance to the result.
+  void push(size_t index, double distance) { neighbors.emplace_back(index_transform(index), distance); }
+
+public:
+  const IndexTransform& index_transform;
+  std::vector<std::pair<size_t, double>> neighbors;  ///< Pairs of point index and distance
 };
 
 }  // namespace gtsam_points

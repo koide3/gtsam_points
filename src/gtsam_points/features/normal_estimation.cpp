@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
-#include <gtsam_points/util/normal_estimation.hpp>
+#include <gtsam_points/features/normal_estimation.hpp>
 
 #include <iostream>
 #include <Eigen/Eigen>
 #include <gtsam_points/config.hpp>
-#include <gtsam_points/util/covariance_estimation.hpp>
 #include <gtsam_points/util/parallelism.hpp>
+#include <gtsam_points/features/covariance_estimation.hpp>
 
 #ifdef GTSAM_POINTS_USE_TBB
 #include <tbb/parallel_for.h>
@@ -52,6 +52,13 @@ std::vector<Eigen::Vector4d> estimate_normals(const Eigen::Vector4d* points, con
 std::vector<Eigen::Vector4d> estimate_normals(const Eigen::Vector4d* points, int num_points, int k_neighbors, int num_threads) {
   auto covs = estimate_covariances(points, num_points, k_neighbors, num_threads);
   return estimate_normals(points, covs.data(), num_points);
+}
+
+std::vector<Eigen::Vector4d> estimate_normals(const PointCloud& points, int k_neighbors, int num_threads) {
+  if (points.has_covs()) {
+    return gtsam_points::estimate_normals(points.points, points.covs, points.size(), num_threads);
+  }
+  return gtsam_points::estimate_normals(points.points, points.size(), k_neighbors, num_threads);
 }
 
 }  // namespace gtsam_points

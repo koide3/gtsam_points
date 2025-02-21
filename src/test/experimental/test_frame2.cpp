@@ -15,7 +15,7 @@
 #include <gtsam_points/cuda/nonlinear_factor_set_gpu.hpp>
 
 #include <gtsam_points/util/read_points.hpp>
-#include <gtsam_points/util/covariance_estimation.hpp>
+#include <gtsam_points/features/covariance_estimation.hpp>
 
 #include <glk/pointcloud_buffer.hpp>
 #include <glk/normal_distributions.hpp>
