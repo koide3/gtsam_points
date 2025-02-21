@@ -64,7 +64,16 @@ All the following optimizers were derived from the implementations in GTSAM.
     Incremental voxel-based nearest neighbor search (iVox) [[11]](#IVOX).
 - **IncrementalCovarianceVoxelMap**
     Incremental voxelmap with online normal and covariance estimation.
+- **FastOccupancyGrid**
+    Binary occupancy grid with bit blocks and flat hashing for efficient point cloud overlap estimation.
 
+## Point Features and Global Point Cloud Registration
+- **Point Feature Histogram (PFH)** [[13]](#PFH)
+- **Fast Point Feature Histogram (FPFH)** [[14]](#FPFH)
+- **RANSAC**
+    RANSAC-based global point cloud registration. Supports 6DoF and 4DoF (XYZ + Yaw) estimation [[15]](#RANSAC).
+- **Graduated Non-Convexity**
+    Graduated Non-Contexity-based global point cloud registration. Supports 6DoF and 4DoF (XYZ + Yaw) estimation [[16]](#GNC).
 
 ## Continuous-Time Trajectory (Under development)
 - **B-Spline**
@@ -227,4 +236,10 @@ The test data in ```data``` directory are generated from [The KITTI Vision Bench
 <a name="BA_EVM"></a> [9] Liu and Zhang, "BALM: Bundle Adjustment for Lidar Mapping", IEEE RA-L, 2021  
 <a name="BA_LSQ"></a> [10] Huang et al, "On Bundle Adjustment for Multiview Point Cloud Registration", IEEE RA-L, 2021  
 <a name="IVOX"></a> [11] Bai et al., "Faster-LIO: Lightweight Tightly Coupled Lidar-Inertial Odometry Using Parallel Sparse Incremental Voxels", IEEE RA-L, 2022  
-<a name="BSPLINE_D"></a> [12] Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020
+<a name="BSPLINE_D"></a> [12] Sommer et al., "Efficient Derivative Computation for Cumulative B-Splines on Lie Groups", CVPR2020  
+<a name="PFH"></a> [13] Rusu et al., "ligning Point Cloud Views using Persistent Feature Histograms", IROS2008  
+<a name="FPFH"></a> [14] Rusu et al., "Fast Point Feature Histograms (FPFH) for 3D Registration", ICRA2009  
+<a name="RANSAC"></a> [15] Buch et al., "Pose Estimation using Local Structure-Specific Shape and Appearance Context", ICRA2013  
+<a name="GNC"></a> [16] Zhou et al., "Fast Global Registration", ECCV2016  
+
+
