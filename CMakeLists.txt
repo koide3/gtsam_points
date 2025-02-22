@@ -148,6 +148,8 @@ add_library(gtsam_points SHARED
   src/gtsam_points/registration/alignment.cpp
   src/gtsam_points/registration/ransac.cpp
   src/gtsam_points/registration/graduated_non_convexity.cpp
+  # segmentation
+  src/gtsam_points/segmentation/region_growing.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
   src/gtsam_points/ann/kdtreex.cpp
