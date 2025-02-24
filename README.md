@@ -75,6 +75,10 @@ All the following optimizers were derived from the implementations in GTSAM.
 - **Graduated Non-Convexity**
     Graduated Non-Contexity-based global point cloud registration. Supports 6DoF and 4DoF (XYZ + Yaw) estimation [[16]](#GNC).
 
+## Object Segmentation
+- **Region Growing Segmentation** [[17]](#RegionGrowing)
+- **Min-Cut Segmentation** [[18]](#MinCut)
+
 ## Continuous-Time Trajectory (Under development)
 - **B-Spline**
     Cubic B-Spline-based interpolation and linear acceleration and angular velocity expressions [[12]](#BSPLINE_D).
@@ -242,5 +246,7 @@ The test data in ```data``` directory are generated from [The KITTI Vision Bench
 <a name="FPFH"></a> [14] Rusu et al., "Fast Point Feature Histograms (FPFH) for 3D Registration", ICRA2009  
 <a name="RANSAC"></a> [15] Buch et al., "Pose Estimation using Local Structure-Specific Shape and Appearance Context", ICRA2013  
 <a name="GNC"></a> [16] Zhou et al., "Fast Global Registration", ECCV2016  
+<a name="RegionGrowing"></a> [17] Rabbani et al., "Segmentation of Point Clouds Using Smoothness Constraint", Remote Sensing and Spatial Information Sciences, 2006  
+<a name="MinCut"></a> [18] Golovinskiy et al., "Min-Cut Based Segmentation of Point Clouds", S3DV-WS@ICCV2009  
 
 
