@@ -6,6 +6,15 @@
 
 namespace gtsam_points {
 
+template MinCutResult min_cut_(const PointCloud& points, const NearestNeighborSearch& search, size_t source_pt_index, const MinCutParams& params);
 template MinCutResult
-min_cut_(const PointCloud& points, const NearestNeighborSearch& search, size_t source_pt_index, size_t sink_pt_index, const MinCutParams& params);
+min_cut_(const PointCloud& points, const NearestNeighborSearch& search, const Eigen::Vector4d& source_pt, const MinCutParams& params);
+
+MinCutResult min_cut(const PointCloud& points, const NearestNeighborSearch& search, size_t source_pt_index, const MinCutParams& params) {
+  return min_cut_<PointCloud>(points, search, source_pt_index, params);
 }
+MinCutResult min_cut(const PointCloud& points, const NearestNeighborSearch& search, const Eigen::Vector4d& source_pt, const MinCutParams& params) {
+  return min_cut_<PointCloud>(points, search, source_pt, params);
+}
+
+}  // namespace gtsam_points

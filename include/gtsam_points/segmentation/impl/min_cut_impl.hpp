@@ -56,12 +56,7 @@
 namespace gtsam_points {
 
 template <typename PointCloud>
-MinCutResult min_cut_(
-  const PointCloud& points,
-  const NearestNeighborSearch& search,
-  const size_t source_pt_index,
-  const size_t sink_pt_index,
-  const MinCutParams& params) {
+MinCutResult min_cut_(const PointCloud& points, const NearestNeighborSearch& search, const size_t source_pt_index, const MinCutParams& params) {
   // Find k-nearest neighbors for all points
   std::vector<size_t> all_neighbors(frame::size(points) * params.k_neighbors);
   std::vector<double> all_neighbor_sq_dists(frame::size(points) * params.k_neighbors);
@@ -108,6 +103,7 @@ MinCutResult min_cut_(
   const double inv_dist_sq_sigma = 1.0 / (params.distance_sigma * params.distance_sigma);
   const double inv_angle_sq_sigma = 1.0 / (params.angle_sigma * params.angle_sigma);
 
+  std::vector<size_t> sink_pt_indices;
   for (size_t i = 0; i < frame::size(points); i++) {
     const size_t* neighbors = all_neighbors.data() + i * params.k_neighbors;
     const double* neighbor_sq_dists = all_neighbor_sq_dists.data() + i * params.k_neighbors;
@@ -121,8 +117,8 @@ MinCutResult min_cut_(
       add_edge(i, source_pt_index, params.foreground_weight);
     }
     // Mark as background if the point is outside the background mask radius
-    if (i != sink_pt_index && dist_from_source > params.background_mask_radius) {
-      add_edge(i, sink_pt_index, params.background_weight);
+    if (dist_from_source > params.background_mask_radius) {
+      sink_pt_indices.emplace_back(i);
     }
 
     // Add connectivity edges to the neighbors
@@ -134,8 +130,20 @@ MinCutResult min_cut_(
     }
   }
 
+  if (sink_pt_indices.empty()) {
+    std::cerr << "No sink points" << std::endl;
+    return MinCutResult();
+  }
+
+  size_t sink_pt_index = sink_pt_indices.front();
+  for (size_t i = 1; i < sink_pt_indices.size(); i++) {
+    add_edge(sink_pt_indices[i], sink_pt_index, params.background_weight);
+  }
+
   // Run the min-cut algorithm
   MinCutResult result;
+  result.source_index = source_pt_index;
+  result.sink_index = sink_pt_index;
   result.max_flow = boost::boykov_kolmogorov_max_flow(g, source_pt_index, sink_pt_index);
 
   // Extract the cluster
@@ -147,6 +155,22 @@ MinCutResult min_cut_(
   }
 
   return result;
+}
+
+template <typename PointCloud>
+MinCutResult min_cut_(const PointCloud& points, const NearestNeighborSearch& search, const Eigen::Vector4d& source_pt, const MinCutParams& params) {
+  size_t source_pt_index;
+  double sq_dist;
+  if (!search.knn_search(source_pt.data(), 1, &source_pt_index, &sq_dist)) {
+    std::cerr << "Failed to find the source point" << std::endl;
+    return MinCutResult();
+  }
+
+  if (sq_dist > params.foreground_mask_radius * params.foreground_mask_radius) {
+    std::cerr << "warning: The source point is too far from the point cloud" << std::endl;
+  }
+
+  return min_cut_(points, search, source_pt_index, params);
 }
 
 }  // namespace gtsam_points
