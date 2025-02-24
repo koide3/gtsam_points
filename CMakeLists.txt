@@ -29,7 +29,7 @@ if(BUILD_WITH_MARCH_NATIVE)
   set(CMAKE_CXX_FLAGS "-march=native ${CMAKE_CXX_FLAGS}")
 endif()
 
-find_package(Boost REQUIRED COMPONENTS filesystem)
+find_package(Boost REQUIRED COMPONENTS graph filesystem)
 find_package(GTSAM REQUIRED)
 find_package(GTSAM_UNSTABLE REQUIRED)
 find_package(Eigen3 REQUIRED)
@@ -149,6 +149,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/registration/ransac.cpp
   src/gtsam_points/registration/graduated_non_convexity.cpp
   # segmentation
+  src/gtsam_points/segmentation/min_cut.cpp
   src/gtsam_points/segmentation/region_growing.cpp
   # ann
   src/gtsam_points/ann/kdtree.cpp
@@ -202,6 +203,7 @@ target_include_directories(gtsam_points PUBLIC
 )
 target_link_libraries(gtsam_points
   Boost::boost
+  Boost::graph
   Boost::filesystem
   Eigen3::Eigen
   gtsam
