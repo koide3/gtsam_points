@@ -22,7 +22,7 @@ struct MinCutParams {
   double foreground_weight = 0.2;       ///< Weight for the foreground points
   double background_weight = 0.2;       ///< Weight for the background points
 
-  int k_neighbors = 10;  ///< Number of neighbors
+  int k_neighbors = 20;  ///< Number of neighbors
   int num_threads = 1;   ///< Number of threads
 };
 
