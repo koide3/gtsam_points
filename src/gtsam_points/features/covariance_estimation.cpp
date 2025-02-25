@@ -93,7 +93,7 @@ estimate_covariances(const Eigen::Vector4d* points, int num_points, int k_neighb
 }
 
 std::vector<Eigen::Matrix4d> estimate_covariances(const PointCloud& points, int k_neighbors, int num_threads) {
-  return estimate_covariances(points.points, k_neighbors, num_threads);
+  return estimate_covariances(points.points, points.num_points, k_neighbors, num_threads);
 }
 
 }  // namespace gtsam_points
