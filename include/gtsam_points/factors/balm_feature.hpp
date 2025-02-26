@@ -17,7 +17,7 @@ public:
 
   /**
    * @brief Constructor
-   * @param points Points in each sensor coordinate (untransformed points)
+   * @param points Points in each sensor coordinate (transformed points)
    */
   BALMFeature(const std::vector<Eigen::Vector3d>& points) {
     Eigen::Vector3d sum_pts = Eigen::Vector3d::Zero();
