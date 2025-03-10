@@ -6,7 +6,6 @@
 #include <gtsam_points/optimizers/linear_solver.hpp>
 #include <gtsam_points/optimizers/linear_system_builder.hpp>
 
-#include <gtsam_points/util/easy_profiler.hpp>
 
 namespace gtsam_points {
 
