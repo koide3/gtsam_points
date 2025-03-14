@@ -254,7 +254,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
       std::vector<float> intensities_f(frame->size());
 
       std::ifstream ifs(path + "/intensities_compact.bin", std::ios::binary);
-      ifs.read(reinterpret_cast<char*>(intensities_f.data()), sizeof(Eigen::Vector4f) * frame->size());
+      ifs.read(reinterpret_cast<char*>(intensities_f.data()), sizeof(float) * frame->size());
       std::copy(intensities_f.begin(), intensities_f.end(), frame->intensities);
     }
 
