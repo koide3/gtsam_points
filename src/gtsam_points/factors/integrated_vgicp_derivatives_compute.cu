@@ -21,11 +21,10 @@
 
 namespace gtsam_points {
 
-template <bool enable_surface_validation_>
 void IntegratedVGICPDerivatives::issue_compute_error_impl(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output) {
   //
-  lookup_voxels_kernel<enable_surface_validation_> corr_kernel(*target, source->points_gpu, source->normals_gpu, d_xl);
-  cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel<enable_surface_validation_>, int*> corr_first(source_inliers, corr_kernel);
+  lookup_voxels_kernel corr_kernel(enable_surface_validation, *target, source->points_gpu, source->normals_gpu, d_xl);
+  cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel, int*> corr_first(source_inliers, corr_kernel);
 
   vgicp_error_kernel error_kernel(d_xl, d_xe, *target, source->points_gpu, source->covs_gpu);
   cub::TransformInputIterator<float, vgicp_error_kernel, decltype(corr_first)> first(corr_first, error_kernel);
@@ -39,8 +38,5 @@ void IntegratedVGICPDerivatives::issue_compute_error_impl(const Eigen::Isometry3
 
   cub::DeviceReduce::Reduce(temp_storage, temp_storage_bytes, first, d_output, num_inliers, thrust::plus<float>(), 0.0f, stream);
 }
-
-template void IntegratedVGICPDerivatives::issue_compute_error_impl<true>(const Eigen::Isometry3f*, const Eigen::Isometry3f*, float*);
-template void IntegratedVGICPDerivatives::issue_compute_error_impl<false>(const Eigen::Isometry3f*, const Eigen::Isometry3f*, float*);
 
 }  // namespace gtsam_points

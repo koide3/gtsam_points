@@ -90,20 +90,12 @@ double IntegratedVGICPDerivatives::compute_error(const Eigen::Isometry3f& d_xl, 
 }
 
 void IntegratedVGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output) {
-  if (enable_surface_validation) {
-    issue_linearize_impl<true>(d_x, d_output);
-  } else {
-    issue_linearize_impl<false>(d_x, d_output);
-  }
+  issue_linearize_impl(d_x, d_output);
 }
 
 void IntegratedVGICPDerivatives::issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output) {
   //
-  if (enable_surface_validation) {
-    issue_compute_error_impl<true>(d_xl, d_xe, d_output);
-  } else {
-    issue_compute_error_impl<false>(d_xl, d_xe, d_output);
-  }
+  issue_compute_error_impl(d_xl, d_xe, d_output);
 }
 
 }  // namespace gtsam_points

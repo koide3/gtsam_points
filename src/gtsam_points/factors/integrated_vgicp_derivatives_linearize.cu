@@ -21,11 +21,10 @@
 
 namespace gtsam_points {
 
-template <bool enable_surface_validation_>
 void IntegratedVGICPDerivatives::issue_linearize_impl(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output) {
   //
-  lookup_voxels_kernel<enable_surface_validation_> corr_kernel(*target, source->points_gpu, source->normals_gpu, d_x);
-  cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel<enable_surface_validation_>, int*> corr_first(source_inliers, corr_kernel);
+  lookup_voxels_kernel corr_kernel(enable_surface_validation, *target, source->points_gpu, source->normals_gpu, d_x);
+  cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel, int*> corr_first(source_inliers, corr_kernel);
 
   vgicp_derivatives_kernel deriv_kernel(d_x, *target, source->points_gpu, source->covs_gpu);
   cub::TransformInputIterator<LinearizedSystem6, vgicp_derivatives_kernel, decltype(corr_first)> first(corr_first, deriv_kernel);
@@ -55,8 +54,5 @@ void IntegratedVGICPDerivatives::issue_linearize_impl(const Eigen::Isometry3f* d
     LinearizedSystem6::zero(),
     stream);
 }
-
-template void IntegratedVGICPDerivatives::issue_linearize_impl<true>(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
-template void IntegratedVGICPDerivatives::issue_linearize_impl<false>(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
 
 }  // namespace gtsam_points

@@ -40,17 +40,10 @@ void IntegratedVGICPDerivatives::update_inliers(const Eigen::Isometry3f& x, cons
     check_error << cudaMallocAsync(&inliers, sizeof(int) * source->size(), stream);
     check_error << cudaMallocAsync(&valid_inliers, sizeof(int) * source->size(), stream);
 
-    if (enable_surface_validation) {
-      lookup_voxels_kernel<true> kernel(*target, source->points_gpu, source->normals_gpu, d_x);
-      auto corr_first = thrust::make_transform_iterator(thrust::counting_iterator<int>(0), kernel);
-      auto corr_last = thrust::make_transform_iterator(thrust::counting_iterator<int>(source->size()), kernel);
-      thrust::transform(thrust::cuda::par_nosync.on(stream), corr_first, corr_last, inliers, untie_pair_first<int, int>());
-    } else {
-      lookup_voxels_kernel<false> kernel(*target, source->points_gpu, source->normals_gpu, d_x);
-      auto corr_first = thrust::make_transform_iterator(thrust::counting_iterator<int>(0), kernel);
-      auto corr_last = thrust::make_transform_iterator(thrust::counting_iterator<int>(source->size()), kernel);
-      thrust::transform(thrust::cuda::par_nosync.on(stream), corr_first, corr_last, inliers, untie_pair_first<int, int>());
-    }
+    lookup_voxels_kernel kernel(enable_surface_validation, *target, source->points_gpu, source->normals_gpu, d_x);
+    auto corr_first = thrust::make_transform_iterator(thrust::counting_iterator<int>(0), kernel);
+    auto corr_last = thrust::make_transform_iterator(thrust::counting_iterator<int>(source->size()), kernel);
+    thrust::transform(thrust::cuda::par_nosync.on(stream), corr_first, corr_last, inliers, untie_pair_first<int, int>());
 
     void* temp_storage = nullptr;
     size_t temp_storage_bytes;
