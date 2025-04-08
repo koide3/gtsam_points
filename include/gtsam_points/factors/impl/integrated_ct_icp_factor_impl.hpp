@@ -206,7 +206,7 @@ void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::update_poses(const gtsam
   pose_derivatives_t0.resize(time_table.size());
   pose_derivatives_t1.resize(time_table.size());
 
-  for (int i = 0; i < time_table.size(); i++) {
+  const auto task = [&](int i) {
     const double t = time_table[i];
 
     gtsam::Matrix6 H_inc_vel;
@@ -219,6 +219,24 @@ void IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::update_poses(const gtsam
 
     pose_derivatives_t0[i] = H_pose_0_a + H_pose_delta * H_delta_0;
     pose_derivatives_t1[i] = H_pose_delta * H_delta_1;
+  };
+
+  if (is_omp_default() || num_threads == 1) {
+#pragma omp parallel for num_threads(this->num_threads) schedule(guided, 32)
+    for (int i = 0; i < time_table.size(); i++) {
+      task(i);
+    }
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    tbb::parallel_for(tbb::blocked_range<int>(0, time_table.size(), 32), [&](const tbb::blocked_range<int>& range) {
+      for (int i = range.begin(); i < range.end(); i++) {
+        task(i);
+      }
+    });
+#else
+    std::cerr << "error: TBB is not available" << std::endl;
+    abort();
+#endif
   }
 }
 
