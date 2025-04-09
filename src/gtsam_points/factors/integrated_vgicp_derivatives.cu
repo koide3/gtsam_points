@@ -64,7 +64,7 @@ LinearizedSystem6 IntegratedVGICPDerivatives::linearize(const Eigen::Isometry3f&
 
   x_ptr[0] = x;
 
-  update_inliers(x, thrust::raw_pointer_cast(x_ptr.data()));
+  reset_inliers(x, thrust::raw_pointer_cast(x_ptr.data()));
   issue_linearize(thrust::raw_pointer_cast(x_ptr.data()), thrust::raw_pointer_cast(output_ptr.data()));
   sync_stream();
 

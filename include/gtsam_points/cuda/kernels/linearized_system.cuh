@@ -13,6 +13,7 @@ public:
 
   __host__ void print() const {
     std::cout << "***" << std::endl;
+    std::cout << "--- num_inliers ---" << std::endl << num_inliers << std::endl;
     std::cout << "--- error ---" << std::endl << error << std::endl;
     std::cout << "--- H_target ---" << std::endl << H_target << std::endl;
     std::cout << "--- H_source ---" << std::endl << H_source << std::endl;
@@ -23,6 +24,7 @@ public:
 
   __host__ __device__ LinearizedSystem6 operator+(const LinearizedSystem6& rhs) const {
     LinearizedSystem6 sum;
+    sum.num_inliers = num_inliers + rhs.num_inliers;
     sum.error = error + rhs.error;
     sum.H_target = H_target + rhs.H_target;
     sum.H_source = H_source + rhs.H_source;
@@ -34,6 +36,7 @@ public:
   }
 
   __host__ __device__ LinearizedSystem6& operator+=(const LinearizedSystem6& rhs) {
+    num_inliers += rhs.num_inliers;
     error += rhs.error;
     H_target += rhs.H_target;
     H_source += rhs.H_source;
@@ -46,6 +49,7 @@ public:
 
   __host__ __device__ static LinearizedSystem6 zero() {
     LinearizedSystem6 system;
+    system.num_inliers = 0;
     system.error = 0.0f;
     system.H_target.setZero();
     system.H_source.setZero();
@@ -57,6 +61,7 @@ public:
   }
 
 public:
+  int num_inliers;
   float error;
   Eigen::Matrix<float, 6, 6> H_target;
   Eigen::Matrix<float, 6, 6> H_source;

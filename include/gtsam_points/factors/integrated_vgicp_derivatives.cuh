@@ -39,7 +39,9 @@ public:
   // synchronized interface
   LinearizedSystem6 linearize(const Eigen::Isometry3f& x);
   double compute_error(const Eigen::Isometry3f& xl, const Eigen::Isometry3f& xe);
-  void update_inliers(const Eigen::Isometry3f& x, const Eigen::Isometry3f* d_x, bool force_update = false);
+
+  void reset_inliers(const Eigen::Isometry3f& x, const Eigen::Isometry3f* d_x, bool force_update = false);
+  void update_inliers(int num_inliers);
 
   // async interface
   void sync_stream();
@@ -62,6 +64,7 @@ private:
   PointCloud::ConstPtr source;
 
   Eigen::Isometry3f inlier_evaluation_point;
+  const Eigen::Isometry3f* inlier_evaluation_point_gpu;
 
   int num_inliers;
   int* num_inliers_gpu;

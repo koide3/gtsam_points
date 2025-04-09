@@ -130,6 +130,11 @@ void NonlinearFactorSetGPU::linearize(const gtsam::Values& linearization_point) 
     factor->store_linearized(output_cpu);
     output_cursor += factor->linearization_output_size();
   }
+
+  // synchronize
+  for (auto& factor : factors) {
+    factor->sync();
+  }
 }
 
 void NonlinearFactorSetGPU::error(const gtsam::Values& values) {
@@ -203,6 +208,11 @@ void NonlinearFactorSetGPU::error(const gtsam::Values& values) {
     auto output_cpu = evaluation_output_buffer_cpu.data() + eval_output_cursor;
     factor->store_computed_error(output_cpu);
     eval_output_cursor += factor->evaluation_output_size();
+  }
+
+  // synchronize
+  for (auto& factor : factors) {
+    factor->sync();
   }
 }
 

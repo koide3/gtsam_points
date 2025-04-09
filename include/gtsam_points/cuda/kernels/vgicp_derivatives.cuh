@@ -61,6 +61,7 @@ struct vgicp_derivatives_kernel {
     Eigen::Matrix<float, 6, 3> J_source_RCR_inv = J_source.transpose() * RCR_inv;
 
     LinearizedSystem6 linearized;
+    linearized.num_inliers = 1;
     linearized.error = error.transpose() * RCR_inv * error;
     linearized.H_target = J_target_RCR_inv * J_target;
     linearized.H_source = J_source_RCR_inv * J_source;

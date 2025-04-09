@@ -220,7 +220,7 @@ void IntegratedVGICPFactorGPU::issue_linearize(const void* lin_input_cpu, const 
   auto linearization_point_gpu = reinterpret_cast<const Eigen::Isometry3f*>(lin_input_gpu);
   auto linearized_gpu = reinterpret_cast<LinearizedSystem6*>(lin_output_gpu);
 
-  derivatives->update_inliers(*linearization_point, linearization_point_gpu);
+  derivatives->reset_inliers(*linearization_point, linearization_point_gpu);
   derivatives->issue_linearize(linearization_point_gpu, linearized_gpu);
 }
 
@@ -228,6 +228,8 @@ void IntegratedVGICPFactorGPU::store_linearized(const void* lin_output_cpu) {
   auto linearized = reinterpret_cast<const LinearizedSystem6*>(lin_output_cpu);
   linearization_result.reset(new LinearizedSystem6(*linearized));
   evaluation_result = linearized->error;
+
+  derivatives->update_inliers(linearized->num_inliers);
 }
 
 void IntegratedVGICPFactorGPU::issue_compute_error(
