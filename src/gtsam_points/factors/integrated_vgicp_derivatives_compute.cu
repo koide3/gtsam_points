@@ -21,7 +21,7 @@
 
 namespace gtsam_points {
 
-void IntegratedVGICPDerivatives::issue_compute_error_impl(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output) {
+void IntegratedVGICPDerivatives::issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output) {
   //
   lookup_voxels_kernel corr_kernel(enable_surface_validation, *target, source->points_gpu, source->normals_gpu, d_xl);
   cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel, int*> corr_first(source_inliers, corr_kernel);

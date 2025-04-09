@@ -48,9 +48,6 @@ public:
   void issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
   void issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output);
 
-  void issue_linearize_impl(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
-  void issue_compute_error_impl(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output);
-
 private:
   bool enable_surface_validation;
   double inlier_update_thresh_trans;

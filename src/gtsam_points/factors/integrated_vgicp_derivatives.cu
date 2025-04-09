@@ -89,13 +89,4 @@ double IntegratedVGICPDerivatives::compute_error(const Eigen::Isometry3f& d_xl, 
   return error;
 }
 
-void IntegratedVGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output) {
-  issue_linearize_impl(d_x, d_output);
-}
-
-void IntegratedVGICPDerivatives::issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output) {
-  //
-  issue_compute_error_impl(d_xl, d_xe, d_output);
-}
-
 }  // namespace gtsam_points
