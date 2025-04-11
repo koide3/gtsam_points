@@ -85,6 +85,13 @@ TEST_P(ContinuousTimeFactorTest, AlignmentTest) {
   const std::string parallelism = std::get<1>(param);
   const int num_threads = parallelism == "NONE" ? 1 : 2;
 
+#ifndef GTSAM_POINTS_USE_TBB
+  if (parallelism == "TBB") {
+    std::cerr << "Skip test for TBB" << std::endl;
+    return;
+  }
+#endif
+
   if (parallelism == "TBB") {
     gtsam_points::set_tbb_as_default();
   } else {
