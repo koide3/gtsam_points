@@ -233,20 +233,20 @@ public:
 INSTANTIATE_TEST_SUITE_P(
   gtsam_points,
   MatchingCostFactorTest,
-  testing::Combine(
-    testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"),
-#ifdef GTSAM_POINTS_USE_TBB
-    testing::Values("NONE", "OMP", "TBB")
-#else
-    testing::Values("NONE", "OMP")
-#endif
-      ),
+  testing::Combine(testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), testing::Values("NONE", "OMP", "TBB")),
   [](const auto& info) { return std::get<0>(info.param) + "_" + std::get<1>(info.param); });
 
 TEST_P(MatchingCostFactorTest, AlignmentTest) {
   const auto param = GetParam();
   const auto method = std::get<0>(param);
   const auto parallelism = std::get<1>(param);
+
+#ifndef GTSAM_POINTS_USE_TBB
+  if (parallelism == "TBB") {
+    std::cerr << "Skip test for TBB" << std::endl;
+    return;
+  }
+#endif
 
   if (parallelism == "TBB") {
     gtsam_points::set_tbb_as_default();
