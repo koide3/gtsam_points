@@ -21,12 +21,17 @@
 
 #include <guik/viewer/light_viewer.hpp>
 
+// Export GTSAM classes for serialization
 BOOST_CLASS_EXPORT_GUID(gtsam::GaussianFactorGraph, "gtsam::GaussianFactorGraph")
 BOOST_CLASS_EXPORT_GUID(gtsam::JacobianFactor, "gtsam::JacobianFactor");
 BOOST_CLASS_EXPORT_GUID(gtsam::HessianFactor, "gtsam::HessianFactor");
 
+/// @brief Random noise feeder
+/// @details This class generates random noise for the benchmark. It can also read noise from a file for reproducibility.
 struct NoiseFeeder {
 public:
+  /// @brief Default constructor
+  /// @details Generates random noise using a normal distribution.
   NoiseFeeder() : count(0) {
     std::mt19937 mt;
     std::normal_distribution<> ndist(0.0, 1.0);
@@ -34,6 +39,7 @@ public:
     std::generate(noise.begin(), noise.end(), [&] { return ndist(mt); });
   }
 
+  /// @brief Read noise from a text file.
   void read(const std::string& path) {
     std::ifstream ifs(path);
     if (!ifs) {
@@ -48,30 +54,35 @@ public:
     }
   }
 
+  /// @brief Take the next noise value.
   double operator()() { return noise[(count++) % noise.size()]; }
 
 public:
-  int count;
-  std::vector<double> noise;
+  int count;                  ///< Generated noise count
+  std::vector<double> noise;  ///< Noise values
 };
 
+/// @brief Estimation frame that contains the pose and point cloud data.
 struct Frame {
   using Ptr = std::shared_ptr<Frame>;
   using ConstPtr = std::shared_ptr<const Frame>;
 
-  int id;
-  double stamp;
-  Eigen::Isometry3d pose;
+  int id;                  ///< Frame ID
+  double stamp;            ///< Frame timestamp
+  Eigen::Isometry3d pose;  ///< Frame pose in world coordinates (groundtruth)
 
-  gtsam_points::PointCloudGPU::Ptr points;
-  std::vector<gtsam_points::GaussianVoxelMapGPU::Ptr> voxelmaps;
+  gtsam_points::PointCloudGPU::Ptr points;                        ///< Point cloud
+  std::vector<gtsam_points::GaussianVoxelMapGPU::Ptr> voxelmaps;  ///< Voxel maps
 };
 
+/// @brief Benchmark dataset
 struct Dataset {
 public:
   using Ptr = std::shared_ptr<Dataset>;
   using ConstPtr = std::shared_ptr<const Dataset>;
 
+  /// @brief Constructor
+  /// @details Read the dataset from a directory
   Dataset(const std::filesystem::path& data_path) : data_path(data_path) {
     std::cout << "reading " + data_path.string() + "...\n" << std::flush;
 
@@ -139,11 +150,12 @@ public:
   }
 
 public:
-  std::filesystem::path data_path;
-  std::vector<Frame::Ptr> frames;
-  std::vector<Frame::Ptr> keyframes;
+  std::filesystem::path data_path;    ///< Dataset path
+  std::vector<Frame::Ptr> frames;     ///< Frames
+  std::vector<Frame::Ptr> keyframes;  ///< Keyframes
 };
 
+/// @brief Benchmark class
 class Benchmark {
 public:
   Benchmark(const Dataset::ConstPtr& dataset, NoiseFeeder& noise, std::ostream& log_os, const boost::program_options::variables_map& vm)
@@ -151,10 +163,12 @@ public:
     std::cout << "dataset=" << dataset->data_path.string() << std::endl;
     log_os << "dataset=" << dataset->data_path.string() << std::endl;
 
+    // Create a stream temp buffer round robin
     roundrobin.reset(new gtsam_points::StreamTempBufferRoundRobin(4));
 
     create_graph(0.1, 0.025, noise);
 
+    // Visualization
     if (guik::running()) {
       auto viewer = guik::viewer();
       viewer->disable_vsync();
@@ -172,13 +186,18 @@ public:
       viewer->spin_once();
     }
 
+    // Verify linearization result
     verify(log_os, vm);
+
+    // Optimize graph for benchmark
     optimize(log_os, vm);
   }
 
 private:
+  /// @brief Create a graph to align all frames and keyframes
   void create_graph(double noise_t, double noise_r, NoiseFeeder& noise) {
     for (const auto& frame : dataset->frames) {
+      // Add noise to the groundtruth pose
       const Eigen::Vector3d tvec = Eigen::Vector3d(noise(), noise(), noise()) * noise_t;
       const Eigen::Vector3d rvec = Eigen::Vector3d(noise(), noise(), noise()) * noise_r;
       const gtsam::Pose3 noise(gtsam::Rot3::Expmap(rvec), tvec);
@@ -210,11 +229,13 @@ private:
     for (int i = 0; i < dataset->frames.size(); i++) {
       const auto& frame_i = dataset->frames[i];
 
+      // Create binary factors for the last 3 frames
       for (int j = i - 3; j >= 0 && j < i; j++) {
         const auto& frame_j = dataset->frames[j];
         create_binary_factor(frame_j, frame_i);
       }
 
+      // Create binary factors for the keyframes
       for (const auto& keyframe : dataset->keyframes) {
         if (keyframe->id >= frame_i->id) {
           break;
@@ -231,6 +252,7 @@ private:
     }
   }
 
+  /// @brief Verify the linearization result
   void verify(std::ostream& log_os, const boost::program_options::variables_map& vm) {
     int verify_count = 0;
 
@@ -285,6 +307,7 @@ private:
     verify(values);
   }
 
+  /// @brief Optimize the graph using Levenberg-Marquardt algorithm
   void optimize(std::ostream& log_os, const boost::program_options::variables_map& vm) {
     gtsam_points::LevenbergMarquardtExtParams lm_params;
     lm_params.setMaxIterations(20);
@@ -313,14 +336,16 @@ private:
   }
 
 private:
-  Dataset::ConstPtr dataset;
-  std::unique_ptr<gtsam_points::StreamTempBufferRoundRobin> roundrobin;
+  Dataset::ConstPtr dataset;                                             ///< Dataset
+  std::unique_ptr<gtsam_points::StreamTempBufferRoundRobin> roundrobin;  ///< Stream temp buffer round robin
 
-  gtsam::Values values;
-  gtsam::NonlinearFactorGraph graph;
+  gtsam::Values values;               ///< Initial sensor poses
+  gtsam::NonlinearFactorGraph graph;  ///< Nonlinear factor graph
 };
 
+/// @brief Entry point
 int main(int argc, char** argv) {
+  // program options
   using namespace boost::program_options;
 
   options_description desc("Options");
@@ -347,16 +372,18 @@ int main(int argc, char** argv) {
     return 0;
   }
 
+  // Register NonlinearFactorSetGPU for batch linearization
   std::cout << "registering NonlinearFactorSetGPU..." << std::endl;
   gtsam_points::LinearizationHook::register_hook([] { return gtsam_points::create_nonlinear_factor_set_gpu(); });
 
   const std::string dataset_path = vm["dataset_path"].as<std::string>();
 
+  // Read noise
   NoiseFeeder noise;
   noise.read(dataset_path + "/noise.txt");
 
+  // Find datasets in dataset_path
   std::vector<std::filesystem::path> paths;
-
   for (const auto& path : std::filesystem::recursive_directory_iterator(dataset_path)) {
     if (path.path().filename() != "data.txt") {
       continue;
@@ -364,8 +391,8 @@ int main(int argc, char** argv) {
     paths.emplace_back(path.path());
   }
   std::sort(paths.begin(), paths.end());
-  // paths.resize(5);
 
+  // Read datasets
   std::vector<Dataset::Ptr> datasets(paths.size());
 #pragma omp parallel for schedule(dynamic)
   for (int i = 0; i < paths.size(); i++) {
@@ -381,6 +408,7 @@ int main(int argc, char** argv) {
     std::filesystem::create_directories(vm["verification_log_path"].as<std::string>());
   }
 
+  // Run benchmark
   std::ofstream ofs(vm["log_dst_path"].as<std::string>());
   for (const auto& dataset : datasets) {
     Benchmark benchmark(dataset, noise, ofs, vm);
