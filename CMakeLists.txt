@@ -304,6 +304,19 @@ if(BUILD_TOOLS)
   endforeach()
 endif()
 
+find_package(Iridescence REQUIRED)
+find_package(Boost REQUIRED COMPONENTS filesystem program_options)
+
+file(GLOB tool_sources "src/tools/*.cpp")
+add_executable(gpu_benchmark
+  src/benchmark/export_factors.cpp
+  src/benchmark/noise_feeder.cpp
+  src/benchmark/dataset.cpp
+  src/benchmark/benchmark.cpp
+  src/benchmark/gpu_benchmark.cpp
+)
+target_link_libraries(gpu_benchmark gtsam_points Iridescence::Iridescence Boost::program_options)
+
 # Test
 if(BUILD_TESTS)
   include(FetchContent)
