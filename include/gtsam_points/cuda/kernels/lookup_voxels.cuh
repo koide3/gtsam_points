@@ -16,16 +16,17 @@
 
 namespace gtsam_points {
 
-template <bool enable_surface_validation>
 struct lookup_voxels_kernel {
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
 
   lookup_voxels_kernel(
+    bool enable_surface_validation,
     const GaussianVoxelMapGPU& voxelmap,
     const Eigen::Vector3f* points,
     const Eigen::Vector3f* normals,
     const Eigen::Isometry3f* x_ptr)
-  : x_ptr(x_ptr),
+  : enable_surface_validation(enable_surface_validation),
+    x_ptr(x_ptr),
     voxelmap_info_ptr(voxelmap.voxelmap_info_ptr),
     buckets_ptr(voxelmap.buckets),
     points_ptr(points),
@@ -83,6 +84,8 @@ struct lookup_voxels_kernel {
   // f(90) = 0.000   f(80) = 0.174   f(70) = 0.343   f(60) = 0.500
   // f(50) = 0.643   f(40) = 0.766   f(30) = 0.866   f(20) = 0.940
   static const float constexpr surface_validation_thresh = 0.174;  // cos(80.0 * M_PI / 180.0)
+
+  const bool enable_surface_validation;
 
   const Eigen::Isometry3f* x_ptr;
 

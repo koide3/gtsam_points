@@ -39,18 +39,14 @@ public:
   // synchronized interface
   LinearizedSystem6 linearize(const Eigen::Isometry3f& x);
   double compute_error(const Eigen::Isometry3f& xl, const Eigen::Isometry3f& xe);
-  void update_inliers(const Eigen::Isometry3f& x, const Eigen::Isometry3f* d_x, bool force_update = false);
+
+  void reset_inliers(const Eigen::Isometry3f& x, const Eigen::Isometry3f* d_x, bool force_update = false);
+  void update_inliers(int num_inliers);
 
   // async interface
   void sync_stream();
   void issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
   void issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output);
-
-  template <bool enable_surface_validation>
-  void issue_linearize_impl(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
-
-  template <bool enable_surface_validation>
-  void issue_compute_error_impl(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output);
 
 private:
   bool enable_surface_validation;
@@ -65,6 +61,7 @@ private:
   PointCloud::ConstPtr source;
 
   Eigen::Isometry3f inlier_evaluation_point;
+  const Eigen::Isometry3f* inlier_evaluation_point_gpu;
 
   int num_inliers;
   int* num_inliers_gpu;
