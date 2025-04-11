@@ -142,6 +142,13 @@ TEST_P(LOAMFactorTest, AlignmentTest) {
   const std::string method = std::get<0>(param);
   const std::string parallelism = std::get<1>(param);
 
+#ifndef GTSAM_POINTS_USE_TBB
+  if (parallelism == "TBB") {
+    std::cerr << "Skip test for TBB" << std::endl;
+    return;
+  }
+#endif
+
   if (parallelism == "TBB") {
     gtsam_points::set_tbb_as_default();
   } else {
