@@ -285,8 +285,10 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCl
 }
 
 void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
+  const Eigen::Vector3i INVALID_COORD = Eigen::Vector3i::Constant(std::numeric_limits<int>::max());
+
   std::vector<VoxelBucket> h_buckets(voxelmap_info.num_buckets);
-  std::vector<Eigen::Vector3i> h_voxel_coords(voxelmap_info.num_voxels, Eigen::Vector3i::Constant(std::numeric_limits<int>::max()));
+  std::vector<Eigen::Vector3i> h_voxel_coords(voxelmap_info.num_voxels, INVALID_COORD);
   std::vector<int> h_num_points(voxelmap_info.num_voxels);
   std::vector<Eigen::Vector3f> h_voxel_means(voxelmap_info.num_voxels);
   std::vector<Eigen::Matrix3f> h_voxel_covs(voxelmap_info.num_voxels);
@@ -317,7 +319,7 @@ void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
   }
 
   for (int i = 0; i < voxelmap_info.num_voxels; i++) {
-    if (h_voxel_coords[i] == Eigen::Vector3i::Constant(std::numeric_limits<int>::max())) {
+    if (h_voxel_coords[i] == INVALID_COORD) {
       std::cerr << "error: h_voxel_coords[" << i << "] is not assigned!!" << std::endl;
       continue;
     }
