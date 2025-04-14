@@ -98,10 +98,10 @@ public:
    * @brief Save the voxelmap
    * @param path  Destination path to save the voxelmap
    */
-  void save_compact(const std::string& path) const;
+  void save_compact(const std::string& path) const override;
 
   /**
-   * @brief Save a voxelmap from a file
+   * @brief Load a voxelmap from a file
    * @param path  Path to a voxelmap file to be loaded
    */
   static GaussianVoxelMapCPU::Ptr load(const std::string& path);

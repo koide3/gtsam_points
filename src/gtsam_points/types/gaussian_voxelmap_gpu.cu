@@ -8,11 +8,14 @@
 #include <thrust/device_vector.h>
 
 #include <set>
+#include <vector>
 #include <chrono>
+#include <fstream>
 #include <device_atomic_functions.h>
 #include <gtsam_points/cuda/check_error.cuh>
 #include <gtsam_points/cuda/kernels/vector3_hash.cuh>
 #include <gtsam_points/cuda/cuda_malloc_async.hpp>
+#include <gtsam_points/types/gaussian_voxel_data.hpp>
 
 namespace gtsam_points {
 
@@ -279,6 +282,173 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCl
   check_error << cudaFreeAsync(coords, stream);
   check_error << cudaFreeAsync(voxels_failures, stream);
   check_error << cudaFreeAsync(index_buckets, stream);
+}
+
+void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
+  const Eigen::Vector3i INVALID_COORD = Eigen::Vector3i::Constant(std::numeric_limits<int>::max());
+
+  std::vector<VoxelBucket> h_buckets(voxelmap_info.num_buckets);
+  std::vector<Eigen::Vector3i> h_voxel_coords(voxelmap_info.num_voxels, INVALID_COORD);
+  std::vector<int> h_num_points(voxelmap_info.num_voxels);
+  std::vector<Eigen::Vector3f> h_voxel_means(voxelmap_info.num_voxels);
+  std::vector<Eigen::Matrix3f> h_voxel_covs(voxelmap_info.num_voxels);
+
+  check_error << cudaMemcpyAsync(h_buckets.data(), buckets, sizeof(VoxelBucket) * voxelmap_info.num_buckets, cudaMemcpyDeviceToHost, 0);
+  check_error << cudaMemcpyAsync(h_num_points.data(), num_points, sizeof(int) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
+  check_error << cudaMemcpyAsync(h_voxel_means.data(), voxel_means, sizeof(Eigen::Vector3f) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
+  check_error << cudaMemcpyAsync(h_voxel_covs.data(), voxel_covs, sizeof(Eigen::Matrix3f) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
+
+  std::vector<GaussianVoxelData> serial_voxels;
+  serial_voxels.reserve(voxelmap_info.num_voxels);
+
+  for (int i = 0; i < voxelmap_info.num_buckets; i++) {
+    const auto& bucket = h_buckets[i];
+    if (bucket.second < 0) {
+      continue;
+    }
+
+    const auto& coord = bucket.first;
+    const int voxel_index = bucket.second;
+
+    if (voxel_index > voxelmap_info.num_voxels) {
+      std::cerr << "error: voxel_index=" << voxel_index << " > num_voxels=" << voxelmap_info.num_voxels << std::endl;
+      abort();
+    }
+
+    h_voxel_coords[voxel_index] = coord;
+  }
+
+  for (int i = 0; i < voxelmap_info.num_voxels; i++) {
+    if (h_voxel_coords[i] == INVALID_COORD) {
+      std::cerr << "error: h_voxel_coords[" << i << "] is not assigned!!" << std::endl;
+      continue;
+    }
+
+    GaussianVoxel voxel;
+    voxel.num_points = h_num_points[i];
+    voxel.mean = h_voxel_means[i].homogeneous().cast<double>();
+    voxel.cov.setZero();
+    voxel.cov.topLeftCorner<3, 3>() = h_voxel_covs[i].cast<double>();
+    serial_voxels.emplace_back(h_voxel_coords[i], voxel);
+  }
+
+  std::ofstream ofs(path);
+  ofs << "compact " << 1 << std::endl;
+  ofs << "resolution " << voxel_resolution() << std::endl;
+  ofs << "lru_count " << 0 << std::endl;
+  ofs << "lru_cycle " << 1 << std::endl;
+  ofs << "lru_thresh " << 1 << std::endl;
+  ofs << "voxel_bytes " << sizeof(GaussianVoxelData) << std::endl;
+  ofs << "num_voxels " << serial_voxels.size() << std::endl;
+
+  ofs.write(reinterpret_cast<const char*>(serial_voxels.data()), sizeof(GaussianVoxelData) * serial_voxels.size());
+}
+
+GaussianVoxelMapGPU::Ptr GaussianVoxelMapGPU::load(const std::string& path) {
+  std::ifstream ifs(path);
+  if (!ifs) {
+    std::cerr << "error: failed to open " << path << std::endl;
+    return nullptr;
+  }
+
+  std::string token;
+  bool compact;
+  double resolution;
+  int lru;
+  int voxel_bytes;
+  int num_voxels;
+
+  ifs >> token >> compact;
+  ifs >> token >> resolution;
+  ifs >> token >> lru;
+  ifs >> token >> lru;
+  ifs >> token >> lru;
+  ifs >> token >> voxel_bytes;
+  ifs >> token >> num_voxels;
+  std::getline(ifs, token);
+
+  std::vector<GaussianVoxelData> flat_voxels(num_voxels);
+  ifs.read(reinterpret_cast<char*>(flat_voxels.data()), sizeof(GaussianVoxelData) * num_voxels);
+
+  std::vector<Eigen::Vector3i> h_coords(num_voxels);
+  std::vector<int> h_num_points(num_voxels);
+  std::vector<Eigen::Vector3f> h_voxel_means(num_voxels);
+  std::vector<Eigen::Matrix3f> h_voxel_covs(num_voxels);
+  for (int i = 0; i < num_voxels; i++) {
+    const auto& info_voxel = flat_voxels[i].uncompact();
+    h_coords[i] = info_voxel->first.coord;
+    h_num_points[i] = info_voxel->second.num_points;
+    h_voxel_means[i] = info_voxel->second.mean.head<3>().cast<float>();
+    h_voxel_covs[i] = info_voxel->second.cov.topLeftCorner<3, 3>().cast<float>();
+  }
+
+  std::vector<VoxelBucket> h_buckets;
+  const auto assign_buckets = [&](int num_buckets) {
+    h_buckets.resize(num_buckets);
+    for (int i = 0; i < num_buckets; i++) {
+      h_buckets[i].first = Eigen::Vector3i(0, 0, 0);
+      h_buckets[i].second = -1;
+    }
+
+    for (int i = 0; i < num_voxels; i++) {
+      uint64_t hash = vector3i_hash(h_coords[i]);
+
+      bool inserted = false;
+      for (int j = 0; j < 10; j++) {
+        uint64_t bucket_index = (hash + j) % num_buckets;
+        auto& bucket = h_buckets[bucket_index];
+
+        if (bucket.second < 0) {
+          bucket.first = h_coords[i];
+          bucket.second = i;
+          inserted = true;
+          break;
+        }
+      }
+
+      if (!inserted) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  for (int num_buckets = 8192 * 4; num_buckets < (1 << 30); num_buckets *= 2) {
+    if (assign_buckets(num_buckets)) {
+      break;
+    }
+  }
+
+  auto voxelmap = std::make_shared<GaussianVoxelMapGPU>(resolution, 8192, 10, 0.1);
+  voxelmap->voxelmap_info.num_voxels = num_voxels;
+  voxelmap->voxelmap_info.num_buckets = h_buckets.size();
+  check_error << cudaMemcpyAsync(voxelmap->voxelmap_info_ptr, &voxelmap->voxelmap_info, sizeof(VoxelMapInfo), cudaMemcpyHostToDevice, 0);
+
+  check_error << cudaMallocAsync(&voxelmap->buckets, sizeof(VoxelBucket) * h_buckets.size(), 0);
+  check_error << cudaMallocAsync(&voxelmap->num_points, sizeof(int) * num_voxels, 0);
+  check_error << cudaMallocAsync(&voxelmap->voxel_means, sizeof(Eigen::Vector3f) * num_voxels, 0);
+  check_error << cudaMallocAsync(&voxelmap->voxel_covs, sizeof(Eigen::Matrix3f) * num_voxels, 0);
+  check_error << cudaMemcpyAsync(voxelmap->buckets, h_buckets.data(), sizeof(VoxelBucket) * h_buckets.size(), cudaMemcpyHostToDevice, 0);
+  check_error << cudaMemcpyAsync(voxelmap->num_points, h_num_points.data(), sizeof(int) * num_voxels, cudaMemcpyHostToDevice, 0);
+  check_error << cudaMemcpyAsync(voxelmap->voxel_means, h_voxel_means.data(), sizeof(Eigen::Vector3f) * num_voxels, cudaMemcpyHostToDevice, 0);
+  check_error << cudaMemcpyAsync(voxelmap->voxel_covs, h_voxel_covs.data(), sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyHostToDevice, 0);
+
+  return voxelmap;
+}
+
+std::vector<VoxelBucket> download_buckets(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {
+  std::vector<VoxelBucket> buckets(voxelmap.voxelmap_info.num_buckets);
+  check_error
+    << cudaMemcpyAsync(buckets.data(), voxelmap.buckets, sizeof(VoxelBucket) * voxelmap.voxelmap_info.num_buckets, cudaMemcpyDeviceToHost, stream);
+  return buckets;
+}
+
+std::vector<int> download_voxel_num_points(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {
+  std::vector<int> num_points(voxelmap.voxelmap_info.num_voxels);
+  check_error
+    << cudaMemcpyAsync(num_points.data(), voxelmap.num_points, sizeof(int) * voxelmap.voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
+  return num_points;
 }
 
 std::vector<Eigen::Vector3f> download_voxel_means(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {
