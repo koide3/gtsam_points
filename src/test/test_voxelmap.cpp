@@ -1,5 +1,6 @@
 #include <vector>
 #include <iostream>
+#include <unordered_set>
 #include <Eigen/Core>
 #include <boost/format.hpp>
 
@@ -169,7 +170,7 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
 TEST_F(VoxelMapTestBase, VoxelMapGPU) {
   for (int i = 0; i < frames.size(); i++) {
     const double overlap_gpu = gtsam_points::overlap_gpu(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
-    const double overlap_auto = gtsam_points::overlap_gpu(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
+    const double overlap_auto = gtsam_points::overlap_auto(voxelmaps_gpu[i], frames[i], Eigen::Isometry3d::Identity());
     EXPECT_GE(overlap_gpu, 0.99);
     EXPECT_DOUBLE_EQ(overlap_gpu, overlap_auto);
   }
@@ -214,6 +215,139 @@ TEST_F(VoxelMapTestBase, VoxelMapGPU) {
   std::vector<gtsam_points::PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
   auto merged = gtsam_points::merge_frames_gpu(poses_, frames_, 0.2);
   validate_frame_gpu(merged);
+}
+
+TEST_F(VoxelMapTestBase, VoxelMapGPU_IO) {
+  std::vector<gtsam_points::GaussianVoxelMapGPU::ConstPtr> voxels_gpu(voxelmaps_gpu.size());
+  std::transform(voxelmaps_gpu.begin(), voxelmaps_gpu.end(), voxels_gpu.begin(), [](const gtsam_points::GaussianVoxelMap::ConstPtr& v) {
+    return std::dynamic_pointer_cast<const gtsam_points::GaussianVoxelMapGPU>(v);
+  });
+  ASSERT_EQ(std::all_of(voxels_gpu.begin(), voxels_gpu.end(), [](const auto& v) { return v != nullptr; }), true);
+
+  std::vector<gtsam_points::GaussianVoxelMapGPU::ConstPtr> loaded_voxels_from_cpu(voxelmaps.size());
+  std::vector<gtsam_points::GaussianVoxelMapGPU::ConstPtr> loaded_voxels_from_gpu(voxelmaps.size());
+  for (int i = 0; i < voxelmaps.size(); i++) {
+    auto v1 = std::dynamic_pointer_cast<gtsam_points::GaussianVoxelMapCPU>(voxelmaps[i]);
+    auto v2 = std::dynamic_pointer_cast<gtsam_points::GaussianVoxelMapGPU>(voxelmaps_gpu[i]);
+
+    voxelmaps[i]->save_compact("/tmp/voxelmap_cpu.bin");
+    loaded_voxels_from_cpu[i] = gtsam_points::GaussianVoxelMapGPU::load("/tmp/voxelmap_cpu.bin");
+    ASSERT_TRUE(loaded_voxels_from_cpu[i] != nullptr);
+
+    voxelmaps_gpu[i]->save_compact("/tmp/voxelmap_gpu.bin");
+    loaded_voxels_from_gpu[i] = gtsam_points::GaussianVoxelMapGPU::load("/tmp/voxelmap_gpu.bin");
+    ASSERT_TRUE(loaded_voxels_from_gpu[i] != nullptr);
+
+    auto loaded = gtsam_points::GaussianVoxelMapGPU::load("/tmp/voxelmap_gpu.bin");
+    ASSERT_TRUE(loaded != nullptr);
+  }
+
+  for (int i = 0; i < voxelmaps.size(); i++) {
+    const auto voxels_cpu = std::dynamic_pointer_cast<gtsam_points::GaussianVoxelMapCPU>(voxelmaps[i]);
+    const auto voxels_gpu = std::dynamic_pointer_cast<gtsam_points::GaussianVoxelMapGPU>(voxelmaps_gpu[i]);
+
+    EXPECT_DOUBLE_EQ(voxels_cpu->voxel_resolution(), loaded_voxels_from_cpu[i]->voxel_resolution());
+    EXPECT_EQ(voxels_cpu->num_voxels(), loaded_voxels_from_cpu[i]->voxelmap_info.num_voxels);
+
+    EXPECT_DOUBLE_EQ(voxels_gpu->voxel_resolution(), loaded_voxels_from_gpu[i]->voxel_resolution());
+    EXPECT_EQ(voxels_gpu->voxelmap_info.num_voxels, loaded_voxels_from_gpu[i]->voxelmap_info.num_voxels);
+
+    // Verify means/covs for CPU-write GPU-read
+    const auto means_cpu = voxels_cpu->voxel_points();
+    const auto covs_cpu = voxels_cpu->voxel_covs();
+    const auto loaded_means_cpu = gtsam_points::download_voxel_means(*loaded_voxels_from_cpu[i]);
+    const auto loaded_covs_cpu = gtsam_points::download_voxel_covs(*loaded_voxels_from_cpu[i]);
+
+    ASSERT_EQ(means_cpu.size(), loaded_means_cpu.size());
+    ASSERT_EQ(covs_cpu.size(), loaded_covs_cpu.size());
+    for (int j = 0; j < means_cpu.size(); j++) {
+      EXPECT_LT((means_cpu[j].cast<float>().head<3>() - loaded_means_cpu[j]).cwiseAbs().maxCoeff(), 1e-3);
+      EXPECT_LT((covs_cpu[j].cast<float>().topLeftCorner<3, 3>() - loaded_covs_cpu[j]).cwiseAbs().maxCoeff(), 1e-3);
+    }
+
+    // Verify buckets for CPU-write GPU-read
+    const auto loaded_buckets_from_cpu = gtsam_points::download_buckets(*loaded_voxels_from_cpu[i]);
+    std::unordered_map<Eigen::Vector3i, int, gtsam_points::Vector3iHash> map_from_cpu;
+    for (const auto& b : loaded_buckets_from_cpu) {
+      if (b.second < 0) {
+        continue;
+      }
+      EXPECT_FALSE(map_from_cpu.count(b.first) > 0) << "Duplicate bucket found for coord " << b.first.transpose();
+      EXPECT_GE(b.second, 0) << "Invalid bucket index found for coord " << b.first.transpose();
+      EXPECT_LT(b.second, loaded_means_cpu.size()) << "Invalid bucket index found for coord " << b.first.transpose();
+
+      map_from_cpu[b.first] = b.second;
+    }
+
+    for (const auto& mean : voxels_cpu->voxel_points()) {
+      const Eigen::Vector3i coord = voxels_cpu->voxel_coord(mean);
+      const auto found = map_from_cpu.find(coord);
+      ASSERT_NE(found, map_from_cpu.end()) << "Failed to find bucket for coord " << coord.transpose();
+
+      const auto& voxel_index = found->second;
+      EXPECT_LE((mean.cast<float>().head<3>() - loaded_means_cpu[voxel_index]).cwiseAbs().maxCoeff(), 1e-3)
+        << "Mean mismatch for coord " << coord.transpose();
+    }
+
+    // Verify means/covs for GPU-write GPU-read
+    const auto means_gpu = gtsam_points::download_voxel_means(*voxels_gpu);
+    const auto covs_gpu = gtsam_points::download_voxel_covs(*voxels_gpu);
+    const auto loaded_means_gpu = gtsam_points::download_voxel_means(*loaded_voxels_from_gpu[i]);
+    const auto loaded_covs_gpu = gtsam_points::download_voxel_covs(*loaded_voxels_from_gpu[i]);
+
+    ASSERT_EQ(means_gpu.size(), loaded_means_gpu.size());
+    ASSERT_EQ(covs_gpu.size(), loaded_covs_gpu.size());
+    for (int j = 0; j < means_gpu.size(); j++) {
+      EXPECT_LT((means_gpu[j] - loaded_means_gpu[j]).cwiseAbs().maxCoeff(), 1e-3);
+      EXPECT_LT((covs_gpu[j] - loaded_covs_gpu[j]).cwiseAbs().maxCoeff(), 1e-3);
+    }
+
+    // Verify buckets for GPU-write GPU-read
+    const auto loaded_buckets_from_gpu = gtsam_points::download_buckets(*loaded_voxels_from_gpu[i]);
+    std::unordered_map<Eigen::Vector3i, int, gtsam_points::Vector3iHash> map_from_gpu;
+    for (const auto& b : loaded_buckets_from_gpu) {
+      if (b.second < 0) {
+        continue;
+      }
+      EXPECT_FALSE(map_from_gpu.count(b.first) > 0) << "Duplicate bucket found for coord " << b.first.transpose();
+      EXPECT_GE(b.second, 0) << "Invalid bucket index found for coord " << b.first.transpose();
+      EXPECT_LT(b.second, loaded_means_gpu.size()) << "Invalid bucket index found for coord " << b.first.transpose();
+
+      map_from_gpu[b.first] = b.second;
+    }
+
+    for (const auto& mean : means_gpu) {
+      const Eigen::Vector3i coord = (mean.array() / voxels_gpu->voxel_resolution()).floor().cast<int>();
+      const auto found = map_from_gpu.find(coord);
+      ASSERT_NE(found, map_from_gpu.end()) << "Failed to find bucket for coord " << coord.transpose();
+
+      const auto& voxel_index = found->second;
+      EXPECT_LE((mean - loaded_means_gpu[voxel_index]).cwiseAbs().maxCoeff(), 1e-3) << "Mean mismatch for coord " << coord.transpose();
+    }
+  }
+
+  // Verify overlap values with identity transform
+  for (int i = 0; i < frames.size(); i++) {
+    const double overlap_from_cpu = gtsam_points::overlap_gpu(loaded_voxels_from_cpu[i], frames[i], Eigen::Isometry3d::Identity());
+    const double overlap_from_gpu = gtsam_points::overlap_gpu(loaded_voxels_from_gpu[i], frames[i], Eigen::Isometry3d::Identity());
+    EXPECT_GT(overlap_from_cpu, 0.99) << "Overlap from CPU: " << overlap_from_cpu;
+    EXPECT_GT(overlap_from_gpu, 0.99) << "Overlap from GPU: " << overlap_from_gpu;
+  }
+
+  // Verify overlap values with random transform
+  for (int i = 0; i < frames.size(); i++) {
+    Eigen::Isometry3d delta = Eigen::Isometry3d::Identity();
+    delta.linear() = Eigen::AngleAxisd(Eigen::Vector2d::Random()[0] * 0.2, Eigen::Vector3d::Random().normalized()).toRotationMatrix();
+    delta.translation() = Eigen::Vector3d::Random();
+
+    const double overlap_cpu_orig = gtsam_points::overlap(voxelmaps[i], frames[i], delta);
+    const double overlap_cpu_loaded = gtsam_points::overlap_gpu(loaded_voxels_from_cpu[i], frames[i], delta);
+    EXPECT_NEAR(overlap_cpu_orig, overlap_cpu_loaded, 1e-3) << "Overlap mismatch CPU: " << overlap_cpu_orig << " GPU: " << overlap_cpu_loaded;
+
+    const double overlap_gpu_orig = gtsam_points::overlap_gpu(voxelmaps_gpu[i], frames[i], delta);
+    const double overlap_gpu_loaded = gtsam_points::overlap_gpu(loaded_voxels_from_gpu[i], frames[i], delta);
+    EXPECT_NEAR(overlap_gpu_orig, overlap_gpu_loaded, 1e-3) << "Overlap mismatch GPU: " << overlap_gpu_orig << " GPU: " << overlap_gpu_loaded;
+  }
 }
 
 #endif
