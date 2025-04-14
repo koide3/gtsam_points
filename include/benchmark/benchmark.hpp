@@ -11,6 +11,8 @@ class Benchmark {
 public:
   Benchmark(const Dataset::ConstPtr& dataset, NoiseFeeder& noise, std::ostream& log_os, const boost::program_options::variables_map& vm);
 
+  bool is_verification_failed() const { return verification_failed; }
+
 private:
   /// @brief Create a graph to align all frames and keyframes
   void create_graph(double noise_t, double noise_r, NoiseFeeder& noise);
@@ -25,6 +27,7 @@ private:
   Dataset::ConstPtr dataset;                                             ///< Dataset
   std::unique_ptr<gtsam_points::StreamTempBufferRoundRobin> roundrobin;  ///< Stream temp buffer round robin
 
+  bool verification_failed = true;    ///< Verification success flag
   gtsam::Values values;               ///< Initial sensor poses
   gtsam::NonlinearFactorGraph graph;  ///< Nonlinear factor graph
 };

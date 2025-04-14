@@ -307,7 +307,6 @@ endif()
 find_package(Iridescence REQUIRED)
 find_package(Boost REQUIRED COMPONENTS filesystem program_options)
 
-file(GLOB tool_sources "src/tools/*.cpp")
 add_executable(gpu_benchmark
   src/benchmark/export_factors.cpp
   src/benchmark/noise_feeder.cpp

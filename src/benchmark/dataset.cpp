@@ -5,7 +5,7 @@
 #include <fstream>
 #include <fmt/format.h>
 
-Dataset::Dataset(const std::filesystem::path& data_path) : data_path(data_path) {
+Dataset::Dataset(const std::filesystem::path& data_path, bool force_recreate_voxelmaps) : data_path(data_path) {
   std::cout << "reading " + data_path.string() + "...\n" << std::flush;
 
   std::ifstream ifs(data_path);
@@ -53,9 +53,21 @@ Dataset::Dataset(const std::filesystem::path& data_path) : data_path(data_path) 
 
       const std::array<double, 2> resolutions = {0.5, 1.0};
       for (const auto r : resolutions) {
-        auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(r, 8192 * 8, 10, 0.0);
-        voxelmap->insert(*frame->points);
-        frame->voxelmaps.emplace_back(voxelmap);
+        const std::string voxelmap_path = fmt::format("{}/voxelmap_{:.3f}.bin", path, r);
+        auto voxelmap = gtsam_points::GaussianVoxelMapGPU::load(voxelmap_path);
+
+        if (voxelmap && !force_recreate_voxelmaps) {
+          frame->voxelmaps.emplace_back(voxelmap);
+        } else {
+          std::cerr << "error: failed to load " << voxelmap_path << std::endl;
+          std::cerr << "creating a new voxelmap" << std::endl;
+
+          auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(r, 8192 * 8, 10, 0.0);
+          voxelmap->insert(*frame->points);
+          frame->voxelmaps.emplace_back(voxelmap);
+
+          voxelmap->save_compact(voxelmap_path);
+        }
       }
 
       if (!reading_keyframes) {

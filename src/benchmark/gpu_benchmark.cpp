@@ -28,6 +28,7 @@ int main(int argc, char** argv) {
     ("verification_log_path", value<std::string>()->default_value("/tmp/verify_log"), "Destimation path to write verification log")  //
     ("save_verification_log", "Save verification log")                                                                               //
     ("verify", "Verify linearization results")                                                                                       //
+    ("recreate_voxelmaps", "Recreating voxelmaps (This will overwrite voxelmap data in the input directory)")                        //
     ("visualize,v", "Enable visualization.")                                                                                         //
     ;
 
@@ -68,7 +69,7 @@ int main(int argc, char** argv) {
   std::vector<Dataset::Ptr> datasets(paths.size());
 #pragma omp parallel for schedule(dynamic)
   for (int i = 0; i < paths.size(); i++) {
-    datasets[i] = std::make_shared<Dataset>(paths[i]);
+    datasets[i] = std::make_shared<Dataset>(paths[i], vm.count("recreate_voxelmaps"));
   }
 
   if (vm.count("visualize")) {
@@ -81,10 +82,14 @@ int main(int argc, char** argv) {
   }
 
   // Run benchmark
+  int verification_failed_count = 0;
   std::ofstream ofs(vm["log_dst_path"].as<std::string>());
   for (const auto& dataset : datasets) {
     Benchmark benchmark(dataset, noise, ofs, vm);
+    verification_failed_count += benchmark.is_verification_failed();
   }
+
+  std::cout << "verification failed " << verification_failed_count << " / " << datasets.size() << std::endl;
 
   return 0;
 }

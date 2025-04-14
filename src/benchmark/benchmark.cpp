@@ -11,7 +11,8 @@
 #include <guik/viewer/light_viewer.hpp>
 
 Benchmark::Benchmark(const Dataset::ConstPtr& dataset, NoiseFeeder& noise, std::ostream& log_os, const boost::program_options::variables_map& vm)
-: dataset(dataset) {
+: dataset(dataset),
+  verification_failed(false) {
   std::cout << "dataset=" << dataset->data_path.string() << std::endl;
   log_os << "dataset=" << dataset->data_path.string() << std::endl;
 
@@ -135,6 +136,7 @@ void Benchmark::verify(std::ostream& log_os, const boost::program_options::varia
       if (logged.size() != linearized->size()) {
         std::cerr << "verification failed!" << std::endl;
         std::cerr << "size mismatch: logged=" << logged.size() << " linearized=" << linearized->size() << std::endl;
+        verification_failed = true;
       } else {
         for (int i = 0; i < logged.size(); i++) {
           const gtsam::Matrix inf_log = logged[i]->augmentedInformation();
@@ -143,13 +145,20 @@ void Benchmark::verify(std::ostream& log_os, const boost::program_options::varia
           const gtsam::Matrix err = (inf_log - inf_lin).cwiseAbs();
           const gtsam::Matrix rerr = err.array() / (inf_log.array().abs() + 1e-6);
 
-          if (rerr.maxCoeff() > 1e-2) {
+          if (rerr.maxCoeff() > 1e-3) {
             std::cerr << "verification failed!" << std::endl;
             std::cerr << "*** logged ***" << std::endl << inf_log << std::endl;
             std::cerr << "*** linearized ***" << std::endl << inf_lin << std::endl;
             std::cerr << "*** rerr ***" << std::endl << rerr << std::endl;
+            verification_failed = true;
           }
         }
+      }
+
+      if (!verification_failed) {
+        std::cout << "verification passed!" << std::endl;
+      } else {
+        std::cerr << "verification failed!" << std::endl;
       }
     }
   };

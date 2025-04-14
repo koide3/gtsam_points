@@ -29,7 +29,7 @@ public:
 
   /// @brief Constructor
   /// @details Read the dataset from a directory
-  Dataset(const std::filesystem::path& data_path);
+  Dataset(const std::filesystem::path& data_path, bool force_recreate_voxelmaps = false);
 
 public:
   std::filesystem::path data_path;    ///< Dataset path
