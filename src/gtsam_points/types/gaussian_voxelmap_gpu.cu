@@ -286,6 +286,7 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCl
 
 void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
   std::vector<VoxelBucket> h_buckets(voxelmap_info.num_buckets);
+  std::vector<Eigen::Vector3i> h_voxel_coords(voxelmap_info.num_voxels, Eigen::Vector3i::Constant(std::numeric_limits<int>::max()));
   std::vector<int> h_num_points(voxelmap_info.num_voxels);
   std::vector<Eigen::Vector3f> h_voxel_means(voxelmap_info.num_voxels);
   std::vector<Eigen::Matrix3f> h_voxel_covs(voxelmap_info.num_voxels);
@@ -304,16 +305,29 @@ void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
       continue;
     }
 
-    const auto& mean = h_voxel_means[bucket.second];
-    const auto& cov = h_voxel_covs[bucket.second];
+    const auto& coord = bucket.first;
+    const int voxel_index = bucket.second;
+
+    if (voxel_index > voxelmap_info.num_voxels) {
+      std::cerr << "error: voxel_index=" << voxel_index << " > num_voxels=" << voxelmap_info.num_voxels << std::endl;
+      abort();
+    }
+
+    h_voxel_coords[voxel_index] = coord;
+  }
+
+  for (int i = 0; i < voxelmap_info.num_voxels; i++) {
+    if (h_voxel_coords[i] == Eigen::Vector3i::Constant(std::numeric_limits<int>::max())) {
+      std::cerr << "error: h_voxel_coords[" << i << "] is not assigned!!" << std::endl;
+      continue;
+    }
 
     GaussianVoxel voxel;
-    voxel.num_points = h_num_points[bucket.second];
-    voxel.mean = h_voxel_means[bucket.second].homogeneous().cast<double>();
+    voxel.num_points = h_num_points[i];
+    voxel.mean = h_voxel_means[i].homogeneous().cast<double>();
     voxel.cov.setZero();
-    voxel.cov.topLeftCorner<3, 3>() = h_voxel_covs[bucket.second].cast<double>();
-
-    serial_voxels.emplace_back(bucket.first, voxel);
+    voxel.cov.topLeftCorner<3, 3>() = h_voxel_covs[i].cast<double>();
+    serial_voxels.emplace_back(h_voxel_coords[i], voxel);
   }
 
   std::ofstream ofs(path);
@@ -419,6 +433,20 @@ GaussianVoxelMapGPU::Ptr GaussianVoxelMapGPU::load(const std::string& path) {
   check_error << cudaMemcpyAsync(voxelmap->voxel_covs, h_voxel_covs.data(), sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyHostToDevice, 0);
 
   return voxelmap;
+}
+
+std::vector<VoxelBucket> download_buckets(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {
+  std::vector<VoxelBucket> buckets(voxelmap.voxelmap_info.num_buckets);
+  check_error
+    << cudaMemcpyAsync(buckets.data(), voxelmap.buckets, sizeof(VoxelBucket) * voxelmap.voxelmap_info.num_buckets, cudaMemcpyDeviceToHost, stream);
+  return buckets;
+}
+
+std::vector<int> download_voxel_num_points(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {
+  std::vector<int> num_points(voxelmap.voxelmap_info.num_voxels);
+  check_error
+    << cudaMemcpyAsync(num_points.data(), voxelmap.num_points, sizeof(int) * voxelmap.voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
+  return num_points;
 }
 
 std::vector<Eigen::Vector3f> download_voxel_means(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {
