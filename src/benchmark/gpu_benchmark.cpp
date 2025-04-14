@@ -29,6 +29,7 @@ int main(int argc, char** argv) {
     ("save_verification_log", "Save verification log")                                                                               //
     ("verify", "Verify linearization results")                                                                                       //
     ("recreate_voxelmaps", "Recreating voxelmaps (This will overwrite voxelmap data in the input directory)")                        //
+    ("sequential", "Sequantially load and evaluate datasets one-by-one (to save memory)")                                            //
     ("visualize,v", "Enable visualization.")                                                                                         //
     ;
 
@@ -43,6 +44,15 @@ int main(int argc, char** argv) {
   if (vm.count("help")) {
     std::cout << desc << std::endl;
     return 0;
+  }
+
+  if (vm.count("visualize")) {
+    auto viewer = guik::viewer();
+    viewer->disable_vsync();
+  }
+
+  if (vm.count("save_verification_log")) {
+    std::filesystem::create_directories(vm["verification_log_path"].as<std::string>());
   }
 
   // Register NonlinearFactorSetGPU for batch linearization
@@ -65,31 +75,32 @@ int main(int argc, char** argv) {
   }
   std::sort(paths.begin(), paths.end());
 
-  // Read datasets
-  std::vector<Dataset::Ptr> datasets(paths.size());
-#pragma omp parallel for schedule(dynamic)
-  for (int i = 0; i < paths.size(); i++) {
-    datasets[i] = std::make_shared<Dataset>(paths[i], vm.count("recreate_voxelmaps"));
-  }
-
-  if (vm.count("visualize")) {
-    auto viewer = guik::viewer();
-    viewer->disable_vsync();
-  }
-
-  if (vm.count("save_verification_log")) {
-    std::filesystem::create_directories(vm["verification_log_path"].as<std::string>());
-  }
-
-  // Run benchmark
   int verification_failed_count = 0;
   std::ofstream ofs(vm["log_dst_path"].as<std::string>());
-  for (const auto& dataset : datasets) {
-    Benchmark benchmark(dataset, noise, ofs, vm);
-    verification_failed_count += benchmark.is_verification_failed();
+
+  if (!vm.count("sequential")) {
+    // Read datasets in parallel
+    std::vector<Dataset::Ptr> datasets(paths.size());
+#pragma omp parallel for schedule(dynamic)
+    for (int i = 0; i < paths.size(); i++) {
+      datasets[i] = std::make_shared<Dataset>(paths[i], vm.count("recreate_voxelmaps"));
+    }
+
+    // Run benchmark sequentially
+    for (int i = 0; i < paths.size(); i++) {
+      const auto& dataset = datasets[i];
+      Benchmark benchmark(dataset, noise, ofs, vm);
+      verification_failed_count += benchmark.is_verification_failed();
+    }
+  } else {
+    for (int i = 0; i < paths.size(); i++) {
+      const auto dataset = std::make_shared<Dataset>(paths[i], vm.count("recreate_voxelmaps"));
+      Benchmark benchmark(dataset, noise, ofs, vm);
+      verification_failed_count += benchmark.is_verification_failed();
+    }
   }
 
-  std::cout << "verification failed " << verification_failed_count << " / " << datasets.size() << std::endl;
+  std::cout << "verification failed " << verification_failed_count << " / " << paths.size() << std::endl;
 
   return 0;
 }
