@@ -62,18 +62,30 @@ public:
   /// @note Incremental insertion is not supported for GPU
   virtual void insert(const PointCloud& frame) override;
 
+  /**
+   * @brief Save the voxelmap
+   * @param path  Destination path to save the voxelmap
+   */
+  void save_compact(const std::string& path) const override;
+
+  /**
+   * @brief Load a voxelmap from a file
+   * @param path  Path to a voxelmap file to be loaded
+   */
+  static GaussianVoxelMapGPU::Ptr load(const std::string& path);
+
 private:
   void create_bucket_table(CUstream_st* stream, const PointCloud& frame);
 
 public:
   CUstream_st* stream;
 
-  const int init_num_buckets;                   ///< Initial number of buckets
-  const double target_points_drop_rate;         ///< Allowable points drop rate
-  VoxelMapInfo voxelmap_info;                   ///< Voxelmap information
-  VoxelMapInfo* voxelmap_info_ptr;              ///< Voxelmap information on GPU memory
+  const int init_num_buckets;            ///< Initial number of buckets
+  const double target_points_drop_rate;  ///< Allowable points drop rate
+  VoxelMapInfo voxelmap_info;            ///< Voxelmap information
+  VoxelMapInfo* voxelmap_info_ptr;       ///< Voxelmap information on GPU memory
 
-  VoxelBucket* buckets;                         ///< Voxel buckets for hashing
+  VoxelBucket* buckets;  ///< Voxel buckets for hashing
 
   // voxel data
   int* num_points;               ///< Number of points in eac voxel
@@ -81,6 +93,8 @@ public:
   Eigen::Matrix3f* voxel_covs;   ///< Voxel covariances
 };
 
+std::vector<VoxelBucket> download_buckets(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream = nullptr);
+std::vector<int> download_voxel_num_points(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream = nullptr);
 std::vector<Eigen::Vector3f> download_voxel_means(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream = nullptr);
 std::vector<Eigen::Matrix3f> download_voxel_covs(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream = nullptr);
 

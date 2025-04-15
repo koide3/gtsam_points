@@ -21,10 +21,14 @@ public:
   GaussianVoxelMap() {}
   virtual ~GaussianVoxelMap() {}
 
-  /// Voxel resolution
+  /// @brief Save the voxelmap
+  /// @param path Destination path
+  virtual void save_compact(const std::string& path) const = 0;
+
+  /// @brief Voxel resolution
   virtual double voxel_resolution() const = 0;
 
-  /// Insert a point cloud frame into the voxelmap
+  /// @brief Insert a point cloud frame into the voxelmap
   virtual void insert(const PointCloud& frame) = 0;
 };
 
