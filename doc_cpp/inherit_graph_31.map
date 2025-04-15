@@ -1,0 +1,25 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classgtsam__points_1_1GaussianVoxelMap.html" title="Gaussian distribution voxelmap." alt="" coords="286,73,527,98"/>
+<area shape="rect" id="Node000001" href="$classgtsam__points_1_1GaussianVoxelMapCPU.html" title=" " alt="" coords="580,5,793,45"/>
+<area shape="poly" id="edge28_Node000000_Node000001" title=" " alt="" coords="480,67,531,56,593,43,594,48,533,61,481,72"/>
+<area shape="rect" id="Node000011" href="$classgtsam__points_1_1GaussianVoxelMapGPU.html" title="Gaussian distribution voxelmap on GPU." alt="" coords="580,69,793,109"/>
+<area shape="poly" id="edge29_Node000000_Node000011" title=" " alt="" coords="541,85,580,85,580,90,541,90"/>
+<area shape="rect" id="Node000003" href="$structgtsam__points_1_1NearestNeighborSearch.html" title="Nearest neighbor search interface." alt="" coords="5,261,233,301"/>
+<area shape="rect" id="Node000002" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title=" " alt="" coords="301,7,512,47"/>
+<area shape="poly" id="edge30_Node000003_Node000002" title=" " alt="" coords="133,247,156,204,188,153,230,101,280,58,305,44,307,49,283,62,234,105,193,156,160,207,138,250"/>
+<area shape="rect" id="Node000004" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title=" " alt="" coords="281,125,532,179"/>
+<area shape="poly" id="edge32_Node000003_Node000004" title=" " alt="" coords="162,252,218,220,280,190,312,177,314,182,282,194,220,225,165,257"/>
+<area shape="rect" id="Node000006" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title="Incremental voxelmap. This class supports incremental point cloud insertion and LRU&#45;based voxel delet..." alt="" coords="303,204,511,244"/>
+<area shape="poly" id="edge34_Node000003_Node000006" title=" " alt="" coords="233,256,305,241,306,247,234,261"/>
+<area shape="rect" id="Node000007" href="$structgtsam__points_1_1IntensityKdTree.html" title="KdTree on intensity augmented coordinates. This class concatenates point coordinates (x,..." alt="" coords="297,269,516,294"/>
+<area shape="poly" id="edge35_Node000003_Node000007" title=" " alt="" coords="247,279,297,279,297,284,247,284"/>
+<area shape="rect" id="Node000008" href="$structgtsam__points_1_1KdTree.html" title="KdTree&#45;based nearest neighbor search." alt="" coords="325,318,488,343"/>
+<area shape="poly" id="edge36_Node000003_Node000008" title=" " alt="" coords="247,301,332,315,331,321,246,306"/>
+<area shape="rect" id="Node000009" href="$structgtsam__points_1_1KdTree2.html" title="KdTree&#45;based nearest neighbor search." alt="" coords="321,368,492,408"/>
+<area shape="poly" id="edge37_Node000003_Node000009" title=" " alt="" coords="173,305,282,352,324,365,322,370,280,357,171,310"/>
+<area shape="rect" id="Node000010" href="$structgtsam__points_1_1KdTreeX.html" title="KdTree with arbitrary dimension." alt="" coords="301,433,512,458"/>
+<area shape="poly" id="edge38_Node000003_Node000010" title=" " alt="" coords="149,310,206,366,243,394,282,418,316,430,314,435,280,422,240,399,203,370,145,314"/>
+<area shape="poly" id="edge31_Node000002_Node000001" title=" " alt="" coords="526,23,580,23,580,29,526,29"/>
+<area shape="rect" id="Node000005" href="$structgtsam__points_1_1IncrementalCovarianceVoxelMap.html" title="Incremental voxelmap with online covariance and normal estimation." alt="" coords="589,133,785,173"/>
+<area shape="poly" id="edge33_Node000004_Node000005" title=" " alt="" coords="546,150,588,150,588,156,546,155"/>
+</map>

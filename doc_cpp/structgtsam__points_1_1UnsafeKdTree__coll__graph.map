@@ -1,0 +1,5 @@
+<map id="gtsam_points::UnsafeKdTree&lt; PointCloud, Projection_ &gt;" name="gtsam_points::UnsafeKdTree&lt; PointCloud, Projection_ &gt;">
+<area shape="rect" id="Node000001" title="&quot;Unsafe&quot; KdTree." alt="" coords="5,93,213,133"/>
+<area shape="rect" id="Node000002" href="$structgtsam__points_1_1PointCloud.html" title="Standard point cloud class that holds only pointers to point attributes." alt="" coords="15,5,203,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="112,44,112,93,107,93,107,44"/>
+</map>

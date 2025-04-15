@@ -1,0 +1,25 @@
+<map id="gtsam_points::IntegratedMatchingCostFactor" name="gtsam_points::IntegratedMatchingCostFactor">
+<area shape="rect" id="Node000001" title="Abstraction of LSQ&#45;based scan matching constraints between point clouds." alt="" coords="227,357,412,397"/>
+<area shape="rect" id="Node000003" href="$classgtsam__points_1_1IntegratedICPFactor__.html" title=" " alt="" coords="489,5,685,75"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="325,344,341,288,367,219,406,147,430,114,458,85,488,65,491,69,462,89,434,118,410,150,372,221,346,290,330,345"/>
+<area shape="rect" id="Node000004" href="$classgtsam__points_1_1IntegratedColorConsistencyFactor__.html" title="Photometric consistency factor between point clouds." alt="" coords="476,99,699,168"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="334,344,354,306,382,262,417,218,458,179,479,166,482,170,462,183,421,222,387,265,359,309,338,346"/>
+<area shape="rect" id="Node000005" href="$classgtsam__points_1_1IntegratedColoredGICPFactor__.html" title="Colored GICP matching cost factor." alt="" coords="460,193,715,247"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="347,345,397,300,459,258,486,245,488,250,461,262,400,305,351,349"/>
+<area shape="rect" id="Node000006" href="$classgtsam__points_1_1IntegratedGICPFactor__.html" title="Generalized ICP matching cost factor Segal et al., &quot;Generalized&#45;ICP&quot;, RSS2005." alt="" coords="488,271,687,326"/>
+<area shape="poly" id="edge5_Node000001_Node000006" title=" " alt="" coords="401,351,493,324,494,329,402,356"/>
+<area shape="rect" id="Node000007" href="$classgtsam__points_1_1IntegratedICPFactor__.html" title="Naive point&#45;to&#45;point ICP matching cost factor Zhang, &quot;Iterative Point Matching for Registration of Fr..." alt="" coords="493,350,682,405"/>
+<area shape="poly" id="edge6_Node000001_Node000007" title=" " alt="" coords="426,375,493,375,493,380,426,380"/>
+<area shape="rect" id="Node000009" href="$classgtsam__points_1_1IntegratedLOAMFactor__.html" title="Scan matching factor based on the combination of point&#45;to&#45;plane and point&#45;to&#45;edge distances." alt="" coords="484,429,691,483"/>
+<area shape="poly" id="edge8_Node000001_Node000009" title=" " alt="" coords="402,399,494,426,493,431,401,404"/>
+<area shape="rect" id="Node000010" href="$classgtsam__points_1_1IntegratedPointToEdgeFactor__.html" title=" " alt="" coords="464,507,711,562"/>
+<area shape="poly" id="edge9_Node000001_Node000010" title=" " alt="" coords="350,405,400,451,461,494,485,505,482,510,459,498,396,455,347,409"/>
+<area shape="rect" id="Node000011" href="$classgtsam__points_1_1IntegratedPointToPlaneFactor__.html" title=" " alt="" coords="462,586,713,641"/>
+<area shape="poly" id="edge10_Node000001_Node000011" title=" " alt="" coords="338,409,358,447,385,491,420,535,462,573,480,584,477,588,458,577,416,539,381,494,353,449,333,411"/>
+<area shape="rect" id="Node000012" href="$classgtsam__points_1_1IntegratedVGICPFactor__.html" title="Voxelized GICP matching cost factor Koide et al., &quot;Voxelized GICP for Fast and Accurate 3D Point Clou..." alt="" coords="476,665,699,705"/>
+<area shape="poly" id="edge11_Node000001_Node000012" title=" " alt="" coords="331,410,346,463,372,529,410,595,434,625,462,651,480,663,477,667,458,655,430,629,406,598,367,531,341,465,325,411"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,365,179,390"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="193,375,226,375,226,380,193,380"/>
+<area shape="rect" id="Node000008" href="$classgtsam__points_1_1IntegratedPointToPlaneICPFactor__.html" title="Point&#45;to&#45;plane ICP factor." alt="" coords="763,350,996,405"/>
+<area shape="poly" id="edge7_Node000007_Node000008" title=" " alt="" coords="696,375,762,375,762,380,696,380"/>
+</map>
