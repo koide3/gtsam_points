@@ -1,0 +1,5 @@
+<map id="gtsam_points::GaussianVoxelMapGPU" name="gtsam_points::GaussianVoxelMapGPU">
+<area shape="rect" id="Node000001" title="Gaussian distribution voxelmap on GPU." alt="" coords="19,79,233,119"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1GaussianVoxelMap.html" title="Gaussian distribution voxelmap." alt="" coords="5,5,247,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="129,44,129,79,123,79,123,44"/>
+</map>
