@@ -339,10 +339,15 @@ std::vector<double> overlap_gpu(
       thrust::device_ptr<bool>(overlap),
       overlap_count_kernel(*target, thrust::device_ptr<const Eigen::Isometry3f>(deltas + i)));
 
-    if (i == 0) {
-      cub::DeviceReduce::Reduce(temp_storage, temp_storage_bytes, overlap, num_inliers + i, source->size(), thrust::plus<int>(), 0, stream);
+    size_t required_temp_storage_bytes = 0;
+    cub::DeviceReduce::Reduce(nullptr, required_temp_storage_bytes, overlap, num_inliers + i, source->size(), thrust::plus<int>(), 0, stream);
+
+    if (temp_storage_bytes < required_temp_storage_bytes) {
+      temp_storage_bytes = required_temp_storage_bytes;
+      check_error << cudaFreeAsync(temp_storage, stream);
       check_error << cudaMallocAsync(&temp_storage, temp_storage_bytes, stream);
     }
+
     cub::DeviceReduce::Reduce(temp_storage, temp_storage_bytes, overlap, num_inliers + i, source->size(), thrust::plus<int>(), 0, stream);
   }
 
