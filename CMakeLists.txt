@@ -316,6 +316,15 @@ add_executable(gpu_benchmark
 )
 target_link_libraries(gpu_benchmark gtsam_points Iridescence::Iridescence Boost::program_options)
 
+add_executable(overlap_benchmark
+src/benchmark/export_factors.cpp
+src/benchmark/noise_feeder.cpp
+src/benchmark/dataset.cpp
+src/benchmark/benchmark_overlap.cpp
+src/benchmark/overlap_benchmark.cpp
+)
+target_link_libraries(overlap_benchmark gtsam_points Iridescence::Iridescence Boost::program_options)
+
 # Test
 if(BUILD_TESTS)
   include(FetchContent)

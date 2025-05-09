@@ -55,9 +55,11 @@ Dataset::Dataset(const std::filesystem::path& data_path, bool force_recreate_vox
       for (const auto r : resolutions) {
         const std::string voxelmap_path = fmt::format("{}/voxelmap_{:.3f}.bin", path, r);
         auto voxelmap = gtsam_points::GaussianVoxelMapGPU::load(voxelmap_path);
+        auto voxelmap_cpu = gtsam_points::GaussianVoxelMapCPU::load(voxelmap_path);
 
         if (voxelmap && !force_recreate_voxelmaps) {
           frame->voxelmaps.emplace_back(voxelmap);
+          frame->voxelmaps_cpu.emplace_back(voxelmap_cpu);
         } else {
           std::cerr << "error: failed to load " << voxelmap_path << std::endl;
           std::cerr << "creating a new voxelmap" << std::endl;
@@ -65,6 +67,10 @@ Dataset::Dataset(const std::filesystem::path& data_path, bool force_recreate_vox
           auto voxelmap = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(r, 8192 * 8, 10, 0.0);
           voxelmap->insert(*frame->points);
           frame->voxelmaps.emplace_back(voxelmap);
+
+          auto voxelmap_cpu = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(r);
+          voxelmap_cpu->insert(*frame->points);
+          frame->voxelmaps_cpu.emplace_back(voxelmap_cpu);
 
           voxelmap->save_compact(voxelmap_path);
         }
