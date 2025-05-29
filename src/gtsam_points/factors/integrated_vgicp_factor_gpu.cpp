@@ -170,7 +170,7 @@ double IntegratedVGICPFactorGPU::error(const gtsam::Values& values) const {
   return err;
 }
 
-boost::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(const gtsam::Values& values) const {
+std::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(const gtsam::Values& values) const {
   linearized = true;
   linearization_point = calc_delta(values);
 

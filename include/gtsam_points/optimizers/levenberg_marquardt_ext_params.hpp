@@ -15,7 +15,15 @@ class LevenbergMarquardtExtParams : public gtsam::LevenbergMarquardtParams {
 public:
   LevenbergMarquardtExtParams() : gtsam::LevenbergMarquardtParams() {}
 
-  LevenbergMarquardtExtParams ensureHasOrdering(const gtsam::NonlinearFactorGraph& graph) const;
+  static LevenbergMarquardtExtParams EnsureHasOrdering(LevenbergMarquardtExtParams params, const gtsam::NonlinearFactorGraph& graph) {
+    if (!params.ordering) params.ordering = gtsam::Ordering::Create(params.orderingType, graph);
+    return params;
+  }
+
+  static LevenbergMarquardtExtParams ReplaceOrdering(LevenbergMarquardtExtParams params, const gtsam::Ordering& ord) {
+    params.ordering = ord;
+    return params;
+  }
 
   void set_verbose() {
     callback = [](const LevenbergMarquardtOptimizationStatus& status, const gtsam::Values&) { std::cout << status.to_string() << std::endl; };

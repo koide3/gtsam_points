@@ -17,19 +17,15 @@
  * @author  Richard Roberts
  */
 
-// the following headers are necesarry to avoid incomplete class errros on nvcc
-#include <boost/utility/in_place_factory.hpp>
-#include <boost/utility/typed_in_place_factory.hpp>
-
 #include <gtsam/base/debug.h>
 #include <gtsam/config.h>            // for GTSAM_USE_TBB
 #include <gtsam/inference/Symbol.h>  // for selective linearization thresholds
 #include <gtsam_points/optimizers/isam2_ext_impl.hpp>
 
-#include <boost/range/adaptors.hpp>
 #include <functional>
 #include <limits>
 #include <string>
+#include <cassert>
 
 using namespace std;
 
@@ -61,7 +57,7 @@ size_t DeltaImpl::UpdateGaussNewtonDelta(const ISAM2Ext::Roots& roots, const Key
     for (const ISAM2Ext::sharedClique& root : roots)
       lastBacksubVariableCount += optimizeWildfireNonRecursive(root, wildfireThreshold, replacedKeys, delta);  // modifies delta
 
-#if !defined(NDEBUG) && defined(GTSAM_POINTSRA_CONSISTENCY_CHECKS)
+#if !defined(NDEBUG) && defined(GTSAM_EXTRA_CONSISTENCY_CHECKS)
     for (VectorValues::const_iterator key_delta = delta->begin(); key_delta != delta->end(); ++key_delta) {
       assert((*delta)[key_delta->first].allFinite());
     }

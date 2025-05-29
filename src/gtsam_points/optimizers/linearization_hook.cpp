@@ -20,11 +20,15 @@ LinearizationHook::LinearizationHook() {
   }
 }
 
+LinearizationHook::LinearizationHook(const gtsam::NonlinearFactorGraph& factors) : LinearizationHook() {
+  add(factors);
+}
+
 LinearizationHook::~LinearizationHook() {}
 
 int LinearizationHook::size() const {
   int count = 0;
-  for(const auto& hook: hooks) {
+  for (const auto& hook : hooks) {
     count += hook->size();
   }
   return count;
@@ -58,7 +62,7 @@ int LinearizationHook::evaluation_count() const {
   return count;
 }
 
-bool LinearizationHook::add(boost::shared_ptr<gtsam::NonlinearFactor> factor) {
+bool LinearizationHook::add(std::shared_ptr<gtsam::NonlinearFactor> factor) {
   bool inserted = false;
   for (auto& hook : hooks) {
     inserted |= hook->add(factor);

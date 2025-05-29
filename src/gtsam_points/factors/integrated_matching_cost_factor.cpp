@@ -34,7 +34,7 @@ double IntegratedMatchingCostFactor::error(const gtsam::Values& values) const {
   return evaluate(delta);
 }
 
-boost::shared_ptr<gtsam::GaussianFactor> IntegratedMatchingCostFactor::linearize(const gtsam::Values& values) const {
+std::shared_ptr<gtsam::GaussianFactor> IntegratedMatchingCostFactor::linearize(const gtsam::Values& values) const {
   Eigen::Isometry3d delta = calc_delta(values);
 
   update_correspondences(delta);

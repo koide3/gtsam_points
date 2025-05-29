@@ -16,13 +16,13 @@
  */
 
 #include <cmath>
+#include <cassert>
 #include <gtsam_points/optimizers/dogleg_optimizer_ext_impl.hpp>
 
 using namespace std;
+using namespace gtsam;
 
 namespace gtsam_points {
-
-using namespace gtsam;
 
 /* ************************************************************************* */
 VectorValues DoglegOptimizerImplExt::ComputeDoglegPoint(double delta, const VectorValues& dx_u, const VectorValues& dx_n, const bool verbose) {
@@ -67,19 +67,21 @@ VectorValues DoglegOptimizerImplExt::ComputeBlend(double delta, const VectorValu
   double tau1 = (-b + sqrt_b_m4ac) / (2. * a);
   double tau2 = (-b - sqrt_b_m4ac) / (2. * a);
 
+  // Determine correct solution accounting for machine precision
   double tau;
-  if (0.0 <= tau1 && tau1 <= 1.0) {
-    assert(!(0.0 <= tau2 && tau2 <= 1.0));
+  const double eps = std::numeric_limits<double>::epsilon();
+  if (-eps <= tau1 && tau1 <= 1.0 + eps) {
+    assert(!(-eps <= tau2 && tau2 <= 1.0 + eps));
     tau = tau1;
   } else {
-    assert(0.0 <= tau2 && tau2 <= 1.0);
+    assert(-eps <= tau2 && tau2 <= 1.0 + eps);
     tau = tau2;
   }
 
   // Compute blended point
   if (verbose) cout << "In blend region with fraction " << tau << " of Newton's method point" << endl;
   VectorValues blend = (1. - tau) * x_u;
-  axpy(tau, x_n, blend);
+  blend += tau * x_n;
   return blend;
 }
 

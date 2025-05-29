@@ -27,7 +27,7 @@ class TempBufferManager;
 class IntegratedVGICPFactorGPU : public gtsam_points::NonlinearFactorGPU {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedVGICPFactorGPU>;
+  using shared_ptr = std::shared_ptr<IntegratedVGICPFactorGPU>;
 
   /**
    * @brief Create a binary VGICP_GPU factor between target and source poses.
@@ -98,7 +98,7 @@ public:
 
   virtual size_t dim() const override { return 6; }
   virtual double error(const gtsam::Values& values) const override;
-  virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
+  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
   virtual size_t linearization_input_size() const override;
   virtual size_t linearization_output_size() const override;

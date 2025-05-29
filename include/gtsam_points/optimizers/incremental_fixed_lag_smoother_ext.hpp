@@ -35,7 +35,7 @@ using namespace gtsam;
 class IncrementalFixedLagSmootherExt : public FixedLagSmoother {
 public:
   /// Typedef for a shared pointer to an Incremental Fixed-Lag Smoother
-  typedef boost::shared_ptr<IncrementalFixedLagSmootherExt> shared_ptr;
+  typedef std::shared_ptr<IncrementalFixedLagSmootherExt> shared_ptr;
 
   /** default constructor */
   IncrementalFixedLagSmootherExt(double smootherLag = 0.0, const ISAM2Params& parameters = DefaultISAM2Params())
