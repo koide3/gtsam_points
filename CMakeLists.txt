@@ -197,7 +197,6 @@ add_library(gtsam_points SHARED
   src/gtsam_points/optimizers/isam2_ext_impl.cpp
   src/gtsam_points/optimizers/incremental_fixed_lag_smoother_ext.cpp
   src/gtsam_points/optimizers/incremental_fixed_lag_smoother_ext_with_fallback.cpp
-  # src/gtsam_points/optimizers/dogleg_optimizer_ext.cpp
   src/gtsam_points/optimizers/dogleg_optimizer_ext_impl.cpp
 )
 target_include_directories(gtsam_points PUBLIC
