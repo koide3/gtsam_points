@@ -33,6 +33,13 @@
 #include <gtsam/base/timing.h>
 #endif
 
+#include <gtsam_points/config.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#endif
+
 #include <cmath>
 #include <fstream>
 #include <iostream>
@@ -54,6 +61,38 @@ using gtsam::NonlinearOptimizerParams;
 using gtsam::Ordering;
 using gtsam::Values;
 using gtsam::VectorValues;
+
+double calc_error(const gtsam::GaussianFactorGraph& gfg, const gtsam::VectorValues& x) {
+  if (is_omp_default()) {
+    return gfg.error(x);
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    // TODO: Should use parallel reduction
+    std::vector<double> errors(gfg.size(), 0.0);
+    tbb::parallel_for(static_cast<size_t>(0), gfg.size(), [&](size_t i) { errors[i] = gfg[i]->error(x); });
+    return std::accumulate(errors.begin(), errors.end(), 0.0);
+#else
+    std::cerr << "error: gtsam_points is not built with TBB!!" << std::endl;
+    return gfg.error(x);
+#endif
+  }
+}
+
+double calc_error(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& x) {
+  if (is_omp_default()) {
+    return graph.error(x);
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    // TODO: Should use parallel reduction
+    std::vector<double> errors(graph.size(), 0.0);
+    tbb::parallel_for(static_cast<size_t>(0), graph.size(), [&](size_t i) { errors[i] = graph[i]->error(x); });
+    return std::accumulate(errors.begin(), errors.end(), 0.0);
+#else
+    std::cerr << "error: gtsam_points is not built with TBB!!" << std::endl;
+    return gfg.error(x);
+#endif
+  }
+}
 
 /* ************************************************************************* */
 LevenbergMarquardtOptimizerExt::LevenbergMarquardtOptimizerExt(
@@ -186,9 +225,8 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(const GaussianFactorGraph& linear
 
     // Compute the old linearized error as it is not the same
     // as the nonlinear error when robust noise models are used.
-    double oldLinearizedError = linear.error(VectorValues::Zero(delta));
-    double newlinearizedError = linear.error(delta);
-
+    double oldLinearizedError = calc_error(linear, gtsam::VectorValues::Zero(delta));
+    double newlinearizedError = calc_error(linear, delta);
     // cost change in the linearized system (old - new)
     double linearizedCostChange = oldLinearizedError - newlinearizedError;
     if (verbose) cout << "newlinearizedError = " << newlinearizedError << "  linearizedCostChange = " << linearizedCostChange << endl;
@@ -205,7 +243,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(const GaussianFactorGraph& linear
       gttic(compute_error);
       if (verbose) cout << "calculating error:" << endl;
       linearization_hook_->error(newValues);
-      newError = graph_.error(newValues);
+      newError = calc_error(graph_, newValues);
       gttoc(compute_error);
 
       if (verbose) cout << "old error (" << currentState->error << ") new (tentative) error (" << newError << ")" << endl;
@@ -233,7 +271,6 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(const GaussianFactorGraph& linear
       }
     }
   }  // if (systemSolvedSuccessfully)
-
   if (params_.callback || params_.status_msg_callback) {
     LevenbergMarquardtOptimizationStatus status;
     status.iterations = currentState->iterations;
@@ -294,7 +331,6 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(const GaussianFactorGraph& linear
     state_ = currentState->decreaseLambda(params_, modelFidelity, std::move(newValues), newError);
     return true;
   } else if (!stopSearchingLambda) {  // we failed to solved the system or had no decrease in cost
-    if (verbose) cout << "increasing lambda" << endl;
     State* modifiedState = static_cast<State*>(state_.get());
     modifiedState->increaseLambda(params_);  // TODO(frank): make this functional with Values move
 
@@ -309,7 +345,6 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(const GaussianFactorGraph& linear
       return false;  // only case where we will keep trying
     }
   } else {  // the change in the cost is very small and it is not worth trying bigger lambdas
-    if (verbose) cout << "Levenberg-Marquardt: stopping as relative cost reduction is small" << endl;
     return true;
   }
 }
