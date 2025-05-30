@@ -29,11 +29,11 @@ public:
     const gtsam::Pose3& xi,
     const gtsam::Pose3& xj,
     const gtsam::Pose3& Tij,
-    boost::optional<gtsam::Matrix&> H_xi = boost::none,
-    boost::optional<gtsam::Matrix&> H_xj = boost::none,
-    boost::optional<gtsam::Matrix&> H_Tij = boost::none) const override {
+    gtsam::OptionalMatrixType H_xi = nullptr,
+    gtsam::OptionalMatrixType H_xj = nullptr,
+    gtsam::OptionalMatrixType H_Tij = nullptr) const override {
     //
-    if (H_xi == boost::none && H_xj == boost::none && H_Tij == boost::none) {
+    if (H_xi && H_xj && H_Tij) {
       const gtsam::Pose3 delta = xi.between(xj);      // (xi^-1 * xj)
       const gtsam::Pose3 error = delta.between(Tij);  // (xj_inv * xi) * Tij;
       return gtsam::Pose3::Logmap(error);

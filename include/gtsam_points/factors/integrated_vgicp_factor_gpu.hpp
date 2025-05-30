@@ -135,7 +135,7 @@ private:
   mutable bool linearized;
   mutable Eigen::Isometry3f linearization_point;
 
-  mutable boost::optional<float> evaluation_result;
+  mutable std::optional<float> evaluation_result;
   mutable std::unique_ptr<LinearizedSystem6> linearization_result;
 };
 
