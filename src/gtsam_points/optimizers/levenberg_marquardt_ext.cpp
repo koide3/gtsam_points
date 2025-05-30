@@ -22,11 +22,18 @@
 
 #include <gtsam_points/optimizers/linearization_hook.hpp>
 
+#include <numeric>
 #include <gtsam/base/Vector.h>
 #include <gtsam/linear/GaussianFactorGraph.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam/nonlinear/internal/LevenbergMarquardtState.h>
 #include <gtsam/inference/Ordering.h>
+#include <gtsam_points/config.hpp>
+#include <gtsam_points/util/parallelism.hpp>
+
+#ifdef GTSAM_POINTS_USE_TBB
+#include <tbb/parallel_for.h>
+#endif
 
 #include <boost/format.hpp>
 #include <boost/range/adaptor/map.hpp>
@@ -34,6 +41,38 @@
 namespace gtsam_points {
 
 using State = gtsam::internal::LevenbergMarquardtState;
+
+double calc_error(const gtsam::GaussianFactorGraph& gfg, const gtsam::VectorValues& x) {
+  if (is_omp_default()) {
+    return gfg.error(x);
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    // TODO: Should use parallel reduction
+    std::vector<double> errors(gfg.size(), 0.0);
+    tbb::parallel_for(static_cast<size_t>(0), gfg.size(), [&](size_t i) { errors[i] = gfg[i]->error(x); });
+    return std::accumulate(errors.begin(), errors.end(), 0.0);
+#else
+    std::cerr << "error: gtsam_points is not built with TBB!!" << std::endl;
+    return gfg.error(x);
+#endif
+  }
+}
+
+double calc_error(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& x) {
+  if (is_omp_default()) {
+    return graph.error(x);
+  } else {
+#ifdef GTSAM_POINTS_USE_TBB
+    // TODO: Should use parallel reduction
+    std::vector<double> errors(graph.size(), 0.0);
+    tbb::parallel_for(static_cast<size_t>(0), graph.size(), [&](size_t i) { errors[i] = graph[i]->error(x); });
+    return std::accumulate(errors.begin(), errors.end(), 0.0);
+#else
+    std::cerr << "error: gtsam_points is not built with TBB!!" << std::endl;
+    return gfg.error(x);
+#endif
+  }
+}
 
 LevenbergMarquardtExtParams LevenbergMarquardtExtParams::ensureHasOrdering(const gtsam::NonlinearFactorGraph& graph) const {
   if (ordering) {
@@ -107,8 +146,8 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
   if (systemSolvedSuccessfully) {
     // Compute the old linearized error as it is not the same
     // as the nonlinear error when robust noise models are used.
-    double oldLinearizedError = linear.error(gtsam::VectorValues::Zero(delta));
-    double newlinearizedError = linear.error(delta);
+    double oldLinearizedError = calc_error(linear, gtsam::VectorValues::Zero(delta));
+    double newlinearizedError = calc_error(linear, delta);
     // cost change in the linearized system (old - new)
     double linearizedCostChange = oldLinearizedError - newlinearizedError;
 
@@ -119,7 +158,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
 
       // cost change in the original, nonlinear system (old - new)
       linearization_hook->error(newValues);
-      newError = graph_.error(newValues);
+      newError = calc_error(graph_, newValues);
       costChange = oldError - newError;
 
       if (linearizedCostChange > std::numeric_limits<double>::epsilon() * oldLinearizedError) {
@@ -138,7 +177,6 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
       }
     }
   }  // if (systemSolvedSuccessfully)
-
   if (params_.callback || params_.status_msg_callback) {
     LevenbergMarquardtOptimizationStatus status;
     status.iterations = currentState->iterations;
@@ -179,7 +217,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
     // TODO(frank): make Values actually support move. Does not seem to happen now.
     state_ = currentState->decreaseLambda(params_, modelFidelity, std::move(newValues), newError);
     return true;
-  } else if (!stopSearchingLambda) {         // we failed to solved the system or had no decrease in cost
+  } else if (!stopSearchingLambda) {  // we failed to solved the system or had no decrease in cost
     State* modifiedState = static_cast<State*>(state_.get());
     modifiedState->increaseLambda(params_);  // TODO(frank): make this functional with Values move
 
@@ -190,7 +228,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(
     } else {
       return false;  // only case where we will keep trying
     }
-  } else {           // the change in the cost is very small and it is not worth trying bigger lambdas
+  } else {  // the change in the cost is very small and it is not worth trying bigger lambdas
     return true;
   }
 }
@@ -206,7 +244,7 @@ gtsam::GaussianFactorGraph::shared_ptr LevenbergMarquardtOptimizerExt::iterate()
   linearization_time = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
 
   linearization_hook->error(currentState->values);
-  double oldError = graph_.error(currentState->values);
+  double oldError = calc_error(graph_, currentState->values);
   // double oldError = graph_.error(currentState->values, linear);
 
   gtsam::VectorValues sqrtHessianDiagonal;
