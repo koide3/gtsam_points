@@ -48,7 +48,7 @@ jobs:
             BASE_IMAGE=koide3/gtsam_docker:${{ matrix.DISTRO.ubuntu }}
             BUILD_WITH_TBB=${{ matrix.BUILD_WITH_TBB }}
           context: .
-          push: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (contains(matrix.DISTRO.suffix, 'gcc') || contains(matrix.DISTRO.suffix, 'focal')) }}
+          push: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (matrix.BUILD_WITH_TBB == 'ON') && (contains(matrix.DISTRO.suffix, 'gcc') || contains(matrix.DISTRO.suffix, 'focal')) }}
 
   dispatch:
     needs: build
