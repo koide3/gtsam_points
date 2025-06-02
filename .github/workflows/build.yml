@@ -24,9 +24,8 @@ jobs:
           { "ubuntu": "jammy_gtsam4.2a9", "suffix": "gcc" },
           { "ubuntu": "jammy_cuda12.2_gtsam4.2a9", "suffix": "gcc.cuda" },
           { "ubuntu": "jammy_cuda12.5_gtsam4.2a9", "suffix": "gcc.cuda" },
-          { "ubuntu": "jammy_gtsam4.2a9", "suffix": "notbb" },
-          { "ubuntu": "jammy_cuda12.5_gtsam4.2a9", "suffix": "notbb.cuda" },
         ]
+        BUILD_WITH_TBB: [ "ON", "OFF" ]
 
     steps:
       - uses: actions/checkout@v2
@@ -47,6 +46,7 @@ jobs:
           file: ${{github.workspace}}/docker/ubuntu/Dockerfile.${{ matrix.DISTRO.suffix }}
           build-args: |
             BASE_IMAGE=koide3/gtsam_docker:${{ matrix.DISTRO.ubuntu }}
+            BUILD_WITH_TBB=${{ matrix.BUILD_WITH_TBB }}
           context: .
           push: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (contains(matrix.DISTRO.suffix, 'gcc') || contains(matrix.DISTRO.suffix, 'focal')) }}
 
