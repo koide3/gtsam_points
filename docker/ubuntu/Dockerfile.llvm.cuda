@@ -2,6 +2,8 @@ ARG BASE_IMAGE=koide3/gtsam_docker:jammy_cuda12.2
 
 FROM ${BASE_IMAGE}
 
+ARG BUILD_WITH_TBB=ON
+
 RUN update-alternatives --install /usr/bin/ld ld /usr/bin/ld.lld 50
 
 COPY . /root/gtsam_points
@@ -13,7 +15,7 @@ RUN CC=clang CXX=clang++ \
   -DBUILD_TESTS=ON \
   -DBUILD_EXAMPLE=ON \
   -DBUILD_TOOLS=ON \
-  -DBUILD_WITH_TBB=ON \
+  -DBUILD_WITH_TBB=${BUILD_WITH_TBB} \
   -DBUILD_WITH_CUDA=ON \
   -DBUILD_WITH_CUDA_MULTIARCH=ON \
   -DCMAKE_BUILD_TYPE=Release && \

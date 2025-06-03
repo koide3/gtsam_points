@@ -89,7 +89,7 @@ double calc_error(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values&
     return std::accumulate(errors.begin(), errors.end(), 0.0);
 #else
     std::cerr << "error: gtsam_points is not built with TBB!!" << std::endl;
-    return gfg.error(x);
+    return graph.error(x);
 #endif
   }
 }
