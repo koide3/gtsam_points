@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(gtsam_points VERSION 1.1.0 LANGUAGES CXX)
+project(gtsam_points VERSION 1.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -30,8 +30,8 @@ if(BUILD_WITH_MARCH_NATIVE)
 endif()
 
 find_package(Boost REQUIRED COMPONENTS graph filesystem)
-find_package(GTSAM REQUIRED)
-find_package(GTSAM_UNSTABLE REQUIRED)
+find_package(GTSAM 4.3 REQUIRED)
+find_package(GTSAM_UNSTABLE 4.3 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 if(BUILD_WITH_TBB)
