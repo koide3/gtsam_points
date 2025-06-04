@@ -30,9 +30,9 @@ public:
     const gtsam::Pose3& xi,
     const gtsam::Pose3& xj,
     const gtsam::Pose3& xk,
-    boost::optional<gtsam::Matrix&> H_xi = boost::none,
-    boost::optional<gtsam::Matrix&> H_xj = boost::none,
-    boost::optional<gtsam::Matrix&> H_xk = boost::none) const override {
+    gtsam::OptionalMatrixType H_xi = nullptr,
+    gtsam::OptionalMatrixType H_xj = nullptr,
+    gtsam::OptionalMatrixType H_xk = nullptr) const override {
     //
     const auto& Ri = xi.rotation();
     const auto& Rj = xj.rotation();

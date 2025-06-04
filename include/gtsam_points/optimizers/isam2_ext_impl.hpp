@@ -28,17 +28,12 @@
 #include <gtsam/linear/GaussianBayesTree.h>
 #include <gtsam/linear/GaussianEliminationTree.h>
 
-#include <boost/range/adaptors.hpp>
-#include <boost/range/algorithm/copy.hpp>
-namespace br {
-using namespace boost::range;
-using namespace boost::adaptors;
-}  // namespace br
-
 #include <algorithm>
 #include <limits>
 #include <string>
 #include <utility>
+#include <variant>
+#include <cassert>
 #include <gtsam_points/config.hpp>
 
 namespace gtsam_points {
@@ -52,7 +47,7 @@ class ISAM2BayesTree : public ISAM2Ext::Base {
 public:
   typedef ISAM2Ext::Base Base;
   typedef ISAM2BayesTree This;
-  typedef boost::shared_ptr<This> shared_ptr;
+  typedef std::shared_ptr<This> shared_ptr;
 
   ISAM2BayesTree() {}
 };
@@ -64,7 +59,7 @@ class ISAM2JunctionTree : public JunctionTree<ISAM2BayesTree, GaussianFactorGrap
 public:
   typedef JunctionTree<ISAM2BayesTree, GaussianFactorGraph> Base;
   typedef ISAM2JunctionTree This;
-  typedef boost::shared_ptr<This> shared_ptr;
+  typedef std::shared_ptr<This> shared_ptr;
 
   explicit ISAM2JunctionTree(const GaussianEliminationTree& eliminationTree) : Base(eliminationTree) {}
 };
@@ -79,7 +74,7 @@ struct GTSAM_EXPORT DeltaImpl {
     size_t nFullSystemVars;
     enum { /*AS_ADDED,*/ COLAMD } algorithm;
     enum { NO_CONSTRAINT, CONSTRAIN_LAST } constrain;
-    boost::optional<FastMap<Key, int> > constrainedKeys;
+    std::optional<FastMap<Key, int>> constrainedKeys;
   };
 
   /**
@@ -185,9 +180,9 @@ struct GTSAM_EXPORT UpdateImpl {
   }
 
   // Calculate nonlinear error
-  void error(const NonlinearFactorGraph& nonlinearFactors, const Values& estimate, boost::optional<double>* result) const {
+  void error(const NonlinearFactorGraph& nonlinearFactors, const Values& estimate, std::optional<double>* result) const {
     gttic(error);
-    result->reset(nonlinearFactors.error(estimate));
+    *result = nonlinearFactors.error(estimate);
   }
 
   // Mark linear update
@@ -311,10 +306,11 @@ struct GTSAM_EXPORT UpdateImpl {
     const ISAM2Params::RelinearizationThreshold& relinearizeThreshold) {
     KeySet relinKeys;
     for (const ISAM2Ext::sharedClique& root : roots) {
-      if (relinearizeThreshold.type() == typeid(double))
-        CheckRelinearizationRecursiveDouble(boost::get<double>(relinearizeThreshold), delta, root, &relinKeys);
-      else if (relinearizeThreshold.type() == typeid(FastMap<char, Vector>))
-        CheckRelinearizationRecursiveMap(boost::get<FastMap<char, Vector> >(relinearizeThreshold), delta, root, &relinKeys);
+      if (std::holds_alternative<double>(relinearizeThreshold)) {
+        CheckRelinearizationRecursiveDouble(std::get<double>(relinearizeThreshold), delta, root, &relinKeys);
+      } else if (std::holds_alternative<FastMap<char, Vector>>(relinearizeThreshold)) {
+        CheckRelinearizationRecursiveMap(std::get<FastMap<char, Vector>>(relinearizeThreshold), delta, root, &relinKeys);
+      }
     }
     return relinKeys;
   }
@@ -333,12 +329,12 @@ struct GTSAM_EXPORT UpdateImpl {
   static KeySet CheckRelinearizationFull(const VectorValues& delta, const ISAM2Params::RelinearizationThreshold& relinearizeThreshold) {
     KeySet relinKeys;
 
-    if (const double* threshold = boost::get<double>(&relinearizeThreshold)) {
+    if (const double* threshold = std::get_if<double>(&relinearizeThreshold)) {
       for (const VectorValues::KeyValuePair& key_delta : delta) {
         double maxDelta = key_delta.second.lpNorm<Eigen::Infinity>();
         if (maxDelta >= *threshold) relinKeys.insert(key_delta.first);
       }
-    } else if (const FastMap<char, Vector>* thresholds = boost::get<FastMap<char, Vector> >(&relinearizeThreshold)) {
+    } else if (const FastMap<char, Vector>* thresholds = std::get_if<FastMap<char, Vector>>(&relinearizeThreshold)) {
       for (const VectorValues::KeyValuePair& key_delta : delta) {
         const Vector& threshold = thresholds->find(Symbol(key_delta.first).chr())->second;
         if (threshold.rows() != key_delta.second.rows())
@@ -407,34 +403,6 @@ struct GTSAM_EXPORT UpdateImpl {
     }
   }
 
-  /**
-   * Apply expmap to the given values, but only for indices appearing in
-   * \c mask.  Values are expmapped in-place.
-   * \param mask Mask on linear indices, only \c true entries are expmapped
-   */
-  static void ExpmapMasked(const VectorValues& delta, const KeySet& mask, Values* theta) {
-    gttic(ExpmapMasked);
-    assert(theta->size() == delta.size());
-    Values::iterator key_value;
-    VectorValues::const_iterator key_delta;
-#ifdef GTSAM_USE_TBB
-    for (key_value = theta->begin(); key_value != theta->end(); ++key_value) {
-      key_delta = delta.find(key_value->key);
-#else
-    for (key_value = theta->begin(), key_delta = delta.begin(); key_value != theta->end(); ++key_value, ++key_delta) {
-      assert(key_value->key == key_delta->first);
-#endif
-      Key var = key_value->key;
-      assert(static_cast<size_t>(delta[var].size()) == key_value->value.dim());
-      assert(delta[var].allFinite());
-      if (mask.exists(var)) {
-        Value* retracted = key_value->value.retract_(delta[var]);
-        key_value->value = *retracted;
-        retracted->deallocate_();
-      }
-    }
-  }
-
   // Linearize new factors
   void linearizeNewFactors(
     const NonlinearFactorGraph& newFactors,
@@ -443,24 +411,6 @@ struct GTSAM_EXPORT UpdateImpl {
     const FactorIndices& newFactorsIndices,
     GaussianFactorGraph* linearFactors) const {
     gttic(linearizeNewFactors);
-
-    for (const auto& factor : newFactors) {
-      for (const auto key : factor->keys()) {
-        if (!theta.exists(key)) {
-          std::cerr << "warning: requesting a non-existing value!! (key=" << gtsam::Symbol(key) << ")" << std::endl;
-
-          std::cerr << "       : factor : ";
-          for(const auto k : factor->keys()) {
-            std::cerr << gtsam::Symbol(k) << " ";
-          }
-          std::cerr << std::endl;
-
-          factor->print();
-          factor->printKeys();
-        }
-      }
-    }
-
     auto linearized = newFactors.linearize(theta);
     if (params_.findUnusedFactorSlots) {
       linearFactors->resize(numNonlinearFactors);

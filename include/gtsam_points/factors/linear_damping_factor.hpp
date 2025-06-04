@@ -14,11 +14,13 @@ namespace gtsam_points {
  */
 class LinearDampingFactor : public gtsam::LinearContainerFactor {
 public:
-  using shared_ptr = boost::shared_ptr<LinearDampingFactor>;
+  using shared_ptr = std::shared_ptr<LinearDampingFactor>;
 
-  LinearDampingFactor(gtsam::Key key, int dim, double mu) : gtsam::LinearContainerFactor(gtsam::HessianFactor(key, mu * gtsam::Matrix::Identity(dim, dim), gtsam::Vector::Zero(dim), 0.0)) {}
+  LinearDampingFactor(gtsam::Key key, int dim, double mu)
+  : gtsam::LinearContainerFactor(gtsam::HessianFactor(key, mu * gtsam::Matrix::Identity(dim, dim), gtsam::Vector::Zero(dim), 0.0)) {}
 
-  LinearDampingFactor(gtsam::Key key, const gtsam::Vector& diag) : gtsam::LinearContainerFactor(gtsam::HessianFactor(key, diag.asDiagonal(), gtsam::Vector::Zero(diag.size()), 0.0)) {}
+  LinearDampingFactor(gtsam::Key key, const gtsam::Vector& diag)
+  : gtsam::LinearContainerFactor(gtsam::HessianFactor(key, diag.asDiagonal(), gtsam::Vector::Zero(diag.size()), 0.0)) {}
 
   LinearDampingFactor() {}
 
@@ -34,4 +36,4 @@ private:
   }
 };
 
-}
+}  // namespace gtsam_points

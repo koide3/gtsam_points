@@ -33,7 +33,7 @@ template <
 class IntegratedColorConsistencyFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame>>;
+  using shared_ptr = std::shared_ptr<IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame>>;
 
   /**
    * @brief Create a binary color consistency factor between target and source poses.

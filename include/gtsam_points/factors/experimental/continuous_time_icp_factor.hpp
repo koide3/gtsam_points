@@ -41,7 +41,7 @@ public:
 
   ~CTICPFactorExpr();
 
-  virtual gtsam::Vector unwhitenedError(const gtsam::Values& values, boost::optional<std::vector<gtsam::Matrix>&> H = boost::none) const;
+  virtual gtsam::Vector unwhitenedError(const gtsam::Values& values, gtsam::OptionalMatrixVecType H = nullptr) const;
 
   void update_correspondence(const gtsam::Values& values) const;
 
@@ -65,7 +65,7 @@ private:
  */
 class IntegratedCTICPFactorExpr : public gtsam::NonlinearFactor {
 public:
-  using shared_ptr = boost::shared_ptr<IntegratedCTICPFactorExpr>;
+  using shared_ptr = std::shared_ptr<IntegratedCTICPFactorExpr>;
 
   IntegratedCTICPFactorExpr(const gtsam::NonlinearFactorGraph::shared_ptr& graph);
   ~IntegratedCTICPFactorExpr();
@@ -73,7 +73,7 @@ public:
   virtual size_t dim() const override { return 6; }
 
   virtual double error(const gtsam::Values& values) const override;
-  virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
+  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
   std::vector<Eigen::Vector3d> deskewed_source_points(const gtsam::Values& values) const;
 

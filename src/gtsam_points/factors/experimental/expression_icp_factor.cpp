@@ -69,7 +69,7 @@ public:
   virtual size_t dim() const override { return 3; }
 
   virtual double error(const gtsam::Values& values) const override { return graph->error(values); }
-  virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override {
+  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override {
     // I'm not 100% sure if it is a correct way
     gtsam::Ordering ordering;
     ordering.push_back(keys()[0]);
@@ -87,22 +87,31 @@ public:
   gtsam::NonlinearFactorGraph::shared_ptr graph;
 };
 
-gtsam::NonlinearFactorGraph::shared_ptr
-create_icp_factors(gtsam::Key target_key, gtsam::Key source_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model) {
+gtsam::NonlinearFactorGraph::shared_ptr create_icp_factors(
+  gtsam::Key target_key,
+  gtsam::Key source_key,
+  const PointCloud::ConstPtr& target,
+  const PointCloud::ConstPtr& source,
+  const gtsam::SharedNoiseModel& noise_model) {
   gtsam::NonlinearFactorGraph::shared_ptr factors(new gtsam::NonlinearFactorGraph);
 
   std::shared_ptr<KdTree> target_tree(new KdTree(target->points, target->size()));
 
   for (int i = 0; i < source->size(); i++) {
-    gtsam::NonlinearFactor::shared_ptr factor(new ICPFactorExpr(target_key, source_key, target, target_tree, source->points[i].head<3>(), noise_model));
+    gtsam::NonlinearFactor::shared_ptr factor(
+      new ICPFactorExpr(target_key, source_key, target, target_tree, source->points[i].head<3>(), noise_model));
     factors->add(factor);
   }
 
   return factors;
 }
 
-gtsam::NonlinearFactor::shared_ptr
-create_integrated_icp_factor(gtsam::Key target_key, gtsam::Key source_key, const PointCloud::ConstPtr& target, const PointCloud::ConstPtr& source, const gtsam::SharedNoiseModel& noise_model)
+gtsam::NonlinearFactor::shared_ptr create_integrated_icp_factor(
+  gtsam::Key target_key,
+  gtsam::Key source_key,
+  const PointCloud::ConstPtr& target,
+  const PointCloud::ConstPtr& source,
+  const gtsam::SharedNoiseModel& noise_model)
 //
 {
   auto factors = create_icp_factors(target_key, source_key, target, source, noise_model);

@@ -20,7 +20,8 @@
 // \callgraph
 #pragma once
 
-#include <gtsam_unstable/nonlinear/FixedLagSmoother.h>
+#include <gtsam/nonlinear/FixedLagSmoother.h>
+#include "gtsam/dllexport.h"
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 
 namespace gtsam_points {
@@ -32,10 +33,10 @@ using namespace gtsam;
  * such that the active states are placed in/near the root. This base class implements a function
  * to calculate the ordering, and an update function to incorporate new factors into the HMF.
  */
-class IncrementalFixedLagSmootherExt : public FixedLagSmoother {
+class GTSAM_EXPORT IncrementalFixedLagSmootherExt : public FixedLagSmoother {
 public:
   /// Typedef for a shared pointer to an Incremental Fixed-Lag Smoother
-  typedef boost::shared_ptr<IncrementalFixedLagSmootherExt> shared_ptr;
+  typedef std::shared_ptr<IncrementalFixedLagSmootherExt> shared_ptr;
 
   /** default constructor */
   IncrementalFixedLagSmootherExt(double smootherLag = 0.0, const ISAM2Params& parameters = DefaultISAM2Params())
@@ -104,6 +105,9 @@ public:
   /// Get results of latest isam2 update
   const ISAM2Result& getISAM2Result() const { return isamResult_; }
 
+  /// Get the iSAM2 object which is used for the inference internally
+  const ISAM2Ext& getISAM2() const { return isam_; }
+
 protected:
   /** Create default parameters */
   static ISAM2Params DefaultISAM2Params() {
@@ -123,7 +127,7 @@ protected:
   void eraseKeysBefore(double timestamp);
 
   /** Fill in an iSAM2 ConstrainedKeys structure such that the provided keys are eliminated before all others */
-  void createOrderingConstraints(const KeyVector& marginalizableKeys, boost::optional<FastMap<Key, int> >& constrainedKeys) const;
+  void createOrderingConstraints(const KeyVector& marginalizableKeys, std::optional<FastMap<Key, int> >& constrainedKeys) const;
 
 private:
   /** Private methods for printing debug information */
@@ -133,6 +137,6 @@ private:
   static void PrintSymbolicTree(const ISAM2Ext& isam, const std::string& label = "Bayes Tree:");
   static void PrintSymbolicTreeHelper(const gtsam::ISAM2Clique::shared_ptr& clique, const std::string indent = "");
 };
-// IncrementalFixedLagSmootherExt
+// IncrementalFixedLagSmoother
 
 }  // namespace gtsam_points

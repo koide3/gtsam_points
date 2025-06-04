@@ -34,7 +34,7 @@ template <
 class IntegratedColoredGICPFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>>;
+  using shared_ptr = std::shared_ptr<IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>>;
 
   IntegratedColoredGICPFactor_(
     gtsam::Key target_key,

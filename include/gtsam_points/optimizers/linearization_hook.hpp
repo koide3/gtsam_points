@@ -19,7 +19,7 @@ public:
   virtual int linearization_count() const = 0;
   virtual int evaluation_count() const = 0;
 
-  virtual bool add(boost::shared_ptr<gtsam::NonlinearFactor> factor) = 0;
+  virtual bool add(std::shared_ptr<gtsam::NonlinearFactor> factor) = 0;
   virtual void add(const gtsam::NonlinearFactorGraph& factors) = 0;
 
   virtual void linearize(const gtsam::Values& values) = 0;
@@ -31,6 +31,7 @@ public:
 class LinearizationHook {
 public:
   LinearizationHook();
+  LinearizationHook(const gtsam::NonlinearFactorGraph& factors);
   ~LinearizationHook();
 
   int size() const;
@@ -40,8 +41,8 @@ public:
   int linearization_count() const;
   int evaluation_count() const;
 
-  bool add(boost::shared_ptr<gtsam::NonlinearFactor> factor);
-  void add(const gtsam::NonlinearFactorGraph& factors) ;
+  bool add(std::shared_ptr<gtsam::NonlinearFactor> factor);
+  void add(const gtsam::NonlinearFactorGraph& factors);
 
   void linearize(const gtsam::Values& values);
   void error(const gtsam::Values& values);

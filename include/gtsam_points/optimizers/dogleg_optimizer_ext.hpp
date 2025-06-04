@@ -31,7 +31,7 @@ protected:
   gtsam::DoglegParams params_;
 
 public:
-  typedef boost::shared_ptr<DoglegOptimizerExt> shared_ptr;
+  typedef std::shared_ptr<DoglegOptimizerExt> shared_ptr;
 
   /// @name Standard interface
   /// @{

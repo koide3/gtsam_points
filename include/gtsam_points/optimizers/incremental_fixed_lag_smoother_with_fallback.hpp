@@ -44,7 +44,7 @@ public:
       const auto& value = smoother->calculateEstimate(key);
       auto found = values.find(key);
       if (found != values.end()) {
-        found->value = value;
+        const_cast<gtsam::Value&>(found->value) = value;  // Bad practice!!
       }
 
       return value.cast<VALUE>();
