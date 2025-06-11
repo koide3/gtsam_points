@@ -53,6 +53,8 @@ public:
 
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
+  virtual size_t memory_usage() const override;
+
   // note: If your GTSAM is built with TBB, linearization is already multi-threaded
   //     : and setting n>1 can rather affect the processing speed
   void set_num_threads(int n);
@@ -108,6 +110,8 @@ public:
   ~IntegratedPointToPlaneFactor_();
 
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
+
+  virtual size_t memory_usage() const override;
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
@@ -168,6 +172,8 @@ public:
   ~IntegratedPointToEdgeFactor_();
 
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
+
+  virtual size_t memory_usage() const override;
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }

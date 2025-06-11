@@ -68,4 +68,8 @@ Eigen::Isometry3d IntegratedMatchingCostFactor::calc_delta(const gtsam::Values& 
   }
 }
 
+size_t IntegratedMatchingCostFactor::memory_usage() const {
+  return sizeof(*this);
+}
+
 }  // namespace gtsam_points

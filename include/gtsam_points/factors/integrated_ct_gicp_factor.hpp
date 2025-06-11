@@ -51,6 +51,8 @@ public:
   /// @brief Print the factor information.
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
+  virtual size_t memory_usage() const override;
+
   virtual double error(const gtsam::Values& values) const override;
   virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
