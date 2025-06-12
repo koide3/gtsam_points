@@ -91,6 +91,14 @@ void IntegratedVGICPFactorGPU::print(const std::string& s, const gtsam::KeyForma
   std::cout << "target_resolusion=" << target->voxel_resolution() << ", |source|=" << frame::size(*source) << "pts" << std::endl;
 }
 
+size_t IntegratedVGICPFactorGPU::memory_usage() const {
+  return sizeof(*this) + sizeof(IntegratedVGICPDerivatives);
+}
+
+size_t IntegratedVGICPFactorGPU::memory_usage_gpu() const {
+  return sizeof(Eigen::Isometry3f) + sizeof(int) + sizeof(int) * derivatives->get_num_inliers();
+}
+
 void IntegratedVGICPFactorGPU::set_enable_surface_validation(bool enable) {
   derivatives->set_enable_surface_validation(enable);
 }

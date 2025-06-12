@@ -56,6 +56,11 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::print(const std::string
 }
 
 template <typename TargetFrame, typename SourceFrame>
+size_t IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::memory_usage() const {
+  return IntegratedCT_ICPFactor_<TargetFrame, SourceFrame>::memory_usage() + sizeof(Eigen::Matrix4d) * mahalanobis.capacity();
+}
+
+template <typename TargetFrame, typename SourceFrame>
 double IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::error(const gtsam::Values& values) const {
   this->update_poses(values);
   if (this->correspondences.size() != frame::size(*this->source)) {

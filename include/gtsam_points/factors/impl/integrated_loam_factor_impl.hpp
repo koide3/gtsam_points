@@ -72,6 +72,11 @@ void IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::print(const std::s
 }
 
 template <typename TargetFrame, typename SourceFrame>
+size_t IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::memory_usage() const {
+  return sizeof(*this) + sizeof(std::tuple<long, long, long>) * correspondences.capacity();
+}
+
+template <typename TargetFrame, typename SourceFrame>
 void IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {
     Eigen::Isometry3d diff = delta.inverse() * last_correspondence_point;
@@ -287,6 +292,11 @@ void IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::print(const std::st
 }
 
 template <typename TargetFrame, typename SourceFrame>
+size_t IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::memory_usage() const {
+  return sizeof(*this) + sizeof(std::tuple<long, long>) * correspondences.capacity();
+}
+
+template <typename TargetFrame, typename SourceFrame>
 double IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>::evaluate(
   const Eigen::Isometry3d& delta,
   Eigen::Matrix<double, 6, 6>* H_target,
@@ -406,6 +416,11 @@ void IntegratedLOAMFactor_<TargetFrame, SourceFrame>::print(const std::string& s
   } else {
     std::cout << "(fixed, " << keyFormatter(this->keys()[0]) << ")" << std::endl;
   }
+}
+
+template <typename TargetFrame, typename SourceFrame>
+size_t IntegratedLOAMFactor_<TargetFrame, SourceFrame>::memory_usage() const {
+  return edge_factor->memory_usage() + plane_factor->memory_usage();
 }
 
 template <typename TargetFrame, typename SourceFrame>

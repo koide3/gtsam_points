@@ -81,6 +81,13 @@ public:
   /// @brief Print the factor information.
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
+  /**
+   * @brief  Calculate the memory usage of this factor
+   * @note   The result is approximate and does not account for objects not owned by this factor (e.g., point clouds)
+   * @return Memory usage in bytes (Approximate size in bytes)
+   */
+  virtual size_t memory_usage() const override;
+
   /// @brief Set the number of thread used for linearization of this factor.
   /// @note If your GTSAM is built with TBB, linearization is already multi-threaded
   ///       and setting n>1 can rather affect the processing speed.

@@ -56,6 +56,8 @@ public:
 
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
+  virtual size_t memory_usage() const override;
+
   void set_num_threads(int n) { num_threads = n; }
   void set_max_correspondence_distance(double d) { max_correspondence_distance_sq = d * d; }
   void set_photometric_term_weight(double w) { photometric_term_weight = w; }

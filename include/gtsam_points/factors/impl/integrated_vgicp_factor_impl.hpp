@@ -90,6 +90,12 @@ void IntegratedVGICPFactor_<SourceFrame>::print(const std::string& s, const gtsa
 }
 
 template <typename SourceFrame>
+size_t IntegratedVGICPFactor_<SourceFrame>::memory_usage() const {
+  return sizeof(*this) + sizeof(const GaussianVoxel*) * correspondences.capacity() + sizeof(Eigen::Matrix4d) * mahalanobis_full.capacity() +
+         sizeof(Eigen::Matrix<float, 6, 1>) * mahalanobis_compact.capacity();
+}
+
+template <typename SourceFrame>
 void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   linearization_point = delta;
   correspondences.resize(frame::size(*source));
