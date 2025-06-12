@@ -86,7 +86,7 @@ TEST_P(GlobalRegistrationTest, RegistrationTest) {
 
   if (method == "RANSAC") {
     gtsam_points::RANSACParams params;
-    params.num_threads = 2;
+    params.num_threads = 1;
     params.dof = dof;
     result = gtsam_points::estimate_pose_ransac(
       *target,
@@ -98,7 +98,7 @@ TEST_P(GlobalRegistrationTest, RegistrationTest) {
       params);
   } else {
     gtsam_points::GNCParams params;
-    params.num_threads = 2;
+    params.num_threads = 1;
     params.dof = dof;
     result = gtsam_points::estimate_pose_gnc(
       *target,
@@ -114,12 +114,12 @@ TEST_P(GlobalRegistrationTest, RegistrationTest) {
   const Eigen::Isometry3d error = T_target_source.inverse() * result.T_target_source;
   const double error_t = error.translation().norm();
   const double error_r = Eigen::AngleAxisd(error.linear()).angle();
-  EXPECT_LE(error_t, 0.5);
-  EXPECT_LE(error_r, 0.1);
+  EXPECT_LE(error_t, 0.5) << "Large translation error in " << method << " registration";
+  EXPECT_LE(error_r, 0.1) << "Large rotation error in " << method << " registration";
 
   if (dof == 4) {
     const Eigen::Vector3d z = result.T_target_source.linear().col(2);
-    EXPECT_NEAR((z - Eigen::Vector3d::UnitZ()).cwiseAbs().maxCoeff(), 0.0, 1e-6);
+    EXPECT_NEAR((z - Eigen::Vector3d::UnitZ()).cwiseAbs().maxCoeff(), 0.0, 1e-6) << "Non-vertical z-axis in 4DoF registration";
   }
 }
 
