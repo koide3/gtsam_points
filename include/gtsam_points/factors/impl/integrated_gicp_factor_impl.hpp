@@ -117,6 +117,17 @@ void IntegratedGICPFactor_<TargetFrame, SourceFrame>::print(const std::string& s
             << ", cache_mode=" << static_cast<int>(mahalanobis_cache_mode) << std::endl;
 }
 
+/**
+ * @brief  Calculate the memory usage of this factor
+ * @note   The result is approximate and does not account for objects not owned by this factor (e.g., point clouds)
+ * @return Memory usage in bytes (Approximate size in bytes)
+ */
+template <typename TargetFrame, typename SourceFrame>
+size_t IntegratedGICPFactor_<TargetFrame, SourceFrame>::memory_usage() const {
+  return sizeof(*this) + sizeof(long) * correspondences.capacity() + sizeof(Eigen::Matrix4d) * mahalanobis_full.capacity() +
+         sizeof(Eigen::Matrix<float, 6, 1>) * mahalanobis_compact.capacity();
+}
+
 template <typename TargetFrame, typename SourceFrame>
 void IntegratedGICPFactor_<TargetFrame, SourceFrame>::update_correspondences(const Eigen::Isometry3d& delta) const {
   linearization_point = delta;

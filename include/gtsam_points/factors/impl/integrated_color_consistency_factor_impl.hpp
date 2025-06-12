@@ -94,6 +94,11 @@ void IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGradie
 }
 
 template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>
+size_t IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGradients>::memory_usage() const {
+  return sizeof(*this) + sizeof(long) * correspondences.capacity();
+}
+
+template <typename TargetFrame, typename SourceFrame, typename IntensityGradients>
 void IntegratedColorConsistencyFactor_<TargetFrame, SourceFrame, IntensityGradients>::update_correspondences(const Eigen::Isometry3d& delta) const {
   bool do_update = true;
   if (correspondences.size() == frame::size(*source) && (correspondence_update_tolerance_trans > 0.0 || correspondence_update_tolerance_rot > 0.0)) {

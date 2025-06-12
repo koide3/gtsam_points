@@ -68,6 +68,16 @@ public:
   /// @brief Print the factor information.
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
+  /// @brief  Calculate the CPU memory usage of this factor
+  /// @note   The result is approximate and does not account for objects not owned by this factor (e.g., point clouds)
+  /// @return Approximate CPU memory usage in bytes
+  size_t memory_usage() const;
+
+  /// @brief  Calculate the GPU memory usage of this factor
+  /// @note   The result is approximate and does not account for objects not owned by this factor (e.g., point clouds)
+  /// @return Approximate GPU memory usage in bytes
+  size_t memory_usage_gpu() const;
+
   /// @brief Enable or disable surface orientation validation for correspondence search
   /// @note  To enable surface orientation validation, source frame must have point normals
   void set_enable_surface_validation(bool enable);

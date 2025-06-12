@@ -51,6 +51,13 @@ public:
   Eigen::Isometry3d calc_delta(const gtsam::Values& values) const;
 
   /**
+   * @brief  Calculate the memory usage of this factor
+   * @note   The result is approximate and does not account for objects not owned by this factor (e.g., point clouds)
+   * @return Memory usage in bytes (Approximate size in bytes)
+   */
+  virtual size_t memory_usage() const;
+
+  /**
    * @brief Update point correspondences
    * @param delta Transformation between target and source (i.e., T_target_source)
    */
