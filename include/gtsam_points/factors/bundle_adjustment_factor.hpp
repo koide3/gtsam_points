@@ -13,7 +13,7 @@ namespace gtsam_points {
  */
 class BundleAdjustmentFactorBase : public gtsam::NonlinearFactor {
 public:
-  using shared_ptr = boost::shared_ptr<BundleAdjustmentFactorBase>;
+  using shared_ptr = std::shared_ptr<BundleAdjustmentFactorBase>;
 
   virtual ~BundleAdjustmentFactorBase() {}
 
@@ -29,10 +29,10 @@ public:
    * @return Number of points
    */
   virtual int num_points() const = 0;
-  
+
   /**
    * @brief Set a constant error scale to boost the weight of the constraint
    */
   virtual void set_scale(double scale) {}
 };
-}
+}  // namespace gtsam_points

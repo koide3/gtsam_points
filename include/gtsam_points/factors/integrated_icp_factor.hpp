@@ -21,7 +21,7 @@ template <typename TargetFrame = gtsam_points::PointCloud, typename SourceFrame 
 class IntegratedICPFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedICPFactor_<PointCloud>>;
+  using shared_ptr = std::shared_ptr<IntegratedICPFactor_<PointCloud>>;
 
   /**
    * @brief Create a binary ICP factor between two poses.
@@ -138,7 +138,7 @@ private:
 template <typename TargetFrame = gtsam_points::PointCloud, typename SourceFrame = gtsam_points::PointCloud>
 class IntegratedPointToPlaneICPFactor_ : public gtsam_points::IntegratedICPFactor_<TargetFrame, SourceFrame> {
 public:
-  using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneICPFactor_<TargetFrame, SourceFrame>>;
+  using shared_ptr = std::shared_ptr<IntegratedPointToPlaneICPFactor_<TargetFrame, SourceFrame>>;
 
   IntegratedPointToPlaneICPFactor_(
     gtsam::Key target_key,

@@ -29,7 +29,7 @@ template <typename TargetFrame = gtsam_points::PointCloud, typename SourceFrame 
 class IntegratedLOAMFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
   GTSAM_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedLOAMFactor_<TargetFrame, SourceFrame>>;
+  using shared_ptr = std::shared_ptr<IntegratedLOAMFactor_<TargetFrame, SourceFrame>>;
 
   IntegratedLOAMFactor_(
     gtsam::Key target_key,
@@ -90,7 +90,7 @@ template <typename TargetFrame = gtsam_points::PointCloud, typename SourceFrame 
 class IntegratedPointToPlaneFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>>;
+  using shared_ptr = std::shared_ptr<IntegratedPointToPlaneFactor_<TargetFrame, SourceFrame>>;
 
   friend class IntegratedLOAMFactor_<TargetFrame, SourceFrame>;
 
@@ -152,7 +152,7 @@ template <typename TargetFrame = gtsam_points::PointCloud, typename SourceFrame 
 class IntegratedPointToEdgeFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>>;
+  using shared_ptr = std::shared_ptr<IntegratedPointToEdgeFactor_<TargetFrame, SourceFrame>>;
 
   friend class IntegratedLOAMFactor_<TargetFrame, SourceFrame>;
 

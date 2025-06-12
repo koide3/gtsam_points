@@ -162,8 +162,8 @@ Eigen::Isometry3f IntegratedVGICPFactorGPU::calc_delta(const gtsam::Values& valu
 double IntegratedVGICPFactorGPU::error(const gtsam::Values& values) const {
   double err;
   if (evaluation_result) {
-    err = evaluation_result.get();
-    evaluation_result = boost::none;
+    err = evaluation_result.value();
+    evaluation_result = {};
   } else {
     std::cerr << "warning: computing error in sync mode seriously affects the processing speed!!" << std::endl;
 
@@ -178,7 +178,7 @@ double IntegratedVGICPFactorGPU::error(const gtsam::Values& values) const {
   return err;
 }
 
-boost::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(const gtsam::Values& values) const {
+std::shared_ptr<gtsam::GaussianFactor> IntegratedVGICPFactorGPU::linearize(const gtsam::Values& values) const {
   linearized = true;
   linearization_point = calc_delta(values);
 

@@ -17,10 +17,13 @@
 #pragma once
 
 #include <iomanip>
+#include <cassert>
 
 #include <gtsam/linear/VectorValues.h>
 #include <gtsam/inference/Ordering.h>
 #include <gtsam_points/optimizers/linearization_hook.hpp>
+
+using gtsam::VectorValues;
 
 namespace gtsam_points {
 
@@ -33,7 +36,7 @@ namespace gtsam_points {
 struct GTSAM_EXPORT DoglegOptimizerImplExt {
   struct GTSAM_EXPORT IterationResult {
     double delta;
-    gtsam::VectorValues dx_d;
+    VectorValues dx_d;
     double f_error;
   };
 
@@ -60,7 +63,7 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    *
    * The update is computed using a quadratic approximation \f$ M(\delta x) \f$
    * of an original nonlinear error function (a NonlinearFactorGraph) \f$ f(x) \f$.
-   * The quadratic approximation is represented as a GaussianBayesNet \f$ bayesNet \f$, which is
+   * The quadratic approximation is represented as a GaussianBayesNet \f$ \bayesNet \f$, which is
    * obtained by eliminating a GaussianFactorGraph resulting from linearizing
    * the nonlinear factor graph \f$ f(x) \f$.  Thus, \f$ M(\delta x) \f$ is
    * \f[
@@ -77,12 +80,12 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    * @tparam VALUES The Values or TupleValues to pass to F::error() to evaluate
    * the error function.
    * @param delta The initial trust region radius.
-   * @param mode See DoglegOptimizerImpl::TrustRegionAdaptationMode
+   * @param mode See DoglegOptimizerImplExt::TrustRegionAdaptationMode
    * @param Rd The Bayes' net or tree as described above.
    * @param f The original nonlinear factor graph with which to evaluate the
    * accuracy of \f$ M(\delta x) \f$ to adjust \f$ \delta \f$.
-   * @param x0 The linearization point about which \f$ bayesNet \f$ was created
-   * @param ordering The variable ordering used to create\f$ bayesNet \f$
+   * @param x0 The linearization point about which \f$ \bayesNet \f$ was created
+   * @param ordering The variable ordering used to create\f$ \bayesNet \f$
    * @param f_error The result of <tt>f.error(x0)</tt>.
    * @return A DoglegIterationResult containing the new \c delta, the linear
    * update \c dx_d, and the resulting nonlinear error \c f_error.
@@ -91,8 +94,8 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
   static IterationResult Iterate(
     double delta,
     TrustRegionAdaptationMode mode,
-    const gtsam::VectorValues& dx_u,
-    const gtsam::VectorValues& dx_n,
+    const VectorValues& dx_u,
+    const VectorValues& dx_n,
     const M& Rd,
     const F& f,
     LinearizationHook& linearization_hook,
@@ -107,7 +110,7 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    *
    * The update is computed using a quadratic approximation \f$ M(\delta x) \f$
    * of an original nonlinear error function (a NonlinearFactorGraph) \f$ f(x) \f$.
-   * The quadratic approximation is represented as a GaussianBayesNet \f$ bayesNet \f$, which is
+   * The quadratic approximation is represented as a GaussianBayesNet \f$ \bayesNet \f$, which is
    * obtained by eliminating a GaussianFactorGraph resulting from linearizing
    * the nonlinear factor graph \f$ f(x) \f$.  Thus, \f$ M(\delta x) \f$ is
    * \f[
@@ -122,8 +125,7 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    * @param dx_n The Gauss-Newton point
    * @return The dogleg point \f$ \delta x_d \f$
    */
-  static gtsam::VectorValues
-  ComputeDoglegPoint(double delta, const gtsam::VectorValues& dx_u, const gtsam::VectorValues& dx_n, const bool verbose = false);
+  static VectorValues ComputeDoglegPoint(double delta, const VectorValues& dx_u, const VectorValues& dx_n, const bool verbose = false);
 
   /** Compute the point on the line between the steepest descent point and the
    * Newton's method point intersecting the trust region boundary.
@@ -134,7 +136,7 @@ struct GTSAM_EXPORT DoglegOptimizerImplExt {
    * @param x_u Steepest descent minimizer
    * @param x_n Newton's method minimizer
    */
-  static gtsam::VectorValues ComputeBlend(double delta, const gtsam::VectorValues& x_u, const gtsam::VectorValues& x_n, const bool verbose = false);
+  static VectorValues ComputeBlend(double delta, const VectorValues& x_u, const VectorValues& x_n, const bool verbose = false);
 };
 
 /* ************************************************************************* */
@@ -142,8 +144,8 @@ template <class M, class F, class VALUES>
 typename DoglegOptimizerImplExt::IterationResult DoglegOptimizerImplExt::Iterate(
   double delta,
   TrustRegionAdaptationMode mode,
-  const gtsam::VectorValues& dx_u,
-  const gtsam::VectorValues& dx_n,
+  const VectorValues& dx_u,
+  const VectorValues& dx_n,
   const M& Rd,
   const F& f,
   LinearizationHook& linearization_hook,
@@ -151,8 +153,7 @@ typename DoglegOptimizerImplExt::IterationResult DoglegOptimizerImplExt::Iterate
   const double f_error,
   const bool verbose) {
   gttic(M_error);
-
-  const double M_error = Rd.error(gtsam::VectorValues::Zero(dx_u));
+  const double M_error = Rd.error(VectorValues::Zero(dx_u));
   gttoc(M_error);
 
   // Result to return

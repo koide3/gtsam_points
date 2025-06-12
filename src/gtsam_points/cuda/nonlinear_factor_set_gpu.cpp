@@ -44,8 +44,8 @@ void NonlinearFactorSetGPU::clear_counts() {
   num_evaluations = 0;
 }
 
-bool NonlinearFactorSetGPU::add(boost::shared_ptr<gtsam::NonlinearFactor> factor) {
-  auto gpu_factor = boost::dynamic_pointer_cast<NonlinearFactorGPU>(factor);
+bool NonlinearFactorSetGPU::add(std::shared_ptr<gtsam::NonlinearFactor> factor) {
+  auto gpu_factor = std::dynamic_pointer_cast<NonlinearFactorGPU>(factor);
   if (gpu_factor) {
     factors.push_back(gpu_factor);
     return true;

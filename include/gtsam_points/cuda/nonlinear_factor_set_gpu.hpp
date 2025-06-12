@@ -55,7 +55,7 @@ public:
    * @param factor    Nonlinear factor
    * @return          True if the factor is GPU-based one and added to the set
    */
-  bool add(boost::shared_ptr<gtsam::NonlinearFactor> factor) override;
+  bool add(std::shared_ptr<gtsam::NonlinearFactor> factor) override;
 
   /**
    * @brief Add all GPU-based factors in a factor graph to the GPU factor set
@@ -105,7 +105,7 @@ private:
   int num_linearizations;
   int num_evaluations;
 
-  std::vector<boost::shared_ptr<NonlinearFactorGPU>> factors;
+  std::vector<std::shared_ptr<NonlinearFactorGPU>> factors;
 
   std::vector<unsigned char, Eigen::aligned_allocator<unsigned char>> linearization_input_buffer_cpu;
   std::vector<unsigned char, Eigen::aligned_allocator<unsigned char>> linearization_output_buffer_cpu;

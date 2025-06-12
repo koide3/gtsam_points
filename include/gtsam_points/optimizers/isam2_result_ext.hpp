@@ -34,14 +34,17 @@ public:
     char check[] = {' ', 'x'};
 
     if (errorBefore && errorAfter) {
-      bool dec = errorBefore.get() > errorAfter.get();
+      const double err_before = errorBefore.value_or(std::numeric_limits<double>::max());
+      const double err_after = errorAfter.value_or(0.0);
+
+      bool dec = err_before > err_after;
       sst1 << boost::format("%5s %15s %15s ") % "dec" % "e0" % "ei";
-      sst2 << boost::format("%5c %15g %15g ") % check[dec] % errorBefore.get() % errorAfter.get();
+      sst2 << boost::format("%5c %15g %15g ") % check[dec] % err_before % err_after;
     }
 
     sst1 << boost::format("%5s %5s %5s %5s %5s %5s %10s %10s") % "count" % "new" % "lin" % "elim" % "gpu_e" % "gpu_l" % "delta" % "time_msec";
-    sst2 << boost::format("%5d %5d %5d %5d %5d %5d %10g %10g") % update_count % newFactorsIndices.size() % variablesRelinearized % variablesReeliminated % gpu_evaluation_count %
-              gpu_linearization_count % delta % (elapsed_time * 1000.0);
+    sst2 << boost::format("%5d %5d %5d %5d %5d %5d %10g %10g") % update_count % newFactorsIndices.size() % variablesRelinearized %
+              variablesReeliminated % gpu_evaluation_count % gpu_linearization_count % delta % (elapsed_time * 1000.0);
 
     sst1 << std::endl << sst2.str();
 
