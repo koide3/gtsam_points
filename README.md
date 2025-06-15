@@ -2,7 +2,7 @@
 
 This is a collection of [GTSAM](https://gtsam.org/) factors and optimizers for range-based SLAM.
 
-Tested on Ubuntu 22.04 / 24.04 and CUDA 12.2, and NVIDIA Jetson Orin with **GTSAM 4.2a9**.
+Tested on Ubuntu 22.04 / 24.04 and CUDA 12.2, and NVIDIA Jetson Orin with **GTSAM 4.3a0**.
 
 
 [![DOI](https://zenodo.org/badge/819211095.svg)](https://zenodo.org/doi/10.5281/zenodo.13378351) [![Doc](https://img.shields.io/badge/API_list-Doxygen-blue)](https://koide3.github.io/gtsam_points/doc_cpp/index.html) [![Build](https://github.com/koide3/gtsam_points/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_points/actions/workflows/build.yml)
@@ -94,7 +94,7 @@ All the following optimizers were derived from the implementations in GTSAM.
 # Install gtsam
 git clone https://github.com/borglab/gtsam
 cd gtsam
-git checkout 4.2a9
+git checkout 4.3a0
 
 mkdir build && cd build
 cmake .. \
@@ -122,10 +122,15 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 
 # Optional cmake arguments
 # cmake .. \
-#   -DBUILD_DEMO=OFF \
-#   -DBUILD_TESTS=OFF \
-#   -DBUILD_WITH_CUDA=OFF \
-#   -DBUILD_WITH_MARCH_NATIVE=OFF
+#   -DBUILD_DEMO=OFF \                # Set ON to build demo programs
+#   -DBUILD_TESTS=OFF \               # Set ON to build unit tests
+#   -DBUILD_TOOLS=OFF \               # Set ON to build tools
+#   -DBUILD_WITH_TBB=OFF \            # Set ON to enable TBB
+#   -DBUILD_WITH_OPENMP=OFF \         # Set ON to enable OpenMP
+#   -DBUILD_WITH_CUDA=OFF \           # Set ON to enable CUDA support
+#   -DBUILD_WITH_CUDA_MULTIARCH=OFF \ # Set ON to enable multi-arch CUDA support
+#   -DCMAKE_CUDA_ARCHITECTURES=89 \   # If not specified, "native" architecture is used
+#   -DBUILD_WITH_MARCH_NATIVE=OFF     # Set ON to enable -march=native (recommended to keep it OFF)
 
 make -j$(nproc)
 sudo make install

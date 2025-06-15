@@ -17,7 +17,7 @@ namespace gtsam_points {
 class IntegratedMatchingCostFactor : public gtsam::NonlinearFactor {
 public:
   GTSAM_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedMatchingCostFactor>;
+  using shared_ptr = std::shared_ptr<IntegratedMatchingCostFactor>;
 
   /**
    * @brief Create a binary matching cost factor between target and source poses
@@ -43,7 +43,7 @@ public:
   /// @note The following error and linearize methods are not thread-safe,
   ///       because we need to update correspondences (that may be mutable members) for every linearization
   virtual double error(const gtsam::Values& values) const override;
-  virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
+  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
 
   const Eigen::Isometry3d& get_fixed_target_pose() const { return fixed_target_pose; }
 

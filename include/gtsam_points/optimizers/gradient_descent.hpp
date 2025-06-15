@@ -4,8 +4,8 @@
 #pragma once
 
 #include <chrono>
+#include <sstream>
 #include <functional>
-#include <boost/format.hpp>
 
 #include <gtsam/linear/VectorValues.h>
 #include <gtsam/nonlinear/NonlinearOptimizer.h>
@@ -14,7 +14,11 @@
 namespace gtsam_points {
 
 struct NumericalGradientDescentStatus {
-  std::string to_string() const { return (boost::format("%d: error:%.6f -> %.6f lambda:%10g") % iterations % error_old % error_new % lambda).str(); }
+  std::string to_string() const {
+    std::stringstream sst;
+    sst << iterations << ": error:" << error_old << " -> " << error_new << " lambda:" << lambda;
+    return sst.str();
+  }
 
   int iterations;
   double lambda;
@@ -67,7 +71,9 @@ public:
   using State = NumericalGradientDescentState;
 
   NumericalGradientDescent(const gtsam::NonlinearFactorGraph& graph, const gtsam::Values& initial_value, const NumericalGradientDescentParams& params)
-  : gtsam::NonlinearOptimizer(graph, std::unique_ptr<NumericalGradientDescentState>(new NumericalGradientDescentState(params, params.init_lambda, initial_value))),
+  : gtsam::NonlinearOptimizer(
+      graph,
+      std::unique_ptr<NumericalGradientDescentState>(new NumericalGradientDescentState(params, params.init_lambda, initial_value))),
     params_(params) {}
 
   virtual gtsam::GaussianFactorGraph::shared_ptr iterate() override {

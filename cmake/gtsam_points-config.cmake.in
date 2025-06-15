@@ -27,7 +27,7 @@ if(GTSAM_POINTS_USE_TBB)
   find_dependency(TBB REQUIRED)
 endif()
 
-if(BUILD_WITH_CUDA)
+if(GTSAM_POINTS_USE_CUDA)
   find_dependency(CUDAToolkit REQUIRED)
 endif()
 

@@ -120,7 +120,7 @@ double LsqBundleAdjustmentFactor::error(const gtsam::Values& c) const {
   return sum_errors;
 }
 
-boost::shared_ptr<gtsam::GaussianFactor> LsqBundleAdjustmentFactor::linearize(const gtsam::Values& c) const {
+std::shared_ptr<gtsam::GaussianFactor> LsqBundleAdjustmentFactor::linearize(const gtsam::Values& c) const {
   update_global_distribution(c);
 
   double sum_errors = 0.0;

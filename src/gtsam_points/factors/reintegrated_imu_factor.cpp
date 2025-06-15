@@ -5,7 +5,7 @@
 namespace gtsam_points {
 
 ReintegratedImuMeasurements::ReintegratedImuMeasurements(
-  const boost::shared_ptr<gtsam::PreintegrationParams>& p,
+  const std::shared_ptr<gtsam::PreintegrationParams>& p,
   const gtsam::imuBias::ConstantBias& biasHat)
 : gtsam::PreintegratedImuMeasurements(p, biasHat) {}
 
@@ -58,7 +58,7 @@ void ReintegratedImuFactor::print(const std::string& s, const gtsam::KeyFormatte
   std::cout << "|imu_data|=" << imu_measurements.imu_data.size() << std::endl;
 }
 
-boost::shared_ptr<gtsam::GaussianFactor> ReintegratedImuFactor::linearize(const gtsam::Values& values) const {
+std::shared_ptr<gtsam::GaussianFactor> ReintegratedImuFactor::linearize(const gtsam::Values& values) const {
   imu_factor = create_imu_factor(values.at<gtsam::imuBias::ConstantBias>(keys()[4]));
   return imu_factor->linearize(values);
 }
@@ -71,7 +71,7 @@ double ReintegratedImuFactor::error(const gtsam::Values& values) const {
   return imu_factor->error(values);
 }
 
-boost::shared_ptr<gtsam::ImuFactor> ReintegratedImuFactor::create_imu_factor(const gtsam::imuBias::ConstantBias& bias) const {
+std::shared_ptr<gtsam::ImuFactor> ReintegratedImuFactor::create_imu_factor(const gtsam::imuBias::ConstantBias& bias) const {
   gtsam::PreintegratedImuMeasurements pim(imu_measurements.params(), bias);
   for (const auto& imu : imu_measurements.imu_data) {
     const gtsam::Vector3 acc = imu.block<3, 1>(0, 0);

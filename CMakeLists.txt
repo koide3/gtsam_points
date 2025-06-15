@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(gtsam_points VERSION 1.1.0 LANGUAGES CXX)
+project(gtsam_points VERSION 1.2.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_LIST_DIR}/cmake")
@@ -30,8 +30,8 @@ if(BUILD_WITH_MARCH_NATIVE)
 endif()
 
 find_package(Boost REQUIRED COMPONENTS graph filesystem)
-find_package(GTSAM REQUIRED)
-find_package(GTSAM_UNSTABLE REQUIRED)
+find_package(GTSAM 4.3 REQUIRED)
+find_package(GTSAM_UNSTABLE 4.3 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 if(BUILD_WITH_TBB)
@@ -197,7 +197,6 @@ add_library(gtsam_points SHARED
   src/gtsam_points/optimizers/isam2_ext_impl.cpp
   src/gtsam_points/optimizers/incremental_fixed_lag_smoother_ext.cpp
   src/gtsam_points/optimizers/incremental_fixed_lag_smoother_ext_with_fallback.cpp
-  # src/gtsam_points/optimizers/dogleg_optimizer_ext.cpp
   src/gtsam_points/optimizers/dogleg_optimizer_ext_impl.cpp
 )
 target_include_directories(gtsam_points PUBLIC

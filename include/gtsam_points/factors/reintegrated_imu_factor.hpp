@@ -13,7 +13,7 @@ public:
   friend class ReintegratedImuFactor;
 
   ReintegratedImuMeasurements(
-    const boost::shared_ptr<gtsam::PreintegrationParams>& p,
+    const std::shared_ptr<gtsam::PreintegrationParams>& p,
     const gtsam::imuBias::ConstantBias& biasHat = gtsam::imuBias::ConstantBias());
   ~ReintegratedImuMeasurements() override;
 
@@ -45,16 +45,16 @@ public:
 
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
-  boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
+  std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
   double error(const gtsam::Values& values) const override;
 
   const ReintegratedImuMeasurements& measurements() const { return imu_measurements; }
 
 private:
-  boost::shared_ptr<gtsam::ImuFactor> create_imu_factor(const gtsam::imuBias::ConstantBias& bias) const;
+  std::shared_ptr<gtsam::ImuFactor> create_imu_factor(const gtsam::imuBias::ConstantBias& bias) const;
 
 private:
   const ReintegratedImuMeasurements imu_measurements;
-  mutable boost::shared_ptr<gtsam::ImuFactor> imu_factor;
+  mutable std::shared_ptr<gtsam::ImuFactor> imu_factor;
 };
 }  // namespace gtsam_points

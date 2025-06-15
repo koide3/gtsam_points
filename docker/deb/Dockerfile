@@ -12,7 +12,7 @@ RUN apt-get install -y --no-install-recommends
 RUN apt-get install -y --no-install-recommends build-essential  \
     git cmake libeigen3-dev ca-certificates libboost-all-dev libmetis-dev file
 
-RUN git clone https://github.com/borglab/gtsam.git /root/gtsam -b 4.2a9
+RUN git clone https://github.com/borglab/gtsam.git /root/gtsam -b 4.3a0
 WORKDIR /root/gtsam/build
 # Rename libgtsam-dev to libgtsam-notbb-dev
 RUN sed -i 's/libgtsam-dev/libgtsam-notbb-dev/g' ../cmake/HandleCPack.cmake

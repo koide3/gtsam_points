@@ -20,27 +20,12 @@
  */
 
 #include <gtsam_points/optimizers/incremental_fixed_lag_smoother_ext.hpp>
+#include <gtsam/nonlinear/BayesTreeMarginalizationHelper.h>
 #include <gtsam/base/debug.h>
-#include <gtsam/inference/Symbol.h>
 
 namespace gtsam_points {
 
-/* ************************************************************************* */
-void recursiveMarkAffectedKeys(const Key& key, const ISAM2Clique::shared_ptr& clique, std::set<Key>& additionalKeys) {
-  // Check if the separator keys of the current clique contain the specified key
-  if (std::find(clique->conditional()->beginParents(), clique->conditional()->endParents(), key) != clique->conditional()->endParents()) {
-    // Mark the frontal keys of the current clique
-    for (Key i : clique->conditional()->frontals()) {
-      additionalKeys.insert(i);
-    }
-
-    // Recursively mark all of the children
-    for (const ISAM2Clique::shared_ptr& child : clique->children) {
-      recursiveMarkAffectedKeys(key, child, additionalKeys);
-    }
-  }
-  // If the key was not found in the separator/parents, then none of its children can have it either
-}
+using namespace gtsam;
 
 /* ************************************************************************* */
 void IncrementalFixedLagSmootherExt::print(const std::string& s, const KeyFormatter& keyFormatter) const {
@@ -55,8 +40,11 @@ bool IncrementalFixedLagSmootherExt::equals(const FixedLagSmoother& rhs, double 
 }
 
 /* ************************************************************************* */
-FixedLagSmoother::Result
-IncrementalFixedLagSmootherExt::update(const NonlinearFactorGraph& newFactors, const Values& newTheta, const KeyTimestampMap& timestamps, const FactorIndices& factorsToRemove) {
+FixedLagSmoother::Result IncrementalFixedLagSmootherExt::update(
+  const NonlinearFactorGraph& newFactors,
+  const Values& newTheta,
+  const KeyTimestampMap& timestamps,
+  const FactorIndices& factorsToRemove) {
   const bool debug = ISDEBUG("IncrementalFixedLagSmootherExt update");
 
   if (debug) {
@@ -66,7 +54,7 @@ IncrementalFixedLagSmootherExt::update(const NonlinearFactorGraph& newFactors, c
   }
 
   FastVector<size_t> removedFactors;
-  boost::optional<FastMap<Key, int> > constrainedKeys = boost::none;
+  std::optional<FastMap<Key, int> > constrainedKeys = {};
 
   // Update the Timestamps associated with the factor keys
   updateKeyTimestampMap(timestamps);
@@ -100,20 +88,11 @@ IncrementalFixedLagSmootherExt::update(const NonlinearFactorGraph& newFactors, c
     std::cout << std::endl;
   }
 
-  // Mark additional keys between the marginalized keys and the leaves
-  std::set<Key> additionalKeys;
-  for (Key key : marginalizableKeys) {
-    ISAM2Clique::shared_ptr clique = isam_[key];
-    for (const ISAM2Clique::shared_ptr& child : clique->children) {
-      recursiveMarkAffectedKeys(key, child, additionalKeys);
-    }
-  }
+  std::unordered_set<Key> additionalKeys = BayesTreeMarginalizationHelper<ISAM2Ext>::gatherAdditionalKeysToReEliminate(isam_, marginalizableKeys);
   KeyList additionalMarkedKeys(additionalKeys.begin(), additionalKeys.end());
 
   // Update iSAM2
-  auto result_ = isam_.update(newFactors, newTheta, factorsToRemove, constrainedKeys, boost::none, additionalMarkedKeys);
-  // std::cout << result_.to_string() << std::endl;
-  isamResult_ = result_;
+  isamResult_ = isam_.update(newFactors, newTheta, factorsToRemove, constrainedKeys, {}, additionalMarkedKeys);
 
   if (debug) {
     PrintSymbolicTree(isam_, "Bayes Tree After Update, Before Marginalization:");
@@ -157,7 +136,9 @@ void IncrementalFixedLagSmootherExt::eraseKeysBefore(double timestamp) {
 }
 
 /* ************************************************************************* */
-void IncrementalFixedLagSmootherExt::createOrderingConstraints(const KeyVector& marginalizableKeys, boost::optional<FastMap<Key, int> >& constrainedKeys) const {
+void IncrementalFixedLagSmootherExt::createOrderingConstraints(
+  const KeyVector& marginalizableKeys,
+  std::optional<FastMap<Key, int> >& constrainedKeys) const {
   if (marginalizableKeys.size() > 0) {
     constrainedKeys = FastMap<Key, int>();
     // Generate ordering constraints so that the marginalizable variables will be eliminated first

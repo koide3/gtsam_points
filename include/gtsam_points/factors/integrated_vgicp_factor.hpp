@@ -24,7 +24,7 @@ template <typename SourceFrame = gtsam_points::PointCloud>
 class IntegratedVGICPFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = boost::shared_ptr<IntegratedVGICPFactor_>;
+  using shared_ptr = std::shared_ptr<IntegratedVGICPFactor_>;
 
   /**
    * @brief Create a binary VGICP factor between target and source poses.

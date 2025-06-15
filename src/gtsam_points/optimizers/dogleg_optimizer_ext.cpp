@@ -19,14 +19,11 @@
 #include <gtsam_points/optimizers/dogleg_optimizer_ext.hpp>
 #include <gtsam_points/optimizers/dogleg_optimizer_ext_impl.hpp>
 
-#include <gtsam/nonlinear/DoglegOptimizer.h>
 #include <gtsam/nonlinear/internal/NonlinearOptimizerState.h>
 #include <gtsam/linear/GaussianBayesTree.h>
 #include <gtsam/linear/GaussianBayesNet.h>
 #include <gtsam/linear/GaussianFactorGraph.h>
 #include <gtsam/linear/VectorValues.h>
-
-#include <boost/algorithm/string.hpp>
 
 namespace gtsam_points {
 
@@ -37,7 +34,9 @@ namespace internal {
 struct DoglegState : public gtsam::internal::NonlinearOptimizerState {
   const double delta;
 
-  DoglegState(const Values& values, double error, double delta, unsigned int iterations = 0) : NonlinearOptimizerState(values, error, iterations), delta(delta) {}
+  DoglegState(const Values& _values, double _error, double _delta, unsigned int _iterations = 0)
+  : NonlinearOptimizerState(_values, _error, _iterations),
+    delta(_delta) {}
 };
 }  // namespace internal
 
@@ -72,12 +71,30 @@ GaussianFactorGraph::shared_ptr DoglegOptimizerExt::iterate(void) {
     GaussianBayesTree bt = *linear->eliminateMultifrontal(*params_.ordering, params_.getEliminationFunction());
     VectorValues dx_u = bt.optimizeGradientSearch();
     VectorValues dx_n = bt.optimize();
-    result = DoglegOptimizerImplExt::Iterate(getDelta(), DoglegOptimizerImplExt::ONE_STEP_PER_ITERATION, dx_u, dx_n, bt, graph_, state_->values, state_->error, dlVerbose);
+    result = DoglegOptimizerImplExt::Iterate(
+      getDelta(),
+      DoglegOptimizerImplExt::ONE_STEP_PER_ITERATION,
+      dx_u,
+      dx_n,
+      bt,
+      graph_,
+      state_->values,
+      state_->error,
+      dlVerbose);
   } else if (params_.isSequential()) {
     GaussianBayesNet bn = *linear->eliminateSequential(*params_.ordering, params_.getEliminationFunction());
     VectorValues dx_u = bn.optimizeGradientSearch();
     VectorValues dx_n = bn.optimize();
-    result = DoglegOptimizerImplExt::Iterate(getDelta(), DoglegOptimizerImplExt::ONE_STEP_PER_ITERATION, dx_u, dx_n, bn, graph_, state_->values, state_->error, dlVerbose);
+    result = DoglegOptimizerImplExt::Iterate(
+      getDelta(),
+      DoglegOptimizerImplExt::ONE_STEP_PER_ITERATION,
+      dx_u,
+      dx_n,
+      bn,
+      graph_,
+      state_->values,
+      state_->error,
+      dlVerbose);
   } else if (params_.isIterative()) {
     throw std::runtime_error("Dogleg is not currently compatible with the linear conjugate gradient solver");
   } else {

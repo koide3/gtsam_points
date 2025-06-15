@@ -24,7 +24,7 @@ struct BALMFeature;
  */
 class EVMBundleAdjustmentFactorBase : public BundleAdjustmentFactorBase {
 public:
-  using shared_ptr = boost::shared_ptr<EVMBundleAdjustmentFactorBase>;
+  using shared_ptr = std::shared_ptr<EVMBundleAdjustmentFactorBase>;
 
   EVMBundleAdjustmentFactorBase();
   virtual ~EVMBundleAdjustmentFactorBase() override;
@@ -72,7 +72,7 @@ protected:
  */
 class PlaneEVMFactor : public EVMBundleAdjustmentFactorBase {
 public:
-  using shared_ptr = boost::shared_ptr<PlaneEVMFactor>;
+  using shared_ptr = std::shared_ptr<PlaneEVMFactor>;
 
   PlaneEVMFactor();
   virtual ~PlaneEVMFactor() override;
@@ -81,7 +81,7 @@ public:
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
   virtual double error(const gtsam::Values& c) const override;
-  virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
+  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
 
   // TODO: Add feature parameter extraction method
 };
@@ -91,7 +91,7 @@ public:
  */
 class EdgeEVMFactor : public EVMBundleAdjustmentFactorBase {
 public:
-  using shared_ptr = boost::shared_ptr<EdgeEVMFactor>;
+  using shared_ptr = std::shared_ptr<EdgeEVMFactor>;
 
   EdgeEVMFactor();
   virtual ~EdgeEVMFactor() override;
@@ -100,6 +100,6 @@ public:
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
   virtual double error(const gtsam::Values& c) const override;
-  virtual boost::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
+  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
 };
 }  // namespace gtsam_points
