@@ -1,0 +1,47 @@
+[build-system]
+requires = ["scikit-build-core >=0.4.3", "pybind11 >2.10.0"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "gtsam_points"
+version = "1.2.0"
+authors = [{name = "Kenji Koide", email = "k.koide@aist.go.jp"}]
+description = "A collection of GTSAM factors and optimizers for point cloud SLAM"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.7"
+
+[project.urls]
+Homepage = "https://github.com/koide3/gtsam_points"
+
+[tool.setuptools]
+zip_safe = false
+
+[tool.scikit-build]
+wheel.license-files = ["LICENSE"]
+install.components = ["python"]
+build-dir = "build/{wheel_tag}"
+wheel.py-api = "cp312" # Build stable ABI wheels for CPython 3.12+
+
+[tool.scikit-build.cmake.define]
+BUILD_PYTHON_BINDINGS = true
+
+[tool.cibuildwheel.linux]
+before-all = "yum install -y libomp-devel"
+
+[tool.cibuildwheel.macos]
+before-all = "brew install eigen libomp"
+environment = { OpenMP_ROOT="/opt/homebrew/opt/libomp" }
+
+[tool.cibuildwheel.windows]
+before-all = "choco install eigen -y"
+test-command = "cd /d {project} && pytest {project}/src --color=yes -v"
+
+[tool.cibuildwheel]
+manylinux-x86_64-image = "manylinux_2_28"
+manylinux-aarch64-image = "manylinux_2_28"
+build = "*"
+skip = "pp* *-win32 *_i686 *musllinux*" # Don't build for PyPy, Win32, i686
+test-requires = "pytest numpy scipy"
+test-command = "cd {project} && pytest {project}/src --color=yes -v"
+build-verbosity = 1

@@ -19,6 +19,7 @@ option(BUILD_WITH_OPENMP "Build with OpenMP support" ON)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_CUDA_MULTIARCH "Build with CUDA multi-architecture support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
+option(BUILD_PYTHON_BINDINGS "Build python bindings" OFF)
 option(ENABLE_CPPCHECK "Enable cppcheck" OFF)
 option(ENABLE_COVERAGE "Enable coverage check" OFF)
 
@@ -268,6 +269,28 @@ if(BUILD_WITH_CUDA)
   )
 endif()
 
+# Python bindings
+if(BUILD_PYTHON_BINDINGS)
+  find_package(Python COMPONENTS Interpreter Development)
+  find_package(pybind11 CONFIG REQUIRED)
+
+  pybind11_add_module(gtsam_points_python
+    src/python/python.cpp
+    src/python/pointcloud.cpp
+    src/python/factors.cpp
+  )
+  target_include_directories(gtsam_points_python PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+  )
+  target_link_libraries(gtsam_points_python PUBLIC
+    gtsam_points
+    Eigen3::Eigen
+    $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
+  )
+  set_target_properties(gtsam_points_python PROPERTIES OUTPUT_NAME gtsam_points)
+endif()
+
 #Demo
 if(BUILD_DEMO)
   find_package(iridescence REQUIRED)
@@ -394,6 +417,18 @@ install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/gtsam_points-config-version.cmake"
   DESTINATION ${CMAKE_CONFIG_INSTALL_DIR}
 )
+
+if(BUILD_PYTHON_BINDINGS)
+  if(DEFINED SKBUILD_PROJECT_NAME)
+    set(PYTHON_INSTALL_DIR .)
+  elseif(NOT DEFINED PYTHON_INSTALL_DIR)
+    set(PYTHON_INSTALL_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages)
+  endif()
+  install(TARGETS gtsam_points_python
+    LIBRARY DESTINATION ${PYTHON_INSTALL_DIR}
+    COMPONENT python
+  )
+endif()
 
 #############
 ## Package ##
