@@ -4,8 +4,11 @@ This is a collection of [GTSAM](https://gtsam.org/) factors and optimizers for r
 
 Tested on Ubuntu 22.04 / 24.04 and CUDA 12.2, and NVIDIA Jetson Orin with **GTSAM 4.3a0**.
 
-
 [![DOI](https://zenodo.org/badge/819211095.svg)](https://zenodo.org/doi/10.5281/zenodo.13378351) [![Doc](https://img.shields.io/badge/API_list-Doxygen-blue)](https://koide3.github.io/gtsam_points/doc_cpp/index.html) [![Build](https://github.com/koide3/gtsam_points/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_points/actions/workflows/build.yml)
+
+## Updates
+
+- 2025/06/15 : The base GTSAM version has been changed. Make sure you have rebuilt and installed **GTSAM 4.3a0**.
 
 ## Factors
 
