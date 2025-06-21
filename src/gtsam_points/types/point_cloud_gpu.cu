@@ -13,7 +13,8 @@ namespace gtsam_points {
 
 // constructor with points
 template <typename T, int D>
-PointCloudGPU::PointCloudGPU(const Eigen::Matrix<T, D, 1>* points, int num_points) : PointCloudCPU(points, num_points) {
+PointCloudGPU::PointCloudGPU(const Eigen::Matrix<T, D, 1>* points, int num_points) : PointCloudCPU(points, num_points),
+                                                                                     last_accessed_time(0) {
   add_points_gpu(points, num_points);
 }
 
@@ -61,7 +62,7 @@ PointCloudGPU::Ptr PointCloudGPU::clone(const PointCloud& frame, CUstream_st* st
   return new_frame;
 }
 
-PointCloudGPU::PointCloudGPU() {}
+PointCloudGPU::PointCloudGPU() : last_accessed_time(0) {}
 
 PointCloudGPU::~PointCloudGPU() {
   if (times_gpu) {
@@ -275,6 +276,79 @@ std::vector<float> download_times_gpu(const gtsam_points::PointCloud& frame, CUs
   check_error << cudaMemcpyAsync(times.data(), frame.times_gpu, sizeof(float) * frame.size(), cudaMemcpyDeviceToHost, stream);
   cudaStreamSynchronize(stream);
   return times;
+}
+
+bool PointCloudGPU::touch(std::uint64_t time, CUstream_st* stream) {
+  last_accessed_time = time;
+  return reload_gpu(stream);
+}
+
+bool PointCloudGPU::offload_gpu(CUstream_st* stream) {
+  if (!points_gpu && !times_gpu && !normals_gpu && !covs_gpu && !intensities_gpu) {
+    return false;  // Nothing to offload
+  }
+
+  bool offloaded = false;
+  if (points_gpu) {
+    check_error << cudaFreeAsync(points_gpu, stream);
+    points_gpu = nullptr;
+    offloaded = true;
+  }
+  if (times_gpu) {
+    check_error << cudaFreeAsync(times_gpu, stream);
+    times_gpu = nullptr;
+    offloaded = true;
+  }
+  if (normals_gpu) {
+    check_error << cudaFreeAsync(normals_gpu, stream);
+    normals_gpu = nullptr;
+    offloaded = true;
+  }
+  if (covs_gpu) {
+    check_error << cudaFreeAsync(covs_gpu, stream);
+    covs_gpu = nullptr;
+    offloaded = true;
+  }
+  if (intensities_gpu) {
+    check_error << cudaFreeAsync(intensities_gpu, stream);
+    intensities_gpu = nullptr;
+    offloaded = true;
+  }
+  return offloaded;
+}
+
+bool PointCloudGPU::reload_gpu(CUstream_st* stream) {
+  if (points_gpu || times_gpu || normals_gpu || covs_gpu || intensities_gpu) {
+    return false;
+  }
+
+  bool reloaded = false;
+  if (points) {
+    add_points_gpu(points, num_points, stream);
+    reloaded = true;
+  }
+
+  if (times) {
+    add_times_gpu(times, num_points, stream);
+    reloaded = true;
+  }
+
+  if (normals) {
+    add_normals_gpu(normals, num_points, stream);
+    reloaded = true;
+  }
+
+  if (covs) {
+    add_covs_gpu(covs, num_points, stream);
+    reloaded = true;
+  }
+
+  if (intensities) {
+    add_intensities_gpu(intensities, num_points, stream);
+    reloaded = true;
+  }
+
+  return reloaded;
 }
 
 }  // namespace gtsam_points

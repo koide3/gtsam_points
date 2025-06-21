@@ -125,6 +125,13 @@ public:
   }
 
   void download_points(CUstream_st* stream = 0);
+
+  bool touch(std::uint64_t time = 0, CUstream_st* stream = 0);
+  bool offload_gpu(CUstream_st* stream = 0);
+  bool reload_gpu(CUstream_st* stream = 0);
+
+public:
+  std::uint64_t last_accessed_time;
 };
 
 // Device to host data transfer
