@@ -118,7 +118,13 @@ void region_growing_dilation_(
     std::vector<double> sq_dists;
     search.radius_search(frame::point(points, context.cluster_indices[i]).data(), params.dilation_radius, indices, sq_dists);
 
-    new_indices[omp_get_thread_num()].insert(indices.begin(), indices.end());
+#ifdef _OPENMP
+    const int thread_num = omp_get_thread_num();
+#else
+    const int thread_num = 0;  // Single-threaded execution
+#endif
+
+    new_indices[thread_num].insert(indices.begin(), indices.end());
   }
 
   // Merge and sort the indices
