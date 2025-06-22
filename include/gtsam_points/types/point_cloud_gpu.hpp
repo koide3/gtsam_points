@@ -9,6 +9,7 @@
 
 #include <gtsam_points/types/point_cloud.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/types/offloadable.hpp>
 
 // forward declaration
 struct CUstream_st;
@@ -18,7 +19,7 @@ namespace gtsam_points {
 /**
  * @brief Point cloud frame on GPU memory
  */
-struct PointCloudGPU : public PointCloudCPU {
+struct PointCloudGPU : public PointCloudCPU, public OffloadableGPU {
 public:
   using Ptr = std::shared_ptr<PointCloudGPU>;
   using ConstPtr = std::shared_ptr<const PointCloudGPU>;
@@ -128,16 +129,10 @@ public:
   void download_points(CUstream_st* stream = 0);
 
   // GPU memory offloading
-  static std::uint64_t current_access_time() { return access_time_counter.load(); }
-  std::uint64_t last_accessed_time() const { return last_access; }
+  virtual size_t memory_usage_gpu() const override;
 
-  bool touch(CUstream_st* stream = 0);
   bool offload_gpu(CUstream_st* stream = 0);
   bool reload_gpu(CUstream_st* stream = 0);
-
-private:
-  static std::atomic_uint64_t access_time_counter;
-  std::uint64_t last_access;
 };
 
 // Device to host data transfer

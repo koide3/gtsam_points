@@ -285,6 +285,26 @@ bool PointCloudGPU::touch(CUstream_st* stream) {
   return reload_gpu(stream);
 }
 
+size_t PointCloudGPU::memory_usage_gpu() const {
+  size_t bytes = 0;
+  if (times_gpu) {
+    bytes += sizeof(float) * num_points;
+  }
+  if (points_gpu) {
+    bytes += sizeof(Eigen::Vector3f) * num_points;
+  }
+  if (normals_gpu) {
+    bytes += sizeof(Eigen::Vector3f) * num_points;
+  }
+  if (covs_gpu) {
+    bytes += sizeof(Eigen::Matrix3f) * num_points;
+  }
+  if (intensities_gpu) {
+    bytes += sizeof(float) * num_points;
+  }
+  return bytes;
+}
+
 bool PointCloudGPU::offload_gpu(CUstream_st* stream) {
   if (!points_gpu && !times_gpu && !normals_gpu && !covs_gpu && !intensities_gpu) {
     return false;  // Nothing to offload

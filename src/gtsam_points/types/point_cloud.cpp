@@ -202,47 +202,4 @@ void PointCloud::save_compact(const std::string& path) const {
   }
 }
 
-size_t PointCloud::memory_usage() const {
-  size_t bytes = 0;
-  if (times) {
-    bytes += sizeof(double) * num_points;
-  }
-  if (points) {
-    bytes += sizeof(Eigen::Vector4d) * num_points;
-  }
-  if (normals) {
-    bytes += sizeof(Eigen::Vector4d) * num_points;
-  }
-  if (covs) {
-    bytes += sizeof(Eigen::Matrix4d) * num_points;
-  }
-  if (intensities) {
-    bytes += sizeof(double) * num_points;
-  }
-  for (const auto& attrib : aux_attributes) {
-    bytes += attrib.second.first * num_points;  // size of each element * number of points
-  }
-  return bytes;
-}
-
-size_t PointCloud::memory_usage_gpu() const {
-  size_t bytes = 0;
-  if (times_gpu) {
-    bytes += sizeof(float) * num_points;
-  }
-  if (points_gpu) {
-    bytes += sizeof(Eigen::Vector3f) * num_points;
-  }
-  if (normals_gpu) {
-    bytes += sizeof(Eigen::Vector3f) * num_points;
-  }
-  if (covs_gpu) {
-    bytes += sizeof(Eigen::Matrix3f) * num_points;
-  }
-  if (intensities_gpu) {
-    bytes += sizeof(float) * num_points;
-  }
-  return bytes;
-}
-
 }  // namespace gtsam_points
