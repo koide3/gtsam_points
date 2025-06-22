@@ -99,6 +99,16 @@ public:
    */
   void save_compact(const std::string& path) const;
 
+  /**
+   * @brief Calculate the CPU memory usage of this point cloud
+   */
+  size_t memory_usage() const;
+
+  /**
+   * @brief Calculate the GPU memory usage of this point cloud
+   */
+  size_t memory_usage_gpu() const;
+
 public:
   size_t num_points;  ///< Number of points
 

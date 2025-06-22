@@ -45,6 +45,8 @@ struct valid_inlier_kernel {
 }  // namespace
 
 void IntegratedVGICPDerivatives::reset_inliers(const Eigen::Isometry3f& x, const Eigen::Isometry3f* d_x, bool force_update) {
+  touch_points();
+
   if (
     force_update || source_inliers == nullptr ||
     large_displacement(inlier_evaluation_point, x, inlier_update_thresh_trans, inlier_update_thresh_angle)) {

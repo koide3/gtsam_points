@@ -16,6 +16,7 @@
 #include <gtsam_points/cuda/kernels/vector3_hash.cuh>
 #include <gtsam_points/cuda/cuda_malloc_async.hpp>
 #include <gtsam_points/types/gaussian_voxel_data.hpp>
+#include <gtsam_points/types/point_cloud_gpu.hpp>
 
 namespace gtsam_points {
 
@@ -170,7 +171,8 @@ GaussianVoxelMapGPU::GaussianVoxelMapGPU(
   CUstream_st* stream)
 : stream(stream),
   init_num_buckets(init_num_buckets),
-  target_points_drop_rate(target_points_drop_rate) {
+  target_points_drop_rate(target_points_drop_rate),
+  last_access(0) {
   voxelmap_info.num_voxels = 0;
   voxelmap_info.num_buckets = init_num_buckets;
   voxelmap_info.max_bucket_scan_count = max_bucket_scan_count;
@@ -435,6 +437,70 @@ GaussianVoxelMapGPU::Ptr GaussianVoxelMapGPU::load(const std::string& path) {
   check_error << cudaMemcpyAsync(voxelmap->voxel_covs, h_voxel_covs.data(), sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyHostToDevice, 0);
 
   return voxelmap;
+}
+
+bool GaussianVoxelMapGPU::touch(CUstream_st* stream) {
+  last_access = PointCloudGPU::current_access_time();
+  return reload_gpu(stream);
+}
+
+bool GaussianVoxelMapGPU::offload_gpu(CUstream_st* stream) {
+  if (!buckets) {
+    return false;
+  }
+
+  if (offloaded_buckets.empty()) {
+    offloaded_buckets.resize(voxelmap_info.num_buckets);
+    offloaded_num_points.resize(voxelmap_info.num_voxels);
+    offloaded_voxel_means.resize(voxelmap_info.num_voxels);
+    offloaded_voxel_covs.resize(voxelmap_info.num_voxels);
+
+    check_error
+      << cudaMemcpyAsync(offloaded_buckets.data(), buckets, sizeof(VoxelBucket) * voxelmap_info.num_buckets, cudaMemcpyDeviceToHost, stream);
+    check_error << cudaMemcpyAsync(offloaded_num_points.data(), num_points, sizeof(int) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
+    check_error << cudaMemcpyAsync(
+      offloaded_voxel_means.data(),
+      voxel_means,
+      sizeof(Eigen::Vector3f) * voxelmap_info.num_voxels,
+      cudaMemcpyDeviceToHost,
+      stream);
+    check_error
+      << cudaMemcpyAsync(offloaded_voxel_covs.data(), voxel_covs, sizeof(Eigen::Matrix3f) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
+  }
+
+  check_error << cudaFreeAsync(buckets, stream);
+  check_error << cudaFreeAsync(num_points, stream);
+  check_error << cudaFreeAsync(voxel_means, stream);
+  check_error << cudaFreeAsync(voxel_covs, stream);
+  buckets = nullptr;
+  num_points = nullptr;
+  voxel_means = nullptr;
+  voxel_covs = nullptr;
+
+  return true;
+}
+
+bool GaussianVoxelMapGPU::reload_gpu(CUstream_st* stream) {
+  if (buckets) {
+    return false;
+  }
+
+  if (offloaded_buckets.empty()) {
+    std::cerr << "error: offloaded buckets are empty!!" << std::endl;
+    return false;
+  }
+  check_error << cudaMallocAsync(&buckets, sizeof(VoxelBucket) * voxelmap_info.num_buckets, stream);
+  check_error << cudaMallocAsync(&num_points, sizeof(int) * voxelmap_info.num_voxels, stream);
+  check_error << cudaMallocAsync(&voxel_means, sizeof(Eigen::Vector3f) * voxelmap_info.num_voxels, stream);
+  check_error << cudaMallocAsync(&voxel_covs, sizeof(Eigen::Matrix3f) * voxelmap_info.num_voxels, stream);
+  check_error << cudaMemcpyAsync(buckets, offloaded_buckets.data(), sizeof(VoxelBucket) * voxelmap_info.num_buckets, cudaMemcpyHostToDevice, stream);
+  check_error << cudaMemcpyAsync(num_points, offloaded_num_points.data(), sizeof(int) * voxelmap_info.num_voxels, cudaMemcpyHostToDevice, stream);
+  check_error
+    << cudaMemcpyAsync(voxel_means, offloaded_voxel_means.data(), sizeof(Eigen::Vector3f) * voxelmap_info.num_voxels, cudaMemcpyHostToDevice, stream);
+  check_error
+    << cudaMemcpyAsync(voxel_covs, offloaded_voxel_covs.data(), sizeof(Eigen::Matrix3f) * voxelmap_info.num_voxels, cudaMemcpyHostToDevice, stream);
+
+  return true;
 }
 
 std::vector<VoxelBucket> download_buckets(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream) {

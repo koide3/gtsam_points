@@ -11,10 +11,12 @@
 
 namespace gtsam_points {
 
+std::atomic_uint64_t PointCloudGPU::access_time_counter(0);
+
 // constructor with points
 template <typename T, int D>
 PointCloudGPU::PointCloudGPU(const Eigen::Matrix<T, D, 1>* points, int num_points) : PointCloudCPU(points, num_points),
-                                                                                     last_accessed_time(0) {
+                                                                                     last_access(0) {
   add_points_gpu(points, num_points);
 }
 
@@ -62,7 +64,7 @@ PointCloudGPU::Ptr PointCloudGPU::clone(const PointCloud& frame, CUstream_st* st
   return new_frame;
 }
 
-PointCloudGPU::PointCloudGPU() : last_accessed_time(0) {}
+PointCloudGPU::PointCloudGPU() : last_access(0) {}
 
 PointCloudGPU::~PointCloudGPU() {
   if (times_gpu) {
@@ -278,8 +280,8 @@ std::vector<float> download_times_gpu(const gtsam_points::PointCloud& frame, CUs
   return times;
 }
 
-bool PointCloudGPU::touch(std::uint64_t time, CUstream_st* stream) {
-  last_accessed_time = time;
+bool PointCloudGPU::touch(CUstream_st* stream) {
+  last_access = (access_time_counter++);
   return reload_gpu(stream);
 }
 

@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <vector>
 #include <Eigen/Core>
 
@@ -126,12 +127,17 @@ public:
 
   void download_points(CUstream_st* stream = 0);
 
-  bool touch(std::uint64_t time = 0, CUstream_st* stream = 0);
+  // GPU memory offloading
+  static std::uint64_t current_access_time() { return access_time_counter.load(); }
+  std::uint64_t last_accessed_time() const { return last_access; }
+
+  bool touch(CUstream_st* stream = 0);
   bool offload_gpu(CUstream_st* stream = 0);
   bool reload_gpu(CUstream_st* stream = 0);
 
-public:
-  std::uint64_t last_accessed_time;
+private:
+  static std::atomic_uint64_t access_time_counter;
+  std::uint64_t last_access;
 };
 
 // Device to host data transfer

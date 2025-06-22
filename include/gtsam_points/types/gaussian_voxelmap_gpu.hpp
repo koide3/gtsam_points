@@ -74,6 +74,13 @@ public:
    */
   static GaussianVoxelMapGPU::Ptr load(const std::string& path);
 
+  // GPU memory offloading
+  std::uint64_t last_accessed_time() const { return last_access; }
+
+  bool touch(CUstream_st* stream = 0);
+  bool offload_gpu(CUstream_st* stream = 0);
+  bool reload_gpu(CUstream_st* stream = 0);
+
 private:
   void create_bucket_table(CUstream_st* stream, const PointCloud& frame);
 
@@ -91,6 +98,14 @@ public:
   int* num_points;               ///< Number of points in eac voxel
   Eigen::Vector3f* voxel_means;  ///< Voxel means
   Eigen::Matrix3f* voxel_covs;   ///< Voxel covariances
+
+  // GPU memory offloading
+  std::uint64_t last_access;
+
+  std::vector<VoxelBucket> offloaded_buckets;          ///< Offloaded buckets
+  std::vector<int> offloaded_num_points;               ///< Offloaded number of points
+  std::vector<Eigen::Vector3f> offloaded_voxel_means;  ///< Offloaded voxel means
+  std::vector<Eigen::Matrix3f> offloaded_voxel_covs;   ///< Offloaded voxel covariances
 };
 
 std::vector<VoxelBucket> download_buckets(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream = nullptr);

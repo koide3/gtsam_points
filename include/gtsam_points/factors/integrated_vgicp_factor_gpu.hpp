@@ -78,6 +78,9 @@ public:
   /// @return Approximate GPU memory usage in bytes
   size_t memory_usage_gpu() const;
 
+  /// @brief Enable or disable GPU memory offloading.
+  void set_enable_offloading(bool enable);
+
   /// @brief Enable or disable surface orientation validation for correspondence search
   /// @note  To enable surface orientation validation, source frame must have point normals
   void set_enable_surface_validation(bool enable);
