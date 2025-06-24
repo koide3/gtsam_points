@@ -11,12 +11,9 @@
 
 namespace gtsam_points {
 
-std::atomic_uint64_t PointCloudGPU::access_time_counter(0);
-
 // constructor with points
 template <typename T, int D>
-PointCloudGPU::PointCloudGPU(const Eigen::Matrix<T, D, 1>* points, int num_points) : PointCloudCPU(points, num_points),
-                                                                                     last_access(0) {
+PointCloudGPU::PointCloudGPU(const Eigen::Matrix<T, D, 1>* points, int num_points) : PointCloudCPU(points, num_points) {
   add_points_gpu(points, num_points);
 }
 
@@ -64,7 +61,7 @@ PointCloudGPU::Ptr PointCloudGPU::clone(const PointCloud& frame, CUstream_st* st
   return new_frame;
 }
 
-PointCloudGPU::PointCloudGPU() : last_access(0) {}
+PointCloudGPU::PointCloudGPU() {}
 
 PointCloudGPU::~PointCloudGPU() {
   if (times_gpu) {
@@ -280,29 +277,28 @@ std::vector<float> download_times_gpu(const gtsam_points::PointCloud& frame, CUs
   return times;
 }
 
-bool PointCloudGPU::touch(CUstream_st* stream) {
-  last_access = (access_time_counter++);
-  return reload_gpu(stream);
-}
-
 size_t PointCloudGPU::memory_usage_gpu() const {
   size_t bytes = 0;
-  if (times_gpu) {
+  if (times) {
     bytes += sizeof(float) * num_points;
   }
-  if (points_gpu) {
+  if (points) {
     bytes += sizeof(Eigen::Vector3f) * num_points;
   }
-  if (normals_gpu) {
+  if (normals) {
     bytes += sizeof(Eigen::Vector3f) * num_points;
   }
-  if (covs_gpu) {
+  if (covs) {
     bytes += sizeof(Eigen::Matrix3f) * num_points;
   }
-  if (intensities_gpu) {
+  if (intensities) {
     bytes += sizeof(float) * num_points;
   }
   return bytes;
+}
+
+bool PointCloudGPU::loaded_on_gpu() const {
+  return points_gpu || times_gpu || normals_gpu || covs_gpu || intensities_gpu;
 }
 
 bool PointCloudGPU::offload_gpu(CUstream_st* stream) {

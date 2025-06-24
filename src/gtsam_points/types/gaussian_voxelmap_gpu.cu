@@ -171,8 +171,7 @@ GaussianVoxelMapGPU::GaussianVoxelMapGPU(
   CUstream_st* stream)
 : stream(stream),
   init_num_buckets(init_num_buckets),
-  target_points_drop_rate(target_points_drop_rate),
-  last_access(0) {
+  target_points_drop_rate(target_points_drop_rate) {
   voxelmap_info.num_voxels = 0;
   voxelmap_info.num_buckets = init_num_buckets;
   voxelmap_info.max_bucket_scan_count = max_bucket_scan_count;
@@ -439,9 +438,13 @@ GaussianVoxelMapGPU::Ptr GaussianVoxelMapGPU::load(const std::string& path) {
   return voxelmap;
 }
 
-bool GaussianVoxelMapGPU::touch(CUstream_st* stream) {
-  last_access = PointCloudGPU::current_access_time();
-  return reload_gpu(stream);
+size_t GaussianVoxelMapGPU::memory_usage_gpu() const {
+  return voxelmap_info.num_voxels * (sizeof(int) + sizeof(Eigen::Vector3f) + sizeof(Eigen::Matrix3f)) +
+         voxelmap_info.num_buckets * sizeof(gtsam_points::VoxelBucket);
+}
+
+bool GaussianVoxelMapGPU::loaded_on_gpu() const {
+  return buckets;
 }
 
 bool GaussianVoxelMapGPU::offload_gpu(CUstream_st* stream) {

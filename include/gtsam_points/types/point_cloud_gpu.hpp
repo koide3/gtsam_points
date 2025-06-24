@@ -129,10 +129,10 @@ public:
   void download_points(CUstream_st* stream = 0);
 
   // GPU memory offloading
-  virtual size_t memory_usage_gpu() const override;
-
-  bool offload_gpu(CUstream_st* stream = 0);
-  bool reload_gpu(CUstream_st* stream = 0);
+  size_t memory_usage_gpu() const override;
+  bool loaded_on_gpu() const override;
+  bool offload_gpu(CUstream_st* stream = 0) override;
+  bool reload_gpu(CUstream_st* stream = 0) override;
 };
 
 // Device to host data transfer

@@ -4,7 +4,7 @@ namespace gtsam_points {
 
 std::atomic_uint64_t OffloadableGPU::access_counter(0);  ///< Counter for the last access time
 
-OffloadableGPU::OffloadableGPU() : last_access(0) {}
+OffloadableGPU::OffloadableGPU() : last_access(access_counter.load()) {}
 
 OffloadableGPU::~OffloadableGPU() {}
 

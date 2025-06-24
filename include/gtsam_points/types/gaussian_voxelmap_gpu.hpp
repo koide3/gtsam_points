@@ -6,6 +6,7 @@
 #include <memory>
 #include <Eigen/Core>
 
+#include <gtsam_points/types/offloadable.hpp>
 #include <gtsam_points/types/gaussian_voxelmap.hpp>
 
 // forward declaration
@@ -34,7 +35,7 @@ struct VoxelBucket {
 /**
  * @brief Gaussian distribution voxelmap on GPU
  */
-class GaussianVoxelMapGPU : public GaussianVoxelMap {
+class GaussianVoxelMapGPU : public GaussianVoxelMap, public OffloadableGPU {
 public:
   using Ptr = std::shared_ptr<GaussianVoxelMapGPU>;
   using ConstPtr = std::shared_ptr<const GaussianVoxelMapGPU>;
@@ -75,11 +76,10 @@ public:
   static GaussianVoxelMapGPU::Ptr load(const std::string& path);
 
   // GPU memory offloading
-  std::uint64_t last_accessed_time() const { return last_access; }
-
-  bool touch(CUstream_st* stream = 0);
-  bool offload_gpu(CUstream_st* stream = 0);
-  bool reload_gpu(CUstream_st* stream = 0);
+  size_t memory_usage_gpu() const override;
+  bool loaded_on_gpu() const override;
+  bool offload_gpu(CUstream_st* stream = 0) override;
+  bool reload_gpu(CUstream_st* stream = 0) override;
 
 private:
   void create_bucket_table(CUstream_st* stream, const PointCloud& frame);
@@ -100,8 +100,6 @@ public:
   Eigen::Matrix3f* voxel_covs;   ///< Voxel covariances
 
   // GPU memory offloading
-  std::uint64_t last_access;
-
   std::vector<VoxelBucket> offloaded_buckets;          ///< Offloaded buckets
   std::vector<int> offloaded_num_points;               ///< Offloaded number of points
   std::vector<Eigen::Vector3f> offloaded_voxel_means;  ///< Offloaded voxel means
