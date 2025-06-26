@@ -27,15 +27,17 @@ void make_sure_loaded_on_gpu(const GaussianVoxelMapGPU::ConstPtr& target_gpu, CU
 }
 
 void make_sure_loaded_on_gpu(const PointCloud::ConstPtr& source, CUstream_st* stream) {
+  if (source->has_points_gpu()) {
+    return;  // Already loaded on GPU
+  }
+
   auto source_gpu = std::dynamic_pointer_cast<const PointCloudGPU>(source);
   if (!source_gpu) {
     std::cerr << "error: Source point cloud is not a PointCloudGPU!!" << std::endl;
     abort();
   }
 
-  if (!source_gpu->has_points_gpu()) {
-    const_cast<PointCloudGPU*>(source_gpu.get())->touch(stream);
-  }
+  const_cast<PointCloudGPU*>(source_gpu.get())->touch(stream);
 }
 
 struct transform_means_kernel {
