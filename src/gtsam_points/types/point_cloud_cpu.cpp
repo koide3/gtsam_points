@@ -293,4 +293,27 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
   return frame;
 }
 
+size_t PointCloudCPU::memory_usage() const {
+  size_t bytes = 0;
+  if (times) {
+    bytes += sizeof(double) * num_points;
+  }
+  if (points) {
+    bytes += sizeof(Eigen::Vector4d) * num_points;
+  }
+  if (normals) {
+    bytes += sizeof(Eigen::Vector4d) * num_points;
+  }
+  if (covs) {
+    bytes += sizeof(Eigen::Matrix4d) * num_points;
+  }
+  if (intensities) {
+    bytes += sizeof(double) * num_points;
+  }
+  for (const auto& attrib : aux_attributes) {
+    bytes += attrib.second.first * num_points;  // size of each element * number of points
+  }
+  return bytes;
+}
+
 }  // namespace gtsam_points
