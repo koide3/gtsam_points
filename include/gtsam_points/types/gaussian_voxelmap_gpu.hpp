@@ -96,9 +96,9 @@ public:
 
   // voxel data
   int* num_points;               ///< Number of points in eac voxel
-  float* voxel_intensities;      ///< Voxel intentisities
   Eigen::Vector3f* voxel_means;  ///< Voxel means
   Eigen::Matrix3f* voxel_covs;   ///< Voxel covariances
+  double* voxel_intensities;      ///< Voxel intentisities
 
   // GPU memory offloading
   std::vector<VoxelBucket> offloaded_buckets;          ///< Offloaded buckets
@@ -111,5 +111,5 @@ std::vector<VoxelBucket> download_buckets(const GaussianVoxelMapGPU& voxelmap, C
 std::vector<int> download_voxel_num_points(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream = nullptr);
 std::vector<Eigen::Vector3f> download_voxel_means(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream = nullptr);
 std::vector<Eigen::Matrix3f> download_voxel_covs(const GaussianVoxelMapGPU& voxelmap, CUstream_st* stream = nullptr);
-std::vector<float> download_voxel_intensities(const GaussianVoxelMapGPU& vm,  CUstream_st* stream= nullptr);
+std::vector<double> download_voxel_intensities(const GaussianVoxelMapGPU& vm,  CUstream_st* stream= nullptr);
 }  // namespace gtsam_points

@@ -34,7 +34,6 @@ find_package(GTSAM 4.3 REQUIRED)
 find_package(GTSAM_UNSTABLE 4.3 REQUIRED)
 find_package(Eigen3 REQUIRED)
 
-
 if(BUILD_WITH_TBB)
   find_package(TBB REQUIRED)
   set(GTSAM_POINTS_USE_TBB 1)
