@@ -33,6 +33,11 @@ find_package(Boost REQUIRED COMPONENTS graph filesystem)
 find_package(GTSAM 4.3 REQUIRED)
 find_package(GTSAM_UNSTABLE 4.3 REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(PCL 1.8 REQUIRED COMPONENTS common io)
+
+include_directories(SYSTEM ${PCL_INCLUDE_DIRS})
+link_directories(${PCL_LIBRARY_DIRS})
+add_definitions(${PCL_DEFINITIONS})
 
 if(BUILD_WITH_TBB)
   find_package(TBB REQUIRED)
