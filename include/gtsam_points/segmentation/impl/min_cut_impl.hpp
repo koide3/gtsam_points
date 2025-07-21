@@ -57,6 +57,8 @@ namespace gtsam_points {
 
 template <typename PointCloud>
 MinCutResult min_cut_(const PointCloud& points, const NearestNeighborSearch& search, const size_t source_pt_index, const MinCutParams& params) {
+  const size_t INVALID_INDEX = std::numeric_limits<size_t>::max();
+
   // Find k-nearest neighbors for all points
   std::vector<size_t> all_neighbors(frame::size(points) * params.k_neighbors);
   std::vector<double> all_neighbor_sq_dists(frame::size(points) * params.k_neighbors);
@@ -64,7 +66,12 @@ MinCutResult min_cut_(const PointCloud& points, const NearestNeighborSearch& sea
   for (size_t i = 0; i < frame::size(points); i++) {
     size_t* k_neighbors = all_neighbors.data() + i * params.k_neighbors;
     double* k_sq_dists = all_neighbor_sq_dists.data() + i * params.k_neighbors;
-    search.knn_search(frame::point(points, i).data(), params.k_neighbors, k_neighbors, k_sq_dists);
+    const size_t num_found = search.knn_search(frame::point(points, i).data(), params.k_neighbors, k_neighbors, k_sq_dists);
+
+    if (num_found != params.k_neighbors) {
+      std::cerr << "warning : Not enough neighbors. num_found=" << num_found << " k_neighbors=" << params.k_neighbors << std::endl;
+      std::fill(k_neighbors + num_found, k_neighbors + params.k_neighbors, INVALID_INDEX);
+    }
   }
 
   // clang-format off
@@ -123,6 +130,10 @@ MinCutResult min_cut_(const PointCloud& points, const NearestNeighborSearch& sea
 
     // Add connectivity edges to the neighbors
     for (size_t k = 0; k < params.k_neighbors; k++) {
+      if (neighbors[k] == INVALID_INDEX) {
+        continue;  // Skip invalid neighbors
+      }
+
       const double weight_dist = std::exp(-neighbor_sq_dists[k] * inv_dist_sq_sigma);
       const double normal_diff = std::acos(std::abs(normal.dot(frame::normal(points, neighbors[k]))));
       const double weight_angle = std::exp(-normal_diff * normal_diff * inv_angle_sq_sigma);

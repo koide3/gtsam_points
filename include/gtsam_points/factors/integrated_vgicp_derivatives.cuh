@@ -32,9 +32,13 @@ public:
     inlier_update_thresh_angle = angle;
   }
 
+  void set_enable_offloading(bool enable) { enable_offloading = enable; }
+
   void set_enable_surface_validation(bool enable) { enable_surface_validation = enable; }
 
   int get_num_inliers() const { return num_inliers; }
+
+  void touch_points();
 
   // synchronized interface
   LinearizedSystem6 linearize(const Eigen::Isometry3f& x);
@@ -49,6 +53,8 @@ public:
   void issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output);
 
 private:
+  bool enable_offloading;
+
   bool enable_surface_validation;
   double inlier_update_thresh_trans;
   double inlier_update_thresh_angle;

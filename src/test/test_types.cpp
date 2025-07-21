@@ -200,6 +200,26 @@ void creation_test_gpu() {
   frame_gpu->add_covs(covs);
   compare_frames(frame, frame_gpu);
   compare_frames(frame, gtsam_points::PointCloudGPU::clone(*frame));
+
+  auto frame2 = gtsam_points::PointCloudGPU::clone(*frame_gpu);
+  ASSERT_TRUE(frame2->offload_gpu());
+  ASSERT_EQ(frame2->times_gpu, nullptr);
+  ASSERT_EQ(frame2->points_gpu, nullptr);
+  ASSERT_EQ(frame2->normals_gpu, nullptr);
+  ASSERT_EQ(frame2->covs_gpu, nullptr);
+  ASSERT_EQ(frame2->intensities_gpu, nullptr);
+
+  ASSERT_TRUE(frame2->reload_gpu());
+  compare_frames(frame, frame2);
+
+  auto downloaded_points = gtsam_points::download_points_gpu(*frame2);
+  auto downloaded_covs = gtsam_points::download_covs_gpu(*frame2);
+  ASSERT_EQ(downloaded_points.size(), frame->size());
+  ASSERT_EQ(downloaded_covs.size(), frame->size());
+  for (int i = 0; i < num_points; i++) {
+    EXPECT_LT((downloaded_points[i].template cast<double>() - frame->points[i].template head<3>()).norm(), 1e-6);
+    EXPECT_LT((downloaded_covs[i].template cast<double>() - frame->covs[i].template block<3, 3>(0, 0)).norm(), 1e-6);
+  }
 }
 
 TEST(TestTypes, TestPointCloudGPU) {

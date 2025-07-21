@@ -170,6 +170,7 @@ add_library(gtsam_points SHARED
   src/gtsam_points/ann/incremental_covariance_voxelmap.cpp
   src/gtsam_points/ann/fast_occupancy_grid.cpp
   # types
+  src/gtsam_points/types/offloadable.cpp
   src/gtsam_points/types/point_cloud.cpp
   src/gtsam_points/types/point_cloud_cpu.cpp
   src/gtsam_points/types/point_cloud_cpu_funcs.cpp

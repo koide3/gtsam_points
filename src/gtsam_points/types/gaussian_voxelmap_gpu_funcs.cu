@@ -19,6 +19,27 @@ namespace gtsam_points {
 
 namespace {
 
+void make_sure_loaded_on_gpu(const GaussianVoxelMapGPU::ConstPtr& target_gpu, CUstream_st* stream) {
+  if (!target_gpu->loaded_on_gpu()) {
+    // A bit hacky, but we need to ensure that the target voxelmap is loaded on GPU
+    const_cast<GaussianVoxelMapGPU*>(target_gpu.get())->touch(stream);
+  }
+}
+
+void make_sure_loaded_on_gpu(const PointCloud::ConstPtr& source, CUstream_st* stream) {
+  if (source->has_points_gpu()) {
+    return;  // Already loaded on GPU
+  }
+
+  auto source_gpu = std::dynamic_pointer_cast<const PointCloudGPU>(source);
+  if (!source_gpu) {
+    std::cerr << "error: Source point cloud is not a PointCloudGPU!!" << std::endl;
+    abort();
+  }
+
+  const_cast<PointCloudGPU*>(source_gpu.get())->touch(stream);
+}
+
 struct transform_means_kernel {
   transform_means_kernel(const thrust::device_ptr<const Eigen::Isometry3f>& transform_ptr) : transform_ptr(transform_ptr) {}
 
@@ -194,6 +215,9 @@ overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const PointCloud::ConstPt
     abort();
   }
 
+  make_sure_loaded_on_gpu(target, stream);
+  make_sure_loaded_on_gpu(source, stream);
+
   bool* overlap;
   check_error << cudaMallocAsync(&overlap, sizeof(bool) * source->size(), stream);
   thrust::device_ptr<bool> overlap_ptr(overlap);
@@ -237,6 +261,9 @@ overlap_gpu(const GaussianVoxelMap::ConstPtr& target_, const PointCloud::ConstPt
     abort();
   }
 
+  make_sure_loaded_on_gpu(target, stream);
+  make_sure_loaded_on_gpu(source, stream);
+
   Eigen::Isometry3f h_delta = delta.cast<float>();
   Eigen::Isometry3f* d_delta;
   check_error << cudaMallocAsync(&d_delta, sizeof(Eigen::Isometry3f), stream);
@@ -264,7 +291,10 @@ double overlap_gpu(
     if (!targets[i]) {
       std::cerr << "error: Failed to cast target voxelmap to GaussianVoxelMapGPU!!" << std::endl;
     }
+
+    make_sure_loaded_on_gpu(targets[i], stream);
   }
+  make_sure_loaded_on_gpu(source, stream);
 
   std::vector<Eigen::Isometry3f> h_deltas(deltas_.size());
   std::transform(deltas_.begin(), deltas_.end(), h_deltas.begin(), [](const Eigen::Isometry3d& delta) { return delta.cast<float>(); });
@@ -331,9 +361,8 @@ std::vector<double> overlap_gpu(
       std::cerr << "error: Failed to cast target voxelmap to GaussianVoxelMapGPU!!" << std::endl;
     }
 
-    if (!sources[i]->has_points_gpu()) {
-      std::cerr << "error: GPU source points have not been allocated!!" << std::endl;
-    }
+    make_sure_loaded_on_gpu(targets[i], stream);
+    make_sure_loaded_on_gpu(sources[i], stream);
 
     max_num_points = std::max(max_num_points, sources[i]->size());
   }
