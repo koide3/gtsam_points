@@ -77,10 +77,10 @@ public:
     return data[local_index];
   }
 
-  std::deque<T>::iterator inner_begin() { return data.begin(); }
-  std::deque<T>::iterator inner_end() { return data.end(); }
-  std::deque<T>::const_iterator inner_begin() const { return data.begin(); }
-  std::deque<T>::const_iterator inner_end() const { return data.end(); }
+  typename std::deque<T>::iterator inner_begin() { return data.begin(); }
+  typename std::deque<T>::iterator inner_end() { return data.end(); }
+  typename std::deque<T>::const_iterator inner_begin() const { return data.begin(); }
+  typename std::deque<T>::const_iterator inner_end() const { return data.end(); }
 
   T& inner_front() { return data.front(); }
   const T& inner_front() const { return data.front(); }
