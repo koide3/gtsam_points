@@ -236,6 +236,9 @@ if(BUILD_WITH_CUDA)
     src/gtsam_points/cuda/nonlinear_factor_set_gpu_create.cpp
     src/gtsam_points/cuda/stream_roundrobin.cu
     src/gtsam_points/cuda/stream_temp_buffer_roundrobin.cu
+    # ann
+    src/gtsam_points/ann/kdtree_cuda.cpp
+    src/gtsam_points/ann/kdtree_cuda.cu
     # types
     src/gtsam_points/types/point_cloud.cu
     src/gtsam_points/types/point_cloud_gpu.cu

@@ -9,8 +9,11 @@
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
 #include <gtsam_points/ann/kdtreex.hpp>
+#include <gtsam_points/ann/kdtree_cuda.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
+#include <gtsam_points/types/point_cloud_gpu.hpp>
 #include <gtsam_points/util/parallelism.hpp>
+#include <gtsam_points/util/easy_profiler.hpp>
 
 class KdTreeTest : public testing::Test, public testing::WithParamInterface<std::string> {
   virtual void SetUp() {
@@ -238,6 +241,46 @@ TEST_P(KdTreeTest, RadiusTest) {
     }
   }
 }
+
+#ifdef GTSAM_POINTS_USE_CUDA
+
+TEST_F(KdTreeTest, KdTreeGPU) {
+  gtsam_points::KdTree kdtree(points.data(), points.size());
+
+  auto points_gpu = std::make_shared<gtsam_points::PointCloudGPU>(points);
+  gtsam_points::KdTreeGPU kdtree_gpu(points_gpu);
+
+  std::vector<Eigen::Vector3f> points_f(points.size());
+  std::transform(points.begin(), points.end(), points_f.begin(), [](const Eigen::Vector4d& p) { return p.head<3>().cast<float>(); });
+
+  std::vector<Eigen::Vector3f> queries_f(queries.size());
+  std::transform(queries.begin(), queries.end(), queries_f.begin(), [](const Eigen::Vector4d& p) { return p.head<3>().cast<float>(); });
+
+  // self-check
+  std::vector<std::uint32_t> nn_indices(points.size());
+  std::vector<float> nn_sq_dists(points.size());
+  kdtree_gpu.nearest_neighbor_search_cpu(points_f.data(), points_f.size(), nn_indices.data(), nn_sq_dists.data());
+
+  for (int i = 0; i < points.size(); i++) {
+    EXPECT_NEAR(nn_sq_dists[i], 0.0, 1e-6);
+    EXPECT_EQ(nn_indices[i], i);
+  }
+
+  // query check
+  nn_indices.resize(queries.size());
+  nn_sq_dists.resize(queries.size());
+  kdtree_gpu.nearest_neighbor_search_cpu(queries_f.data(), queries_f.size(), nn_indices.data(), nn_sq_dists.data());
+
+  for (int i = 0; i < queries.size(); i++) {
+    EXPECT_NEAR(nn_sq_dists[i], gt_sq_dists[i][0], 1e-2);
+
+    const double d1 = (points[nn_indices[i]] - queries[i]).squaredNorm();
+    const double d2 = (points[gt_indices[i][0]] - queries[i]).squaredNorm();
+    EXPECT_NEAR(d1, d2, 1e-3);
+  }
+}
+
+#endif
 
 int main(int argc, char** argv) {
   testing::InitGoogleTest(&argc, argv);
