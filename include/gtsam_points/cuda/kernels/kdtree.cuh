@@ -1,26 +1,14 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025  Kenji Koide (k.koide@aist.go.jp)
-#include <gtsam_points/ann/kdtree_cuda.hpp>
-
-#include <algorithm>
-#include <thrust/copy.h>
-
-#include <thrust/pair.h>
-#include <thrust/for_each.h>
-#include <thrust/iterator/counting_iterator.h>
-#include <gtsam_points/cuda/check_error.cuh>
+#include <gtsam_points/ann/kdtree_gpu.hpp>
 
 namespace gtsam_points {
 
-namespace {
-
-struct nearest_neighbor_search_kernel {
+struct kdtree_nearest_neighbor_search_kernel {
 public:
   static constexpr int MAX_STACK_SIZE = 20;
 
-  __device__ void operator()(std::uint32_t i) const {
-    const Eigen::Vector3f query = queries[i];
-
+  __device__ thrust::pair<NodeIndexType, float> operator()(const Eigen::Vector3f query) const {
     thrust::pair<NodeIndexType, float> result = {INVALID_NODE, std::numeric_limits<float>::max()};
 
     int stack_size = 1;
@@ -72,34 +60,13 @@ public:
       search_stack[stack_size++].second = 0.0f;
     }
 
-    nn_indices[i] = result.first;
-    nn_sq_dists[i] = result.second;
+    return result;
   }
 
 public:
   const Eigen::Vector3f* __restrict__ points;
   const std::uint32_t* __restrict__ indices;
   const KdTreeNodeGPU* __restrict__ nodes;
-
-  const Eigen::Vector3f* __restrict__ queries;
-
-  std::uint32_t* nn_indices;
-  float* nn_sq_dists;
 };
-
-}  // namespace
-
-void KdTreeGPU::nearest_neighbor_search(
-  const Eigen::Vector3f* queries,
-  const size_t num_queries,
-  std::uint32_t* nn_indices,
-  float* nn_sq_dists,
-  CUstream_st* stream) {
-  thrust::for_each(
-    thrust::cuda::par.on(stream),
-    thrust::counting_iterator<std::uint32_t>(0),
-    thrust::counting_iterator<std::uint32_t>(num_queries),
-    nearest_neighbor_search_kernel{points->points_gpu, indices, nodes, queries, nn_indices, nn_sq_dists});
-}
 
 }  // namespace gtsam_points

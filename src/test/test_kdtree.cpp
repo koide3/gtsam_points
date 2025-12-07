@@ -9,7 +9,7 @@
 #include <gtsam_points/ann/kdtree.hpp>
 #include <gtsam_points/ann/kdtree2.hpp>
 #include <gtsam_points/ann/kdtreex.hpp>
-#include <gtsam_points/ann/kdtree_cuda.hpp>
+#include <gtsam_points/ann/kdtree_gpu.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 #include <gtsam_points/types/point_cloud_gpu.hpp>
 #include <gtsam_points/util/parallelism.hpp>

@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025  Kenji Koide (k.koide@aist.go.jp)
-#include <gtsam_points/ann/kdtree_cuda.hpp>
+#include <gtsam_points/ann/kdtree_gpu.hpp>
 
 #include <gtsam_points/cuda/check_error.cuh>
 #include <gtsam_points/ann/small_kdtree.hpp>

@@ -29,6 +29,9 @@ struct KdTreeNodeGPU {
 
 class KdTreeGPU {
 public:
+  using Ptr = std::shared_ptr<KdTreeGPU>;
+  using ConstPtr = std::shared_ptr<const KdTreeGPU>;
+
   KdTreeGPU(const PointCloud::ConstPtr& points, CUstream_st* stream = nullptr);
   ~KdTreeGPU();
 
