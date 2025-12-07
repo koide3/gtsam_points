@@ -6,6 +6,7 @@
 #include <thrust/pair.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <thrust/iterator/constant_iterator.h>
 
 #include <set>
 #include <vector>
@@ -109,7 +110,7 @@ struct accumulate_points_kernel {
     const auto& mean = thrust::get<0>(input);
     const auto& cov = thrust::get<1>(input);
     const float& intensity = thrust::get<2>(input);
-    
+
     const Eigen::Vector3i coord = calc_voxel_coord(mean, info.voxel_resolution);
     uint64_t hash = vector3i_hash(coord);
 
@@ -134,9 +135,9 @@ struct accumulate_points_kernel {
         for (int j = 0; j < 9; j++) {
           atomicAdd(voxel_cov.data() + j, cov.data()[j]);
         }
-        unsigned int *as_uint = reinterpret_cast<unsigned int*>(&voxel_intensity);
-        atomicMax(as_uint, __float_as_uint(intensity));                 // Max intensity value
-        //atomicAdd(thrust::raw_pointer_cast(voxel_intensities_ptr) + bucket.second, intensity); // Add intensity value for average intensity
+        unsigned int* as_uint = reinterpret_cast<unsigned int*>(&voxel_intensity);
+        atomicMax(as_uint, __float_as_uint(intensity));  // Max intensity value
+        // atomicAdd(thrust::raw_pointer_cast(voxel_intensities_ptr) + bucket.second, intensity); // Add intensity value for average intensity
       }
     }
   }
@@ -165,13 +166,13 @@ struct finalize_voxels_kernel {
 
     voxel_mean /= num_points;
     voxel_covs /= num_points;
-    //voxel_ints /= num_points;   //uncomment this line if you want to average the intensity values
+    // voxel_ints /= num_points;   //uncomment this line if you want to average the intensity values
   }
 
   thrust::device_ptr<int> num_points_ptr;
   thrust::device_ptr<Eigen::Vector3f> voxel_means_ptr;
   thrust::device_ptr<Eigen::Matrix3f> voxel_covs_ptr;
-  thrust::device_ptr<float> voxel_intensities_ptr; 
+  thrust::device_ptr<float> voxel_intensities_ptr;
 };
 
 GaussianVoxelMapGPU::GaussianVoxelMapGPU(
@@ -195,8 +196,7 @@ GaussianVoxelMapGPU::GaussianVoxelMapGPU(
   num_points = nullptr;
   voxel_means = nullptr;
   voxel_covs = nullptr;
-  voxel_intensities = nullptr; 
-  
+  voxel_intensities = nullptr;
 }
 
 GaussianVoxelMapGPU::~GaussianVoxelMapGPU() {
@@ -266,7 +266,7 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCl
   check_error << cudaMallocAsync(&voxels_failures, sizeof(int) * 2, stream);
   check_error << cudaMemsetAsync(voxels_failures, 0, sizeof(int) * 2, stream);
 
-  for (int num_buckets = init_num_buckets; init_num_buckets * 4; num_buckets *= 2) {            
+  for (int num_buckets = init_num_buckets; init_num_buckets * 4; num_buckets *= 2) {
     voxelmap_info.num_buckets = num_buckets;
     check_error << cudaMemcpyAsync(voxelmap_info_ptr, &voxelmap_info, sizeof(VoxelMapInfo), cudaMemcpyHostToDevice, stream);
 
@@ -355,7 +355,6 @@ void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
     voxel.cov.topLeftCorner<3, 3>() = h_voxel_covs[i].cast<double>();
     voxel.intensity = h_voxel_intensities[i];
     serial_voxels.emplace_back(h_voxel_coords[i], voxel);
-    
   }
 
   std::ofstream ofs(path);
@@ -567,10 +566,9 @@ std::vector<Eigen::Matrix3f> download_voxel_covs(const GaussianVoxelMapGPU& voxe
   return covs;
 }
 
-std::vector<float> download_voxel_intensities(const GaussianVoxelMapGPU& vm,  CUstream_st* stream) {
+std::vector<float> download_voxel_intensities(const GaussianVoxelMapGPU& vm, CUstream_st* stream) {
   std::vector<float> ints(vm.voxelmap_info.num_voxels);
-  check_error 
-    << cudaMemcpyAsync(ints.data(), vm.voxel_intensities, sizeof(float) * vm.voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
+  check_error << cudaMemcpyAsync(ints.data(), vm.voxel_intensities, sizeof(float) * vm.voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
   return ints;
 }
 
