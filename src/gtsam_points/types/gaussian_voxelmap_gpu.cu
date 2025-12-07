@@ -94,19 +94,22 @@ struct accumulate_points_kernel {
     const VoxelBucket* buckets,
     int* num_points,
     Eigen::Vector3f* voxel_means,
-    Eigen::Matrix3f* voxel_covs)
+    Eigen::Matrix3f* voxel_covs,
+    float* voxel_intensities)
   : voxelmap_info_ptr(voxelmap_info_ptr),
     buckets_ptr(buckets),
     num_points_ptr(num_points),
     voxel_means_ptr(voxel_means),
-    voxel_covs_ptr(voxel_covs) {}
+    voxel_covs_ptr(voxel_covs),
+    voxel_intensities_ptr(voxel_intensities) {}
 
-  __device__ void operator()(const thrust::tuple<Eigen::Vector3f, Eigen::Matrix3f>& input) const {
+  __device__ void operator()(const thrust::tuple<Eigen::Vector3f, Eigen::Matrix3f, float>& input) const {
     const auto& info = *thrust::raw_pointer_cast(voxelmap_info_ptr);
 
     const auto& mean = thrust::get<0>(input);
     const auto& cov = thrust::get<1>(input);
-
+    const float& intensity = thrust::get<2>(input);
+    
     const Eigen::Vector3i coord = calc_voxel_coord(mean, info.voxel_resolution);
     uint64_t hash = vector3i_hash(coord);
 
@@ -122,7 +125,7 @@ struct accumulate_points_kernel {
         int& num_points = thrust::raw_pointer_cast(num_points_ptr)[bucket.second];
         Eigen::Vector3f& voxel_mean = thrust::raw_pointer_cast(voxel_means_ptr)[bucket.second];
         Eigen::Matrix3f& voxel_cov = thrust::raw_pointer_cast(voxel_covs_ptr)[bucket.second];
-
+        float& voxel_intensity = thrust::raw_pointer_cast(voxel_intensities_ptr)[bucket.second];
         atomicAdd(&num_points, 1);
         for (int j = 0; j < 3; j++) {
           atomicAdd(voxel_mean.data() + j, mean[j]);
@@ -131,6 +134,9 @@ struct accumulate_points_kernel {
         for (int j = 0; j < 9; j++) {
           atomicAdd(voxel_cov.data() + j, cov.data()[j]);
         }
+        unsigned int *as_uint = reinterpret_cast<unsigned int*>(&voxel_intensity);
+        atomicMax(as_uint, __float_as_uint(intensity));                 // Max intensity value
+        //atomicAdd(thrust::raw_pointer_cast(voxel_intensities_ptr) + bucket.second, intensity); // Add intensity value for average intensity
       }
     }
   }
@@ -141,26 +147,31 @@ struct accumulate_points_kernel {
   thrust::device_ptr<int> num_points_ptr;
   thrust::device_ptr<Eigen::Vector3f> voxel_means_ptr;
   thrust::device_ptr<Eigen::Matrix3f> voxel_covs_ptr;
+  thrust::device_ptr<float> voxel_intensities_ptr;
 };
 
 struct finalize_voxels_kernel {
-  finalize_voxels_kernel(int* num_points, Eigen::Vector3f* voxel_means, Eigen::Matrix3f* voxel_covs)
+  finalize_voxels_kernel(int* num_points, Eigen::Vector3f* voxel_means, Eigen::Matrix3f* voxel_covs, float* voxel_intensities)
   : num_points_ptr(num_points),
     voxel_means_ptr(voxel_means),
-    voxel_covs_ptr(voxel_covs) {}
+    voxel_covs_ptr(voxel_covs),
+    voxel_intensities_ptr(voxel_intensities) {}
 
   __host__ __device__ void operator()(int i) const {
     int num_points = thrust::raw_pointer_cast(num_points_ptr)[i];
     auto& voxel_mean = thrust::raw_pointer_cast(voxel_means_ptr)[i];
     auto& voxel_covs = thrust::raw_pointer_cast(voxel_covs_ptr)[i];
+    auto& voxel_ints = thrust::raw_pointer_cast(voxel_intensities_ptr)[i];
 
     voxel_mean /= num_points;
     voxel_covs /= num_points;
+    //voxel_ints /= num_points;   //uncomment this line if you want to average the intensity values
   }
 
   thrust::device_ptr<int> num_points_ptr;
   thrust::device_ptr<Eigen::Vector3f> voxel_means_ptr;
   thrust::device_ptr<Eigen::Matrix3f> voxel_covs_ptr;
+  thrust::device_ptr<float> voxel_intensities_ptr; 
 };
 
 GaussianVoxelMapGPU::GaussianVoxelMapGPU(
@@ -176,7 +187,6 @@ GaussianVoxelMapGPU::GaussianVoxelMapGPU(
   voxelmap_info.num_buckets = init_num_buckets;
   voxelmap_info.max_bucket_scan_count = max_bucket_scan_count;
   voxelmap_info.voxel_resolution = resolution;
-
   check_error << cudaMallocAsync(&voxelmap_info_ptr, sizeof(VoxelMapInfo), stream);
   check_error << cudaMemcpyAsync(voxelmap_info_ptr, &voxelmap_info, sizeof(VoxelMapInfo), cudaMemcpyHostToDevice, stream);
 
@@ -185,6 +195,8 @@ GaussianVoxelMapGPU::GaussianVoxelMapGPU(
   num_points = nullptr;
   voxel_means = nullptr;
   voxel_covs = nullptr;
+  voxel_intensities = nullptr; 
+  
 }
 
 GaussianVoxelMapGPU::~GaussianVoxelMapGPU() {
@@ -193,6 +205,7 @@ GaussianVoxelMapGPU::~GaussianVoxelMapGPU() {
   check_error << cudaFreeAsync(num_points, 0);
   check_error << cudaFreeAsync(voxel_means, 0);
   check_error << cudaFreeAsync(voxel_covs, 0);
+  check_error << cudaFreeAsync(voxel_intensities, 0);
 }
 
 void GaussianVoxelMapGPU::insert(const PointCloud& frame) {
@@ -202,30 +215,38 @@ void GaussianVoxelMapGPU::insert(const PointCloud& frame) {
   }
 
   create_bucket_table(stream, frame);
-
   check_error << cudaMallocAsync(&num_points, sizeof(int) * voxelmap_info.num_voxels, stream);
   check_error << cudaMallocAsync(&voxel_means, sizeof(Eigen::Vector3f) * voxelmap_info.num_voxels, stream);
   check_error << cudaMallocAsync(&voxel_covs, sizeof(Eigen::Matrix3f) * voxelmap_info.num_voxels, stream);
-
+  check_error << cudaMallocAsync(&voxel_intensities, sizeof(float) * voxelmap_info.num_voxels, stream);
   check_error << cudaMemsetAsync(num_points, 0, sizeof(int) * voxelmap_info.num_voxels, stream);
   check_error << cudaMemsetAsync(voxel_means, 0, sizeof(Eigen::Vector3f) * voxelmap_info.num_voxels, stream);
   check_error << cudaMemsetAsync(voxel_covs, 0, sizeof(Eigen::Matrix3f) * voxelmap_info.num_voxels, stream);
-
+  check_error << cudaMemsetAsync(voxel_intensities, 0, sizeof(float) * voxelmap_info.num_voxels, stream);
   thrust::device_ptr<Eigen::Vector3f> points_ptr(frame.points_gpu);
   thrust::device_ptr<Eigen::Matrix3f> covs_ptr(frame.covs_gpu);
-
-  thrust::for_each(
-    thrust::cuda::par_nosync.on(stream),
-    thrust::make_zip_iterator(thrust::make_tuple(points_ptr, covs_ptr)),
-    thrust::make_zip_iterator(thrust::make_tuple(points_ptr + frame.size(), covs_ptr + frame.size())),
-    accumulate_points_kernel(voxelmap_info_ptr, buckets, num_points, voxel_means, voxel_covs));
+  if (frame.intensities_gpu) {
+    thrust::device_ptr<float> ints_ptr(frame.intensities_gpu);
+    thrust::for_each(
+      thrust::cuda::par_nosync.on(stream),
+      thrust::make_zip_iterator(thrust::make_tuple(points_ptr, covs_ptr, ints_ptr)),
+      thrust::make_zip_iterator(thrust::make_tuple(points_ptr + frame.size(), covs_ptr + frame.size(), ints_ptr + frame.size())),
+      accumulate_points_kernel(voxelmap_info_ptr, buckets, num_points, voxel_means, voxel_covs, voxel_intensities));
+  } else {
+    // If intensities are missing, fill voxel intensities with zeros while still accumulating geometry.
+    auto zero_ints = thrust::make_constant_iterator(0.0f);
+    thrust::for_each(
+      thrust::cuda::par_nosync.on(stream),
+      thrust::make_zip_iterator(thrust::make_tuple(points_ptr, covs_ptr, zero_ints)),
+      thrust::make_zip_iterator(thrust::make_tuple(points_ptr + frame.size(), covs_ptr + frame.size(), zero_ints + frame.size())),
+      accumulate_points_kernel(voxelmap_info_ptr, buckets, num_points, voxel_means, voxel_covs, voxel_intensities));
+  }
 
   thrust::for_each(
     thrust::cuda::par_nosync.on(stream),
     thrust::counting_iterator<int>(0),
     thrust::counting_iterator<int>(voxelmap_info.num_voxels),
-    finalize_voxels_kernel(num_points, voxel_means, voxel_covs));
-
+    finalize_voxels_kernel(num_points, voxel_means, voxel_covs, voxel_intensities));
   cudaStreamSynchronize(stream);
 }
 
@@ -245,7 +266,7 @@ void GaussianVoxelMapGPU::create_bucket_table(cudaStream_t stream, const PointCl
   check_error << cudaMallocAsync(&voxels_failures, sizeof(int) * 2, stream);
   check_error << cudaMemsetAsync(voxels_failures, 0, sizeof(int) * 2, stream);
 
-  for (int num_buckets = init_num_buckets; init_num_buckets * 4; num_buckets *= 2) {
+  for (int num_buckets = init_num_buckets; init_num_buckets * 4; num_buckets *= 2) {            
     voxelmap_info.num_buckets = num_buckets;
     check_error << cudaMemcpyAsync(voxelmap_info_ptr, &voxelmap_info, sizeof(VoxelMapInfo), cudaMemcpyHostToDevice, stream);
 
@@ -293,11 +314,13 @@ void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
   std::vector<int> h_num_points(voxelmap_info.num_voxels);
   std::vector<Eigen::Vector3f> h_voxel_means(voxelmap_info.num_voxels);
   std::vector<Eigen::Matrix3f> h_voxel_covs(voxelmap_info.num_voxels);
+  std::vector<float> h_voxel_intensities(voxelmap_info.num_voxels);
 
   check_error << cudaMemcpyAsync(h_buckets.data(), buckets, sizeof(VoxelBucket) * voxelmap_info.num_buckets, cudaMemcpyDeviceToHost, 0);
   check_error << cudaMemcpyAsync(h_num_points.data(), num_points, sizeof(int) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
   check_error << cudaMemcpyAsync(h_voxel_means.data(), voxel_means, sizeof(Eigen::Vector3f) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
   check_error << cudaMemcpyAsync(h_voxel_covs.data(), voxel_covs, sizeof(Eigen::Matrix3f) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
+  check_error << cudaMemcpyAsync(h_voxel_intensities.data(), voxel_intensities, sizeof(float) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
 
   std::vector<GaussianVoxelData> serial_voxels;
   serial_voxels.reserve(voxelmap_info.num_voxels);
@@ -330,7 +353,9 @@ void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
     voxel.mean = h_voxel_means[i].homogeneous().cast<double>();
     voxel.cov.setZero();
     voxel.cov.topLeftCorner<3, 3>() = h_voxel_covs[i].cast<double>();
+    voxel.intensity = h_voxel_intensities[i];
     serial_voxels.emplace_back(h_voxel_coords[i], voxel);
+    
   }
 
   std::ofstream ofs(path);
@@ -375,12 +400,15 @@ GaussianVoxelMapGPU::Ptr GaussianVoxelMapGPU::load(const std::string& path) {
   std::vector<int> h_num_points(num_voxels);
   std::vector<Eigen::Vector3f> h_voxel_means(num_voxels);
   std::vector<Eigen::Matrix3f> h_voxel_covs(num_voxels);
+  std::vector<float> h_voxel_intensities(num_voxels);
+
   for (int i = 0; i < num_voxels; i++) {
     const auto& info_voxel = flat_voxels[i].uncompact();
     h_coords[i] = info_voxel->first.coord;
     h_num_points[i] = info_voxel->second.num_points;
     h_voxel_means[i] = info_voxel->second.mean.head<3>().cast<float>();
     h_voxel_covs[i] = info_voxel->second.cov.topLeftCorner<3, 3>().cast<float>();
+    h_voxel_intensities[i] = info_voxel->second.intensity;
   }
 
   std::vector<VoxelBucket> h_buckets;
@@ -430,11 +458,12 @@ GaussianVoxelMapGPU::Ptr GaussianVoxelMapGPU::load(const std::string& path) {
   check_error << cudaMallocAsync(&voxelmap->num_points, sizeof(int) * num_voxels, 0);
   check_error << cudaMallocAsync(&voxelmap->voxel_means, sizeof(Eigen::Vector3f) * num_voxels, 0);
   check_error << cudaMallocAsync(&voxelmap->voxel_covs, sizeof(Eigen::Matrix3f) * num_voxels, 0);
+  check_error << cudaMallocAsync(&voxelmap->voxel_intensities, sizeof(float) * num_voxels, 0);
   check_error << cudaMemcpyAsync(voxelmap->buckets, h_buckets.data(), sizeof(VoxelBucket) * h_buckets.size(), cudaMemcpyHostToDevice, 0);
   check_error << cudaMemcpyAsync(voxelmap->num_points, h_num_points.data(), sizeof(int) * num_voxels, cudaMemcpyHostToDevice, 0);
   check_error << cudaMemcpyAsync(voxelmap->voxel_means, h_voxel_means.data(), sizeof(Eigen::Vector3f) * num_voxels, cudaMemcpyHostToDevice, 0);
   check_error << cudaMemcpyAsync(voxelmap->voxel_covs, h_voxel_covs.data(), sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyHostToDevice, 0);
-
+  check_error << cudaMemcpyAsync(voxelmap->voxel_intensities, h_voxel_intensities.data(), sizeof(float) * num_voxels, cudaMemcpyHostToDevice, 0);
   return voxelmap;
 }
 
@@ -536,6 +565,13 @@ std::vector<Eigen::Matrix3f> download_voxel_covs(const GaussianVoxelMapGPU& voxe
   check_error
     << cudaMemcpyAsync(covs.data(), voxelmap.voxel_covs, sizeof(Eigen::Matrix3f) * voxelmap.voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
   return covs;
+}
+
+std::vector<float> download_voxel_intensities(const GaussianVoxelMapGPU& vm,  CUstream_st* stream) {
+  std::vector<float> ints(vm.voxelmap_info.num_voxels);
+  check_error 
+    << cudaMemcpyAsync(ints.data(), vm.voxel_intensities, sizeof(float) * vm.voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, stream);
+  return ints;
 }
 
 }  // namespace gtsam_points
