@@ -88,12 +88,6 @@ PointCloud::Ptr merge_frames_gpu(
   double* all_ints;
   check_error << cudaMallocAsync(&all_ints, sizeof(double) * num_all_points, stream);
 
-  static double* d_zero = nullptr;
-  if (!d_zero) {
-    cudaMalloc(&d_zero, sizeof(double));
-    cudaMemset(d_zero, 0, sizeof(double));
-  }
-
   const thrust::device_ptr<Eigen::Vector3f> all_points_ptr(all_points);
   const thrust::device_ptr<Eigen::Matrix3f> all_covs_ptr(all_covs);
 
