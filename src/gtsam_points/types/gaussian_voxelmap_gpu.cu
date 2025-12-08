@@ -235,7 +235,7 @@ void GaussianVoxelMapGPU::insert(const PointCloud& frame) {
       accumulate_points_kernel(voxelmap_info_ptr, buckets, num_points, voxel_means, voxel_covs, voxel_intensities));
   } else {
     // If intensities are missing, fill voxel intensities with zeros while still accumulating geometry.
-    auto zero_ints = thrust::make_constant_iterator(0.0f);
+    auto zero_ints = thrust::make_constant_iterator<double>(0.0);
     thrust::for_each(
       thrust::cuda::par_nosync.on(stream),
       thrust::make_zip_iterator(thrust::make_tuple(points_ptr, covs_ptr, zero_ints)),
