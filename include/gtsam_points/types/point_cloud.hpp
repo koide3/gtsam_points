@@ -115,7 +115,7 @@ public:
   Eigen::Vector3f* points_gpu;   ///< Point coordinates on GPU
   Eigen::Vector3f* normals_gpu;  ///< Point normals on GPU
   Eigen::Matrix3f* covs_gpu;     ///< Point covariances on GPU
-  float* intensities_gpu;        ///< Point intensities on GPU
+  double* intensities_gpu;        ///< Point intensities on GPU
 };
 }  // namespace gtsam_points
 

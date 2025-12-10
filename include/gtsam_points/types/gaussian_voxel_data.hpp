@@ -50,7 +50,7 @@ public:
   int num_points;
   Eigen::Vector3f mean;
   Eigen::Matrix<float, 6, 1> cov;
-  float intensity;
+  double intensity;
 };
 
 }
