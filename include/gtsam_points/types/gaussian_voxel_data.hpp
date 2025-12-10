@@ -15,7 +15,7 @@ public:
   GaussianVoxelData(const Eigen::Vector3i& coord, const GaussianVoxel& voxel) {
     const auto& mean = voxel.mean;
     const auto& cov = voxel.cov;
-    const auto& intensity = voxel.intensity;
+    const auto intensity = voxel.intensity;
 
     this->coord = coord;
     this->num_points = voxel.num_points;
@@ -50,7 +50,7 @@ public:
   int num_points;
   Eigen::Vector3f mean;
   Eigen::Matrix<float, 6, 1> cov;
-  double intensity;
+  float intensity;
 };
 
 }
