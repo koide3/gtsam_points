@@ -95,10 +95,6 @@ size_t IntegratedVGICPFactorGPU::memory_usage() const {
   return sizeof(*this) + sizeof(IntegratedVGICPDerivatives);
 }
 
-size_t IntegratedVGICPFactorGPU::memory_usage_gpu() const {
-  return sizeof(Eigen::Isometry3f) + sizeof(int) + sizeof(int) * derivatives->get_num_inliers();
-}
-
 void IntegratedVGICPFactorGPU::set_enable_offloading(bool enable) {
   derivatives->set_enable_offloading(enable);
 }
@@ -228,6 +224,7 @@ void IntegratedVGICPFactorGPU::set_evaluation_point(const gtsam::Values& values,
 }
 
 void IntegratedVGICPFactorGPU::issue_linearize(const void* lin_input_cpu, const void* lin_input_gpu, void* lin_output_gpu) {
+  touch();
   auto linearization_point = reinterpret_cast<const Eigen::Isometry3f*>(lin_input_cpu);
   auto linearization_point_gpu = reinterpret_cast<const Eigen::Isometry3f*>(lin_input_gpu);
   auto linearized_gpu = reinterpret_cast<LinearizedSystem6*>(lin_output_gpu);
@@ -251,6 +248,7 @@ void IntegratedVGICPFactorGPU::issue_compute_error(
   const void* eval_input_gpu,
   void* eval_output_gpu) {
   //
+  touch();
   auto linearization_point = reinterpret_cast<const Eigen::Isometry3f*>(lin_input_cpu);
   auto evaluation_point = reinterpret_cast<const Eigen::Isometry3f*>(eval_input_cpu);
 
@@ -258,7 +256,7 @@ void IntegratedVGICPFactorGPU::issue_compute_error(
   auto evaluation_point_gpu = reinterpret_cast<const Eigen::Isometry3f*>(eval_input_gpu);
 
   auto error_gpu = reinterpret_cast<float*>(eval_output_gpu);
-
+  derivatives->reset_inliers(*linearization_point, linearization_point_gpu);
   derivatives->issue_compute_error(linearization_point_gpu, evaluation_point_gpu, error_gpu);
 }
 
@@ -270,4 +268,20 @@ void IntegratedVGICPFactorGPU::store_computed_error(const void* eval_output_cpu)
 void IntegratedVGICPFactorGPU::sync() {
   derivatives->sync_stream();
 }
+size_t IntegratedVGICPFactorGPU::memory_usage_gpu() const {
+  return derivatives->memory_usage_gpu();
+}
+
+bool IntegratedVGICPFactorGPU::loaded_on_gpu() const {
+  return derivatives->loaded_on_gpu();
+}
+
+bool IntegratedVGICPFactorGPU::offload_gpu(CUstream_st* stream) {
+  return derivatives->offload_gpu(stream);
+}
+
+bool IntegratedVGICPFactorGPU::reload_gpu(CUstream_st* stream) {
+  return derivatives->reload_gpu(stream);
+}
+
 }  // namespace gtsam_points

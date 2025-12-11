@@ -52,6 +52,12 @@ public:
   void issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output);
   void issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output);
 
+  // GPU memory offloading
+  size_t memory_usage_gpu() const;
+  bool loaded_on_gpu() const;
+  bool offload_gpu(CUstream_st* stream = 0);
+  bool reload_gpu(CUstream_st* stream = 0);
+
 private:
   bool enable_offloading;
 
