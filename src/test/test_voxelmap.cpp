@@ -165,6 +165,47 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU) {
   validate_frame(merged2);
 }
 
+TEST_F(VoxelMapTestBase, VoxelMapCPU_Intensity) {
+  for (int i = 0; i < frames.size(); i++) {
+    // without intensities
+    {
+      const auto& frame = frames[i];
+      EXPECT_FALSE(frames[i]->has_intensities());
+
+      auto voxels = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(1.0);
+      voxels->insert(*frame);
+
+      auto intensities = voxels->voxel_intensities();
+      EXPECT_EQ(intensities.size(), voxels->num_voxels());
+      for (const auto intensity : intensities) {
+        EXPECT_EQ(intensity, 0.0f) << "Intensity should be zero when inserting points without intensities";
+      }
+    }
+
+    // with intensities
+    {
+      auto frame = gtsam_points::PointCloudCPU::clone(*frames[i]);
+      std::vector<float> intensities(frame->size());
+      for (int j = 0; j < frame->size(); j++) {
+        intensities[j] = (j % 128) + 128.0f;  // [128.0, 255.0]
+      }
+      frame->add_intensities(intensities);
+      EXPECT_TRUE(frame->has_intensities());
+
+      auto voxels = std::make_shared<gtsam_points::GaussianVoxelMapCPU>(1.0);
+      voxels->insert(*frame);
+
+      auto voxel_intensities = voxels->voxel_intensities();
+      EXPECT_EQ(voxel_intensities.size(), voxels->num_voxels());
+      for (const auto intensity : voxel_intensities) {
+        // TODO : implement CPU intensity handling
+        // EXPECT_GT(intensity, 128.0f - 0.1f) << "Intensity should be greater than zero when inserting points with intensities";
+        // EXPECT_LT(intensity, 255.0f + 0.1f) << "Intensity should be less than or equal to 255.0";
+      }
+    }
+  }
+}
+
 #ifdef GTSAM_POINTS_USE_CUDA
 
 TEST_F(VoxelMapTestBase, VoxelMapGPU) {
@@ -215,6 +256,46 @@ TEST_F(VoxelMapTestBase, VoxelMapGPU) {
   std::vector<gtsam_points::PointCloud::ConstPtr> frames_(frames.begin(), frames.end());
   auto merged = gtsam_points::merge_frames_gpu(poses_, frames_, 0.2);
   validate_frame_gpu(merged);
+}
+
+TEST_F(VoxelMapTestBase, VoxelMapGPU_Intensity) {
+  for (int i = 0; i < frames.size(); i++) {
+    // without intensities
+    {
+      const auto& frame = frames[i];
+      EXPECT_FALSE(frames[i]->has_intensities());
+
+      auto voxels = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
+      voxels->insert(*frame);
+
+      auto intensities = gtsam_points::download_voxel_intensities(*voxels);
+      EXPECT_EQ(intensities.size(), voxels->voxelmap_info.num_voxels);
+      for (const auto intensity : intensities) {
+        EXPECT_EQ(intensity, 0.0f) << "Intensity should be zero when inserting points without intensities";
+      }
+    }
+
+    // with intensities
+    {
+      auto frame = gtsam_points::PointCloudGPU::clone(*frames[i]);
+      std::vector<float> intensities(frame->size());
+      for (int j = 0; j < frame->size(); j++) {
+        intensities[j] = (j % 128) + 128.0f;  // [128.0, 255.0]
+      }
+      frame->add_intensities(intensities);
+      EXPECT_TRUE(frame->has_intensities());
+
+      auto voxels = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
+      voxels->insert(*frame);
+
+      auto voxel_intensities = gtsam_points::download_voxel_intensities(*voxels);
+      EXPECT_EQ(voxel_intensities.size(), voxels->voxelmap_info.num_voxels);
+      for (const auto intensity : voxel_intensities) {
+        EXPECT_GT(intensity, 128.0f - 0.1f) << "Intensity should be greater than zero when inserting points with intensities";
+        EXPECT_LT(intensity, 255.0f + 0.1f) << "Intensity should be less than or equal to 255.0";
+      }
+    }
+  }
 }
 
 TEST_F(VoxelMapTestBase, VoxelMapGPU_IO) {
