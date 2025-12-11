@@ -236,12 +236,16 @@ if(BUILD_WITH_CUDA)
     src/gtsam_points/cuda/nonlinear_factor_set_gpu_create.cpp
     src/gtsam_points/cuda/stream_roundrobin.cu
     src/gtsam_points/cuda/stream_temp_buffer_roundrobin.cu
+    # ann
+    src/gtsam_points/ann/kdtree_gpu.cpp
+    src/gtsam_points/ann/kdtree_gpu.cu
     # types
     src/gtsam_points/types/point_cloud.cu
     src/gtsam_points/types/point_cloud_gpu.cu
     src/gtsam_points/types/gaussian_voxelmap_gpu.cu
     src/gtsam_points/types/gaussian_voxelmap_gpu_funcs.cu
     # factors
+    src/gtsam_points/factors/integrated_gicp_derivatives.cu
     src/gtsam_points/factors/integrated_vgicp_derivatives.cu
     src/gtsam_points/factors/integrated_vgicp_derivatives_inliers.cu
     src/gtsam_points/factors/integrated_vgicp_derivatives_compute.cu
