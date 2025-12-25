@@ -199,8 +199,8 @@ TEST_F(VoxelMapTestBase, VoxelMapCPU_Intensity) {
       EXPECT_EQ(voxel_intensities.size(), voxels->num_voxels());
       for (const auto intensity : voxel_intensities) {
         // TODO : implement CPU intensity handling
-        // EXPECT_GT(intensity, 128.0f - 0.1f) << "Intensity should be greater than zero when inserting points with intensities";
-        // EXPECT_LT(intensity, 255.0f + 0.1f) << "Intensity should be less than or equal to 255.0";
+        EXPECT_GT(intensity, 128.0f - 0.1f) << "Intensity should be greater than zero when inserting points with intensities";
+        EXPECT_LT(intensity, 255.0f + 0.1f) << "Intensity should be less than or equal to 255.0";
       }
     }
   }
