@@ -216,6 +216,10 @@ target_link_libraries(gtsam_points
   $<TARGET_NAME_IF_EXISTS:TBB::tbb>
   $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
 )
+set_target_properties(gtsam_points PROPERTIES
+  VERSION   ${PROJECT_VERSION}
+  SOVERSION 1
+)
 
 # GPU-related
 if(BUILD_WITH_CUDA)
@@ -262,6 +266,10 @@ if(BUILD_WITH_CUDA)
     gtsam_unstable
     $<TARGET_NAME_IF_EXISTS:TBB::tbb>
     $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
+  )
+  set_target_properties(gtsam_points_cuda PROPERTIES
+    VERSION   ${PROJECT_VERSION}
+    SOVERSION 1
   )
 
   target_link_libraries(gtsam_points
