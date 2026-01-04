@@ -30,6 +30,10 @@ void GaussianVoxel::add(const Setting& setting, const PointCloud& points, size_t
   num_points++;
   this->mean += points.points[i];
   this->cov += points.covs[i];
+
+  if (frame::has_intensities(points)) {
+    this->intensity = std::max(this->intensity, frame::intensity(points, i));
+  }
 }
 
 void GaussianVoxel::finalize() {
