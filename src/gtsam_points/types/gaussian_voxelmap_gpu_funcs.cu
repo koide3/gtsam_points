@@ -6,7 +6,6 @@
 #include <thrust/device_vector.h>
 
 #include <cub/device/device_reduce.cuh>
-#include <cub/iterator/transform_input_iterator.cuh>
 
 #include <gtsam_points/types/point_cloud_gpu.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>

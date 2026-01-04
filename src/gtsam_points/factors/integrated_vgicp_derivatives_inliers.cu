@@ -11,7 +11,6 @@
 
 #include <cub/device/device_reduce.cuh>
 #include <cub/device/device_select.cuh>
-#include <cub/iterator/transform_input_iterator.cuh>
 
 #include <gtsam_points/cuda/check_error.cuh>
 #include <gtsam_points/cuda/kernels/pose.cuh>
