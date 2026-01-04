@@ -1,8 +1,22 @@
-ARG BASE_IMAGE=koide3/gtsam_docker:jammy_cuda12.2
-
+ARG BASE_IMAGE=nvidia/cuda:12.2.2-devel-ubuntu22.04
 FROM ${BASE_IMAGE}
 
-ARG BUILD_WITH_TBB=ON
+ENV DEBIAN_FRONTEND=noninteractive
+ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       cmake build-essential gpg-agent software-properties-common \
+       libboost-system-dev libboost-timer-dev libboost-thread-dev libboost-filesystem-dev libboost-graph-dev libboost-program-options-dev \
+       libeigen3-dev libomp-dev \
+       clang lld ca-certificates \
+       libtbb-dev libgtest-dev libmetis-dev \
+       libglm-dev libglfw3-dev libpng-dev libjpeg-dev
+
+RUN add-apt-repository ppa:koide3/iridescence -y && \
+    add-apt-repository ppa:koide3/gtsam -y && \
+    apt-get update && \
+    apt-get install -y libiridescence-dev libgtsam-no-tbb-dev=4.3.0-1*
 
 COPY . /root/gtsam_points
 WORKDIR /root/gtsam_points/build
@@ -14,10 +28,8 @@ RUN cmake .. \
   -DBUILD_TOOLS=ON \
   -DBUILD_WITH_TBB=${BUILD_WITH_TBB} \
   -DBUILD_WITH_CUDA=ON \
-  -DBUILD_WITH_CUDA_MULTIARCH=ON \
   -DCMAKE_BUILD_TYPE=Release && \
-  make -j$(nproc) && \
-  make install && \
-  rm -rf /root/gtsam_points/build
+  make -j$(nproc)
+RUN make install
 
 CMD ["bash"]

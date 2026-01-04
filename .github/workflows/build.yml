@@ -17,13 +17,15 @@ jobs:
     strategy:
       matrix:
         DISTRO: [
-          { "ubuntu": "noble_gtsam4.3a0", "suffix": "gcc" },
-          { "ubuntu": "noble_gtsam4.3a0", "suffix": "llvm" },
-          { "ubuntu": "noble_cuda12.5_gtsam4.3a0", "suffix": "gcc.cuda" },
-          { "ubuntu": "noble_cuda12.5_gtsam4.3a0", "suffix": "llvm.cuda" },
-          { "ubuntu": "jammy_gtsam4.3a0", "suffix": "gcc" },
-          { "ubuntu": "jammy_cuda12.2_gtsam4.3a0", "suffix": "gcc.cuda" },
-          { "ubuntu": "jammy_cuda12.5_gtsam4.3a0", "suffix": "gcc.cuda" },
+          { "tag": "jammy_gtsam4.3a0", "base_image": "ubuntu:jammy", "suffix": "gcc" },
+          { "tag": "jammy_gtsam4.3a0", "base_image": "ubuntu:jammy", "suffix": "llvm" },
+          { "tag": "jammy_cuda12.2_gtsam4.3a0", "base_image": "nvidia/cuda:12.2.2-devel-ubuntu22.04", "suffix": "gcc.cuda" },
+          { "tag": "jammy_cuda12.5_gtsam4.3a0", "base_image": "nvidia/cuda:12.5.1-devel-ubuntu22.04", "suffix": "gcc.cuda" },
+          { "tag": "jammy_cuda13.1_gtsam4.3a0", "base_image": "nvidia/cuda:13.1.0-devel-ubuntu22.04", "suffix": "gcc.cuda" },
+          { "tag": "noble_gtsam4.3a0", "base_image": "ubuntu:noble", "suffix": "gcc" },
+          { "tag": "noble_gtsam4.3a0", "base_image": "ubuntu:noble", "suffix": "llvm" },
+          { "tag": "noble_cuda12.5_gtsam4.3a0", "base_image": "nvidia/cuda:12.5.1-devel-ubuntu24.04", "suffix": "gcc.cuda" },
+          { "tag": "noble_cuda13.1_gtsam4.3a0", "base_image": "nvidia/cuda:13.1.0-devel-ubuntu24.04", "suffix": "gcc.cuda" },
         ]
         BUILD_WITH_TBB: [ "ON", "OFF" ]
 
@@ -42,13 +44,13 @@ jobs:
       - name: Docker build
         uses: docker/build-push-action@v6
         with:
-          tags: koide3/gtsam_points:${{ matrix.DISTRO.ubuntu }}
+          tags: koide3/gtsam_points:${{ matrix.DISTRO.tag }}
           file: ${{github.workspace}}/docker/ubuntu/Dockerfile.${{ matrix.DISTRO.suffix }}
           build-args: |
-            BASE_IMAGE=koide3/gtsam_docker:${{ matrix.DISTRO.ubuntu }}
+            BASE_IMAGE=${{ matrix.DISTRO.base_image }}
             BUILD_WITH_TBB=${{ matrix.BUILD_WITH_TBB }}
           context: .
-          push: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (matrix.BUILD_WITH_TBB == 'ON') && (contains(matrix.DISTRO.suffix, 'gcc') || contains(matrix.DISTRO.suffix, 'focal')) }}
+          push: ${{ (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && (matrix.BUILD_WITH_TBB == 'OFF') && (contains(matrix.DISTRO.suffix, 'gcc') || contains(matrix.DISTRO.suffix, 'focal')) }}
 
   dispatch:
     needs: build
