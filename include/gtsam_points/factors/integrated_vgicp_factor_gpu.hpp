@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <gtsam_points/types/offloadable.hpp>
 #include <gtsam_points/types/point_cloud.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
 #include <gtsam_points/factors/nonlinear_factor_gpu.hpp>
@@ -24,7 +25,7 @@ class TempBufferManager;
  *        Koide et al., "Voxelized GICP for Fast and Accurate 3D Point Cloud Registration", ICRA2021
  *        Koide et al., "Globally Consistent 3D LiDAR Mapping with GPU-accelerated GICP Matching Cost Factors", RA-L2021
  */
-class IntegratedVGICPFactorGPU : public gtsam_points::NonlinearFactorGPU {
+class IntegratedVGICPFactorGPU : public gtsam_points::NonlinearFactorGPU, public gtsam_points::OffloadableGPU {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = std::shared_ptr<IntegratedVGICPFactorGPU>;
@@ -72,11 +73,6 @@ public:
   /// @note   The result is approximate and does not account for objects not owned by this factor (e.g., point clouds)
   /// @return Approximate CPU memory usage in bytes
   size_t memory_usage() const;
-
-  /// @brief  Calculate the GPU memory usage of this factor
-  /// @note   The result is approximate and does not account for objects not owned by this factor (e.g., point clouds)
-  /// @return Approximate GPU memory usage in bytes
-  size_t memory_usage_gpu() const;
 
   /// @brief Enable or disable GPU memory offloading.
   void set_enable_offloading(bool enable);
@@ -132,6 +128,12 @@ public:
   virtual void store_computed_error(const void* eval_output_cpu) override;
 
   virtual void sync() override;
+
+  // GPU memory offloading
+  size_t memory_usage_gpu() const override;
+  bool loaded_on_gpu() const override;
+  bool offload_gpu(CUstream_st* stream = 0) override;
+  bool reload_gpu(CUstream_st* stream = 0) override;
 
 private:
   Eigen::Isometry3f calc_delta(const gtsam::Values& values) const;

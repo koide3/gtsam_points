@@ -108,4 +108,29 @@ double IntegratedVGICPDerivatives::compute_error(const Eigen::Isometry3f& d_xl, 
   return error;
 }
 
+size_t IntegratedVGICPDerivatives::memory_usage_gpu() const {
+  return sizeof(int) + sizeof(int) * num_inliers;
+}
+
+bool IntegratedVGICPDerivatives::loaded_on_gpu() const {
+  return source_inliers;
+}
+
+bool IntegratedVGICPDerivatives::offload_gpu(CUstream_st* stream) {
+  if (!source_inliers) {
+    return false;
+  }
+
+  check_error << cudaFreeAsync(source_inliers, stream);
+  source_inliers = nullptr;
+  return true;
+}
+
+bool IntegratedVGICPDerivatives::reload_gpu(CUstream_st* stream) {
+  if (source_inliers) {
+    return false;
+  }
+  return false;
+}
+
 }  // namespace gtsam_points
