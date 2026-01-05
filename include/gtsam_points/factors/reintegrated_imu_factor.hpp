@@ -45,7 +45,7 @@ public:
 
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
-  std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
+  gtsam::GaussianFactor::shared_ptr linearize(const gtsam::Values& values) const override;
   double error(const gtsam::Values& values) const override;
 
   const ReintegratedImuMeasurements& measurements() const { return imu_measurements; }

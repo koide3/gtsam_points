@@ -81,7 +81,7 @@ public:
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
   virtual double error(const gtsam::Values& c) const override;
-  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
+  virtual gtsam::GaussianFactor::shared_ptr linearize(const gtsam::Values& c) const override;
 
   // TODO: Add feature parameter extraction method
 };
@@ -100,6 +100,6 @@ public:
   virtual void print(const std::string& s = "", const gtsam::KeyFormatter& keyFormatter = gtsam::DefaultKeyFormatter) const override;
 
   virtual double error(const gtsam::Values& c) const override;
-  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& c) const override;
+  virtual gtsam::GaussianFactor::shared_ptr linearize(const gtsam::Values& c) const override;
 };
 }  // namespace gtsam_points

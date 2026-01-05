@@ -59,7 +59,7 @@ public:
 
   virtual size_t dim() const override { return 6; }
   virtual double error(const gtsam::Values& values) const override;
-  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
+  virtual gtsam::GaussianFactor::shared_ptr linearize(const gtsam::Values& values) const override;
 
   void set_num_threads(int n) { num_threads = n; }
   void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }

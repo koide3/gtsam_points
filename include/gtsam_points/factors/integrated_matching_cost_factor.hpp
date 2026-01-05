@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <gtsam/linear/GaussianFactor.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
@@ -43,7 +44,7 @@ public:
   /// @note The following error and linearize methods are not thread-safe,
   ///       because we need to update correspondences (that may be mutable members) for every linearization
   virtual double error(const gtsam::Values& values) const override;
-  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
+  virtual gtsam::GaussianFactor::shared_ptr linearize(const gtsam::Values& values) const override;
 
   const Eigen::Isometry3d& get_fixed_target_pose() const { return fixed_target_pose; }
 
