@@ -29,7 +29,7 @@ using optional = std::optional<T>;
 using OptionalMatrixType = gtsam::Matrix*;
 using OptionalMatrixVecType = std::vector<gtsam::Matrix>*;
 
-constexpr OptionalMatrixVecType NoneValue = nullptr;
+constexpr auto NoneValue = nullptr;
 
 #else
 
