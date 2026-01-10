@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: MIT
 #pragma once
 
+#include <memory>
 #include <optional>
 #include <gtsam/config.h>
 #include <gtsam/base/make_shared.h>
@@ -14,22 +15,29 @@ namespace gtsam_points {
 template <typename T>
 using shared_ptr = std::shared_ptr<T>;
 
+template <typename T>
+using weak_ptr = std::weak_ptr<T>;
+
 template <class T, class U>
-auto dynamic_pointer_cast(const gtsam::shared_ptr<U>& sp) -> std::shared_ptr<T> {
+auto dynamic_pointer_cast(const std::shared_ptr<U>& sp) -> std::shared_ptr<T> {
   return std::dynamic_pointer_cast<T>(sp);
 }
 
 template <typename T>
 using optional = std::optional<T>;
 
-using OptionalMatrixType = gtsam::OptionalMatrixType;
-using OptionalMatrixVecType = gtsam::OptionalMatrixVecType;
+using OptionalMatrixType = gtsam::Matrix*;
+using OptionalMatrixVecType = std::vector<gtsam::Matrix>*;
+
 constexpr OptionalMatrixVecType NoneValue = nullptr;
 
 #else
 
 template <typename T>
 using shared_ptr = boost::shared_ptr<T>;
+
+template <typename T>
+using weak_ptr = boost::weak_ptr<T>;
 
 template <class T, class U>
 auto dynamic_pointer_cast(const boost::shared_ptr<U>& sp) -> boost::shared_ptr<T> {
