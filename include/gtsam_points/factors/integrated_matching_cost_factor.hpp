@@ -9,6 +9,7 @@
 #include <memory>
 #include <gtsam/inference/Key.h>
 #include <gtsam/geometry/Pose3.h>
+#include <gtsam_points/util/gtsam_migration.hpp>
 
 namespace gtsam_points {
 
@@ -18,7 +19,7 @@ namespace gtsam_points {
 class IntegratedMatchingCostFactor : public gtsam::NonlinearFactor {
 public:
   GTSAM_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = std::shared_ptr<IntegratedMatchingCostFactor>;
+  using shared_ptr = gtsam_points::shared_ptr<IntegratedMatchingCostFactor>;
 
   /**
    * @brief Create a binary matching cost factor between target and source poses

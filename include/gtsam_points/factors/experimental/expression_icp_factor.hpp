@@ -6,6 +6,7 @@
 #include <gtsam/slam/expressions.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 #include <gtsam_points/types/point_cloud.hpp>
+#include <gtsam_points/util/gtsam_migration.hpp>
 
 namespace gtsam_points {
 
@@ -29,7 +30,7 @@ public:
 
   ~ICPFactorExpr();
 
-  virtual gtsam::Vector unwhitenedError(const gtsam::Values& values, gtsam::OptionalMatrixType H = nullptr) const;
+  virtual gtsam::Vector unwhitenedError(const gtsam::Values& values, OptionalMatrixType H = NoneValue) const;
 
   void update_correspondence(const gtsam::Values& values) const;
 

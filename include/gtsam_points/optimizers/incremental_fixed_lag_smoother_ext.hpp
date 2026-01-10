@@ -20,8 +20,9 @@
 // \callgraph
 #pragma once
 
-#include <gtsam/nonlinear/FixedLagSmoother.h>
+#include <gtsam_unstable/nonlinear/FixedLagSmoother.h>
 #include "gtsam/dllexport.h"
+#include <gtsam_points/util/gtsam_migration.hpp>
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 
 namespace gtsam_points {
@@ -127,7 +128,7 @@ protected:
   void eraseKeysBefore(double timestamp);
 
   /** Fill in an iSAM2 ConstrainedKeys structure such that the provided keys are eliminated before all others */
-  void createOrderingConstraints(const KeyVector& marginalizableKeys, std::optional<FastMap<Key, int> >& constrainedKeys) const;
+  void createOrderingConstraints(const KeyVector& marginalizableKeys, optional<FastMap<Key, int> >& constrainedKeys) const;
 
 private:
   /** Private methods for printing debug information */

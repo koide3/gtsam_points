@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2024  Kenji Koide (k.koide@aist.go.jp)
+#include <gtsam_points/util/gtsam_migration.hpp>
 #include <gtsam_points/factors/reintegrated_imu_factor.hpp>
 
 namespace gtsam_points {
 
 ReintegratedImuMeasurements::ReintegratedImuMeasurements(
-  const std::shared_ptr<gtsam::PreintegrationParams>& p,
+  const gtsam_points::shared_ptr<gtsam::PreintegrationParams>& p,
   const gtsam::imuBias::ConstantBias& biasHat)
 : gtsam::PreintegratedImuMeasurements(p, biasHat) {}
 
@@ -58,7 +59,7 @@ void ReintegratedImuFactor::print(const std::string& s, const gtsam::KeyFormatte
   std::cout << "|imu_data|=" << imu_measurements.imu_data.size() << std::endl;
 }
 
-std::shared_ptr<gtsam::GaussianFactor> ReintegratedImuFactor::linearize(const gtsam::Values& values) const {
+gtsam::GaussianFactor::shared_ptr ReintegratedImuFactor::linearize(const gtsam::Values& values) const {
   imu_factor = create_imu_factor(values.at<gtsam::imuBias::ConstantBias>(keys()[4]));
   return imu_factor->linearize(values);
 }
@@ -71,7 +72,7 @@ double ReintegratedImuFactor::error(const gtsam::Values& values) const {
   return imu_factor->error(values);
 }
 
-std::shared_ptr<gtsam::ImuFactor> ReintegratedImuFactor::create_imu_factor(const gtsam::imuBias::ConstantBias& bias) const {
+gtsam::ImuFactor::shared_ptr ReintegratedImuFactor::create_imu_factor(const gtsam::imuBias::ConstantBias& bias) const {
   gtsam::PreintegratedImuMeasurements pim(imu_measurements.params(), bias);
   for (const auto& imu : imu_measurements.imu_data) {
     const gtsam::Vector3 acc = imu.block<3, 1>(0, 0);
