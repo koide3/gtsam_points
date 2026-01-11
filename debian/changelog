@@ -1,3 +1,9 @@
+gtsam-points (1.2.0-1-1ppa1-noble1) noble; urgency=medium
+
+  * v1.2.0 on noble
+
+ -- Kenji Koide <k.koide@aist.go.jp>  Sun, 11 Jan 2026 10:48:14 +0900
+
 gtsam-points (1.2.0-1-1ppa1-jammy1) jammy; urgency=medium
 
   * v1.2.0 (First PPA release)
