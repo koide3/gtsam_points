@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <gtsam_points/util/gtsam_migration.hpp>
 #include <gtsam_points/factors/integrated_ct_icp_factor.hpp>
 
 namespace gtsam_points {
@@ -16,7 +17,7 @@ template <typename TargetFrame = gtsam_points::PointCloud, typename SourceFrame 
 class IntegratedCT_GICPFactor_ : public IntegratedCT_ICPFactor_<TargetFrame, SourceFrame> {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = std::shared_ptr<IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>>;
+  using shared_ptr = gtsam_points::shared_ptr<IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>>;
 
   /**
    * @brief Constructor
@@ -54,7 +55,7 @@ public:
   virtual size_t memory_usage() const override;
 
   virtual double error(const gtsam::Values& values) const override;
-  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override;
+  virtual gtsam::GaussianFactor::shared_ptr linearize(const gtsam::Values& values) const override;
 
 protected:
   virtual void update_correspondences() const override;

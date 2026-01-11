@@ -46,6 +46,7 @@
 #include <iomanip>
 #include <limits>
 #include <string>
+#include <numeric>
 
 using namespace std;
 

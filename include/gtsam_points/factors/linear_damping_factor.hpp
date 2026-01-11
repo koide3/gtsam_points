@@ -5,6 +5,7 @@
 
 #include <gtsam/linear/HessianFactor.h>
 #include <gtsam/nonlinear/LinearContainerFactor.h>
+#include <gtsam_points/util/gtsam_migration.hpp>
 
 namespace gtsam_points {
 
@@ -14,7 +15,7 @@ namespace gtsam_points {
  */
 class LinearDampingFactor : public gtsam::LinearContainerFactor {
 public:
-  using shared_ptr = std::shared_ptr<LinearDampingFactor>;
+  using shared_ptr = gtsam_points::shared_ptr<LinearDampingFactor>;
 
   LinearDampingFactor(gtsam::Key key, int dim, double mu)
   : gtsam::LinearContainerFactor(gtsam::HessianFactor(key, mu * gtsam::Matrix::Identity(dim, dim), gtsam::Vector::Zero(dim), 0.0)) {}

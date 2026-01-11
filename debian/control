@@ -7,10 +7,20 @@ Build-Depends:
  debhelper-compat (= 13),
  cmake,
  libomp-dev,
+ libmetis-dev,
  libeigen3-dev,
  libboost-dev,
  libboost-graph-dev,
  libboost-filesystem-dev,
+ libboost-system-dev,
+ libboost-serialization-dev,
+ libboost-date-time-dev,
+ libboost-filesystem-dev,
+ libboost-program-options-dev,
+ libboost-regex-dev,
+ libboost-thread-dev,
+ libboost-timer-dev,
+ libboost-chrono-dev,
  libgtsam-no-tbb-dev (>= 4.3)
 Standards-Version: 4.6.2
 Homepage: https://github.com/koide3/gtsam_points.git

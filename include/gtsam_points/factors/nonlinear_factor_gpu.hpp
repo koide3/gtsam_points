@@ -6,6 +6,7 @@
 #include <boost/utility/in_place_factory.hpp>
 #include <boost/utility/typed_in_place_factory.hpp>
 #include <gtsam/nonlinear/NonlinearFactor.h>
+#include <gtsam_points/util/gtsam_migration.hpp>
 
 namespace gtsam_points {
 
@@ -35,6 +36,8 @@ namespace gtsam_points {
  */
 class NonlinearFactorGPU : public gtsam::NonlinearFactor {
 public:
+  using shared_ptr = gtsam_points::shared_ptr<NonlinearFactorGPU>;
+
   template <typename CONTAINER>
   NonlinearFactorGPU(const CONTAINER& keys) : gtsam::NonlinearFactor(keys) {}
   virtual ~NonlinearFactorGPU() {}
@@ -76,8 +79,7 @@ public:
    * @param lin_input_gpu    Linearization input data on the GPU memory (size == linearization_input_size)
    * @param lin_output_gpu   Output data destination on the GPU memory (size == linearization_output_size)
    */
-  virtual void
-  issue_linearize(const void* lin_input_cpu, const void* lin_input_gpu, void* lin_output_gpu) = 0;
+  virtual void issue_linearize(const void* lin_input_cpu, const void* lin_input_gpu, void* lin_output_gpu) = 0;
 
   /**
    * @brief Read linearization output data from the download buffer
