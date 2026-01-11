@@ -1,0 +1,7 @@
+<map id="gtsam_points::GaussianVoxelMapGPU" name="gtsam_points::GaussianVoxelMapGPU">
+<area shape="rect" id="Node000001" title="Gaussian distribution voxelmap on GPU." alt="" coords="147,79,361,119"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1GaussianVoxelMap.html" title="Gaussian distribution voxelmap." alt="" coords="5,5,247,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="158,36,225,76,222,81,155,40"/>
+<area shape="rect" id="Node000003" href="$classgtsam__points_1_1OffloadableGPU.html" title="An interface class for offloading data from GPU to CPU." alt="" coords="271,5,493,31"/>
+<area shape="poly" id="edge2_Node000001_Node000003" title=" " alt="" coords="353,40,286,81,283,76,350,36"/>
+</map>

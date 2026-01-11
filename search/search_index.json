@@ -1,0 +1,1 @@
+{"config":{"lang":["en"],"separator":"[\\s\\-]+","pipeline":["stopWordFilter"],"fields":{"title":{"boost":1000.0},"text":{"boost":1.0},"tags":{"boost":1000000.0}}},"docs":[{"location":"index.html","title":"gtsam_points","text":""},{"location":"index.html#documentation","title":"Documentation","text":"<ul> <li>C++</li> </ul>"}]}

@@ -1,0 +1,7 @@
+<map id="gtsam_points::IntegratedColoredGICPFactor_&lt; TargetFrame, SourceFrame, IntensityGradients &gt;" name="gtsam_points::IntegratedColoredGICPFactor_&lt; TargetFrame, SourceFrame, IntensityGradients &gt;">
+<area shape="rect" id="Node000001" title="Colored GICP matching cost factor." alt="" coords="5,167,260,221"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1IntegratedMatchingCostFactor.html" title="Abstraction of LSQ&#45;based scan matching constraints between point clouds." alt="" coords="40,79,225,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="135,132,135,167,130,167,130,132"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="46,5,219,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="135,44,135,79,130,79,130,44"/>
+</map>
