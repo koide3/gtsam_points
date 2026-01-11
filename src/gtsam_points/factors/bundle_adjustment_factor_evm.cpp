@@ -109,7 +109,7 @@ gtsam::GaussianFactor::shared_ptr EVMBundleAdjustmentFactorBase::compose_factor(
     gs.push_back(J.block<1, 6>(0, i * 6));
   }
 
-  return std::shared_ptr<gtsam::HessianFactor>(new gtsam::HessianFactor(keys_, Gs, gs, error));
+  return gtsam::make_shared<gtsam::HessianFactor>(keys_, Gs, gs, error);
 }
 
 /**
@@ -140,7 +140,7 @@ double PlaneEVMFactor::error(const gtsam::Values& values) const {
   return error_scale * calc_eigenvalue<0>(transed_points);
 }
 
-std::shared_ptr<gtsam::GaussianFactor> PlaneEVMFactor::linearize(const gtsam::Values& values) const {
+gtsam::GaussianFactor::shared_ptr PlaneEVMFactor::linearize(const gtsam::Values& values) const {
   std::vector<Eigen::Vector3d> transed_points(points.size());
   for (int i = 0; i < points.size(); i++) {
     transed_points[i] = values.at<gtsam::Pose3>(keys[i]) * points[i];
@@ -186,7 +186,7 @@ double EdgeEVMFactor::error(const gtsam::Values& values) const {
   return calc_eigenvalue<0>(transed_points) + calc_eigenvalue<1>(transed_points);
 }
 
-std::shared_ptr<gtsam::GaussianFactor> EdgeEVMFactor::linearize(const gtsam::Values& values) const {
+gtsam::GaussianFactor::shared_ptr EdgeEVMFactor::linearize(const gtsam::Values& values) const {
   std::vector<Eigen::Vector3d> transed_points(points.size());
   for (int i = 0; i < points.size(); i++) {
     transed_points[i] = values.at<gtsam::Pose3>(keys[i]) * points[i];

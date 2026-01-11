@@ -4,6 +4,7 @@
 
 #include <gtsam/slam/BetweenFactor.h>
 #include <gtsam_points/util/read_points.hpp>
+#include <gtsam_points/util/gtsam_migration.hpp>
 #include <gtsam_points/features/normal_estimation.hpp>
 #include <gtsam_points/features/covariance_estimation.hpp>
 #include <gtsam_points/types/point_cloud.hpp>
@@ -167,11 +168,11 @@ public:
 
       // Calculate deskewed source points
       std::vector<Eigen::Vector4d> points;
-      auto cticp_factor = std::dynamic_pointer_cast<gtsam_points::IntegratedCT_ICPFactor>(factor);
+      auto cticp_factor = gtsam_points::dynamic_pointer_cast<gtsam_points::IntegratedCT_ICPFactor>(factor);
       if (cticp_factor) {
         points = cticp_factor->deskewed_source_points(values);
       } else {
-        auto cticp_factor_expr = std::dynamic_pointer_cast<gtsam_points::IntegratedCTICPFactorExpr>(factor);
+        auto cticp_factor_expr = gtsam_points::dynamic_pointer_cast<gtsam_points::IntegratedCTICPFactorExpr>(factor);
         auto deskewed = cticp_factor_expr->deskewed_source_points(values);
         std::transform(deskewed.begin(), deskewed.end(), std::back_inserter(points), [](const Eigen::Vector3d& p) {
           return (Eigen::Vector4d() << p, 1.0).finished();

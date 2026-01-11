@@ -62,7 +62,7 @@ int LinearizationHook::evaluation_count() const {
   return count;
 }
 
-bool LinearizationHook::add(std::shared_ptr<gtsam::NonlinearFactor> factor) {
+bool LinearizationHook::add(gtsam::NonlinearFactor::shared_ptr factor) {
   bool inserted = false;
   for (auto& hook : hooks) {
     inserted |= hook->add(factor);

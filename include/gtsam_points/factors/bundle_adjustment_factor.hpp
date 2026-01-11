@@ -5,6 +5,7 @@
 
 #include <gtsam/geometry/Point3.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
+#include <gtsam_points/util/gtsam_migration.hpp>
 
 namespace gtsam_points {
 
@@ -13,7 +14,7 @@ namespace gtsam_points {
  */
 class BundleAdjustmentFactorBase : public gtsam::NonlinearFactor {
 public:
-  using shared_ptr = std::shared_ptr<BundleAdjustmentFactorBase>;
+  using shared_ptr = gtsam_points::shared_ptr<BundleAdjustmentFactorBase>;
 
   virtual ~BundleAdjustmentFactorBase() {}
 

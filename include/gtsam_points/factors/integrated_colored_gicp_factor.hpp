@@ -6,6 +6,7 @@
 #include <gtsam/nonlinear/NonlinearFactor.h>
 
 #include <memory>
+#include <gtsam_points/util/gtsam_migration.hpp>
 #include <gtsam_points/types/point_cloud.hpp>
 #include <gtsam_points/factors/intensity_gradients.hpp>
 #include <gtsam_points/factors/integrated_matching_cost_factor.hpp>
@@ -34,7 +35,7 @@ template <
 class IntegratedColoredGICPFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  using shared_ptr = std::shared_ptr<IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>>;
+  using shared_ptr = gtsam_points::shared_ptr<IntegratedColoredGICPFactor_<TargetFrame, SourceFrame>>;
 
   IntegratedColoredGICPFactor_(
     gtsam::Key target_key,

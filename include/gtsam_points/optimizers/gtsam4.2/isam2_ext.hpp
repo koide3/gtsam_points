@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <chrono>
 #include <gtsam/linear/GaussianBayesTree.h>
 #include <gtsam/nonlinear/ISAM2Clique.h>
 #include <gtsam/nonlinear/ISAM2Params.h>
@@ -27,19 +28,18 @@
 #include <gtsam/nonlinear/ISAM2UpdateParams.h>
 #include <gtsam/nonlinear/NonlinearFactorGraph.h>
 
-#include <gtsam_points/util/gtsam_migration.hpp>
 #include <gtsam_points/optimizers/isam2_result_ext.hpp>
 
-#include <chrono>
 #include <vector>
 
 namespace gtsam_points {
 
 using namespace gtsam;
+
 class LinearizationHook;
 
 /**
- * @ingroup isam2
+ * @addtogroup ISAM2
  * Implementation of the full ISAM2 algorithm for incremental nonlinear
  * optimization.
  *
@@ -49,7 +49,7 @@ class LinearizationHook;
  * called to obtain the current estimate of all variables.
  *
  */
-class GTSAM_EXPORT ISAM2Ext : public BayesTree<ISAM2Clique> {
+class ISAM2Ext : public BayesTree<ISAM2Clique> {
 protected:
   /** The current linearization point */
   Values theta_;
@@ -94,7 +94,7 @@ protected:
   ISAM2Params params_;
 
   /** The current Dogleg Delta (trust region radius) */
-  mutable std::optional<double> doglegDelta_;
+  mutable boost::optional<double> doglegDelta_;
 
   /** Set of variables that are involved with linear factors from marginalized
    * variables and thus cannot have their linearization points changed. */
@@ -159,9 +159,9 @@ public:
     const NonlinearFactorGraph& newFactors = NonlinearFactorGraph(),
     const Values& newTheta = Values(),
     const FactorIndices& removeFactorIndices = FactorIndices(),
-    const optional<FastMap<Key, int> >& constrainedKeys = {},
-    const optional<FastList<Key> >& noRelinKeys = {},
-    const optional<FastList<Key> >& extraReelimKeys = {},
+    const boost::optional<FastMap<Key, int> >& constrainedKeys = boost::none,
+    const boost::optional<FastList<Key> >& noRelinKeys = boost::none,
+    const boost::optional<FastList<Key> >& extraReelimKeys = boost::none,
     bool force_relinearize = false);
 
   /**
@@ -201,19 +201,10 @@ public:
    * graph indices of any factor that was removed during the 'marginalizeLeaves'
    * call
    */
-  void
-  marginalizeLeaves(const FastList<Key>& leafKeys, FactorIndices* marginalFactorsIndices = nullptr, FactorIndices* deletedFactorsIndices = nullptr);
-
-  /** An overload of marginalizeLeaves that takes references
-   * to vectors instead of pointers to vectors and passes
-   * it to the pointer version of the function.
-   */
-  template <class... OptArgs>
-  void marginalizeLeaves(const FastList<Key>& leafKeys, OptArgs&&... optArgs) {
-    // dereference the optional arguments and pass
-    // it to the pointer version
-    marginalizeLeaves(leafKeys, (&optArgs)...);
-  }
+  void marginalizeLeaves(
+    const FastList<Key>& leafKeys,
+    boost::optional<FactorIndices&> marginalFactorsIndices = boost::none,
+    boost::optional<FactorIndices&> deletedFactorsIndices = boost::none);
 
   /// Access the current linearization point
   const Values& getLinearizationPoint() const { return theta_; }
@@ -306,17 +297,6 @@ protected:
   // (note that the remaining stuff is summarized in the cached factors)
   GaussianFactorGraph relinearizeAffectedFactors(const ISAM2UpdateParams& updateParams, const FastList<Key>& affectedKeys, const KeySet& relinKeys);
 
-  /**
-   * @brief Perform an incremental update of the factor graph to return a new
-   * Bayes Tree with affected keys.
-   *
-   * @param updateParams Parameters for the ISAM2 update.
-   * @param relinKeys Keys of variables to relinearize.
-   * @param affectedKeys The set of keys which are affected in the update.
-   * @param affectedKeysSet [output] Affected and contaminated keys.
-   * @param orphans [output] List of orphanes cliques after elimination.
-   * @param result [output] The result of the incremental update step.
-   */
   void recalculateIncremental(
     const ISAM2UpdateParams& updateParams,
     const KeySet& relinKeys,
@@ -338,27 +318,6 @@ protected:
   void removeVariables(const KeySet& unusedKeys);
 
   void updateDelta(bool forceFullSolve = false) const;
-
-private:
-#if GTSAM_ENABLE_BOOST_SERIALIZATION
-  /** Serialization function */
-  friend class boost::serialization::access;
-  template <class ARCHIVE>
-  void serialize(ARCHIVE& ar, const unsigned int /*version*/) {
-    ar& BOOST_SERIALIZATION_BASE_OBJECT_NVP(Base);
-    ar& BOOST_SERIALIZATION_NVP(theta_);
-    ar& BOOST_SERIALIZATION_NVP(variableIndex_);
-    ar& BOOST_SERIALIZATION_NVP(delta_);
-    ar& BOOST_SERIALIZATION_NVP(deltaNewton_);
-    ar& BOOST_SERIALIZATION_NVP(RgProd_);
-    ar& BOOST_SERIALIZATION_NVP(deltaReplacedMask_);
-    ar& BOOST_SERIALIZATION_NVP(nonlinearFactors_);
-    ar& BOOST_SERIALIZATION_NVP(linearFactors_);
-    ar& BOOST_SERIALIZATION_NVP(doglegDelta_);
-    ar& BOOST_SERIALIZATION_NVP(fixedVariables_);
-    ar& BOOST_SERIALIZATION_NVP(update_count_);
-  }
-#endif
 
   std::chrono::high_resolution_clock::time_point optimization_start_time;
   std::unique_ptr<LinearizationHook> linearization_hook;
