@@ -1,0 +1,28 @@
+Source: gtsam-points
+Section: libs
+Priority: optional
+Maintainer: k.koide <k.koide@aist.go.jp>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (= 13),
+ cmake,
+ libomp-dev,
+ libeigen3-dev,
+ libboost-dev,
+ libboost-graph-dev,
+ libboost-filesystem-dev,
+ libgtsam-no-tbb-dev (>= 4.3)
+Standards-Version: 4.6.2
+Homepage: https://github.com/koide3/gtsam_points.git
+
+Package: libgtsam-points
+Section: libs
+Architecture: any
+Multi-Arch: foreign
+Conflicts: libgtsam-points-cuda-dev
+Replaces: libgtsam-points-cuda-dev
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+Description: gtsam_points : A collection of GTSAM factors and optimizers for point cloud SLAM  (No CUDA)
+ A collection of GTSAM factors and optimizers for point cloud SLAM.

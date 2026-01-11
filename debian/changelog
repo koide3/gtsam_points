@@ -1,0 +1,5 @@
+gtsam-points (1.2.0-1-1ppa1-jammy1) jammy; urgency=medium
+
+  * v1.2.0 (First PPA release)
+
+ -- Kenji Koide <k.koide@aist.go.jp>  Sun, 04 Jan 2026 16:20:45 +0900

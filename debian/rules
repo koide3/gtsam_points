@@ -1,0 +1,10 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@ --buildsystem=cmake
+
+override_dh_auto_configure:
+	dh_auto_configure -- \
+	  -DBUILD_WITH_OPENMP=ON \
+		-DBUILD_WITH_CUDA=OFF \
+		-DGTSAM_WITH_TBB=OFF
