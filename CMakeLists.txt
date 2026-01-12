@@ -152,9 +152,10 @@ configure_file(include/gtsam_points/config.hpp.in include/gtsam_points/config.hp
 
 add_library(gtsam_points SHARED
   # util
+  src/gtsam_points/util/parallelism.cpp
   src/gtsam_points/util/bspline.cpp
   src/gtsam_points/util/continuous_trajectory.cpp
-  src/gtsam_points/util/parallelism.cpp
+  src/gtsam_points/util/voxel_raycaster.cpp
   # features
   src/gtsam_points/features/covariance_estimation.cpp
   src/gtsam_points/features/normal_estimation.cpp
