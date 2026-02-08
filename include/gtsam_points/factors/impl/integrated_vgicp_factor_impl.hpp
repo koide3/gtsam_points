@@ -137,7 +137,7 @@ void IntegratedVGICPFactor_<SourceFrame>::update_correspondences(const Eigen::Is
         case FusedCovCacheMode::FULL: {
           const Eigen::Matrix4d RCR = (voxel->cov + delta.matrix() * frame::cov(*source, i) * delta.matrix().transpose());
           mahalanobis_full[i].setZero();
-          mahalanobis_full[i].topLeftCorner<3, 3>() = RCR.topLeftCorner<3, 3>().inverse();
+          mahalanobis_full[i].template topLeftCorner<3, 3>() = RCR.topLeftCorner<3, 3>().inverse();
           break;
         }
         case FusedCovCacheMode::COMPACT: {
