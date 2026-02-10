@@ -30,9 +30,18 @@ if(BUILD_WITH_MARCH_NATIVE)
 endif()
 
 find_package(Boost REQUIRED COMPONENTS graph filesystem)
-find_package(GTSAM 4.3 REQUIRED)
-find_package(GTSAM_UNSTABLE 4.3 REQUIRED)
+find_package(GTSAM 4.2 REQUIRED)
+find_package(GTSAM_UNSTABLE 4.2 REQUIRED)
 find_package(Eigen3 REQUIRED)
+
+# Set optimizer source paths based on GTSAM version
+if(GTSAM_VERSION VERSION_LESS "4.3")
+  set(GTSAM_POINTS_ISAM2_SRC_DIR "gtsam4.2/")
+  message(STATUS "Using ISAM2 sources for GTSAM4.2")
+else()
+  set(GTSAM_POINTS_ISAM2_SRC_DIR "")
+  message(STATUS "Using default ISAM2 sources")
+endif()
 
 if(BUILD_WITH_TBB)
   find_package(TBB REQUIRED)
@@ -65,8 +74,8 @@ if(BUILD_WITH_CUDA)
       set(CMAKE_CUDA_ARCHITECTURES 75 80 87 89 90 CACHE STRING "CUDA architectures" FORCE)
     else()
     if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES OR CMAKE_CUDA_ARCHITECTURES STREQUAL "52")
-        message(WARNING "CMAKE_CUDA_ARCHITECTURES is not defined. Set to 80 by default")
-        set(CMAKE_CUDA_ARCHITECTURES 53 62 80 87 89 90 CACHE STRING "CUDA architectures" FORCE)
+        message(WARNING "CMAKE_CUDA_ARCHITECTURES is not defined. Set to defaults")
+        set(CMAKE_CUDA_ARCHITECTURES 75 80 87 89 90 CACHE STRING "CUDA architectures" FORCE)
       endif()
     endif()
   endif()
@@ -140,11 +149,13 @@ configure_file(include/gtsam_points/config.hpp.in include/gtsam_points/config.hp
 ## Build ##
 ###########
 
+
 add_library(gtsam_points SHARED
   # util
+  src/gtsam_points/util/parallelism.cpp
   src/gtsam_points/util/bspline.cpp
   src/gtsam_points/util/continuous_trajectory.cpp
-  src/gtsam_points/util/parallelism.cpp
+  src/gtsam_points/util/voxel_raycaster.cpp
   # features
   src/gtsam_points/features/covariance_estimation.cpp
   src/gtsam_points/features/normal_estimation.cpp
@@ -194,9 +205,9 @@ add_library(gtsam_points SHARED
   src/gtsam_points/optimizers/gaussian_factor_graph_solver.cpp
   src/gtsam_points/optimizers/levenberg_marquardt_ext.cpp
   src/gtsam_points/optimizers/levenberg_marquardt_optimization_status.cpp
-  src/gtsam_points/optimizers/isam2_ext.cpp
-  src/gtsam_points/optimizers/isam2_ext_impl.cpp
-  src/gtsam_points/optimizers/incremental_fixed_lag_smoother_ext.cpp
+  src/gtsam_points/optimizers/${GTSAM_POINTS_ISAM2_SRC_DIR}isam2_ext.cpp
+  src/gtsam_points/optimizers/${GTSAM_POINTS_ISAM2_SRC_DIR}isam2_ext_impl.cpp
+  src/gtsam_points/optimizers/${GTSAM_POINTS_ISAM2_SRC_DIR}incremental_fixed_lag_smoother_ext.cpp
   src/gtsam_points/optimizers/incremental_fixed_lag_smoother_ext_with_fallback.cpp
   src/gtsam_points/optimizers/dogleg_optimizer_ext_impl.cpp
 )
@@ -215,6 +226,10 @@ target_link_libraries(gtsam_points
   gtsam_unstable
   $<TARGET_NAME_IF_EXISTS:TBB::tbb>
   $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
+)
+set_target_properties(gtsam_points PROPERTIES
+  VERSION   ${PROJECT_VERSION}
+  SOVERSION 1
 )
 
 # GPU-related
@@ -266,6 +281,10 @@ if(BUILD_WITH_CUDA)
     gtsam_unstable
     $<TARGET_NAME_IF_EXISTS:TBB::tbb>
     $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
+  )
+  set_target_properties(gtsam_points_cuda PROPERTIES
+    VERSION   ${PROJECT_VERSION}
+    SOVERSION 1
   )
 
   target_link_libraries(gtsam_points

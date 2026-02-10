@@ -18,7 +18,7 @@ public:
   struct Setting {};
 
   /// @brief Constructor.
-  GaussianVoxel() : finalized(false), num_points(0), mean(Eigen::Vector4d::Zero()), cov(Eigen::Matrix4d::Zero()) {}
+  GaussianVoxel() : finalized(false), num_points(0), mean(Eigen::Vector4d::Zero()), cov(Eigen::Matrix4d::Zero()), intensity(0.0) {}
 
   /// @brief  Number of points in the voxel (Always 1 for GaussianVoxel).
   size_t size() const { return 1; }
@@ -48,6 +48,7 @@ public:
   size_t num_points;     ///< Number of input points
   Eigen::Vector4d mean;  ///< Mean
   Eigen::Matrix4d cov;   ///< Covariance
+  double intensity;       ///< Intensity
 };
 
 namespace frame {
@@ -59,12 +60,12 @@ struct traits<GaussianVoxel> {
   static bool has_points(const GaussianVoxel& frame) { return true; }
   static bool has_normals(const GaussianVoxel& frame) { return false; }
   static bool has_covs(const GaussianVoxel& frame) { return true; }
-  static bool has_intensities(const GaussianVoxel& frame) { return false; }
+  static bool has_intensities(const GaussianVoxel& frame) { return true; }
 
   static const Eigen::Vector4d& point(const GaussianVoxel& frame, size_t i) { return frame.mean; }
   static const Eigen::Vector4d normal(const GaussianVoxel& frame, size_t i) { return Eigen::Vector4d::Zero(); }
   static const Eigen::Matrix4d& cov(const GaussianVoxel& frame, size_t i) { return frame.cov; }
-  static double intensity(const GaussianVoxel& frame, size_t i) { return 0.0; }
+  static double intensity(const GaussianVoxel& frame, size_t i) { return frame.intensity; }
 };
 
 }  // namespace frame

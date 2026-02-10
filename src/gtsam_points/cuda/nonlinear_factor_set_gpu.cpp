@@ -5,6 +5,7 @@
 
 #include <cuda_runtime.h>
 #include <gtsam_points/cuda/check_error.cuh>
+#include <gtsam_points/util/gtsam_migration.hpp>
 
 namespace gtsam_points {
 
@@ -44,8 +45,8 @@ void NonlinearFactorSetGPU::clear_counts() {
   num_evaluations = 0;
 }
 
-bool NonlinearFactorSetGPU::add(std::shared_ptr<gtsam::NonlinearFactor> factor) {
-  auto gpu_factor = std::dynamic_pointer_cast<NonlinearFactorGPU>(factor);
+bool NonlinearFactorSetGPU::add(gtsam::NonlinearFactor::shared_ptr factor) {
+  auto gpu_factor = gtsam_points::dynamic_pointer_cast<NonlinearFactorGPU>(factor);
   if (gpu_factor) {
     factors.push_back(gpu_factor);
     return true;

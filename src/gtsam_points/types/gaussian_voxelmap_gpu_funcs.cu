@@ -6,7 +6,6 @@
 #include <thrust/device_vector.h>
 
 #include <cub/device/device_reduce.cuh>
-#include <cub/iterator/transform_input_iterator.cuh>
 
 #include <gtsam_points/types/point_cloud_gpu.hpp>
 #include <gtsam_points/types/gaussian_voxelmap_cpu.hpp>
@@ -85,6 +84,9 @@ PointCloud::Ptr merge_frames_gpu(
   check_error << cudaMallocAsync(&all_points, sizeof(Eigen::Vector3f) * num_all_points, stream);
   check_error << cudaMallocAsync(&all_covs, sizeof(Eigen::Matrix3f) * num_all_points, stream);
 
+  float* all_ints;
+  check_error << cudaMallocAsync(&all_ints, sizeof(float) * num_all_points, stream);
+
   const thrust::device_ptr<Eigen::Vector3f> all_points_ptr(all_points);
   const thrust::device_ptr<Eigen::Matrix3f> all_covs_ptr(all_covs);
 
@@ -102,6 +104,12 @@ PointCloud::Ptr merge_frames_gpu(
       all_points_ptr + begin,
       transform_means_kernel(transform_ptr));
     thrust::transform(thrust::cuda::par.on(stream), covs_ptr, covs_ptr + frame->size(), all_covs_ptr + begin, transform_covs_kernel(transform_ptr));
+    if (frame->intensities_gpu) {
+      check_error << cudaMemcpyAsync(all_ints + begin, frame->intensities_gpu, sizeof(float) * frame->size(), cudaMemcpyDeviceToDevice, stream);
+    } else {
+      check_error << cudaMemsetAsync(all_ints + begin, 0, sizeof(float) * frame->size(), stream);
+    }
+
     begin += frame->size();
   }
 
@@ -111,6 +119,7 @@ PointCloud::Ptr merge_frames_gpu(
   all_frames.num_points = num_all_points;
   all_frames.points_gpu = all_points;
   all_frames.covs_gpu = all_covs;
+  all_frames.intensities_gpu = all_ints;
 
   GaussianVoxelMapGPU downsampling(downsample_resolution, num_all_points, 10, 1e-3, stream);
   downsampling.insert(all_frames);
@@ -118,21 +127,26 @@ PointCloud::Ptr merge_frames_gpu(
   const int num_voxels = downsampling.voxelmap_info.num_voxels;
   const Eigen::Vector3f* voxel_means = downsampling.voxel_means;
   const Eigen::Matrix3f* voxel_covs = downsampling.voxel_covs;
+  float* voxel_intensities = downsampling.voxel_intensities;
 
   std::vector<Eigen::Vector3f> means(num_voxels);
   std::vector<Eigen::Matrix3f> covs(num_voxels);
+  std::vector<float> intensities(num_voxels);
 
   check_error << cudaMemcpyAsync(means.data(), voxel_means, sizeof(Eigen::Vector3f) * num_voxels, cudaMemcpyDeviceToHost, stream);
   check_error << cudaMemcpyAsync(covs.data(), voxel_covs, sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyDeviceToHost, stream);
+  check_error << cudaMemcpyAsync(intensities.data(), downsampling.voxel_intensities, sizeof(float) * num_voxels, cudaMemcpyDeviceToHost, stream);
   check_error << cudaStreamSynchronize(stream);
 
   check_error << cudaFreeAsync(d_poses, stream);
   check_error << cudaFreeAsync(all_points, stream);
   check_error << cudaFreeAsync(all_covs, stream);
+  check_error << cudaFreeAsync(all_ints, stream);
 
   auto merged = std::make_shared<PointCloudGPU>();
   merged->add_points(means, stream);
   merged->add_covs(covs, stream);
+  merged->add_intensities(intensities, stream);
 
   return merged;
 }

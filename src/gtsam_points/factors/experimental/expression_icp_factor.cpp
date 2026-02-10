@@ -69,7 +69,7 @@ public:
   virtual size_t dim() const override { return 3; }
 
   virtual double error(const gtsam::Values& values) const override { return graph->error(values); }
-  virtual std::shared_ptr<gtsam::GaussianFactor> linearize(const gtsam::Values& values) const override {
+  virtual gtsam::GaussianFactor::shared_ptr linearize(const gtsam::Values& values) const override {
     // I'm not 100% sure if it is a correct way
     gtsam::Ordering ordering;
     ordering.push_back(keys()[0]);

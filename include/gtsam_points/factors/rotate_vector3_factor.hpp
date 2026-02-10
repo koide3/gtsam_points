@@ -6,6 +6,7 @@
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
 #include <gtsam/nonlinear/ExpressionFactor.h>
+#include <gtsam_points/util/gtsam_migration.hpp>
 
 namespace gtsam_points {
 
@@ -30,8 +31,8 @@ public:
   virtual gtsam::Vector evaluateError(
     const gtsam::Pose3& x,
     const gtsam::Vector3& v,
-    gtsam::OptionalMatrixType H_x = nullptr,
-    gtsam::OptionalMatrixType H_v = nullptr) const override {
+    OptionalMatrixType H_x = NoneValue,
+    OptionalMatrixType H_v = NoneValue) const override {
     gtsam::Matrix36 H_x1;
     gtsam::Matrix33 H_x2;
     gtsam::Vector3 v_ = x.rotation(H_x1).rotate(local_v, H_x2);

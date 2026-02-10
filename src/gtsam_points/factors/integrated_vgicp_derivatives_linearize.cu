@@ -8,7 +8,6 @@
 #include <thrust/iterator/transform_iterator.h>
 
 #include <cub/device/device_reduce.cuh>
-#include <cub/iterator/transform_input_iterator.cuh>
 
 #include <gtsam_points/cuda/kernels/pose.cuh>
 #include <gtsam_points/cuda/kernels/untie.cuh>
@@ -24,10 +23,10 @@ namespace gtsam_points {
 void IntegratedVGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output) {
   //
   lookup_voxels_kernel corr_kernel(enable_surface_validation, *target, source->points_gpu, source->normals_gpu, d_x);
-  cub::TransformInputIterator<thrust::pair<int, int>, lookup_voxels_kernel, int*> corr_first(source_inliers, corr_kernel);
+  auto corr_first = thrust::make_transform_iterator(source_inliers, corr_kernel);
 
   vgicp_derivatives_kernel deriv_kernel(d_x, *target, source->points_gpu, source->covs_gpu);
-  cub::TransformInputIterator<LinearizedSystem6, vgicp_derivatives_kernel, decltype(corr_first)> first(corr_first, deriv_kernel);
+  auto first = thrust::make_transform_iterator(corr_first, deriv_kernel);
 
   void* temp_storage = nullptr;
   size_t temp_storage_bytes = 0;

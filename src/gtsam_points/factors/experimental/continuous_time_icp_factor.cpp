@@ -56,7 +56,7 @@ CTICPFactorExpr::CTICPFactorExpr(
 
 CTICPFactorExpr::~CTICPFactorExpr() {}
 
-gtsam::Vector CTICPFactorExpr::unwhitenedError(const gtsam::Values& values, gtsam::OptionalMatrixVecType H) const {
+gtsam::Vector CTICPFactorExpr::unwhitenedError(const gtsam::Values& values, OptionalMatrixVecType H) const {
   // Update corresponding point at the first call and every linearization call
   if (target_index < 0 || H) {
     update_correspondence(values);
@@ -111,7 +111,7 @@ double IntegratedCTICPFactorExpr::error(const gtsam::Values& values) const {
   return graph->error(values);
 }
 
-std::shared_ptr<gtsam::GaussianFactor> IntegratedCTICPFactorExpr::linearize(const gtsam::Values& values) const {
+gtsam::GaussianFactor::shared_ptr IntegratedCTICPFactorExpr::linearize(const gtsam::Values& values) const {
   // I'm not 100% sure if it is a correct way
   gtsam::Ordering ordering;
   ordering.push_back(keys()[0]);
@@ -129,7 +129,11 @@ std::shared_ptr<gtsam::GaussianFactor> IntegratedCTICPFactorExpr::linearize(cons
 std::vector<Eigen::Vector3d> IntegratedCTICPFactorExpr::deskewed_source_points(const gtsam::Values& values) const {
   std::vector<Eigen::Vector3d> points;
   for (const auto& factor : *graph) {
-    auto f = std::dynamic_pointer_cast<gtsam_points::CTICPFactorExpr>(factor);
+    if (!factor) {
+      continue;
+    }
+
+    auto f = dynamic_cast<gtsam_points::CTICPFactorExpr*>(factor.get());
     if (f) {
       points.push_back(f->transform_source_point().value(values));
     }

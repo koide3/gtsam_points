@@ -3,7 +3,6 @@
 
 #pragma once
 
-#include <gtsam_points/util/gtsam_migration.hpp>
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 
 namespace gtsam_points {
@@ -17,9 +16,9 @@ public:
     const NonlinearFactorGraph& newFactors = NonlinearFactorGraph(),
     const Values& newTheta = Values(),
     const FactorIndices& removeFactorIndices = FactorIndices(),
-    const optional<FastMap<Key, int> >& constrainedKeys = {},
-    const optional<FastList<Key> >& noRelinKeys = {},
-    const optional<FastList<Key> >& extraReelimKeys = {},
+    const boost::optional<FastMap<Key, int> >& constrainedKeys = boost::none,
+    const boost::optional<FastList<Key> >& noRelinKeys = boost::none,
+    const boost::optional<FastList<Key> >& extraReelimKeys = boost::none,
     bool force_relinearize = false) override {
     //
     nonlinearFactors_.add(newFactors);
