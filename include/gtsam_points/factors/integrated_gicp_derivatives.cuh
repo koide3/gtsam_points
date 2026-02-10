@@ -35,6 +35,8 @@ public:
     inlier_update_thresh_angle = angle;
   }
 
+  void set_max_correspondence_distance(double dist) { max_correspondence_distance_sq = dist * dist; }
+
   void set_enable_offloading(bool enable) { enable_offloading = enable; }
 
   void set_enable_surface_validation(bool enable) { enable_surface_validation = enable; }
@@ -59,6 +61,7 @@ private:
   bool enable_offloading;
 
   bool enable_surface_validation;
+  double max_correspondence_distance_sq;
   double inlier_update_thresh_trans;
   double inlier_update_thresh_angle;
 

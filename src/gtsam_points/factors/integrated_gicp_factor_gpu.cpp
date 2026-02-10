@@ -135,6 +135,10 @@ void IntegratedGICPFactorGPU::set_inlier_update_thresh(double trans, double angl
   derivatives->set_inlier_update_thresh(trans, angle);
 }
 
+void IntegratedGICPFactorGPU::set_max_correspondence_distance(double dist) {
+  derivatives->set_max_correspondence_distance(dist);
+}
+
 int IntegratedGICPFactorGPU::num_inliers() const {
   return derivatives->get_num_inliers();
 }

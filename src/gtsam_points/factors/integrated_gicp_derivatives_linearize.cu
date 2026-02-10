@@ -27,12 +27,14 @@ struct kdtree_correspondence_kernel {
     const Eigen::Vector3f* source_points,
     const Eigen::Vector3f* target_points,
     const std::uint32_t* target_indices,
-    const KdTreeNodeGPU* target_nodes)
+    const KdTreeNodeGPU* target_nodes,
+    float max_correspondence_distance_sq)
   : linearization_point_ptr(linearization_point_ptr),
     source_points(source_points),
     target_points(target_points),
     target_indices(target_indices),
-    target_nodes(target_nodes) {}
+    target_nodes(target_nodes),
+    max_correspondence_distance_sq(max_correspondence_distance_sq) {}
 
   __device__ thrust::pair<int, int> operator()(const thrust::pair<int, int>& source_target) const {
     const int source_idx = source_target.first;
@@ -50,6 +52,10 @@ struct kdtree_correspondence_kernel {
 
     const auto [nn_idx, sq_dist] = nn_search(transed_pt);
 
+    if (sq_dist > max_correspondence_distance_sq) {
+      return thrust::make_pair(source_idx, -1);
+    }
+
     return thrust::make_pair(source_idx, static_cast<int>(nn_idx));
   }
 
@@ -58,6 +64,7 @@ struct kdtree_correspondence_kernel {
   const Eigen::Vector3f* target_points;
   const std::uint32_t* target_indices;
   const KdTreeNodeGPU* target_nodes;
+  float max_correspondence_distance_sq;
 };
 
 }  // namespace
@@ -69,7 +76,8 @@ void IntegratedGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, Li
     reinterpret_cast<const Eigen::Vector3f*>(source->points_gpu),
     reinterpret_cast<const Eigen::Vector3f*>(target->points_gpu),
     target_tree->get_indices(),
-    target_tree->get_nodes());
+    target_tree->get_nodes(),
+    max_correspondence_distance_sq);
 
   auto corr_first = thrust::make_transform_iterator(source_target_correspondences, corr_kernel);
 

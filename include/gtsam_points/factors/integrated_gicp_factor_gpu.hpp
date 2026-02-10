@@ -91,6 +91,10 @@ public:
   ///        Setting larger values reduces GPU sync but may affect the registration accuracy.
   void set_inlier_update_thresh(double trans, double angle);
 
+  /// @brief Set the maximum distance between corresponding points.
+  ///        Correspondences with distances larger than this will be rejected (i.e., correspondence trimming).
+  void set_max_correspondence_distance(double dist);
+
   /// @brief  Get the number of inlier points.
   /// @note   This function must be called after the factor is linearized.
   int num_inliers() const;

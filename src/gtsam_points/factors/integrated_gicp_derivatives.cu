@@ -24,6 +24,7 @@ IntegratedGICPDerivatives::IntegratedGICPDerivatives(
   std::shared_ptr<TempBufferManager> temp_buffer)
 : enable_offloading(false),
   enable_surface_validation(false),
+  max_correspondence_distance_sq(1.0),
   inlier_update_thresh_trans(1e-6),
   inlier_update_thresh_angle(1e-6),
   target(target),
