@@ -79,6 +79,5 @@ private:
   int num_inliers;
   int* num_inliers_gpu;
   thrust::pair<int, int>* source_target_correspondences;
-  thrust::pair<int, int>* computed_correspondences;
 };
 }  // namespace gtsam_points

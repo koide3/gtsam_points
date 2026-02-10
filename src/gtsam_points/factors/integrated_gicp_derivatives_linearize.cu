@@ -73,12 +73,7 @@ struct kdtree_correspondence_kernel {
 }  // namespace
 
 void IntegratedGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, LinearizedSystem6* d_output) {
-  // Allocate buffer for computed correspondences if needed
-  if (computed_correspondences == nullptr) {
-    check_error << cudaMallocAsync(&computed_correspondences, sizeof(thrust::pair<int, int>) * num_inliers, stream);
-  }
-
-  // First, compute correspondences using KdTree nearest neighbor search
+  // Compute correspondences using KdTree nearest neighbor search
   kdtree_correspondence_kernel corr_kernel(
     d_x,
     reinterpret_cast<const Eigen::Vector3f*>(source->points_gpu),
@@ -87,12 +82,12 @@ void IntegratedGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, Li
     target_tree->get_nodes(),
     max_correspondence_distance_sq);
 
-  // Materialize correspondences to buffer for reuse in issue_compute_error
+  // Materialize correspondences in-place for reuse in issue_compute_error
   thrust::transform(
     thrust::cuda::par_nosync.on(stream),
     source_target_correspondences,
     source_target_correspondences + num_inliers,
-    computed_correspondences,
+    source_target_correspondences,
     corr_kernel);
 
   // Compute GICP derivatives using the computed correspondences
@@ -103,7 +98,7 @@ void IntegratedGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, Li
     reinterpret_cast<const Eigen::Vector3f*>(source->points_gpu),
     reinterpret_cast<const Eigen::Matrix3f*>(source->covs_gpu));
 
-  auto first = thrust::make_transform_iterator(computed_correspondences, deriv_kernel);
+  auto first = thrust::make_transform_iterator(source_target_correspondences, deriv_kernel);
 
   void* temp_storage = nullptr;
   size_t temp_storage_bytes = 0;

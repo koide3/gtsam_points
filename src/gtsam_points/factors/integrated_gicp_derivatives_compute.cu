@@ -73,7 +73,7 @@ void IntegratedGICPDerivatives::issue_compute_error(const Eigen::Isometry3f* d_x
     reinterpret_cast<const Eigen::Vector3f*>(source->points_gpu),
     reinterpret_cast<const Eigen::Matrix3f*>(source->covs_gpu));
 
-  auto first = thrust::make_transform_iterator(computed_correspondences, error_kernel);
+  auto first = thrust::make_transform_iterator(source_target_correspondences, error_kernel);
 
   void* temp_storage = nullptr;
   size_t temp_storage_bytes = 0;
