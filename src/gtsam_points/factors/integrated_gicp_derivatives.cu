@@ -34,7 +34,8 @@ IntegratedGICPDerivatives::IntegratedGICPDerivatives(
   stream(ext_stream),
   temp_buffer(temp_buffer),
   num_inliers(0),
-  source_target_correspondences(nullptr) {
+  source_target_correspondences(nullptr),
+  computed_correspondences(nullptr) {
   //
   if (stream == nullptr) {
     external_stream = false;
@@ -51,6 +52,7 @@ IntegratedGICPDerivatives::IntegratedGICPDerivatives(
 
 IntegratedGICPDerivatives::~IntegratedGICPDerivatives() {
   check_error << cudaFreeAsync(source_target_correspondences, stream);
+  check_error << cudaFreeAsync(computed_correspondences, stream);
   check_error << cudaFreeAsync(num_inliers_gpu, stream);
   // check_error << cudaHostUnregister(&num_inliers);
 

@@ -63,16 +63,7 @@ struct kdtree_correspondence_kernel {
 }  // namespace
 
 void IntegratedGICPDerivatives::issue_compute_error(const Eigen::Isometry3f* d_xl, const Eigen::Isometry3f* d_xe, float* d_output) {
-  // First, compute correspondences using KdTree nearest neighbor search (at linearization point)
-  kdtree_correspondence_kernel corr_kernel(
-    d_xl,
-    reinterpret_cast<const Eigen::Vector3f*>(source->points_gpu),
-    reinterpret_cast<const Eigen::Vector3f*>(target->points_gpu),
-    target_tree->get_indices(),
-    target_tree->get_nodes());
-
-  auto corr_first = thrust::make_transform_iterator(source_target_correspondences, corr_kernel);
-
+  // Reuse correspondences computed in issue_linearize instead of recomputing KdTree search
   // Compute GICP error using the correspondences
   gicp_error_kernel error_kernel(
     d_xl,
@@ -82,7 +73,7 @@ void IntegratedGICPDerivatives::issue_compute_error(const Eigen::Isometry3f* d_x
     reinterpret_cast<const Eigen::Vector3f*>(source->points_gpu),
     reinterpret_cast<const Eigen::Matrix3f*>(source->covs_gpu));
 
-  auto first = thrust::make_transform_iterator(corr_first, error_kernel);
+  auto first = thrust::make_transform_iterator(computed_correspondences, error_kernel);
 
   void* temp_storage = nullptr;
   size_t temp_storage_bytes = 0;
