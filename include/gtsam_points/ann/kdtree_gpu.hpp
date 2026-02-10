@@ -49,6 +49,12 @@ public:
     float* h_nn_sq_dists,
     CUstream_st* stream = nullptr);
 
+  /// @brief Get the GPU pointer to the point indices
+  const std::uint32_t* get_indices() const { return indices; }
+
+  /// @brief Get the GPU pointer to the KdTree nodes
+  const KdTreeNodeGPU* get_nodes() const { return nodes; }
+
 private:
   PointCloud::ConstPtr points;
   size_t num_indices;

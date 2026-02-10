@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <optional>
 #include <gtsam_points/types/point_cloud.hpp>
 #include <gtsam_points/ann/kdtree_gpu.hpp>
 #include <gtsam_points/factors/nonlinear_factor_gpu.hpp>

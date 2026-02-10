@@ -6,6 +6,7 @@
 #include <memory>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
+#include <thrust/pair.h>
 
 #include <gtsam_points/ann/kdtree_gpu.hpp>
 #include <gtsam_points/types/point_cloud_gpu.hpp>
@@ -74,6 +75,6 @@ private:
 
   int num_inliers;
   int* num_inliers_gpu;
-  std::pair<int, int>* source_target_correspondences;
+  thrust::pair<int, int>* source_target_correspondences;
 };
 }  // namespace gtsam_points

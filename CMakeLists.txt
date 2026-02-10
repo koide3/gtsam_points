@@ -261,6 +261,10 @@ if(BUILD_WITH_CUDA)
     src/gtsam_points/types/gaussian_voxelmap_gpu_funcs.cu
     # factors
     src/gtsam_points/factors/integrated_gicp_derivatives.cu
+    src/gtsam_points/factors/integrated_gicp_derivatives_inliers.cu
+    src/gtsam_points/factors/integrated_gicp_derivatives_linearize.cu
+    src/gtsam_points/factors/integrated_gicp_derivatives_compute.cu
+    src/gtsam_points/factors/integrated_gicp_factor_gpu.cpp
     src/gtsam_points/factors/integrated_vgicp_derivatives.cu
     src/gtsam_points/factors/integrated_vgicp_derivatives_inliers.cu
     src/gtsam_points/factors/integrated_vgicp_derivatives_compute.cu
