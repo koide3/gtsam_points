@@ -275,6 +275,7 @@ if(BUILD_WITH_CUDA)
   )
   target_include_directories(gtsam_points_cuda PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>
     $<INSTALL_INTERFACE:include>
   )
   target_link_libraries(gtsam_points_cuda
