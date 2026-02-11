@@ -23,8 +23,10 @@
 
 #include <gtsam_points/factors/integrated_icp_factor.hpp>
 #include <gtsam_points/factors/integrated_gicp_factor.hpp>
+#include <gtsam_points/factors/integrated_gicp_factor_gpu.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
+#include <gtsam_points/ann/kdtree_gpu.hpp>
 #include <gtsam_points/optimizers/isam2_ext.hpp>
 #include <gtsam_points/optimizers/levenberg_marquardt_ext.hpp>
 #include <gtsam_points/optimizers/linearization_hook.hpp>
@@ -56,6 +58,7 @@ public:
     frames.resize(5);
     voxelmaps.resize(5);
     voxelmaps_gpu.resize(5);
+    kdtrees_gpu.resize(5);
 
     for (int i = 0; i < 5; i++) {
       std::string token;
@@ -103,6 +106,9 @@ public:
       auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(2.0);
       voxelmap_gpu->insert(*frame);
       voxelmaps_gpu[i] = voxelmap_gpu;
+
+      auto kdtree_gpu = std::make_shared<gtsam_points::KdTreeGPU>(frame);
+      kdtrees_gpu[i] = kdtree_gpu;
 #endif
 
       viewer->update_drawable("frame_" + std::to_string(i), std::make_shared<glk::PointCloudBuffer>(frame->points, frame->size()), guik::Rainbow());
@@ -122,6 +128,7 @@ public:
     factor_types.push_back("GICP");
     factor_types.push_back("VGICP");
 #ifdef GTSAM_POINTS_USE_CUDA
+    factor_types.push_back("GICP_GPU");
     factor_types.push_back("VGICP_GPU");
 #endif
 
@@ -220,6 +227,10 @@ public:
       auto factor = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
       factor->set_num_threads(num_threads);
       return factor;
+    } else if (factor_types[factor_type] == std::string("GICP_GPU")) {
+#ifdef GTSAM_POINTS_USE_CUDA
+      return gtsam::make_shared<gtsam_points::IntegratedGICPFactorGPU>(target_key, source_key, target, source, kdtrees_gpu[target_key]);
+#endif
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
 #ifdef GTSAM_POINTS_USE_CUDA
       return gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap_gpu, source);
@@ -301,6 +312,7 @@ private:
   std::vector<gtsam_points::PointCloud::Ptr> frames;
   std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps;
   std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps_gpu;
+  std::vector<gtsam_points::KdTreeGPU::Ptr> kdtrees_gpu;
 };
 
 int main(int argc, char** argv) {

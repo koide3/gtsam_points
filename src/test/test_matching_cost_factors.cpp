@@ -22,8 +22,10 @@
 #include <gtsam_points/types/gaussian_voxelmap_gpu.hpp>
 #include <gtsam_points/factors/integrated_icp_factor.hpp>
 #include <gtsam_points/factors/integrated_gicp_factor.hpp>
+#include <gtsam_points/factors/integrated_gicp_factor_gpu.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor.hpp>
 #include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
+#include <gtsam_points/ann/kdtree_gpu.hpp>
 #include <gtsam_points/cuda/stream_temp_buffer_roundrobin.hpp>
 #include <gtsam_points/cuda/nonlinear_factor_set_gpu_create.hpp>
 
@@ -89,8 +91,12 @@ struct MatchingCostFactorsTestBase : public testing::Test {
       auto voxelmap_gpu = std::make_shared<gtsam_points::GaussianVoxelMapGPU>(1.0);
       voxelmap_gpu->insert(*frames.back());
       voxelmaps_gpu.push_back(voxelmap_gpu);
+
+      auto kdtree_gpu = std::make_shared<gtsam_points::KdTreeGPU>(frames.back());
+      kdtrees_gpu.push_back(kdtree_gpu);
 #else
       voxelmaps_gpu.push_back(nullptr);
+      kdtrees_gpu.push_back(nullptr);
 #endif
     }
 
@@ -103,6 +109,7 @@ struct MatchingCostFactorsTestBase : public testing::Test {
   std::vector<gtsam_points::PointCloud::Ptr> frames;
   std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps;
   std::vector<gtsam_points::GaussianVoxelMap::Ptr> voxelmaps_gpu;
+  std::vector<gtsam_points::KdTreeGPU::Ptr> kdtrees_gpu;
   gtsam::Values poses;
   gtsam::Values poses_gt;
 
@@ -144,6 +151,14 @@ public:
       auto f = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
       f->set_num_threads(num_threads);
       factor = f;
+    } else if (method == "GICP_CUDA") {
+#ifdef GTSAM_POINTS_USE_CUDA
+      auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
+      const auto& stream = stream_buffer.first;
+      const auto& buffer = stream_buffer.second;
+      auto kdtree_gpu = std::make_shared<gtsam_points::KdTreeGPU>(target, stream);
+      factor.reset(new gtsam_points::IntegratedGICPFactorGPU(target_key, source_key, target, source, kdtree_gpu, stream, buffer));
+#endif
     } else if (method == "VGICP_CUDA") {
 #ifdef GTSAM_POINTS_USE_CUDA
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
@@ -181,6 +196,14 @@ public:
       auto f = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(fixed_target_pose, source_key, target_voxelmap, source);
       f->set_num_threads(num_threads);
       factor = f;
+    } else if (method == "GICP_CUDA") {
+#ifdef GTSAM_POINTS_USE_CUDA
+      auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
+      const auto& stream = stream_buffer.first;
+      const auto& buffer = stream_buffer.second;
+      auto kdtree_gpu = std::make_shared<gtsam_points::KdTreeGPU>(target, stream);
+      factor.reset(new gtsam_points::IntegratedGICPFactorGPU(fixed_target_pose, source_key, target, source, kdtree_gpu, stream, buffer));
+#endif
     } else if (method == "VGICP_CUDA") {
 #ifdef GTSAM_POINTS_USE_CUDA
       auto stream_buffer = stream_buffer_roundrobin->get_stream_buffer();
@@ -233,7 +256,7 @@ public:
 INSTANTIATE_TEST_SUITE_P(
   gtsam_points,
   MatchingCostFactorTest,
-  testing::Combine(testing::Values("ICP", "GICP", "VGICP", "VGICP_CUDA"), testing::Values("NONE", "OMP", "TBB")),
+  testing::Combine(testing::Values("ICP", "GICP", "VGICP", "GICP_CUDA", "VGICP_CUDA"), testing::Values("NONE", "OMP", "TBB")),
   [](const auto& info) { return std::get<0>(info.param) + "_" + std::get<1>(info.param); });
 
 TEST_P(MatchingCostFactorTest, AlignmentTest) {
