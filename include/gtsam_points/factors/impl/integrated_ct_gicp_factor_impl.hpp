@@ -195,7 +195,7 @@ void IntegratedCT_GICPFactor_<TargetFrame, SourceFrame>::update_correspondences(
       const Eigen::Matrix4d RCR = (cov_B + pose * cov_A * pose.transpose());
 
       mahalanobis[i].setZero();
-      mahalanobis[i].block<3, 3>(0, 0) = RCR.block<3, 3>(0, 0).inverse();
+      mahalanobis[i].template block<3, 3>(0, 0) = RCR.block<3, 3>(0, 0).inverse();
     }
   };
 
