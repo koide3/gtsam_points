@@ -19,7 +19,6 @@ jobs:
         DISTRO: [
           { "tag": "jammy_gtsam4.3a0", "base_image": "ubuntu:jammy", "suffix": "gcc" },
           { "tag": "jammy_gtsam4.3a0", "base_image": "ubuntu:jammy", "suffix": "llvm" },
-          { "tag": "jammy_cuda12.2_gtsam4.3a0", "base_image": "nvidia/cuda:12.2.2-devel-ubuntu22.04", "suffix": "gcc.cuda" },
           { "tag": "jammy_cuda12.5_gtsam4.3a0", "base_image": "nvidia/cuda:12.5.1-devel-ubuntu22.04", "suffix": "gcc.cuda" },
           { "tag": "jammy_cuda13.1_gtsam4.3a0", "base_image": "nvidia/cuda:13.1.0-devel-ubuntu22.04", "suffix": "gcc.cuda" },
           { "tag": "noble_gtsam4.3a0", "base_image": "ubuntu:noble", "suffix": "gcc" },
