@@ -1,0 +1,5 @@
+<map id="gtsam_points::KnnResult&lt; N, IndexTransform &gt;" name="gtsam_points::KnnResult&lt; N, IndexTransform &gt;">
+<area shape="rect" id="Node000001" title="K&#45;nearest neighbor search result container." alt="" coords="5,108,189,148"/>
+<area shape="rect" id="Node000002" href="$structgtsam__points_1_1identity__transform.html" title="Identity transformation function. (use std::identity instead in C++20)" alt="" coords="13,5,181,45"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="100,59,100,108,95,108,95,59"/>
+</map>

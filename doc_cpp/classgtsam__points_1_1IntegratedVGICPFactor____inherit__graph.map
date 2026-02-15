@@ -1,0 +1,7 @@
+<map id="gtsam_points::IntegratedVGICPFactor_&lt; SourceFrame &gt;" name="gtsam_points::IntegratedVGICPFactor_&lt; SourceFrame &gt;">
+<area shape="rect" id="Node000001" title="Voxelized GICP matching cost factor Koide et al., &quot;Voxelized GICP for Fast and Accurate 3D Point Clou..." alt="" coords="5,167,228,207"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1IntegratedMatchingCostFactor.html" title="Abstraction of LSQ&#45;based scan matching constraints between point clouds." alt="" coords="24,79,209,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="119,133,119,166,114,166,114,133"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="30,5,203,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="119,44,119,79,114,79,114,44"/>
+</map>

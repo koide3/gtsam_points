@@ -1,0 +1,5 @@
+<map id="gtsam_points::ReintegratedImuMeasurements" name="gtsam_points::ReintegratedImuMeasurements">
+<area shape="rect" id="Node000001" title="IMU measurements to be re&#45;integrated. This class stores IMU measurements along with the pre&#45;integrate..." alt="" coords="45,79,247,119"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,287,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="149,44,149,79,143,79,143,44"/>
+</map>

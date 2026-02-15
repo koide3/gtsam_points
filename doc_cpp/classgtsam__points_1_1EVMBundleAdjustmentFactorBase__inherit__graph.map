@@ -1,0 +1,11 @@
+<map id="gtsam_points::EVMBundleAdjustmentFactorBase" name="gtsam_points::EVMBundleAdjustmentFactorBase">
+<area shape="rect" id="Node000001" title="Bundle adjustment factor based on Eigenvalue minimization One EVMFactor represents one feature (plane..." alt="" coords="104,167,371,207"/>
+<area shape="rect" id="Node000004" href="$classgtsam__points_1_1EdgeEVMFactor.html" title="Edge EVM factor that minimizes lambda_0 + lambda_1." alt="" coords="5,255,224,280"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="198,216,134,257,131,252,195,212"/>
+<area shape="rect" id="Node000005" href="$classgtsam__points_1_1PlaneEVMFactor.html" title="Plane EVM factor that minimizes lambda_0." alt="" coords="249,255,471,280"/>
+<area shape="poly" id="edge4_Node000001_Node000005" title=" " alt="" coords="280,212,343,252,341,257,277,216"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1BundleAdjustmentFactorBase.html" title="Base class of range&#45;based bundle adjustment factors." alt="" coords="118,79,357,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="240,133,240,166,235,166,235,133"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="151,5,324,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="240,44,240,79,235,79,235,44"/>
+</map>

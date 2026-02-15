@@ -1,0 +1,5 @@
+<map id="gtsam_points::Pose3InterpolationFactor" name="gtsam_points::Pose3InterpolationFactor">
+<area shape="rect" id="Node000001" title="Factor(xi, xj, xk) s.t. xk = Slerp(xi, xj, t)" alt="" coords="5,108,245,148"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="28,5,223,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="128,74,128,108,123,108,123,74"/>
+</map>

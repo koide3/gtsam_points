@@ -1,0 +1,5 @@
+<map id="gtsam_points::Pose3CalibFactor" name="gtsam_points::Pose3CalibFactor">
+<area shape="rect" id="Node000001" title="Factor(xi, xj, Tij) that evaluates (xj_inv * xi) * Tij." alt="" coords="7,108,198,148"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="5,5,200,60"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="105,74,105,108,100,108,100,74"/>
+</map>

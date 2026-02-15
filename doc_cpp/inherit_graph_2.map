@@ -1,0 +1,7 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,45,200,70"/>
+<area shape="rect" id="Node000001" href="$classgtsam__points_1_1Pose3CalibFactor.html" title="Factor(xi, xj, Tij) that evaluates (xj_inv * xi) * Tij." alt="" coords="273,5,463,45"/>
+<area shape="poly" id="edge3_Node000000_Node000001" title=" " alt="" coords="213,41,272,34,273,39,214,47"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1Pose3InterpolationFactor.html" title="Factor(xi, xj, xk) s.t. xk = Slerp(xi, xj, t)" alt="" coords="248,69,488,109"/>
+<area shape="poly" id="edge4_Node000000_Node000002" title=" " alt="" coords="214,68,248,72,247,77,213,73"/>
+</map>

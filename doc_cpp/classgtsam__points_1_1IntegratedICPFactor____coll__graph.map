@@ -1,0 +1,7 @@
+<map id="gtsam_points::IntegratedICPFactor_&lt; TargetFrame, SourceFrame &gt;" name="gtsam_points::IntegratedICPFactor_&lt; TargetFrame, SourceFrame &gt;">
+<area shape="rect" id="Node000001" title="Naive point&#45;to&#45;point ICP matching cost factor Zhang, &quot;Iterative Point Matching for Registration of Fr..." alt="" coords="5,167,195,221"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1IntegratedMatchingCostFactor.html" title="Abstraction of LSQ&#45;based scan matching constraints between point clouds." alt="" coords="7,79,193,119"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="103,132,103,167,97,167,97,132"/>
+<area shape="rect" id="Node000003" title=" " alt="" coords="13,5,187,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="103,44,103,79,97,79,97,44"/>
+</map>

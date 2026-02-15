@@ -1,0 +1,5 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,13,219,38"/>
+<area shape="rect" id="Node000001" href="$classgtsam__points_1_1LinearDampingFactor.html" title="This factor adds a constant diagonal matrix to the Hessian matrix. It causes a damping effect (like l..." alt="" coords="267,5,484,45"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="233,23,267,23,267,28,233,28"/>
+</map>
