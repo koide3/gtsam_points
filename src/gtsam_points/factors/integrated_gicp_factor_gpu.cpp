@@ -120,7 +120,7 @@ size_t IntegratedGICPFactorGPU::memory_usage() const {
 }
 
 size_t IntegratedGICPFactorGPU::memory_usage_gpu() const {
-  return sizeof(Eigen::Isometry3f) + sizeof(int) + sizeof(std::pair<int, int>) * derivatives->get_num_inliers();
+  return sizeof(Eigen::Isometry3f) + sizeof(int) + sizeof(Correspondence) * derivatives->get_num_inliers();
 }
 
 void IntegratedGICPFactorGPU::set_enable_offloading(bool enable) {

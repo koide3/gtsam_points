@@ -6,9 +6,9 @@
 #include <memory>
 #include <Eigen/Core>
 #include <Eigen/Geometry>
-#include <thrust/pair.h>
 
 #include <gtsam_points/ann/kdtree_gpu.hpp>
+#include <gtsam_points/cuda/kernels/correspondence.hpp>
 #include <gtsam_points/types/point_cloud_gpu.hpp>
 
 struct CUstream_st;
@@ -78,6 +78,6 @@ private:
 
   int num_inliers;
   int* num_inliers_gpu;
-  thrust::pair<int, int>* source_target_correspondences;
+  Correspondence* source_target_correspondences;
 };
 }  // namespace gtsam_points

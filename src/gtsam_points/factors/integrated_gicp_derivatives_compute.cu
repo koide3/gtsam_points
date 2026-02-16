@@ -34,8 +34,8 @@ struct kdtree_correspondence_kernel {
     target_indices(target_indices),
     target_nodes(target_nodes) {}
 
-  __device__ thrust::pair<int, int> operator()(const thrust::pair<int, int>& source_target) const {
-    const int source_idx = source_target.first;
+  __device__ Correspondence operator()(const Correspondence& source_target) const {
+    const int source_idx = source_target.source_idx;
     if (source_idx < 0) {
       return source_target;
     }
@@ -50,7 +50,7 @@ struct kdtree_correspondence_kernel {
 
     const auto [nn_idx, sq_dist] = nn_search(transed_pt);
 
-    return thrust::make_pair(source_idx, static_cast<int>(nn_idx));
+    return Correspondence(source_idx, static_cast<int>(nn_idx));
   }
 
   const Eigen::Isometry3f* linearization_point_ptr;

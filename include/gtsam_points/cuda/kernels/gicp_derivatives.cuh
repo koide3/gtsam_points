@@ -6,6 +6,7 @@
 #include <Eigen/Core>
 #include <thrust/device_vector.h>
 
+#include <gtsam_points/cuda/kernels/correspondence.hpp>
 #include <gtsam_points/cuda/kernels/pose.cuh>
 #include <gtsam_points/cuda/kernels/linearized_system.cuh>
 
@@ -24,9 +25,9 @@ struct gicp_derivatives_kernel {
     source_means_ptr(source_means),
     source_covs_ptr(source_covs) {}
 
-  __device__ LinearizedSystem6 operator()(const thrust::pair<int, int>& source_target_correspondence) const {
-    const int source_idx = source_target_correspondence.first;
-    const int target_idx = source_target_correspondence.second;
+  __device__ LinearizedSystem6 operator()(const Correspondence& source_target_correspondence) const {
+    const int source_idx = source_target_correspondence.source_idx;
+    const int target_idx = source_target_correspondence.target_idx;
     if (source_idx < 0 || target_idx < 0) {
       return LinearizedSystem6::zero();
     }
@@ -93,9 +94,9 @@ struct gicp_error_kernel {
     source_means_ptr(source_means),
     source_covs_ptr(source_covs) {}
 
-  __device__ float operator()(const thrust::pair<int, int>& source_target_correspondence) const {
-    const int source_idx = source_target_correspondence.first;
-    const int target_idx = source_target_correspondence.second;
+  __device__ float operator()(const Correspondence& source_target_correspondence) const {
+    const int source_idx = source_target_correspondence.source_idx;
+    const int target_idx = source_target_correspondence.target_idx;
     if (source_idx < 0 || target_idx < 0) {
       return 0.0f;
     }

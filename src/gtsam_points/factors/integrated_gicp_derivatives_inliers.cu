@@ -8,7 +8,6 @@
 #include <thrust/sequence.h>
 #include <thrust/host_vector.h>
 #include <thrust/transform.h>
-#include <thrust/pair.h>
 
 #include <gtsam_points/cuda/check_error.cuh>
 #include <gtsam_points/cuda/kernels/pose.cuh>
@@ -20,7 +19,7 @@ namespace gtsam_points {
 namespace {
 
 struct init_source_target_indices_kernel {
-  __host__ __device__ thrust::pair<int, int> operator()(const int i) const { return thrust::make_pair(i, -1); }
+  __host__ __device__ Correspondence operator()(const int i) const { return Correspondence(i, -1); }
 };
 
 }  // namespace
@@ -35,7 +34,7 @@ void IntegratedGICPDerivatives::reset_inliers(const Eigen::Isometry3f& x, const 
     inlier_evaluation_point_gpu = d_x;
 
     check_error << cudaFreeAsync(source_target_correspondences, stream);
-    check_error << cudaMallocAsync(&source_target_correspondences, sizeof(thrust::pair<int, int>) * source->size(), stream);
+    check_error << cudaMallocAsync(&source_target_correspondences, sizeof(Correspondence) * source->size(), stream);
     thrust::transform(
       thrust::cuda::par_nosync.on(stream),
       thrust::make_counting_iterator<int>(0),
