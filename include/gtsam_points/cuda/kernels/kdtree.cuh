@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2025  Kenji Koide (k.koide@aist.go.jp)
+#pragma once
 #include <gtsam_points/ann/kdtree_gpu.hpp>
 
 namespace gtsam_points {
