@@ -1,0 +1,114 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2025  Kenji Koide (k.koide@aist.go.jp)
+
+#include <gtsam_points/factors/integrated_gicp_derivatives.cuh>
+
+#include <iostream>
+#include <Eigen/Geometry>
+
+#include <gtsam_points/cuda/check_error.cuh>
+#include <gtsam_points/cuda/kernels/linearized_system.cuh>
+#include <gtsam_points/cuda/kernels/vgicp_derivatives.cuh>
+#include <gtsam_points/cuda/stream_temp_buffer_roundrobin.hpp>
+#include <gtsam_points/cuda/cuda_malloc_async.hpp>
+
+#include <gtsam_points/types/point_cloud_gpu.hpp>
+
+namespace gtsam_points {
+
+IntegratedGICPDerivatives::IntegratedGICPDerivatives(
+  const PointCloud::ConstPtr& target,
+  const PointCloud::ConstPtr& source,
+  const KdTreeGPU::ConstPtr& target_tree,
+  CUstream_st* ext_stream,
+  std::shared_ptr<TempBufferManager> temp_buffer)
+: enable_offloading(false),
+  enable_surface_validation(false),
+  max_correspondence_distance_sq(1.0),
+  inlier_update_thresh_trans(1e-6),
+  inlier_update_thresh_angle(1e-6),
+  target(target),
+  source(source),
+  target_tree(target_tree),
+  external_stream(true),
+  stream(ext_stream),
+  temp_buffer(temp_buffer),
+  num_inliers(0),
+  source_target_correspondences(nullptr) {
+  //
+  if (stream == nullptr) {
+    external_stream = false;
+    cudaStreamCreateWithFlags(&stream, cudaStreamNonBlocking);
+  }
+
+  if (this->temp_buffer == nullptr) {
+    this->temp_buffer.reset(new TempBufferManager());
+  }
+
+  check_error << cudaMallocAsync(&num_inliers_gpu, sizeof(int), stream);
+  // check_error << cudaHostRegister(&num_inliers, sizeof(int), cudaHostRegisterDefault);
+}
+
+IntegratedGICPDerivatives::~IntegratedGICPDerivatives() {
+  check_error << cudaFreeAsync(source_target_correspondences, stream);
+  check_error << cudaFreeAsync(num_inliers_gpu, stream);
+  // check_error << cudaHostUnregister(&num_inliers);
+
+  if (!external_stream) {
+    cudaStreamDestroy(stream);
+  }
+}
+
+void IntegratedGICPDerivatives::sync_stream() {
+  check_error << cudaStreamSynchronize(stream);
+}
+
+void IntegratedGICPDerivatives::touch_points() {
+  if (!enable_offloading) {
+    return;
+  }
+
+  // auto target_ = const_cast<GaussianVoxelMapGPU*>(target.get());
+  // target_->touch(stream);
+
+  // auto source_gpu_const = dynamic_cast<const PointCloudGPU*>(source.get());
+  // if (!source_gpu_const) {
+  //   return;
+  // }
+
+  // auto source_gpu = const_cast<PointCloudGPU*>(source_gpu_const);
+  // source_gpu->touch(stream);
+}
+
+LinearizedSystem6 IntegratedGICPDerivatives::linearize(const Eigen::Isometry3f& x) {
+  thrust::device_vector<Eigen::Isometry3f> x_ptr(1);
+  thrust::device_vector<LinearizedSystem6> output_ptr(1);
+
+  x_ptr[0] = x;
+
+  reset_inliers(x, thrust::raw_pointer_cast(x_ptr.data()));
+  issue_linearize(thrust::raw_pointer_cast(x_ptr.data()), thrust::raw_pointer_cast(output_ptr.data()));
+  sync_stream();
+
+  LinearizedSystem6 linearized = output_ptr[0];
+
+  return linearized;
+}
+
+double IntegratedGICPDerivatives::compute_error(const Eigen::Isometry3f& d_xl, const Eigen::Isometry3f& d_xe) {
+  thrust::device_vector<Eigen::Isometry3f> xs_ptr(2);
+  xs_ptr[0] = d_xl;
+  xs_ptr[1] = d_xe;
+  thrust::device_vector<float> output_ptr(1);
+
+  issue_compute_error(
+    thrust::raw_pointer_cast(xs_ptr.data()),
+    thrust::raw_pointer_cast(xs_ptr.data() + 1),
+    thrust::raw_pointer_cast(output_ptr.data()));
+  sync_stream();
+
+  float error = output_ptr[0];
+  return error;
+}
+
+}  // namespace gtsam_points
