@@ -219,7 +219,7 @@ PointCloudCPU::Ptr IncrementalVoxelMap<VoxelContents>::voxel_data() const {
   });
 
   frame->num_points = frame->points_storage.size();
-  frame->points = frame->points_storage.data();
+  frame->points = frame->points_storage.empty() ? nullptr : frame->points_storage.data();
   frame->normals = frame->normals_storage.empty() ? nullptr : frame->normals_storage.data();
   frame->covs = frame->covs_storage.empty() ? nullptr : frame->covs_storage.data();
   frame->intensities = frame->intensities_storage.empty() ? nullptr : frame->intensities_storage.data();

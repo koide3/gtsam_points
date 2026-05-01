@@ -211,7 +211,7 @@ void PointCloudGPU::download_points(CUstream_st* stream) {
 
   if (!points) {
     points_storage.resize(num_points);
-    points = points_storage.data();
+    points = points_storage.empty() ? nullptr : points_storage.data();
   }
 
   std::transform(points_h.begin(), points_h.end(), points, [](const Eigen::Vector3f& p) { return Eigen::Vector4d(p.x(), p.y(), p.z(), 1.0); });

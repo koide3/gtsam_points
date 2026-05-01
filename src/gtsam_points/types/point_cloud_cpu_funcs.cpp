@@ -28,30 +28,30 @@ PointCloudCPU::Ptr sample(const PointCloud::ConstPtr& frame, const std::vector<i
   PointCloudCPU::Ptr sampled(new PointCloudCPU);
   sampled->num_points = indices.size();
   sampled->points_storage.resize(indices.size());
-  sampled->points = sampled->points_storage.data();
+  sampled->points = sampled->points_storage.empty() ? nullptr : sampled->points_storage.data();
   std::transform(indices.begin(), indices.end(), sampled->points, [&](const int i) { return frame->points[i]; });
 
   if (frame->times) {
     sampled->times_storage.resize(indices.size());
-    sampled->times = sampled->times_storage.data();
+    sampled->times = sampled->times_storage.empty() ? nullptr : sampled->times_storage.data();
     std::transform(indices.begin(), indices.end(), sampled->times, [&](const int i) { return frame->times[i]; });
   }
 
   if (frame->normals) {
     sampled->normals_storage.resize(indices.size());
-    sampled->normals = sampled->normals_storage.data();
+    sampled->normals = sampled->normals_storage.empty() ? nullptr : sampled->normals_storage.data();
     std::transform(indices.begin(), indices.end(), sampled->normals, [&](const int i) { return frame->normals[i]; });
   }
 
   if (frame->covs) {
     sampled->covs_storage.resize(indices.size());
-    sampled->covs = sampled->covs_storage.data();
+    sampled->covs = sampled->covs_storage.empty() ? nullptr : sampled->covs_storage.data();
     std::transform(indices.begin(), indices.end(), sampled->covs, [&](const int i) { return frame->covs[i]; });
   }
 
   if (frame->intensities) {
     sampled->intensities_storage.resize(indices.size());
-    sampled->intensities = sampled->intensities_storage.data();
+    sampled->intensities = sampled->intensities_storage.empty() ? nullptr : sampled->intensities_storage.data();
     std::transform(indices.begin(), indices.end(), sampled->intensities, [&](const int i) { return frame->intensities[i]; });
   }
 
@@ -68,7 +68,7 @@ PointCloudCPU::Ptr sample(const PointCloud::ConstPtr& frame, const std::vector<i
     }
 
     sampled->aux_attributes_storage[name] = storage;
-    sampled->aux_attributes[name] = std::make_pair(elem_size, storage->data());
+    sampled->aux_attributes[name] = std::make_pair(elem_size, storage->empty() ? nullptr : storage->data());
   }
 
   return sampled;
@@ -265,26 +265,26 @@ PointCloudCPU::Ptr voxelgrid_sampling(const PointCloud::ConstPtr& frame, const d
 
   downsampled->num_points = num_points;
   downsampled->points_storage.resize(num_points);
-  downsampled->points = downsampled->points_storage.data();
+  downsampled->points = downsampled->points_storage.empty() ? nullptr : downsampled->points_storage.data();
 
   if (frame->times) {
     downsampled->times_storage.resize(num_points);
-    downsampled->times = downsampled->times_storage.data();
+    downsampled->times = downsampled->times_storage.empty() ? nullptr : downsampled->times_storage.data();
   }
 
   if (frame->normals) {
     downsampled->normals_storage.resize(num_points);
-    downsampled->normals = downsampled->normals_storage.data();
+    downsampled->normals = downsampled->normals_storage.empty() ? nullptr : downsampled->normals_storage.data();
   }
 
   if (frame->covs) {
     downsampled->covs_storage.resize(num_points);
-    downsampled->covs = downsampled->covs_storage.data();
+    downsampled->covs = downsampled->covs_storage.empty() ? nullptr : downsampled->covs_storage.data();
   }
 
   if (frame->intensities) {
     downsampled->intensities_storage.resize(num_points);
-    downsampled->intensities = downsampled->intensities_storage.data();
+    downsampled->intensities = downsampled->intensities_storage.empty() ? nullptr : downsampled->intensities_storage.data();
   }
 
   if (!frame->aux_attributes.empty()) {
