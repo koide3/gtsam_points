@@ -85,7 +85,7 @@ public:
   void add_aux_attribute(const std::string& attrib_name, const T* values, int num_points) {
     auto attributes = std::make_shared<std::vector<T>>(values, values + num_points);
     aux_attributes_storage[attrib_name] = attributes;
-    aux_attributes[attrib_name] = std::make_pair(sizeof(T), attributes->data());
+    aux_attributes[attrib_name] = std::make_pair(sizeof(T), attributes->empty() ? nullptr : attributes->data());
   }
   template <typename T, typename Alloc>
   void add_aux_attribute(const std::string& attrib_name, const std::vector<T, Alloc>& values) {

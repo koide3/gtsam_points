@@ -141,12 +141,12 @@ IntensityGradients::estimate(const gtsam_points::PointCloudCPU::Ptr& frame, int 
 
   if (estimate_normals) {
     frame->normals_storage.resize(frame->size());
-    frame->normals = frame->normals_storage.data();
+    frame->normals = frame->normals_storage.empty() ? nullptr : frame->normals_storage.data();
   }
 
   if (estimate_covs) {
     frame->covs_storage.resize(frame->size());
-    frame->covs = frame->covs_storage.data();
+    frame->covs = frame->covs_storage.empty() ? nullptr : frame->covs_storage.data();
   }
 
   IntensityGradients::Ptr gradients(new IntensityGradients);

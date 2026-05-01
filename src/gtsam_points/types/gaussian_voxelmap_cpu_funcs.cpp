@@ -82,13 +82,13 @@ merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<Poin
   merged->num_points = num_voxels;
   merged->points_storage.resize(num_voxels, Eigen::Vector4d::Zero());
   merged->covs_storage.resize(num_voxels, Eigen::Matrix4d::Zero());
-  merged->points = merged->points_storage.data();
-  merged->covs = merged->covs_storage.data();
+  merged->points = merged->points_storage.empty() ? nullptr : merged->points_storage.data();
+  merged->covs = merged->covs_storage.empty() ? nullptr : merged->covs_storage.data();
 
   const bool has_intensities = std::all_of(frames.begin(), frames.end(), [](const auto& frame) { return frame->has_intensities(); });
   if (has_intensities) {
     merged->intensities_storage.resize(num_voxels, 0.0);
-    merged->intensities = merged->intensities_storage.data();
+    merged->intensities = merged->intensities_storage.empty() ? nullptr : merged->intensities_storage.data();
   }
 
   for (int i = 0; i < frames.size(); i++) {

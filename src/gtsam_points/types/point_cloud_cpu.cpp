@@ -62,7 +62,7 @@ PointCloudCPU::Ptr PointCloudCPU::clone(const PointCloud& points) {
     memcpy(storage->data(), data_ptr, elem_size * points.size());
 
     new_points->aux_attributes_storage[name] = storage;
-    new_points->aux_attributes[name] = std::make_pair(elem_size, storage->data());
+    new_points->aux_attributes[name] = std::make_pair(elem_size, storage->empty() ? nullptr : storage->data());
   }
 
   return new_points;
@@ -76,7 +76,7 @@ void PointCloudCPU::add_times(const T* times, int num_points) {
   if (times) {
     std::copy(times, times + num_points, times_storage.begin());
   }
-  this->times = this->times_storage.data();
+  this->times = times_storage.empty() ? nullptr : times_storage.data();
 }
 
 template void PointCloudCPU::add_times(const float* times, int num_points);
@@ -91,7 +91,7 @@ void PointCloudCPU::add_points(const Eigen::Matrix<T, D, 1>* points, int num_poi
       points_storage[i].head<D>() = points[i].template head<D>().template cast<double>();
     }
   }
-  this->points = points_storage.data();
+  this->points = points_storage.empty() ? nullptr : points_storage.data();
   this->num_points = num_points;
 }
 
@@ -110,7 +110,7 @@ void PointCloudCPU::add_normals(const Eigen::Matrix<T, D, 1>* normals, int num_p
       normals_storage[i].head<D>() = normals[i].template head<D>().template cast<double>();
     }
   }
-  this->normals = normals_storage.data();
+  this->normals = normals_storage.empty() ? nullptr : normals_storage.data();
 }
 
 template void PointCloudCPU::add_normals(const Eigen::Matrix<float, 3, 1>* normals, int num_points);
@@ -128,7 +128,7 @@ void PointCloudCPU::add_covs(const Eigen::Matrix<T, D, D>* covs, int num_points)
       covs_storage[i].block<D, D>(0, 0) = covs[i].template block<D, D>(0, 0).template cast<double>();
     }
   }
-  this->covs = covs_storage.data();
+  this->covs = covs_storage.empty() ? nullptr : covs_storage.data();
 }
 
 template void PointCloudCPU::add_covs(const Eigen::Matrix<float, 3, 3>* covs, int num_points);
@@ -144,7 +144,7 @@ void PointCloudCPU::add_intensities(const T* intensities, int num_points) {
   if (intensities) {
     std::copy(intensities, intensities + num_points, intensities_storage.begin());
   }
-  this->intensities = this->intensities_storage.data();
+  this->intensities = intensities_storage.empty() ? nullptr : intensities_storage.data();
 }
 
 template void PointCloudCPU::add_intensities(const float* intensities, int num_points);
@@ -161,35 +161,35 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
 
     frame->num_points = num_points;
     frame->points_storage.resize(num_points);
-    frame->points = frame->points_storage.data();
+    frame->points = frame->points_storage.empty() ? nullptr : frame->points_storage.data();
 
     ifs.seekg(0, std::ios::beg);
     ifs.read(reinterpret_cast<char*>(frame->points), sizeof(Eigen::Vector4d) * frame->size());
 
     if (boost::filesystem::exists(path + "/times.bin")) {
       frame->times_storage.resize(frame->size());
-      frame->times = frame->times_storage.data();
+      frame->times = frame->times_storage.empty() ? nullptr : frame->times_storage.data();
       std::ifstream ifs(path + "/times.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(frame->times), sizeof(double) * frame->size());
     }
 
     if (boost::filesystem::exists(path + "/normals.bin")) {
       frame->normals_storage.resize(frame->size());
-      frame->normals = frame->normals_storage.data();
+      frame->normals = frame->normals_storage.empty() ? nullptr : frame->normals_storage.data();
       std::ifstream ifs(path + "/normals.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(frame->normals), sizeof(Eigen::Vector4d) * frame->size());
     }
 
     if (boost::filesystem::exists(path + "/covs.bin")) {
       frame->covs_storage.resize(frame->size());
-      frame->covs = frame->covs_storage.data();
+      frame->covs = frame->covs_storage.empty() ? nullptr : frame->covs_storage.data();
       std::ifstream ifs(path + "/covs.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(frame->covs), sizeof(Eigen::Matrix4d) * frame->size());
     }
 
     if (boost::filesystem::exists(path + "/intensities.bin")) {
       frame->intensities_storage.resize(frame->size());
-      frame->intensities = frame->intensities_storage.data();
+      frame->intensities = frame->intensities_storage.empty() ? nullptr : frame->intensities_storage.data();
       std::ifstream ifs(path + "/intensities.bin", std::ios::binary);
       ifs.read(reinterpret_cast<char*>(frame->intensities), sizeof(double) * frame->size());
     }
@@ -200,7 +200,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
 
     frame->num_points = num_points;
     frame->points_storage.resize(num_points);
-    frame->points = frame->points_storage.data();
+    frame->points = frame->points_storage.empty() ? nullptr : frame->points_storage.data();
     std::vector<Eigen::Vector3f> points_f(num_points);
 
     ifs.seekg(0, std::ios::beg);
@@ -209,7 +209,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
 
     if (boost::filesystem::exists(path + "/times_compact.bin")) {
       frame->times_storage.resize(frame->size());
-      frame->times = frame->times_storage.data();
+      frame->times = frame->times_storage.empty() ? nullptr : frame->times_storage.data();
       std::vector<float> times_f(frame->size());
 
       std::ifstream ifs(path + "/times_compact.bin", std::ios::binary);
@@ -219,7 +219,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
 
     if (boost::filesystem::exists(path + "/normals_compact.bin")) {
       frame->normals_storage.resize(frame->size());
-      frame->normals = frame->normals_storage.data();
+      frame->normals = frame->normals_storage.empty() ? nullptr : frame->normals_storage.data();
       std::vector<Eigen::Vector3f> normals_f(frame->size());
 
       std::ifstream ifs(path + "/normals_compact.bin", std::ios::binary);
@@ -231,7 +231,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
 
     if (boost::filesystem::exists(path + "/covs_compact.bin")) {
       frame->covs_storage.resize(frame->size());
-      frame->covs = frame->covs_storage.data();
+      frame->covs = frame->covs_storage.empty() ? nullptr : frame->covs_storage.data();
       std::vector<Eigen::Matrix<float, 6, 1>> covs_f(frame->size());
 
       std::ifstream ifs(path + "/covs_compact.bin", std::ios::binary);
@@ -250,7 +250,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
 
     if (boost::filesystem::exists(path + "/intensities_compact.bin")) {
       frame->intensities_storage.resize(frame->size());
-      frame->intensities = frame->intensities_storage.data();
+      frame->intensities = frame->intensities_storage.empty() ? nullptr : frame->intensities_storage.data();
       std::vector<float> intensities_f(frame->size());
 
       std::ifstream ifs(path + "/intensities_compact.bin", std::ios::binary);
@@ -287,7 +287,7 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
     ifs.read(storage->data(), bytes);
 
     frame->aux_attributes_storage[name] = storage;
-    frame->aux_attributes[name] = std::make_pair(elem_size, storage->data());
+    frame->aux_attributes[name] = std::make_pair(elem_size, storage->empty() ? nullptr : storage->data());
   }
 
   return frame;
