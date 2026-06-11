@@ -3,6 +3,7 @@
 
 #pragma once
 
+#include <numeric>
 #include <vector>
 #include <random>
 #include <Eigen/Core>

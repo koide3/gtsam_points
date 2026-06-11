@@ -321,6 +321,7 @@ void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
   check_error << cudaMemcpyAsync(h_voxel_means.data(), voxel_means, sizeof(Eigen::Vector3f) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
   check_error << cudaMemcpyAsync(h_voxel_covs.data(), voxel_covs, sizeof(Eigen::Matrix3f) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
   check_error << cudaMemcpyAsync(h_voxel_intensities.data(), voxel_intensities, sizeof(float) * voxelmap_info.num_voxels, cudaMemcpyDeviceToHost, 0);
+  check_error << cudaStreamSynchronize(0);
 
   std::vector<GaussianVoxelData> serial_voxels;
   serial_voxels.reserve(voxelmap_info.num_voxels);
@@ -357,20 +358,20 @@ void GaussianVoxelMapGPU::save_compact(const std::string& path) const {
     serial_voxels.emplace_back(h_voxel_coords[i], voxel);
   }
 
-  std::ofstream ofs(path);
-  ofs << "compact " << 1 << std::endl;
-  ofs << "resolution " << voxel_resolution() << std::endl;
-  ofs << "lru_count " << 0 << std::endl;
-  ofs << "lru_cycle " << 1 << std::endl;
-  ofs << "lru_thresh " << 1 << std::endl;
-  ofs << "voxel_bytes " << sizeof(GaussianVoxelData) << std::endl;
-  ofs << "num_voxels " << serial_voxels.size() << std::endl;
+  std::ofstream ofs(path, std::ios::binary);
+  ofs << "compact " << 1 << "\n";
+  ofs << "resolution " << voxel_resolution() << "\n";
+  ofs << "lru_count " << 0 << "\n";
+  ofs << "lru_cycle " << 1 << "\n";
+  ofs << "lru_thresh " << 1 << "\n";
+  ofs << "voxel_bytes " << sizeof(GaussianVoxelData) << "\n";
+  ofs << "num_voxels " << serial_voxels.size() << "\n";
 
   ofs.write(reinterpret_cast<const char*>(serial_voxels.data()), sizeof(GaussianVoxelData) * serial_voxels.size());
 }
 
 GaussianVoxelMapGPU::Ptr GaussianVoxelMapGPU::load(const std::string& path) {
-  std::ifstream ifs(path);
+  std::ifstream ifs(path, std::ios::binary);
   if (!ifs) {
     std::cerr << "error: failed to open " << path << std::endl;
     return nullptr;
@@ -463,6 +464,8 @@ GaussianVoxelMapGPU::Ptr GaussianVoxelMapGPU::load(const std::string& path) {
   check_error << cudaMemcpyAsync(voxelmap->voxel_means, h_voxel_means.data(), sizeof(Eigen::Vector3f) * num_voxels, cudaMemcpyHostToDevice, 0);
   check_error << cudaMemcpyAsync(voxelmap->voxel_covs, h_voxel_covs.data(), sizeof(Eigen::Matrix3f) * num_voxels, cudaMemcpyHostToDevice, 0);
   check_error << cudaMemcpyAsync(voxelmap->voxel_intensities, h_voxel_intensities.data(), sizeof(float) * num_voxels, cudaMemcpyHostToDevice, 0);
+  // Ensure all H2D copies complete before the source host buffers go out of scope.
+  check_error << cudaStreamSynchronize(0);
   return voxelmap;
 }
 

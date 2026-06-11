@@ -18,6 +18,7 @@ option(BUILD_WITH_TBB "Build with TBB support" OFF)
 option(BUILD_WITH_OPENMP "Build with OpenMP support" ON)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_CUDA_MULTIARCH "Build with CUDA multi-architecture support" OFF)
+option(BUILD_WITH_HIP "Build with ROCm/HIP GPU support (AMD)" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 option(ENABLE_CPPCHECK "Enable cppcheck" OFF)
 option(ENABLE_COVERAGE "Enable coverage check" OFF)
@@ -112,6 +113,38 @@ if(BUILD_WITH_CUDA)
   set(GTSAM_POINTS_CUDA_VERSION_PATCH ${CUDAToolkit_VERSION_PATCH})
 endif()
 
+# GPU-related (ROCm/HIP for AMD). Mirrors the BUILD_WITH_CUDA arm above: keeps
+# GTSAM_POINTS_USE_CUDA / BUILD_GTSAM_POINTS_GPU defined so all existing GPU
+# guards compile unchanged, and builds the same gtsam_points_cuda source list
+# with the .cu sources marked LANGUAGE HIP (see the GPU library section).
+if(BUILD_WITH_HIP)
+  set(GTSAM_POINTS_USE_CUDA 1)
+  set(GTSAM_POINTS_USE_HIP 1)
+  add_definitions(-DBUILD_GTSAM_POINTS_GPU)
+
+  # Windows/clang needs _USE_MATH_DEFINES for M_PI and NOMINMAX to prevent
+  # the Windows min/max macros from colliding with std::min/max.
+  if(WIN32)
+    add_compile_definitions(_USE_MATH_DEFINES NOMINMAX)
+  endif()
+
+  find_package(hip REQUIRED)
+  enable_language(HIP)
+
+  # Default the lead arch only when unset; never a hardcoded literal, which
+  # would override -DCMAKE_HIP_ARCHITECTURES and force every follower target to
+  # edit this file (gfx1100/gfx1151 reuse the same commit with just the flag).
+  if(NOT DEFINED CMAKE_HIP_ARCHITECTURES OR CMAKE_HIP_ARCHITECTURES STREQUAL "")
+    set(CMAKE_HIP_ARCHITECTURES "gfx90a" CACHE STRING "HIP architectures" FORCE)
+  endif()
+  message(STATUS "CMAKE_HIP_ARCHITECTURES: ${CMAKE_HIP_ARCHITECTURES}")
+
+  set(GTSAM_POINTS_CUDA_VERSION 0)
+  set(GTSAM_POINTS_CUDA_VERSION_MAJOR 0)
+  set(GTSAM_POINTS_CUDA_VERSION_MINOR 0)
+  set(GTSAM_POINTS_CUDA_VERSION_PATCH 0)
+endif()
+
 if(ENABLE_CPPCHECK)
   set(CMAKE_CXX_CPPCHECK "cppcheck")
   list(APPEND CMAKE_CXX_CPPCHECK
@@ -150,7 +183,16 @@ configure_file(include/gtsam_points/config.hpp.in include/gtsam_points/config.hp
 ###########
 
 
-add_library(gtsam_points SHARED
+if(WIN32 AND BUILD_WITH_HIP)
+  # On Windows with a static GTSAM (GTSAM_EXPORT = empty, no dllimport), both
+  # gtsam_points and gtsam_points_cuda are built as STATIC to avoid circular DLL
+  # import issues (PointCloudGPU inherits PointCloudCPU across library boundary).
+  # Test executables link all three static libs directly.
+  set(_gtsam_points_type STATIC)
+else()
+  set(_gtsam_points_type SHARED)
+endif()
+add_library(gtsam_points ${_gtsam_points_type}
   # util
   src/gtsam_points/util/parallelism.cpp
   src/gtsam_points/util/bspline.cpp
@@ -227,14 +269,37 @@ target_link_libraries(gtsam_points
   $<TARGET_NAME_IF_EXISTS:TBB::tbb>
   $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
 )
-set_target_properties(gtsam_points PROPERTIES
-  VERSION   ${PROJECT_VERSION}
-  SOVERSION 1
-)
+if(NOT WIN32 OR NOT BUILD_WITH_HIP)
+  set_target_properties(gtsam_points PROPERTIES
+    VERSION   ${PROJECT_VERSION}
+    SOVERSION 1
+  )
+endif()
+
+if(BUILD_WITH_HIP)
+  # The public API uses CUstream_st* etc. The main library's host .cpp call into
+  # the GPU library across that type, so they must see the same HIP opaque-type
+  # bridge (CUstream_st -> ihipStream_t) for name mangling to match. Force-
+  # include the lightweight type bridge (forward decls only, no HIP runtime).
+  target_compile_definitions(gtsam_points PRIVATE USE_HIP)
+  target_compile_options(gtsam_points PRIVATE
+    -include ${CMAKE_CURRENT_SOURCE_DIR}/include/gtsam_points/cuda/cuda_to_hip_types.h
+  )
+endif()
 
 # GPU-related
-if(BUILD_WITH_CUDA)
-  add_library(gtsam_points_cuda SHARED
+if(BUILD_WITH_CUDA OR BUILD_WITH_HIP)
+  # On Windows the GPU lib and the main lib have a mutual symbol dependency
+  # (PointCloudGPU inherits PointCloudCPU across the library boundary).
+  # Build as STATIC on Windows/HIP so the GPU objects are absorbed into
+  # gtsam_points.dll at final link, avoiding the circular DLL import.
+  # On Linux/CUDA the existing SHARED build is preserved.
+  if(WIN32 AND BUILD_WITH_HIP)
+    set(_gtsam_points_cuda_type STATIC)
+  else()
+    set(_gtsam_points_cuda_type SHARED)
+  endif()
+  add_library(gtsam_points_cuda ${_gtsam_points_cuda_type}
     # cuda-related
     src/gtsam_points/cuda/check_error.cu
     src/gtsam_points/cuda/check_error_cusolver.cu
@@ -269,8 +334,61 @@ if(BUILD_WITH_CUDA)
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
   )
+
+  if(BUILD_WITH_HIP)
+    # Compile the .cu sources as HIP. The .cpp sources here are host-only
+    # orchestration (streams + async alloc, no device kernels), so they stay
+    # CXX; both languages get the compat header force-included and the
+    # CUDA-toolkit-named forwarding shims on a PRIVATE+BEFORE include path.
+    set(gtsam_points_cuda_hip_sources
+      src/gtsam_points/cuda/check_error.cu
+      src/gtsam_points/cuda/check_error_cusolver.cu
+      src/gtsam_points/cuda/check_error_curand.cu
+      src/gtsam_points/cuda/cuda_memory.cu
+      src/gtsam_points/cuda/cuda_stream.cu
+      src/gtsam_points/cuda/cuda_buffer.cu
+      src/gtsam_points/cuda/cuda_device_sync.cu
+      src/gtsam_points/cuda/cuda_device_prop.cu
+      src/gtsam_points/cuda/cuda_graph.cu
+      src/gtsam_points/cuda/cuda_graph_exec.cu
+      src/gtsam_points/cuda/stream_roundrobin.cu
+      src/gtsam_points/cuda/stream_temp_buffer_roundrobin.cu
+      src/gtsam_points/types/point_cloud.cu
+      src/gtsam_points/types/point_cloud_gpu.cu
+      src/gtsam_points/types/gaussian_voxelmap_gpu.cu
+      src/gtsam_points/types/gaussian_voxelmap_gpu_funcs.cu
+      src/gtsam_points/factors/integrated_vgicp_derivatives.cu
+      src/gtsam_points/factors/integrated_vgicp_derivatives_inliers.cu
+      src/gtsam_points/factors/integrated_vgicp_derivatives_compute.cu
+      src/gtsam_points/factors/integrated_vgicp_derivatives_linearize.cu
+      src/gtsam_points/util/easy_profiler_cuda.cu
+    )
+    set_source_files_properties(${gtsam_points_cuda_hip_sources} PROPERTIES LANGUAGE HIP)
+    set_target_properties(gtsam_points_cuda PROPERTIES HIP_ARCHITECTURES "${CMAKE_HIP_ARCHITECTURES}")
+
+    # PRIVATE+BEFORE so <cuda.h>/<cuda_runtime.h>/<device_atomic_functions.h>/
+    # <curand.h>/<cusparse.h> resolve to the forwarding shims on the HIP build
+    # only (the dir is absent on the CUDA build, so the real toolkit wins).
+    target_include_directories(gtsam_points_cuda BEFORE PRIVATE
+      ${CMAKE_CURRENT_SOURCE_DIR}/hip_compat
+    )
+    # Force-include the compat header into every TU (CXX and HIP) so sources
+    # keep their CUDA spelling and the CUstream_st/graph type bridge is in scope.
+    target_compile_options(gtsam_points_cuda PRIVATE
+      -include ${CMAKE_CURRENT_SOURCE_DIR}/include/gtsam_points/cuda/cuda_to_hip.h
+    )
+    target_compile_definitions(gtsam_points_cuda PRIVATE USE_HIP)
+  endif()
+
+  if(BUILD_WITH_CUDA)
+    target_link_libraries(gtsam_points_cuda CUDA::cudart)
+  endif()
+  if(BUILD_WITH_HIP)
+    # hip::host (runtime) only -- NOT hip::device, whose -x hip/--offload-arch in
+    # INTERFACE_COMPILE_OPTIONS would propagate to the host .cpp in this target.
+    target_link_libraries(gtsam_points_cuda hip::host)
+  endif()
   target_link_libraries(gtsam_points_cuda
-    CUDA::cudart
     Boost::boost
     Eigen3::Eigen
     gtsam
@@ -278,10 +396,12 @@ if(BUILD_WITH_CUDA)
     $<TARGET_NAME_IF_EXISTS:TBB::tbb>
     $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
   )
-  set_target_properties(gtsam_points_cuda PROPERTIES
-    VERSION   ${PROJECT_VERSION}
-    SOVERSION 1
-  )
+  if(NOT WIN32 OR NOT BUILD_WITH_HIP)
+    set_target_properties(gtsam_points_cuda PROPERTIES
+      VERSION   ${PROJECT_VERSION}
+      SOVERSION 1
+    )
+  endif()
 
   target_link_libraries(gtsam_points
     gtsam_points_cuda
@@ -348,7 +468,30 @@ if(BUILD_TESTS)
     add_executable(${test_name} ${test_src})
     target_link_libraries(${test_name} gtsam_points gtest_main)
     target_include_directories(${test_name} PRIVATE ${Boost_INCLUDE_DIRS} src/test/include)
-    gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+    if(BUILD_WITH_HIP)
+      # Tests call the GPU API across CUstream_st*; force-include the HIP opaque-
+      # type bridge so those calls match the gtsam_points_cuda definitions.
+      target_compile_definitions(${test_name} PRIVATE USE_HIP)
+      target_compile_options(${test_name} PRIVATE
+        -include ${CMAKE_CURRENT_SOURCE_DIR}/include/gtsam_points/cuda/cuda_to_hip_types.h
+      )
+    endif()
+    if(WIN32 AND BUILD_WITH_HIP)
+      # The mixed MSVC/clang toolchain causes duplicate COMDAT symbols when
+      # clang-compiled gtsam_points.lib and MSVC-compiled gtsam.dll both define
+      # the same STL inline/template symbols. Use /FORCE:MULTIPLE to let lld-link
+      # pick one definition and proceed (all definitions are functionally identical).
+      target_link_options(${test_name} PRIVATE "LINKER:/FORCE:MULTIPLE")
+    endif()
+    if(WIN32 AND BUILD_WITH_HIP)
+      # Defer test discovery to run time: build-time discovery requires the exe
+      # to load successfully, but gtsam.dll and ROCm DLLs are not in the exe dir
+      # until the DLL-copy step runs at ctest time.
+      gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        DISCOVERY_MODE PRE_TEST)
+    else()
+      gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+    endif()
   endforeach()
 
   if(BUILD_TESTS_PCL)
@@ -379,7 +522,7 @@ install(
 )
 
 list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points)
-if(BUILD_WITH_CUDA)
+if(BUILD_WITH_CUDA OR BUILD_WITH_HIP)
   list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points_cuda)
 endif()
 
