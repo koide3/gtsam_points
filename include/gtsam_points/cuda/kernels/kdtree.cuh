@@ -38,9 +38,8 @@ public:
       const float diff = val - node.node_type.sub.thresh;
       const float cut_sq_dist = diff * diff;
 
-      int best_child;
-      int other_child;
-
+      NodeIndexType best_child;
+      NodeIndexType other_child;
       if (diff < 0.0f) {
         best_child = node.left;
         other_child = node.right;
