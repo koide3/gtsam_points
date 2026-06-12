@@ -56,6 +56,8 @@ KdTreeGPU::KdTreeGPU(const PointCloud::ConstPtr& points, CUstream_st* stream)
 }
 
 KdTreeGPU::~KdTreeGPU() {
+  // Ensure all GPU work that might use 'indices' or 'nodes' has completed
+  check_error << cudaDeviceSynchronize();
   check_error << cudaFreeAsync(indices, nullptr);
   check_error << cudaFreeAsync(nodes, nullptr);
 }

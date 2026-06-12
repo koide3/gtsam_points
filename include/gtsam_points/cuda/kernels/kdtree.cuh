@@ -52,6 +52,7 @@ public:
 
       if (stack_size > MAX_STACK_SIZE - 2) {
         printf("kdtree stack overflow!!");
+        continue;
       } else if (cut_sq_dist < result.second) {
         search_stack[stack_size].first = other_child;
         search_stack[stack_size++].second = cut_sq_dist;
