@@ -15,8 +15,11 @@ RUN apt-get update \
        libtbb-dev libgtest-dev libmetis-dev \
        libglm-dev libglfw3-dev libpng-dev libjpeg-dev
 
-RUN curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xCF2F07B59413E1A7C0548D8BD8B88E02F5DED8A6" \
+RUN curl -fsSL --retry 3 --retry-delay 5 --max-time 30 \
+        "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xCF2F07B59413E1A7C0548D8BD8B88E02F5DED8A6" \
         | gpg --dearmor -o /usr/share/keyrings/koide3-ubuntu-ppa.gpg && \
+    gpg --no-default-keyring --keyring /usr/share/keyrings/koide3-ubuntu-ppa.gpg --fingerprint \
+        | grep -q "CF2F 07B5 9413 E1A7 C054  8D8B D8B8 8E02 F5DE D8A6" && \
     . /etc/os-release && \
     echo "deb [signed-by=/usr/share/keyrings/koide3-ubuntu-ppa.gpg] https://ppa.launchpadcontent.net/koide3/iridescence/ubuntu ${UBUNTU_CODENAME} main" \
         > /etc/apt/sources.list.d/koide3-iridescence.list && \
