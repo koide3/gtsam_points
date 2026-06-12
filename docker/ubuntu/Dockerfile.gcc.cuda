@@ -4,17 +4,24 @@ FROM ${BASE_IMAGE}
 ENV DEBIAN_FRONTEND=noninteractive
 ENV LD_LIBRARY_PATH=/usr/local/lib:$LD_LIBRARY_PATH
 
+SHELL ["/bin/bash", "-o", "pipefail", "-c"]
+
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
-       cmake build-essential gpg-agent software-properties-common \
+       cmake build-essential gpg-agent software-properties-common curl \
        libboost-system-dev libboost-timer-dev libboost-thread-dev libboost-filesystem-dev libboost-graph-dev libboost-program-options-dev \
        libeigen3-dev libomp-dev \
        clang lld ca-certificates \
        libtbb-dev libgtest-dev libmetis-dev \
        libglm-dev libglfw3-dev libpng-dev libjpeg-dev
 
-RUN add-apt-repository ppa:koide3/iridescence -y && \
-    add-apt-repository ppa:koide3/gtsam -y && \
+RUN curl -fsSL "https://keyserver.ubuntu.com/pks/lookup?op=get&search=0xCF2F07B59413E1A7C0548D8BD8B88E02F5DED8A6" \
+        | gpg --dearmor -o /usr/share/keyrings/koide3-ubuntu-ppa.gpg && \
+    . /etc/os-release && \
+    echo "deb [signed-by=/usr/share/keyrings/koide3-ubuntu-ppa.gpg] https://ppa.launchpadcontent.net/koide3/iridescence/ubuntu ${UBUNTU_CODENAME} main" \
+        > /etc/apt/sources.list.d/koide3-iridescence.list && \
+    echo "deb [signed-by=/usr/share/keyrings/koide3-ubuntu-ppa.gpg] https://ppa.launchpadcontent.net/koide3/gtsam/ubuntu ${UBUNTU_CODENAME} main" \
+        > /etc/apt/sources.list.d/koide3-gtsam.list && \
     apt-get update && \
     apt-get install -y libiridescence-dev libgtsam-no-tbb-dev=4.3.0-1*
 
