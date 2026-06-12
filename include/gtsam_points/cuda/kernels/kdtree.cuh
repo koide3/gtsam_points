@@ -13,8 +13,7 @@ public:
     thrust::pair<NodeIndexType, float> result = {INVALID_NODE, std::numeric_limits<float>::max()};
 
     int stack_size = 1;
-    thrust::pair<int, float> search_stack[MAX_STACK_SIZE] = {{0, 0.0f}};
-
+    thrust::pair<NodeIndexType, float> search_stack[MAX_STACK_SIZE] = {{0u, 0.0f}};
     while (stack_size > 0) {
       const auto [node_index, sq_dist] = search_stack[--stack_size];
       if (sq_dist > result.second) {
