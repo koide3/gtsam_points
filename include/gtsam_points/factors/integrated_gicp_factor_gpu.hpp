@@ -49,10 +49,11 @@ public:
 
   /**
    * @brief Create a unary GICP_GPU factor between a fixed target pose and an active source pose.
-   * @param targfixed_target_pose  Fixed target pose
+   * @param fixed_target_pose      Fixed target pose
    * @param source_key             Source key
-   * @param target                 Target kdtree
+   * @param target                 Target frame
    * @param source                 Source frame
+   * @param target_tree            Target kdtree
    * @param stream                 CUDA stream
    * @param temp_buffer            CUDA temporary buffer manager
    */
