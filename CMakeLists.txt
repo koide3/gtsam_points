@@ -129,14 +129,9 @@ if(BUILD_WITH_HIP)
   endif()
 
   find_package(hip REQUIRED)
+  # enable_language(HIP) honors -DCMAKE_HIP_ARCHITECTURES, otherwise auto-detects
+  # the host GPU and errors on a no-GPU build host.
   enable_language(HIP)
-
-  # Default the lead arch only when unset; never a hardcoded literal, which
-  # would override -DCMAKE_HIP_ARCHITECTURES and force every follower target to
-  # edit this file (gfx1100/gfx1151 reuse the same commit with just the flag).
-  if(NOT DEFINED CMAKE_HIP_ARCHITECTURES OR CMAKE_HIP_ARCHITECTURES STREQUAL "")
-    set(CMAKE_HIP_ARCHITECTURES "gfx90a" CACHE STRING "HIP architectures" FORCE)
-  endif()
   message(STATUS "CMAKE_HIP_ARCHITECTURES: ${CMAKE_HIP_ARCHITECTURES}")
 
   set(GTSAM_POINTS_CUDA_VERSION 0)
