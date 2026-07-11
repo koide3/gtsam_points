@@ -1,0 +1,5 @@
+<map id="gtsam_points::ReintegratedImuFactor" name="gtsam_points::ReintegratedImuFactor">
+<area shape="rect" id="Node000001" title="&quot;Re&quot;&#45;integrated IMU factor (IMU factor without pre&#45;integration). This factor re&#45;integrates IMU measur..." alt="" coords="5,79,208,119"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="20,5,193,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="109,44,109,79,104,79,104,44"/>
+</map>

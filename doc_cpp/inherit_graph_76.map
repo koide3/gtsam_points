@@ -1,0 +1,17 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" title=" " alt="" coords="5,256,124,281"/>
+<area shape="rect" id="Node000001" href="$structgtsam__points_1_1frame_1_1has__covs__defined.html" title=" " alt="" coords="205,5,362,60"/>
+<area shape="poly" id="edge44_Node000000_Node000001" title=" " alt="" coords="71,242,84,204,105,157,133,110,170,69,203,49,206,54,174,73,137,114,109,160,89,206,76,243"/>
+<area shape="rect" id="Node000002" href="$structgtsam__points_1_1frame_1_1has__intensities__defined.html" title=" " alt="" coords="192,84,375,139"/>
+<area shape="poly" id="edge45_Node000000_Node000002" title=" " alt="" coords="80,243,118,195,143,170,171,148,191,136,193,141,173,152,146,174,122,198,84,246"/>
+<area shape="rect" id="Node000003" href="$structgtsam__points_1_1frame_1_1has__normals__defined.html" title=" " alt="" coords="199,163,367,217"/>
+<area shape="poly" id="edge46_Node000000_Node000003" title=" " alt="" coords="111,248,171,226,202,215,204,220,173,231,113,253"/>
+<area shape="rect" id="Node000004" href="$structgtsam__points_1_1frame_1_1has__points__defined.html" title=" " alt="" coords="205,241,362,296"/>
+<area shape="poly" id="edge47_Node000000_Node000004" title=" " alt="" coords="138,266,204,266,204,271,138,271"/>
+<area shape="rect" id="Node000005" href="$structgtsam__points_1_1frame_1_1has__times__defined.html" title=" " alt="" coords="205,320,362,375"/>
+<area shape="poly" id="edge48_Node000000_Node000005" title=" " alt="" coords="115,284,173,305,207,317,205,322,171,310,113,289"/>
+<area shape="rect" id="Node000006" href="$structgtsam__points_1_1frame_1_1normal__defined.html" title=" " alt="" coords="204,399,363,453"/>
+<area shape="poly" id="edge49_Node000000_Node000006" title=" " alt="" coords="84,291,122,338,146,362,173,384,205,401,203,405,171,388,143,366,118,341,80,294"/>
+<area shape="rect" id="Node000007" href="$structgtsam__points_1_1frame_1_1size__defined.html" title=" " alt="" coords="172,478,395,518"/>
+<area shape="poly" id="edge50_Node000000_Node000007" title=" " alt="" coords="75,294,88,331,109,377,137,423,174,463,194,476,192,480,170,467,133,426,104,379,83,333,70,295"/>
+</map>

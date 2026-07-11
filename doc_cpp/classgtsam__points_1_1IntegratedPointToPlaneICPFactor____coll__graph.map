@@ -1,0 +1,9 @@
+<map id="gtsam_points::IntegratedPointToPlaneICPFactor_&lt; TargetFrame, SourceFrame &gt;" name="gtsam_points::IntegratedPointToPlaneICPFactor_&lt; TargetFrame, SourceFrame &gt;">
+<area shape="rect" id="Node000001" title="Point&#45;to&#45;plane ICP factor." alt="" coords="5,269,239,324"/>
+<area shape="rect" id="Node000002" href="$classgtsam__points_1_1IntegratedICPFactor__.html" title="Naive point&#45;to&#45;point ICP matching cost factor Zhang, &quot;Iterative Point Matching for Registration of Fr..." alt="" coords="27,167,217,221"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="125,235,125,269,119,269,119,235"/>
+<area shape="rect" id="Node000003" href="$classgtsam__points_1_1IntegratedMatchingCostFactor.html" title="Abstraction of LSQ&#45;based scan matching constraints between point clouds." alt="" coords="29,79,215,119"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="125,132,125,167,119,167,119,132"/>
+<area shape="rect" id="Node000004" title=" " alt="" coords="35,5,209,31"/>
+<area shape="poly" id="edge3_Node000003_Node000004" title=" " alt="" coords="125,44,125,79,119,79,119,44"/>
+</map>

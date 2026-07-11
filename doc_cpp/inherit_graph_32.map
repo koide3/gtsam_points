@@ -1,0 +1,33 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="Node000000" href="$classgtsam__points_1_1GaussianVoxelMap.html" title="Gaussian distribution voxelmap." alt="" coords="286,313,527,339"/>
+<area shape="rect" id="Node000001" href="$classgtsam__points_1_1GaussianVoxelMapCPU.html" title=" " alt="" coords="581,278,795,318"/>
+<area shape="poly" id="edge28_Node000000_Node000001" title=" " alt="" coords="541,310,581,306,581,311,541,315"/>
+<area shape="rect" id="Node000011" href="$classgtsam__points_1_1GaussianVoxelMapGPU.html" title="Gaussian distribution voxelmap on GPU." alt="" coords="581,375,795,415"/>
+<area shape="poly" id="edge29_Node000000_Node000011" title=" " alt="" coords="489,339,533,349,621,373,620,378,531,354,488,344"/>
+<area shape="rect" id="Node000003" href="$structgtsam__points_1_1NearestNeighborSearch.html" title="Nearest neighbor search interface." alt="" coords="5,191,233,231"/>
+<area shape="rect" id="Node000002" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title=" " alt="" coords="301,249,512,289"/>
+<area shape="poly" id="edge30_Node000003_Node000002" title=" " alt="" coords="234,231,306,246,305,251,233,237"/>
+<area shape="rect" id="Node000004" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title=" " alt="" coords="281,55,532,109"/>
+<area shape="poly" id="edge32_Node000003_Node000004" title=" " alt="" coords="162,182,218,150,280,120,312,107,314,112,282,124,220,155,165,187"/>
+<area shape="rect" id="Node000006" href="$structgtsam__points_1_1IncrementalVoxelMap.html" title="Incremental voxelmap. This class supports incremental point cloud insertion and LRU&#45;based voxel delet..." alt="" coords="303,363,511,403"/>
+<area shape="poly" id="edge34_Node000003_Node000006" title=" " alt="" coords="149,240,207,295,244,323,283,348,313,361,311,366,280,352,241,328,204,299,146,243"/>
+<area shape="rect" id="Node000007" href="$structgtsam__points_1_1IntensityKdTree.html" title="KdTree on intensity augmented coordinates. This class concatenates point coordinates (x,..." alt="" coords="297,428,516,453"/>
+<area shape="poly" id="edge35_Node000003_Node000007" title=" " alt="" coords="139,242,162,282,194,329,235,375,283,413,310,426,308,430,280,418,231,379,190,332,157,285,134,245"/>
+<area shape="rect" id="Node000008" href="$structgtsam__points_1_1KdTree.html" title="KdTree&#45;based nearest neighbor search." alt="" coords="325,5,488,31"/>
+<area shape="poly" id="edge36_Node000003_Node000008" title=" " alt="" coords="139,179,164,145,196,107,236,70,280,40,324,24,326,29,283,44,239,74,200,111,168,149,143,182"/>
+<area shape="rect" id="Node000009" href="$structgtsam__points_1_1KdTree2.html" title="KdTree&#45;based nearest neighbor search." alt="" coords="321,134,492,174"/>
+<area shape="poly" id="edge37_Node000003_Node000009" title=" " alt="" coords="233,186,320,168,321,174,234,191"/>
+<area shape="rect" id="Node000010" href="$structgtsam__points_1_1KdTreeX.html" title="KdTree with arbitrary dimension." alt="" coords="301,199,512,224"/>
+<area shape="poly" id="edge38_Node000003_Node000010" title=" " alt="" coords="247,209,301,209,301,214,247,214"/>
+<area shape="poly" id="edge31_Node000002_Node000001" title=" " alt="" coords="526,278,582,284,581,290,525,284"/>
+<area shape="rect" id="Node000005" href="$structgtsam__points_1_1IncrementalCovarianceVoxelMap.html" title="Incremental voxelmap with online covariance and normal estimation." alt="" coords="590,62,786,102"/>
+<area shape="poly" id="edge33_Node000004_Node000005" title=" " alt="" coords="546,79,590,79,590,85,546,85"/>
+<area shape="rect" id="Node000012" href="$classgtsam__points_1_1OffloadableGPU.html" title="An interface class for offloading data from GPU to CPU." alt="" coords="296,477,517,503"/>
+<area shape="poly" id="edge39_Node000012_Node000011" title=" " alt="" coords="497,472,531,462,593,438,647,413,649,418,595,443,533,467,498,477"/>
+<area shape="rect" id="Node000013" href="$structgtsam__points_1_1PointCloudGPU.html" title="Point cloud frame on GPU memory." alt="" coords="580,501,796,527"/>
+<area shape="poly" id="edge40_Node000012_Node000013" title=" " alt="" coords="531,498,580,502,580,507,531,503"/>
+<area shape="rect" id="Node000015" href="$structgtsam__points_1_1PointCloud.html" title="Standard point cloud class that holds only pointers to point attributes." alt="" coords="25,527,213,552"/>
+<area shape="rect" id="Node000014" href="$structgtsam__points_1_1PointCloudCPU.html" title="Point cloud frame on CPU memory." alt="" coords="299,527,514,552"/>
+<area shape="poly" id="edge41_Node000015_Node000014" title=" " alt="" coords="227,537,299,537,299,542,227,542"/>
+<area shape="poly" id="edge42_Node000014_Node000013" title=" " alt="" coords="528,526,580,521,580,526,528,531"/>
+</map>

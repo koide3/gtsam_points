@@ -1,0 +1,5 @@
+<map id="gtsam_points::NonlinearFactorSetGPU" name="gtsam_points::NonlinearFactorSetGPU">
+<area shape="rect" id="Node000001" title="This class holds a set of GPU&#45;based NonlinearFactors and manages their linearization and cost evaluat..." alt="" coords="5,79,225,119"/>
+<area shape="rect" id="Node000002" title=" " alt="" coords="43,5,188,31"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="118,44,118,79,113,79,113,44"/>
+</map>

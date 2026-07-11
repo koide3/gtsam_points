@@ -1,0 +1,9 @@
+<map id="gtsam_points::PointCloudGPU" name="gtsam_points::PointCloudGPU">
+<area shape="rect" id="Node000001" title="Point cloud frame on GPU memory." alt="" coords="126,152,342,177"/>
+<area shape="rect" id="Node000002" href="$structgtsam__points_1_1PointCloudCPU.html" title="Point cloud frame on CPU memory." alt="" coords="5,79,220,104"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="146,109,215,149,213,154,143,113"/>
+<area shape="rect" id="Node000003" href="$structgtsam__points_1_1PointCloud.html" title="Standard point cloud class that holds only pointers to point attributes." alt="" coords="19,5,207,31"/>
+<area shape="poly" id="edge2_Node000002_Node000003" title=" " alt="" coords="115,44,115,79,110,79,110,44"/>
+<area shape="rect" id="Node000004" href="$classgtsam__points_1_1OffloadableGPU.html" title="An interface class for offloading data from GPU to CPU." alt="" coords="245,79,466,104"/>
+<area shape="poly" id="edge3_Node000001_Node000004" title=" " alt="" coords="325,113,255,154,253,149,322,109"/>
+</map>
