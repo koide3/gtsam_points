@@ -267,8 +267,9 @@ PointCloudCPU::Ptr PointCloudCPU::load(const std::string& path) {
   boost::filesystem::directory_iterator end;
   const std::regex aux_name_regex("/aux_([^_]+).bin");
   for (; itr != end; itr++) {
+    const std::string itr_path_str = itr->path().generic_string();
     std::smatch matched;
-    if (!std::regex_search(itr->path().string(), matched, aux_name_regex)) {
+    if (!std::regex_search(itr_path_str, matched, aux_name_regex)) {
       continue;
     }
     const std::string name = matched.str(1);
