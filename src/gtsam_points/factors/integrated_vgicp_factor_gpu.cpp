@@ -3,6 +3,10 @@
 
 #include <gtsam_points/factors/integrated_vgicp_factor_gpu.hpp>
 
+#include <stdexcept>
+#include <typeinfo>
+#include <utility>
+
 #include <cuda_runtime.h>
 
 #include <gtsam/geometry/Pose3.h>
@@ -120,6 +124,11 @@ double IntegratedVGICPFactorGPU::inlier_fraction() const {
 }
 
 gtsam::NonlinearFactor::shared_ptr IntegratedVGICPFactorGPU::clone() const {
+  if (typeid(*derivatives) != typeid(IntegratedVGICPDerivatives)) {
+    throw std::logic_error(
+      "A derived IntegratedVGICPFactorGPU with custom derivatives must override clone() and reinstall them");
+  }
+
   if (is_binary) {
     return gtsam::make_shared<IntegratedVGICPFactorGPU>(keys()[0], keys()[1], target, source, nullptr, nullptr);
   }
@@ -269,5 +278,13 @@ void IntegratedVGICPFactorGPU::store_computed_error(const void* eval_output_cpu)
 
 void IntegratedVGICPFactorGPU::sync() {
   derivatives->sync_stream();
+}
+
+void IntegratedVGICPFactorGPU::replace_derivatives(std::unique_ptr<IntegratedVGICPDerivatives> replacement) {
+  if (!replacement) {
+    throw std::invalid_argument("IntegratedVGICPFactorGPU derivatives replacement must not be null");
+  }
+
+  derivatives = std::move(replacement);
 }
 }  // namespace gtsam_points

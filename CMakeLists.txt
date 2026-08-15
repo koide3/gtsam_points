@@ -280,7 +280,7 @@ if(BUILD_WITH_CUDA)
   )
   set_target_properties(gtsam_points_cuda PROPERTIES
     VERSION   ${PROJECT_VERSION}
-    SOVERSION 1
+    SOVERSION 2
   )
 
   target_link_libraries(gtsam_points
@@ -350,6 +350,14 @@ if(BUILD_TESTS)
     target_include_directories(${test_name} PRIVATE ${Boost_INCLUDE_DIRS} src/test/include)
     gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
   endforeach()
+
+  if(BUILD_WITH_CUDA)
+    set(test_name test_vgicp_derivatives_transform_reduce)
+    add_executable(${test_name} src/test/test_vgicp_derivatives_transform_reduce.cu)
+    target_link_libraries(${test_name} gtsam_points gtest_main)
+    target_include_directories(${test_name} PRIVATE ${Boost_INCLUDE_DIRS} src/test/include)
+    gtest_discover_tests(${test_name} WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+  endif()
 
   if(BUILD_TESTS_PCL)
     enable_language(C)
