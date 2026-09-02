@@ -2,8 +2,6 @@
 #include <thread>
 #include <iostream>
 
-#include <gtest/gtest.h>
-
 #include <gtsam/slam/PriorFactor.h>
 
 #include <gtsam_points/ann/kdtree.hpp>

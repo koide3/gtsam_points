@@ -13,6 +13,7 @@
 
 #include <gtsam_points/config.hpp>
 #include <gtsam_points/util/fast_floor.hpp>
+#include <gtsam_points/util/reservoir.hpp>
 #include <gtsam_points/types/point_cloud_cpu.hpp>
 
 #ifdef GTSAM_POINTS_USE_CUDA
@@ -24,6 +25,14 @@ namespace gtsam_points {
 // merge_frames
 PointCloud::Ptr
 merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution) {
+  return merge_frames(poses, frames, downsample_resolution, std::numeric_limits<size_t>::max());
+}
+
+PointCloud::Ptr merge_frames(
+  const std::vector<Eigen::Isometry3d>& poses,
+  const std::vector<PointCloud::ConstPtr>& frames,
+  double downsample_resolution,
+  size_t max_num_points) {
   constexpr int coord_bits = 21;
   constexpr std::uint64_t coord_bitmask = (1ull << coord_bits) - 1;
   const int coord_offset = 1 << (coord_bits - 1);  // Coordinate offset to make values positive
@@ -60,52 +69,43 @@ merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<Poin
 
   std::sort(coords_indices.begin(), coords_indices.end(), [](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; });
 
-  std::vector<std::vector<size_t>> dest_indices(frames.size());
-  for (int i = 0; i < frames.size(); i++) {
-    dest_indices[i].resize(frames[i]->size(), 0);
-  }
+  std::vector<std::uint64_t> sampled_indices;
+  sampled_indices.reserve(std::min<size_t>(max_num_points, coords_indices.size() / 10));
 
-  size_t num_voxels = 0;
+  std::mt19937 mt;
+  Reservoir<std::uint64_t, 1> reservoir;
+
   for (int i = 0; i < coords_indices.size(); i++) {
     if (i && coords_indices[i - 1].first != coords_indices[i].first) {
-      num_voxels++;
+      sampled_indices.emplace_back(reservoir.front());
+      reservoir = Reservoir<std::uint64_t, 1>();
     }
 
-    const auto [coord, index] = coords_indices[i];
-    const size_t point_id = index & frame_id_bitmask;
-    const size_t frame_id = (index >> frame_id_bits) & frame_id_bitmask;
-    dest_indices[frame_id][point_id] = num_voxels;
+    reservoir.push(coords_indices[i].second, mt);
   }
-  num_voxels++;
+  sampled_indices.emplace_back(reservoir.front());
 
-  auto merged = std::make_shared<gtsam_points::PointCloudCPU>();
-  merged->num_points = num_voxels;
-  merged->points_storage.resize(num_voxels, Eigen::Vector4d::Zero());
-  merged->covs_storage.resize(num_voxels, Eigen::Matrix4d::Zero());
-  merged->points = merged->points_storage.data();
-  merged->covs = merged->covs_storage.data();
-
-  const bool has_intensities = std::all_of(frames.begin(), frames.end(), [](const auto& frame) { return frame->has_intensities(); });
-  if (has_intensities) {
-    merged->intensities_storage.resize(num_voxels, 0.0);
-    merged->intensities = merged->intensities_storage.data();
+  if (sampled_indices.size() > max_num_points) {
+    std::vector<std::uint64_t> subsampled_indices(max_num_points);
+    std::sample(sampled_indices.begin(), sampled_indices.end(), subsampled_indices.begin(), max_num_points, mt);
+    sampled_indices = std::move(subsampled_indices);
   }
 
-  for (int i = 0; i < frames.size(); i++) {
-    const auto& pose = poses[i];
-    for (int j = 0; j < frames[i]->size(); j++) {
-      const size_t dest = dest_indices[i][j];
-      merged->points[dest] += pose * frames[i]->points[j];
-      merged->covs[dest] += pose.matrix() * frames[i]->covs[j] * pose.matrix().transpose();
-      if (has_intensities) {
-        merged->intensities[dest] = std::max(merged->intensities[dest], frame::intensity(*frames[i], j));
-      }
+  auto merged = sample_multi_frames(frames, sampled_indices);
+
+  for (size_t i = 0; i < merged->size(); i++) {
+    const int frame_id = (sampled_indices[i] >> frame_id_bits) & frame_id_bitmask;
+    const auto& pose = poses[frame_id];
+
+    merged->points[i] = pose * merged->points[i];
+
+    if (merged->covs) {
+      merged->covs[i] = pose.matrix() * merged->covs[i] * pose.matrix().transpose();
     }
-  }
 
-  for (int i = 0; i < merged->size(); i++) {
-    merged->covs[i] /= merged->points[i].w();
-    merged->points[i] /= merged->points[i].w();
+    if (merged->normals) {
+      merged->normals[i] = pose.matrix() * merged->normals[i];
+    }
   }
 
   return merged;
@@ -113,12 +113,12 @@ merge_frames(const std::vector<Eigen::Isometry3d>& poses, const std::vector<Poin
 
 PointCloud::Ptr
 merge_frames_auto(const std::vector<Eigen::Isometry3d>& poses, const std::vector<PointCloud::ConstPtr>& frames, double downsample_resolution) {
-//
-#ifdef GTSAM_POINTS_USE_CUDA
-  if (frames[0]->points_gpu && frames[0]->covs_gpu) {
-    return merge_frames_gpu(poses, frames, downsample_resolution);
-  }
-#endif
+  // TODO: Implement GPU version of merge_frames and call it here when the input frames are on GPU
+  // #ifdef GTSAM_POINTS_USE_CUDA
+  //   if (frames[0]->points_gpu && frames[0]->covs_gpu) {
+  //     return merge_frames_gpu(poses, frames, downsample_resolution);
+  //   }
+  // #endif
 
   return merge_frames(poses, frames, downsample_resolution);
 }

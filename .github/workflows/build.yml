@@ -17,14 +17,18 @@ jobs:
     strategy:
       matrix:
         DISTRO: [
-          { "tag": "jammy_gtsam4.3a0", "base_image": "ubuntu:jammy", "suffix": "gcc" },
-          { "tag": "jammy_gtsam4.3a0", "base_image": "ubuntu:jammy", "suffix": "llvm" },
-          { "tag": "jammy_cuda12.5_gtsam4.3a0", "base_image": "nvidia/cuda:12.5.1-devel-ubuntu22.04", "suffix": "gcc.cuda" },
-          { "tag": "jammy_cuda13.1_gtsam4.3a0", "base_image": "nvidia/cuda:13.1.0-devel-ubuntu22.04", "suffix": "gcc.cuda" },
-          { "tag": "noble_gtsam4.3a0", "base_image": "ubuntu:noble", "suffix": "gcc" },
-          { "tag": "noble_gtsam4.3a0", "base_image": "ubuntu:noble", "suffix": "llvm" },
-          { "tag": "noble_cuda12.5_gtsam4.3a0", "base_image": "nvidia/cuda:12.5.1-devel-ubuntu24.04", "suffix": "gcc.cuda" },
-          { "tag": "noble_cuda13.1_gtsam4.3a0", "base_image": "nvidia/cuda:13.1.0-devel-ubuntu24.04", "suffix": "gcc.cuda" },
+          { "tag": "jammy_gtsam4.3a1", "base_image": "ubuntu:jammy", "suffix": "gcc" },
+          { "tag": "jammy_gtsam4.3a1", "base_image": "ubuntu:jammy", "suffix": "llvm" },
+          { "tag": "jammy_cuda12.2_gtsam4.3a1", "base_image": "nvidia/cuda:12.2.2-devel-ubuntu22.04", "suffix": "gcc.cuda" },
+          { "tag": "jammy_cuda12.5_gtsam4.3a1", "base_image": "nvidia/cuda:12.5.1-devel-ubuntu22.04", "suffix": "gcc.cuda" },
+          { "tag": "jammy_cuda13.1_gtsam4.3a1", "base_image": "nvidia/cuda:13.1.0-devel-ubuntu22.04", "suffix": "gcc.cuda" },
+          { "tag": "noble_gtsam4.3a1", "base_image": "ubuntu:noble", "suffix": "gcc" },
+          { "tag": "noble_gtsam4.3a1", "base_image": "ubuntu:noble", "suffix": "llvm" },
+          { "tag": "noble_cuda12.5_gtsam4.3a1", "base_image": "nvidia/cuda:12.5.1-devel-ubuntu24.04", "suffix": "gcc.cuda" },
+          { "tag": "noble_cuda13.1_gtsam4.3a1", "base_image": "nvidia/cuda:13.1.0-devel-ubuntu24.04", "suffix": "gcc.cuda" },
+          { "tag": "noble_cuda13.3_gtsam4.3a1", "base_image": "nvidia/cuda:13.3.0-devel-ubuntu24.04", "suffix": "gcc.cuda" },
+          { "tag": "resolute_gtsam4.3a1", "base_image": "ubuntu:resolute", "suffix": "gcc" },
+          { "tag": "resolute_cuda13.3_gtsam4.3a1", "base_image": "nvidia/cuda:13.3.0-devel-ubuntu26.04", "suffix": "gcc.cuda" },
         ]
         BUILD_WITH_TBB: [ "ON", "OFF" ]
 

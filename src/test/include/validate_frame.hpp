@@ -74,7 +74,7 @@ void validate_frame_gpu(const gtsam_points::PointCloud::ConstPtr& frame) {
 }
 #endif
 
-void validate_all_propaties(const gtsam_points::PointCloud::ConstPtr& frame, bool test_aux = true) {
+void validate_all_properties(const gtsam_points::PointCloud::ConstPtr& frame, bool test_aux = true) {
   ASSERT_TRUE(frame->points);
   ASSERT_TRUE(frame->normals);
   ASSERT_TRUE(frame->covs);

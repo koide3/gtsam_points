@@ -253,7 +253,7 @@ TEST(TestTypes, TestPointCloudCPUFuncs) {
 
   auto sampled = gtsam_points::sample(frame, samples);
   ASSERT_EQ(sampled->size(), num_samples);
-  validate_all_propaties(sampled);
+  validate_all_properties(sampled);
 
   const Eigen::Vector4d* aux1_ = frame->aux_attribute<Eigen::Vector4d>("aux1");
   const Eigen::Matrix4d* aux2_ = frame->aux_attribute<Eigen::Matrix4d>("aux2");
@@ -273,22 +273,22 @@ TEST(TestTypes, TestPointCloudCPUFuncs) {
   // Test for random_sampling, voxelgrid_sampling, and randomgrid_sampling
   sampled = gtsam_points::random_sampling(frame, 0.5, mt);
   EXPECT_DOUBLE_EQ(static_cast<double>(sampled->size()) / frame->size(), 0.5);
-  validate_all_propaties(sampled);
+  validate_all_properties(sampled);
 
   sampled = gtsam_points::voxelgrid_sampling(frame, 0.1);
   EXPECT_LE(sampled->size(), frame->size());
-  validate_all_propaties(sampled, false);
+  validate_all_properties(sampled, false);
 
   sampled = gtsam_points::randomgrid_sampling(frame, 0.1, 0.5, mt);
   EXPECT_LE(sampled->size(), frame->size());
-  validate_all_propaties(sampled);
+  validate_all_properties(sampled);
 
   // Test for filter
   auto filtered1 = gtsam_points::filter(frame, [](const Eigen::Vector4d& pt) { return pt.x() < 0.0; });
   auto filtered2 = gtsam_points::filter(frame, [](const Eigen::Vector4d& pt) { return pt.x() >= 0.0; });
 
-  validate_all_propaties(filtered1);
-  validate_all_propaties(filtered2);
+  validate_all_properties(filtered1);
+  validate_all_properties(filtered2);
   EXPECT_EQ(filtered1->size() + filtered2->size(), frame->size());
   EXPECT_TRUE(std::all_of(filtered1->points, filtered1->points + filtered1->size(), [](const Eigen::Vector4d& pt) { return pt.x() < 0.0; }));
   EXPECT_TRUE(std::all_of(filtered2->points, filtered2->points + filtered2->size(), [](const Eigen::Vector4d& pt) { return pt.x() >= 0.0; }));
@@ -297,21 +297,21 @@ TEST(TestTypes, TestPointCloudCPUFuncs) {
   filtered1 = gtsam_points::filter_by_index(frame, [&](int i) { return frame->points[i].x() < 0.0; });
   filtered2 = gtsam_points::filter_by_index(frame, [&](int i) { return frame->points[i].x() >= 0.0; });
 
-  validate_all_propaties(filtered1);
-  validate_all_propaties(filtered2);
+  validate_all_properties(filtered1);
+  validate_all_properties(filtered2);
   EXPECT_EQ(filtered1->size() + filtered2->size(), frame->size());
   EXPECT_TRUE(std::all_of(filtered1->points, filtered1->points + filtered1->size(), [](const Eigen::Vector4d& pt) { return pt.x() < 0.0; }));
   EXPECT_TRUE(std::all_of(filtered2->points, filtered2->points + filtered2->size(), [](const Eigen::Vector4d& pt) { return pt.x() >= 0.0; }));
 
   // Test for sort
   auto sorted = gtsam_points::sort(frame, [&](int lhs, int rhs) { return frame->points[lhs].x() < frame->points[rhs].x(); });
-  validate_all_propaties(sorted);
+  validate_all_properties(sorted);
   EXPECT_EQ(sorted->size(), frame->size());
   EXPECT_TRUE(std::is_sorted(sorted->points, sorted->points + sorted->size(), [](const auto& lhs, const auto& rhs) { return lhs.x() < rhs.x(); }));
 
   // Test for sort_by_time
   sorted = gtsam_points::sort_by_time(frame);
-  validate_all_propaties(sorted);
+  validate_all_properties(sorted);
   EXPECT_EQ(sorted->size(), frame->size());
   EXPECT_TRUE(std::is_sorted(sorted->times, sorted->times + sorted->size()));
 
@@ -321,7 +321,7 @@ TEST(TestTypes, TestPointCloudCPUFuncs) {
   T.translation() = Eigen::Vector3d::Random();
 
   auto transformed = gtsam_points::transform(frame, T);
-  validate_all_propaties(transformed);
+  validate_all_properties(transformed);
   ASSERT_EQ(transformed->size(), frame->size());
   for (int i = 0; i < frame->size(); i++) {
     EXPECT_LT((T * frame->points[i] - transformed->points[i]).norm(), 1e-6);
@@ -344,7 +344,49 @@ TEST(TestTypes, TestPointCloudCPUFuncs) {
   // Test for remove_outliers
   auto filtered = gtsam_points::remove_outliers(frame);
   EXPECT_LE(filtered->size(), frame->size());
-  validate_all_propaties(filtered);
+  validate_all_properties(filtered);
+}
+
+TEST(TestTypes, TestPointCloudCPUSampleMultiFrames) {
+  std::vector<gtsam_points::PointCloud::ConstPtr> frames(5);
+
+  for (int i = 0; i < frames.size(); i++) {
+    RandomSet<double, 4> randomset;
+    auto frame = std::make_shared<gtsam_points::PointCloudCPU>();
+    frame->add_points(randomset.points);
+    frame->add_normals(randomset.normals);
+    frame->add_covs(randomset.covs);
+    frame->add_intensities(randomset.intensities);
+    frame->add_times(randomset.times);
+    frame->add_aux_attribute("aux1", randomset.aux1);
+    frame->add_aux_attribute("aux2", randomset.aux2);
+    frames[i] = frame;
+  }
+
+  std::vector<std::uint64_t> frame_point_indices(256);
+  std::mt19937 mt;
+  std::uniform_int_distribution<int> frame_dist(0, frames.size() - 1);
+  std::uniform_int_distribution<int> point_dist(0, frames[0]->size() - 1);
+  for (auto& idx : frame_point_indices) {
+    const int frame_id = frame_dist(mt);
+    const int point_id = point_dist(mt);
+    idx = (static_cast<std::uint64_t>(frame_id) << 32) | static_cast<std::uint64_t>(point_id);
+  }
+
+  auto sampled = gtsam_points::sample_multi_frames(frames, frame_point_indices);
+  EXPECT_EQ(sampled->size(), frame_point_indices.size());
+  validate_all_properties(sampled);
+
+  for (size_t i = 0; i < sampled->size(); i++) {
+    const auto idx = frame_point_indices[i];
+    const int frame_id = (idx >> 32) & 0xFFFFFFFF;
+    const int point_id = idx & 0xFFFFFFFF;
+    EXPECT_LT((frames[frame_id]->points[point_id] - sampled->points[i]).norm(), 1e-6) << "point mismatch at index " << i;
+    EXPECT_LT((frames[frame_id]->normals[point_id] - sampled->normals[i]).norm(), 1e-6) << "normal mismatch at index " << i;
+    EXPECT_LT((frames[frame_id]->covs[point_id] - sampled->covs[i]).norm(), 1e-6) << "cov mismatch at index " << i;
+    EXPECT_LT(std::abs(frames[frame_id]->intensities[point_id] - sampled->intensities[i]), 1e-6) << "intensity mismatch at index " << i;
+    EXPECT_LT(std::abs(frames[frame_id]->times[point_id] - sampled->times[i]), 1e-6) << "time mismatch at index " << i;
+  }
 }
 
 int main(int argc, char** argv) {

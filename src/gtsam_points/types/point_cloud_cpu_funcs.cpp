@@ -74,6 +74,99 @@ PointCloudCPU::Ptr sample(const PointCloud::ConstPtr& frame, const std::vector<i
   return sampled;
 }
 
+PointCloudCPU::Ptr sample_multi_frames(const std::vector<PointCloud::ConstPtr>& frames, const std::vector<std::uint64_t>& frame_point_indices) {
+  constexpr int frame_id_bits = 32;
+  constexpr std::uint64_t mask = (1ULL << frame_id_bits) - 1;
+
+  const bool has_times = std::all_of(frames.begin(), frames.end(), [](const auto& frame) { return frame->has_times(); });
+  const bool has_normals = std::all_of(frames.begin(), frames.end(), [](const auto& frame) { return frame->has_normals(); });
+  const bool has_covs = std::all_of(frames.begin(), frames.end(), [](const auto& frame) { return frame->has_covs(); });
+  const bool has_intensities = std::all_of(frames.begin(), frames.end(), [](const auto& frame) { return frame->has_intensities(); });
+
+  PointCloudCPU::Ptr sampled(new PointCloudCPU);
+  if (frames.empty()) {
+    return sampled;
+  }
+
+  sampled->num_points = frame_point_indices.size();
+  sampled->points_storage.resize(frame_point_indices.size());
+  sampled->points = sampled->points_storage.data();
+  std::transform(frame_point_indices.begin(), frame_point_indices.end(), sampled->points, [&](const std::uint64_t idx) {
+    const int frame_id = (idx >> frame_id_bits) & mask;
+    const int point_id = idx & mask;
+    return frames[frame_id]->points[point_id];
+  });
+
+  if (has_times) {
+    sampled->times_storage.resize(frame_point_indices.size());
+    sampled->times = sampled->times_storage.data();
+    std::transform(frame_point_indices.begin(), frame_point_indices.end(), sampled->times, [&](const std::uint64_t idx) {
+      const int frame_id = (idx >> frame_id_bits) & mask;
+      const int point_id = idx & mask;
+      return frames[frame_id]->times[point_id];
+    });
+  }
+
+  if (has_normals) {
+    sampled->normals_storage.resize(frame_point_indices.size());
+    sampled->normals = sampled->normals_storage.data();
+    std::transform(frame_point_indices.begin(), frame_point_indices.end(), sampled->normals, [&](const std::uint64_t idx) {
+      const int frame_id = (idx >> frame_id_bits) & mask;
+      const int point_id = idx & mask;
+      return frames[frame_id]->normals[point_id];
+    });
+  }
+
+  if (has_covs) {
+    sampled->covs_storage.resize(frame_point_indices.size());
+    sampled->covs = sampled->covs_storage.data();
+    std::transform(frame_point_indices.begin(), frame_point_indices.end(), sampled->covs, [&](const std::uint64_t idx) {
+      const int frame_id = (idx >> frame_id_bits) & mask;
+      const int point_id = idx & mask;
+      return frames[frame_id]->covs[point_id];
+    });
+  }
+
+  if (has_intensities) {
+    sampled->intensities_storage.resize(frame_point_indices.size());
+    sampled->intensities = sampled->intensities_storage.data();
+    std::transform(frame_point_indices.begin(), frame_point_indices.end(), sampled->intensities, [&](const std::uint64_t idx) {
+      const int frame_id = (idx >> frame_id_bits) & mask;
+      const int point_id = idx & mask;
+      return frames[frame_id]->intensities[point_id];
+    });
+  }
+
+  for (const auto& attrib : frames[0]->aux_attributes) {
+    const auto& name = attrib.first;
+    if (std::any_of(frames.begin(), frames.end(), [&](const auto& frame) { return frame->aux_attributes.count(name) == 0; })) {
+      continue;
+    }
+
+    const size_t elem_size = attrib.second.first;
+
+    std::vector<const unsigned char*> data_ptrs(frames.size());
+    for (int i = 0; i < frames.size(); i++) {
+      data_ptrs[i] = static_cast<const unsigned char*>(frames[i]->aux_attributes.at(name).second);
+    }
+
+    auto storage = std::make_shared<std::vector<unsigned char>>(frame_point_indices.size() * elem_size);
+    for (int i = 0; i < frame_point_indices.size(); i++) {
+      const std::uint64_t idx = frame_point_indices[i];
+      const int frame_id = (idx >> frame_id_bits) & mask;
+      const int point_id = idx & mask;
+      const auto src = data_ptrs[frame_id] + elem_size * point_id;
+      auto dst = storage->data() + elem_size * i;
+      memcpy(dst, src, elem_size);
+    }
+
+    sampled->aux_attributes_storage[name] = storage;
+    sampled->aux_attributes[name] = std::make_pair(elem_size, storage->data());
+  }
+
+  return sampled;
+}
+
 // random_sampling
 PointCloudCPU::Ptr random_sampling(const PointCloud::ConstPtr& frame, const double sampling_rate, std::mt19937& mt) {
   if (sampling_rate >= 0.99) {

@@ -2,14 +2,16 @@
 
 This is a collection of [GTSAM](https://gtsam.org/) factors and optimizers for range-based SLAM.
 
-Tested on Ubuntu 22.04 / 24.04 and CUDA 12.2 / 12.6 / 13.1, and NVIDIA Jetson Orin with **GTSAM 4.2a9 and 4.3a0**.
+Tested on Ubuntu 22.04 / 24.04 and CUDA 12.2 / 12.6 / 13.1 / 13.3, and NVIDIA Jetson Orin with **GTSAM 4.2a9 and 4.3a1**.
 
 [![DOI](https://zenodo.org/badge/819211095.svg)](https://zenodo.org/doi/10.5281/zenodo.13378351) [![Doc](https://img.shields.io/badge/API_list-Doxygen-blue)](https://koide3.github.io/gtsam_points/doc_cpp/index.html) [![Build](https://github.com/koide3/gtsam_points/actions/workflows/build.yml/badge.svg)](https://github.com/koide3/gtsam_points/actions/workflows/build.yml)
 
 ## Updates
 
+- 2026/07/12 : v1.2.2 released. Minor fix for GTSAM 4.3a1..
+- 2026/06/14 : v1.2.1 released. Support for GTSAM 4.3a1 and CUDA 13.3.
 - 2026/01/24 : v1.2.0 released. Support for both GTSAM 4.2a9 and GTSAM 4.3a0, and CUDA 13.1. Intensity support for Gaussian voxelmap.
-- 2025/06/15 : The base GTSAM version has been changed. Make sure you have rebuilt and installed **GTSAM 4.3a0**.
+- 2025/06/15 : The base GTSAM version has been changed. Make sure you have rebuilt and installed **GTSAM 4.3a1**.
 
 ## Factors
 
@@ -98,7 +100,7 @@ All the following optimizers were derived from the implementations in GTSAM.
 # Install gtsam
 git clone https://github.com/borglab/gtsam
 cd gtsam
-git checkout 4.3a0
+git checkout 4.3a1
 
 mkdir build && cd build
 cmake .. \

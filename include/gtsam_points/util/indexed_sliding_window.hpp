@@ -57,6 +57,11 @@ public:
     }
   }
 
+  bool has_index(size_t index) const {
+    const std::int64_t local_index = static_cast<std::int64_t>(index) - static_cast<std::int64_t>(total_size - data.size());
+    return local_index >= 0 && local_index < static_cast<std::int64_t>(data.size());
+  }
+
   T& operator[](size_t index) {
     if (auto_shrink) {
       shrink();

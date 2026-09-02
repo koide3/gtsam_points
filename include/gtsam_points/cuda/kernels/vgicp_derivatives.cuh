@@ -5,6 +5,7 @@
 
 #include <Eigen/Core>
 #include <thrust/device_vector.h>
+#include <thrust/pair.h>
 
 #include <gtsam_points/cuda/kernels/pose.cuh>
 #include <gtsam_points/cuda/kernels/linearized_system.cuh>

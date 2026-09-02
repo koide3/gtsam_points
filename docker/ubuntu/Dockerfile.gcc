@@ -16,7 +16,7 @@ RUN apt-get update \
 RUN add-apt-repository ppa:koide3/iridescence -y && \
     add-apt-repository ppa:koide3/gtsam -y && \
     apt-get update && \
-    apt-get install -y libiridescence-dev libgtsam-no-tbb-dev=4.3.0-1*
+    apt-get install -y libiridescence-dev libgtsam-no-tbb-dev=4.3.0-2*
 
 COPY . /root/gtsam_points
 WORKDIR /root/gtsam_points/build

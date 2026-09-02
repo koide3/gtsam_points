@@ -2,8 +2,10 @@
 // Copyright (c) 2021  Kenji Koide (k.koide@aist.go.jp)
 
 #include <thrust/transform.h>
+#include <thrust/tuple.h>
 #include <thrust/host_vector.h>
 #include <thrust/device_vector.h>
+#include <thrust/iterator/zip_iterator.h>
 
 #include <cub/device/device_reduce.cuh>
 
