@@ -20,6 +20,7 @@ option(BUILD_WITH_OPENMP "Build with OpenMP support" ON)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
 option(BUILD_WITH_CUDA_MULTIARCH "Build with CUDA multi-architecture support" OFF)
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
+option(BUILD_PYTHON_BINDINGS "Build python bindings" OFF)
 option(ENABLE_CPPCHECK "Enable cppcheck" OFF)
 option(ENABLE_COVERAGE "Enable coverage check" OFF)
 
@@ -477,6 +478,18 @@ install(FILES
   "${CMAKE_CURRENT_BINARY_DIR}/gtsam_points-config-version.cmake"
   DESTINATION ${CMAKE_CONFIG_INSTALL_DIR}
 )
+
+if(BUILD_PYTHON_BINDINGS)
+  if(DEFINED SKBUILD_PROJECT_NAME)
+    set(PYTHON_INSTALL_DIR .)
+  elseif(NOT DEFINED PYTHON_INSTALL_DIR)
+    set(PYTHON_INSTALL_DIR lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages)
+  endif()
+  install(TARGETS gtsam_points_python
+    LIBRARY DESTINATION ${PYTHON_INSTALL_DIR}
+    COMPONENT python
+  )
+endif()
 
 #############
 ## Package ##
