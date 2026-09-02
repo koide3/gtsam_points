@@ -3,3 +3,5 @@
 build/*
 docs/html/*
 imgui.ini
+refs/
+dist/

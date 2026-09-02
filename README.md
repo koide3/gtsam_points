@@ -165,6 +165,46 @@ sudo apt install -y libgtsam-points-cuda12.5-dev
 # with CUDA 13.1
 sudo apt install -y libgtsam-points-cuda13.1-dev
 ```
+
+### Python bindings
+
+The python bindings of gtsam_points are designed to be used together with those of GTSAM.
+Install GTSAM with its python bindings first (built with pybind11 >= 3.0), and then run `pip install .` in the gtsam_points directory.
+
+```bash
+# Install GTSAM with python bindings
+cd gtsam/build
+cmake .. -DGTSAM_BUILD_PYTHON=ON
+make -j$(nproc) python-install
+
+# Install gtsam_points python bindings
+cd gtsam_points
+pip install .
+```
+
+```python
+import gtsam
+import gtsam_points
+
+target = gtsam_points.PointCloudCPU(target_points)  # numpy array [N, 3]
+source = gtsam_points.PointCloudCPU(source_points)
+
+values = gtsam.Values()
+values.insert(0, gtsam.Pose3())
+values.insert(1, gtsam.Pose3())
+
+graph = gtsam.NonlinearFactorGraph()
+graph.add(gtsam.PriorFactorPose3(0, gtsam.Pose3(), gtsam.noiseModel.Isotropic.Precision(6, 1e6)))
+graph.add(gtsam_points.IntegratedICPFactor(0, 1, target, source))
+
+optimizer = gtsam_points.LevenbergMarquardtOptimizerExt(graph, values)
+values = optimizer.optimize()
+
+print(values.atPose3(1).matrix())  # T_target_source
+```
+
+See [examples/python](examples/python) for complete examples.
+
 ## Demo
 
 ```bash

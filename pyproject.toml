@@ -1,0 +1,33 @@
+[build-system]
+requires = ["scikit-build-core >=0.10", "pybind11 >=3.0,<4"]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "gtsam_points"
+version = "1.2.2"
+description = "A collection of GTSAM factors and optimizers for range-based SLAM"
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Kenji Koide", email = "k.koide@aist.go.jp" }]
+requires-python = ">=3.8"
+# NOTE: The GTSAM python bindings (built and installed along with the GTSAM library,
+#       e.g., `make python-install`) are also required at runtime.
+dependencies = ["numpy"]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: C++",
+  "Programming Language :: Python :: 3",
+  "Topic :: Scientific/Engineering",
+]
+
+[project.urls]
+Homepage = "https://github.com/koide3/gtsam_points"
+Documentation = "https://koide3.github.io/gtsam_points/"
+
+[tool.scikit-build]
+minimum-version = "0.10"
+build-dir = "build/{wheel_tag}"
+sdist.exclude = ["build", "dist", ".venv", "refs", "data", "docs", "docker", "imgui.ini"]
+
+[tool.scikit-build.cmake.define]
+BUILD_PYTHON_BINDINGS = "ON"

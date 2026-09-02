@@ -14,6 +14,7 @@ option(BUILD_TESTS_PCL "Build tests that require PCL" OFF)
 option(BUILD_DEMO "Build demo programs" OFF)
 option(BUILD_EXAMPLE "Build example programs" OFF)
 option(BUILD_TOOLS "Build tools" OFF)
+option(BUILD_PYTHON_BINDINGS "Build python bindings" OFF)
 option(BUILD_WITH_TBB "Build with TBB support" OFF)
 option(BUILD_WITH_OPENMP "Build with OpenMP support" ON)
 option(BUILD_WITH_CUDA "Build with GPU support" OFF)
@@ -21,6 +22,14 @@ option(BUILD_WITH_CUDA_MULTIARCH "Build with CUDA multi-architecture support" OF
 option(BUILD_WITH_MARCH_NATIVE "Build with -march=native" OFF)
 option(ENABLE_CPPCHECK "Enable cppcheck" OFF)
 option(ENABLE_COVERAGE "Enable coverage check" OFF)
+
+if(DEFINED SKBUILD_PROJECT_NAME)
+  # Built as a python wheel by scikit-build-core (pip install). The wheel bundles the
+  # gtsam_points libraries and the python module, which are linked against GTSAM and other
+  # libraries installed elsewhere. Keep their directories in the RUNPATH of the binaries.
+  set(BUILD_PYTHON_BINDINGS ON CACHE BOOL "Build python bindings" FORCE)
+  set(CMAKE_INSTALL_RPATH_USE_LINK_PATH ON)
+endif()
 
 if(BUILD_WITH_MARCH_NATIVE)
   set(GTSAM_POINTS_WITH_MARCH_NATIVE 1)
@@ -227,10 +236,13 @@ target_link_libraries(gtsam_points
   $<TARGET_NAME_IF_EXISTS:TBB::tbb>
   $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
 )
-set_target_properties(gtsam_points PROPERTIES
-  VERSION   ${PROJECT_VERSION}
-  SOVERSION 1
-)
+if(NOT DEFINED SKBUILD_PROJECT_NAME)
+  # No versioned library names in python wheels (symlinks are not supported in wheels)
+  set_target_properties(gtsam_points PROPERTIES
+    VERSION   ${PROJECT_VERSION}
+    SOVERSION 1
+  )
+endif()
 
 # GPU-related
 if(BUILD_WITH_CUDA)
@@ -278,14 +290,48 @@ if(BUILD_WITH_CUDA)
     $<TARGET_NAME_IF_EXISTS:TBB::tbb>
     $<TARGET_NAME_IF_EXISTS:OpenMP::OpenMP_CXX>
   )
-  set_target_properties(gtsam_points_cuda PROPERTIES
-    VERSION   ${PROJECT_VERSION}
-    SOVERSION 1
-  )
+  if(NOT DEFINED SKBUILD_PROJECT_NAME)
+    set_target_properties(gtsam_points_cuda PROPERTIES
+      VERSION   ${PROJECT_VERSION}
+      SOVERSION 1
+    )
+  endif()
 
   target_link_libraries(gtsam_points
     gtsam_points_cuda
   )
+endif()
+
+############
+## Python ##
+############
+
+if(BUILD_PYTHON_BINDINGS)
+  find_package(Python REQUIRED COMPONENTS Interpreter Development.Module)
+  find_package(pybind11 CONFIG REQUIRED)
+
+  pybind11_add_module(gtsam_points_python
+    src/python/main.cpp
+    src/python/util.cpp
+    src/python/types.cpp
+    src/python/ann.cpp
+    src/python/features.cpp
+    src/python/registration.cpp
+    src/python/segmentation.cpp
+    src/python/factors.cpp
+    src/python/optimizers.cpp
+  )
+  set_target_properties(gtsam_points_python PROPERTIES
+    OUTPUT_NAME gtsam_points
+    INSTALL_RPATH_USE_LINK_PATH ON
+  )
+  target_link_libraries(gtsam_points_python PRIVATE gtsam_points)
+  target_compile_definitions(gtsam_points_python PRIVATE VERSION_INFO=${PROJECT_VERSION})
+  # Find the bundled (wheel) or installed gtsam_points libraries at runtime
+  set_property(TARGET gtsam_points_python APPEND PROPERTY INSTALL_RPATH "$ORIGIN")
+  if(NOT DEFINED SKBUILD_PROJECT_NAME)
+    set_property(TARGET gtsam_points_python APPEND PROPERTY INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+  endif()
 endif()
 
 #Demo
@@ -372,16 +418,33 @@ endif()
 ## Install ##
 #############
 
+list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points)
+if(BUILD_WITH_CUDA)
+  list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points_cuda)
+endif()
+
+if(DEFINED SKBUILD_PROJECT_NAME)
+  # Install only the python module and the shared libraries into the wheel root
+  install(TARGETS ${GTSAM_POINTS_LIBRARIES} gtsam_points_python LIBRARY DESTINATION .)
+  return()
+endif()
+
+if(BUILD_PYTHON_BINDINGS)
+  if(DEFINED ENV{ROS_VERSION} AND "$ENV{ROS_VERSION}" STREQUAL "2" AND NOT DEFINED PYTHON_INSTALL_DIR)
+    # Built as a ROS2 package by colcon
+    find_package(ament_cmake_python REQUIRED)
+    ament_get_python_install_dir(PYTHON_INSTALL_DIR)
+  elseif(NOT DEFINED PYTHON_INSTALL_DIR)
+    set(PYTHON_INSTALL_DIR "lib/python${Python_VERSION_MAJOR}.${Python_VERSION_MINOR}/site-packages")
+  endif()
+  install(TARGETS gtsam_points_python DESTINATION ${PYTHON_INSTALL_DIR})
+endif()
+
 include(GNUInstallDirs)
 install(
   DIRECTORY include/ thirdparty/nanoflann/include/ ${CMAKE_CURRENT_BINARY_DIR}/include/
   DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
 )
-
-list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points)
-if(BUILD_WITH_CUDA)
-  list(APPEND GTSAM_POINTS_LIBRARIES gtsam_points_cuda)
-endif()
 
 install(TARGETS ${GTSAM_POINTS_LIBRARIES}
   EXPORT gtsam_points-targets
