@@ -9,6 +9,7 @@
 #include <gtsam_points/cuda/kernels/correspondence.hpp>
 #include <gtsam_points/cuda/kernels/pose.cuh>
 #include <gtsam_points/cuda/kernels/linearized_system.cuh>
+#include <gtsam_points/cuda/kernels/robust_kernels.cuh>
 
 namespace gtsam_points {
 
@@ -18,12 +19,14 @@ struct gicp_derivatives_kernel {
     const Eigen::Vector3f* target_means,
     const Eigen::Matrix3f* target_covs,
     const Eigen::Vector3f* source_means,
-    const Eigen::Matrix3f* source_covs)
+    const Eigen::Matrix3f* source_covs,
+  float robust_kernel_width)
   : linearization_point_ptr(linearization_point_ptr),
     target_means_ptr(target_means),
     target_covs_ptr(target_covs),
     source_means_ptr(source_means),
-    source_covs_ptr(source_covs) {}
+    source_covs_ptr(source_covs),
+    robust_kernel_width(robust_kernel_width) {}
 
   __device__ LinearizedSystem6 operator()(const Correspondence& source_target_correspondence) const {
     const int source_idx = source_target_correspondence.source_idx;
@@ -46,6 +49,8 @@ struct gicp_derivatives_kernel {
     const Eigen::Matrix3f RCR = (R * cov_A * R.transpose());
     const Eigen::Matrix3f RCR_inv = (cov_B + RCR).inverse();
     Eigen::Vector3f error = mean_B - transed_mean_A;
+
+    const float weight = robust_kernel_width <= 0.0f ? 1.0f : geman_mcclure_weight(error.squaredNorm(), robust_kernel_width);
 
     Eigen::Matrix<float, 3, 6> J_target;
     J_target.block<3, 3>(0, 0) = -skew_symmetric(transed_mean_A);
@@ -77,6 +82,7 @@ struct gicp_derivatives_kernel {
 
   const Eigen::Vector3f* source_means_ptr;
   const Eigen::Matrix3f* source_covs_ptr;
+  const float robust_kernel_width;
 };
 
 struct gicp_error_kernel {
@@ -86,13 +92,15 @@ struct gicp_error_kernel {
     const Eigen::Vector3f* target_means,
     const Eigen::Matrix3f* target_covs,
     const Eigen::Vector3f* source_means,
-    const Eigen::Matrix3f* source_covs)
+    const Eigen::Matrix3f* source_covs,
+    float robust_kernel_width)
   : linearization_point_ptr(linearization_point_ptr),
     evaluation_point_ptr(evaluation_point_ptr),
     target_means_ptr(target_means),
     target_covs_ptr(target_covs),
     source_means_ptr(source_means),
-    source_covs_ptr(source_covs) {}
+    source_covs_ptr(source_covs),
+    robust_kernel_width(robust_kernel_width) {}
 
   __device__ float operator()(const Correspondence& source_target_correspondence) const {
     const int source_idx = source_target_correspondence.source_idx;
@@ -119,7 +127,13 @@ struct gicp_error_kernel {
     const Eigen::Matrix3f RCR_inv = (cov_B + RCR).inverse();
     Eigen::Vector3f error = mean_B - transed_mean_A;
 
-    return error.transpose() * RCR_inv * error;
+    float weight = 1.0;
+    if (robust_kernel_width > 0.0f) {
+      // TODO: should use the weight at the linearization point?
+      weight = geman_mcclure_weight(error.squaredNorm(), robust_kernel_width);
+    }
+
+    return weight * error.transpose() * RCR_inv * error;
   }
 
   const Eigen::Isometry3f* linearization_point_ptr;
@@ -129,6 +143,7 @@ struct gicp_error_kernel {
   const Eigen::Matrix3f* target_covs_ptr;
   const Eigen::Vector3f* source_means_ptr;
   const Eigen::Matrix3f* source_covs_ptr;
+  const float robust_kernel_width;
 };
 
 }  // namespace gtsam_points

@@ -96,7 +96,8 @@ void IntegratedGICPDerivatives::issue_linearize(const Eigen::Isometry3f* d_x, Li
     reinterpret_cast<const Eigen::Vector3f*>(target->points_gpu),
     reinterpret_cast<const Eigen::Matrix3f*>(target->covs_gpu),
     reinterpret_cast<const Eigen::Vector3f*>(source->points_gpu),
-    reinterpret_cast<const Eigen::Matrix3f*>(source->covs_gpu));
+    reinterpret_cast<const Eigen::Matrix3f*>(source->covs_gpu),
+    geman_mcclure_kernel_width);
 
   auto first = thrust::make_transform_iterator(source_target_correspondences, deriv_kernel);
 

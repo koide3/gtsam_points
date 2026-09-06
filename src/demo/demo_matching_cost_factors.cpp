@@ -135,6 +135,8 @@ public:
     full_connection = true;
     num_threads = 1;
 
+    max_correspondence_distance = 1.0f;
+    robust_kernel_width = 1.0f;
     correspondence_update_tolerance_rot = 0.0f;
     correspondence_update_tolerance_trans = 0.0f;
 
@@ -156,6 +158,8 @@ public:
       ImGui::Combo("factor type", &factor_type, factor_types.data(), factor_types.size());
       ImGui::Combo("optimizer type", &optimizer_type, optimizer_types.data(), optimizer_types.size());
 
+      ImGui::DragFloat("max correspondence distance", &max_correspondence_distance, 0.01f, 0.0f);
+      ImGui::DragFloat("robust kernel width", &robust_kernel_width, 0.01f, 0.0f);
       ImGui::DragFloat("corr update tolerance rot", &correspondence_update_tolerance_rot, 0.001f, 0.0f, 0.1f);
       ImGui::DragFloat("corr update tolerance trans", &correspondence_update_tolerance_trans, 0.01f, 0.0f, 1.0f);
 
@@ -210,16 +214,19 @@ public:
     const gtsam_points::PointCloud::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
+      factor->set_max_correspondence_distance(max_correspondence_distance);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("ICP_PLANE")) {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
+      factor->set_max_correspondence_distance(max_correspondence_distance);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("GICP")) {
       auto factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(target_key, source_key, target, source);
+      factor->set_max_correspondence_distance(max_correspondence_distance);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       factor->set_num_threads(num_threads);
       return factor;
@@ -229,7 +236,10 @@ public:
       return factor;
     } else if (factor_types[factor_type] == std::string("GICP_GPU")) {
 #ifdef GTSAM_POINTS_USE_CUDA
-      return gtsam::make_shared<gtsam_points::IntegratedGICPFactorGPU>(target_key, source_key, target, source, kdtrees_gpu[target_key]);
+      auto factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactorGPU>(target_key, source_key, target, source, kdtrees_gpu[target_key]);
+      factor->set_max_correspondence_distance(max_correspondence_distance);
+      factor->set_robust_kernel_width(robust_kernel_width);
+      return factor;
 #endif
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
 #ifdef GTSAM_POINTS_USE_CUDA
@@ -302,6 +312,8 @@ private:
   std::vector<const char*> optimizer_types;
   int optimizer_type;
 
+  float max_correspondence_distance;
+  float robust_kernel_width;
   float correspondence_update_tolerance_rot;
   float correspondence_update_tolerance_trans;
 

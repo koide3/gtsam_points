@@ -139,6 +139,10 @@ void IntegratedGICPFactorGPU::set_max_correspondence_distance(double dist) {
   derivatives->set_max_correspondence_distance(dist);
 }
 
+void IntegratedGICPFactorGPU::set_robust_kernel_width(double width) {
+  derivatives->set_robust_kernel_width(width);
+}
+
 int IntegratedGICPFactorGPU::num_inliers() const {
   return derivatives->get_num_inliers();
 }
