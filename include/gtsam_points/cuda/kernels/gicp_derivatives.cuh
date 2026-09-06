@@ -20,7 +20,7 @@ struct gicp_derivatives_kernel {
     const Eigen::Matrix3f* target_covs,
     const Eigen::Vector3f* source_means,
     const Eigen::Matrix3f* source_covs,
-  float robust_kernel_width)
+    float robust_kernel_width)
   : linearization_point_ptr(linearization_point_ptr),
     target_means_ptr(target_means),
     target_covs_ptr(target_covs),
@@ -48,9 +48,15 @@ struct gicp_derivatives_kernel {
 
     const Eigen::Matrix3f RCR = (R * cov_A * R.transpose());
     const Eigen::Matrix3f RCR_inv = (cov_B + RCR).inverse();
-    Eigen::Vector3f error = mean_B - transed_mean_A;
+    const Eigen::Vector3f error = mean_B - transed_mean_A;
 
-    const float weight = robust_kernel_width <= 0.0f ? 1.0f : geman_mcclure_weight(error.squaredNorm(), robust_kernel_width);
+    const float error_sq = error.transpose() * RCR_inv * error;
+
+    // Attenuation factor driven by the Euclidean residual (i.e., robust_kernel_width is in the metric unit).
+    // It is multiplied to the cost, H, and b so that they remain consistent with each other (IRLS).
+    // The resulting cost (weight * error_sq) saturates at robust_kernel_width^2 * |RCR_inv| and is identical
+    // to twice the Geman-McClure loss when RCR_inv is the identity.
+    const float weight = robust_kernel_width <= 0.0f ? 1.0f : geman_mcclure_scale_sqdist(error.squaredNorm(), robust_kernel_width);
 
     Eigen::Matrix<float, 3, 6> J_target;
     J_target.block<3, 3>(0, 0) = -skew_symmetric(transed_mean_A);
@@ -65,12 +71,12 @@ struct gicp_derivatives_kernel {
 
     LinearizedSystem6 linearized;
     linearized.num_inliers = 1;
-    linearized.error = error.transpose() * RCR_inv * error;
-    linearized.H_target = J_target_RCR_inv * J_target;
-    linearized.H_source = J_source_RCR_inv * J_source;
-    linearized.H_target_source = J_target_RCR_inv * J_source;
-    linearized.b_target = J_target_RCR_inv * error;
-    linearized.b_source = J_source_RCR_inv * error;
+    linearized.error = weight * error_sq;
+    linearized.H_target = weight * J_target_RCR_inv * J_target;
+    linearized.H_source = weight * J_source_RCR_inv * J_source;
+    linearized.H_target_source = weight * J_target_RCR_inv * J_source;
+    linearized.b_target = weight * J_target_RCR_inv * error;
+    linearized.b_source = weight * J_source_RCR_inv * error;
 
     return linearized;
   }
@@ -127,13 +133,13 @@ struct gicp_error_kernel {
     const Eigen::Matrix3f RCR_inv = (cov_B + RCR).inverse();
     Eigen::Vector3f error = mean_B - transed_mean_A;
 
-    float weight = 1.0;
-    if (robust_kernel_width > 0.0f) {
-      // TODO: should use the weight at the linearization point?
-      weight = geman_mcclure_weight(error.squaredNorm(), robust_kernel_width);
-    }
+    const float error_sq = error.transpose() * RCR_inv * error;
 
-    return weight * error.transpose() * RCR_inv * error;
+    // The attenuation factor is a part of the cost function and thus must be evaluated at the evaluation point.
+    // Only H and b freeze it at the linearization point (Gauss-Newton approximation).
+    const float weight = robust_kernel_width <= 0.0f ? 1.0f : geman_mcclure_scale_sqdist(error.squaredNorm(), robust_kernel_width);
+
+    return weight * error_sq;
   }
 
   const Eigen::Isometry3f* linearization_point_ptr;

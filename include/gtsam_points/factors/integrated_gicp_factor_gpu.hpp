@@ -97,7 +97,9 @@ public:
   void set_max_correspondence_distance(double dist);
 
   /// @brief Set the width of the robust kernel used in the factor. We only support Geman-McClure kernel.
-  /// @param width The width of the robust kernel (k in the Geman-McClure function). Disabled if width <= 0.0.
+  /// @note  The kernel is driven by the Euclidean distance between corresponding points (i.e., the width is
+  ///        in the metric unit), while the cost to be robustified is the Mahalanobis distance of GICP.
+  /// @param width The width of the robust kernel (c in the Geman-McClure function) [m]. Disabled if width <= 0.0.
   void set_robust_kernel_width(double width);
 
   /// @brief  Get the number of inlier points.
