@@ -85,6 +85,16 @@ public:
   template <typename PointCloud>
   std::vector<unsigned char> get_overlaps(const PointCloud& points, const Eigen::Isometry3d& pose = Eigen::Isometry3d::Identity()) const;
 
+  /// @brief Update the overlap status of each point in the point cloud. This function only updates the status of non-overlapping points (points with
+  /// overlap status 1 will be unchanged).
+  /// @param overlaps [in/out] Overlap status of each point (0=free, 1=occupied). Size must be 0 or equal to the number of points in the point cloud.
+  /// @param points   Point cloud.
+  /// @param pose     Pose of the points.
+  /// @return         Number of points that newly found to be overlapping.
+  template <typename PointCloud>
+  int update_overlaps(std::vector<unsigned char>& overlaps, const PointCloud& points, const Eigen::Isometry3d& pose = Eigen::Isometry3d::Identity())
+    const;
+
   /// @brief Get the number of occupied cells in the grid.
   int num_occupied_cells() const;
 
