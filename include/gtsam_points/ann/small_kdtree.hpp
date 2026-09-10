@@ -100,7 +100,7 @@ public:
 };
 
 using NodeIndexType = std::uint32_t;
-static constexpr NodeIndexType INVALID_NODE = std::numeric_limits<NodeIndexType>::max();
+constexpr NodeIndexType INVALID_NODE = std::numeric_limits<NodeIndexType>::max();
 
 /// @brief KdTree node.
 template <typename Projection>

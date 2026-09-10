@@ -54,8 +54,26 @@ double FastOccupancyGrid::calc_overlap_rate(const PointCloud& points, const Eige
 template <typename PointCloud>
 std::vector<unsigned char> FastOccupancyGrid::get_overlaps(const PointCloud& points, const Eigen::Isometry3d& pose) const {
   std::vector<unsigned char> overlaps(frame::size(points), 0);
+  update_overlaps(overlaps, points, pose);
+  return overlaps;
+}
 
+template <typename PointCloud>
+int FastOccupancyGrid::update_overlaps(std::vector<unsigned char>& overlaps, const PointCloud& points, const Eigen::Isometry3d& pose) const {
+  if (overlaps.empty()) {
+    overlaps.resize(frame::size(points), 0);
+  }
+
+  if (overlaps.size() != frame::size(points)) {
+    throw std::runtime_error("Overlap vector size must be 0 or equal to the number of points in the point cloud.");
+  }
+
+  int num_updated = 0;
   for (int i = 0; i < frame::size(points); i++) {
+    if (overlaps[i]) {
+      continue;
+    }
+
     const auto& pt = frame::point(points, i);
     const Eigen::Array4i global_coord = fast_floor((pose * pt) * inv_resolution) + coord_offset;
     const Eigen::Array4i block_coord = global_coord / FastOccupancyBlock::stride;
@@ -68,9 +86,10 @@ std::vector<unsigned char> FastOccupancyGrid::get_overlaps(const PointCloud& poi
 
     const Eigen::Array4i cell_coord = global_coord - block_coord * FastOccupancyBlock::stride;
     overlaps[i] = blocks[block_loc].second.occupied(cell_coord.head<3>());
+    num_updated += (overlaps[i] != 0);
   }
 
-  return overlaps;
+  return num_updated;
 }
 
 }  // namespace gtsam_points

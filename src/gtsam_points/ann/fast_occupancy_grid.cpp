@@ -92,14 +92,11 @@ void FastOccupancyGrid::rehash(size_t hash_size) {
   blocks = std::move(new_blocks);
 }
 
-template void FastOccupancyGrid::insert<PointCloud>(const PointCloud& points, const Eigen::Isometry3d& pose = Eigen::Isometry3d::Identity());
-template int FastOccupancyGrid::calc_overlap<PointCloud>(const PointCloud& points, const Eigen::Isometry3d& pose = Eigen::Isometry3d::Identity())
-  const;
-template double FastOccupancyGrid::calc_overlap_rate<PointCloud>(
-  const PointCloud& points,
-  const Eigen::Isometry3d& pose = Eigen::Isometry3d::Identity()) const;
-template std::vector<unsigned char> FastOccupancyGrid::get_overlaps<PointCloud>(
-  const PointCloud& points,
-  const Eigen::Isometry3d& pose = Eigen::Isometry3d::Identity()) const;
+template void FastOccupancyGrid::insert<PointCloud>(const PointCloud& points, const Eigen::Isometry3d& pose);
+template int FastOccupancyGrid::calc_overlap<PointCloud>(const PointCloud& points, const Eigen::Isometry3d& pose) const;
+template double FastOccupancyGrid::calc_overlap_rate<PointCloud>(const PointCloud& points, const Eigen::Isometry3d& pose) const;
+template std::vector<unsigned char> FastOccupancyGrid::get_overlaps<PointCloud>(const PointCloud& points, const Eigen::Isometry3d& pose) const;
+template int
+FastOccupancyGrid::update_overlaps<PointCloud>(std::vector<unsigned char>& overlaps, const PointCloud& points, const Eigen::Isometry3d& pose) const;
 
 }  // namespace gtsam_points
