@@ -42,6 +42,7 @@ public:
   /// @param distances        Buffer to store distances (must be larger than k=max(N, num_neighbors))
   /// @param num_neighbors    Number of neighbors to search (must be -1 for static case N > 0)
   /// @param index_transform  Index transformation function (e.g., local point index -> global voxel + point index)
+  /// @note The transform is copied into the result; references captured by it must remain valid.
   explicit KnnResult(
     size_t* indices,
     double* distances,
@@ -109,7 +110,7 @@ public:
   }
 
 public:
-  const IndexTransform& index_transform;
+  const IndexTransform index_transform;
   const int capacity;       ///< Maximum number of neighbors to search
   int num_found_neighbors;  ///< Number of found neighbors
   size_t* indices;          ///< Indices of neighbors
@@ -122,6 +123,7 @@ struct RadiusSearchResult {
 public:
   /// @brief Constructor
   /// @param index_transform  Index transformation function (e.g., local point index -> global voxel + point index)
+  /// @note The transform is copied into the result; references captured by it must remain valid.
   explicit RadiusSearchResult(const IndexTransform& index_transform = IndexTransform()) : index_transform(index_transform) { neighbors.reserve(32); }
 
   /// @brief Number of found neighbors.
@@ -139,7 +141,7 @@ public:
   void push(size_t index, double distance) { neighbors.emplace_back(index_transform(index), distance); }
 
 public:
-  const IndexTransform& index_transform;
+  const IndexTransform index_transform;
   std::vector<std::pair<size_t, double>> neighbors;  ///< Pairs of point index and distance
 };
 
