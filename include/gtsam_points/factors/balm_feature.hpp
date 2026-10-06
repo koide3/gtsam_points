@@ -4,6 +4,7 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <Eigen/Eigenvalues>
 
 namespace gtsam_points {
 

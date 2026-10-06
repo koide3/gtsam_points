@@ -108,11 +108,11 @@ TEST_P(ContinuousTimeFactorTest, AlignmentTest) {
 
     gtsam_points::IntegratedCT_ICPFactor::shared_ptr factor;
     if (method == "CTICP") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedCT_ICPFactor>(0, 1, target, source);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedCT_ICPFactor>(0, 1, target, source);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "CTGICP") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedCT_GICPFactor>(0, 1, target, source);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedCT_GICPFactor>(0, 1, target, source);
       f->set_num_threads(num_threads);
       factor = f;
     }

@@ -18,7 +18,6 @@ namespace gtsam_points {
  */
 class IntegratedMatchingCostFactor : public gtsam::NonlinearFactor {
 public:
-  GTSAM_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = gtsam_points::shared_ptr<IntegratedMatchingCostFactor>;
 
   /**

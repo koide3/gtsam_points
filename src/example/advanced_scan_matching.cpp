@@ -67,7 +67,7 @@ int main(int argc, char** argv) {
 
       // Create an ICP factor between target (iVox) and source (current frame)
       auto icp_factor =
-        gtsam::make_shared<gtsam_points::IntegratedGICPFactor_<gtsam_points::iVox, gtsam_points::PointCloud>>(0, 1, ivox, frame, ivox);
+        gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor_<gtsam_points::iVox, gtsam_points::PointCloud>>(0, 1, ivox, frame, ivox);
       icp_factor->set_num_threads(num_threads);
       graph.add(icp_factor);
 

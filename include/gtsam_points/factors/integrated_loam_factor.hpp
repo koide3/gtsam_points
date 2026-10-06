@@ -29,7 +29,6 @@ class IntegratedPointToEdgeFactor_;
 template <typename TargetFrame = gtsam_points::PointCloud, typename SourceFrame = gtsam_points::PointCloud>
 class IntegratedLOAMFactor_ : public gtsam_points::IntegratedMatchingCostFactor {
 public:
-  GTSAM_MAKE_ALIGNED_OPERATOR_NEW
   using shared_ptr = gtsam_points::shared_ptr<IntegratedLOAMFactor_<TargetFrame, SourceFrame>>;
 
   IntegratedLOAMFactor_(

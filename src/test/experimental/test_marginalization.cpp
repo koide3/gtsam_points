@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
 
   return 0;
 
-  auto factor = gtsam::make_shared<gtsam::BetweenFactor<gtsam::Pose3>>(0, 1, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e3));
+  auto factor = gtsam_points::make_shared_ptr<gtsam::BetweenFactor<gtsam::Pose3>>(0, 1, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e3));
 
   gtsam::Values values;
   values.insert(0, gtsam::Pose3::Expmap(gtsam::Vector6::Random()));

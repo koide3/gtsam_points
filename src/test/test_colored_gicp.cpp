@@ -150,15 +150,15 @@ TEST_P(ColoredGICPTest, AlignmentTest) {
   std::shared_ptr<gtsam_points::IntensityKdTree> target_intensity_tree(
     new gtsam_points::IntensityKdTree(target->points, target->intensities, target->size()));
 
-  auto f1 = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
+  auto f1 = gtsam_points::make_shared_ptr<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
   f1->set_num_threads(num_threads);
   test_factor(f1, "DEFAULT");
 
-  auto f2 = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients);
+  auto f2 = gtsam_points::make_shared_ptr<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients);
   f2->set_num_threads(num_threads);
   test_factor(f2, "ESTIMATE_PHOTO_AND_GEOM");
 
-  auto f3 = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients2);
+  auto f3 = gtsam_points::make_shared_ptr<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_intensity_tree, target_gradients2);
   f3->set_num_threads(num_threads);
   test_factor(f3, "ESTIMATE_PHOTO_ONLY");
 }

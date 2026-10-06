@@ -144,11 +144,11 @@ public:
     // Create continuous time ICP factor
     gtsam::NonlinearFactor::shared_ptr factor;
     if (factor_types[factor_type] == std::string("CT-ICP")) {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedCT_ICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
       f->set_max_correspondence_distance(max_correspondence_distance);
       factor = f;
     } else if (factor_types[factor_type] == std::string("CT-GICP")) {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedCT_GICPFactor>(0, 1, deskewed_frames[data_id], raw_frames[data_id]);
       f->set_max_correspondence_distance(max_correspondence_distance);
       factor = f;
     } else if (factor_types[factor_type] == std::string("CT-ICP-EXPR")) {

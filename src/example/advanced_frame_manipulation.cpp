@@ -54,12 +54,12 @@ int main(int argc, char** argv) {
   gtsam::NonlinearFactorGraph graph;
 
   // Fix the target pose
-  auto prior_factor = gtsam::make_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+  auto prior_factor = gtsam_points::make_shared_ptr<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
   graph.add(prior_factor);
 
   // Create an ICP factor with std::shared_ptr<std::vector<Eigen::Vector4d>>
   // Note that you need to include "integrated_icp_factor_impl.hpp" when you feed a custom data to scan matching factors
-  auto icp_factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor_<std::vector<Eigen::Vector4d>, std::vector<Eigen::Vector4d>>>(0, 1, target, source, target_tree);
+  auto icp_factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedICPFactor_<std::vector<Eigen::Vector4d>, std::vector<Eigen::Vector4d>>>(0, 1, target, source, target_tree);
   graph.add(icp_factor);
 
   gtsam::Values values;

@@ -19,7 +19,7 @@ auto generate_factor(std::mt19937& mt) {
   std::uniform_real_distribution<> udist(-1.0, 1.0);
 
   gtsam::Vector3 rel_pose = Eigen::Vector3d(udist(mt), udist(mt), udist(mt));
-  return gtsam::make_shared<gtsam::BetweenFactor<gtsam::Vector3>>(0, 1, rel_pose, gtsam::noiseModel::Isotropic::Sigma(6, 1.0));
+  return gtsam_points::make_shared_ptr<gtsam::BetweenFactor<gtsam::Vector3>>(0, 1, rel_pose, gtsam::noiseModel::Isotropic::Sigma(6, 1.0));
 }
 
 gtsam::Values generate_values(std::mt19937& mt) {

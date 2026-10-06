@@ -202,27 +202,27 @@ public:
     const gtsam_points::GaussianVoxelMap::ConstPtr& target_voxelmap_gpu,
     const gtsam_points::PointCloud::ConstPtr& source) {
     if (factor_types[factor_type] == std::string("ICP")) {
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("ICP_PLANE")) {
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedPointToPlaneICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("GICP")) {
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(target_key, source_key, target, source);
+      auto factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor>(target_key, source_key, target, source);
       factor->set_correspondence_update_tolerance(correspondence_update_tolerance_rot, correspondence_update_tolerance_trans);
       factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("VGICP")) {
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
+      auto factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
       factor->set_num_threads(num_threads);
       return factor;
     } else if (factor_types[factor_type] == std::string("VGICP_GPU")) {
 #ifdef GTSAM_POINTS_USE_CUDA
-      return gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap_gpu, source);
+      return gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactorGPU>(target_key, source_key, target_voxelmap_gpu, source);
 #endif
     }
 

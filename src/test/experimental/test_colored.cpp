@@ -103,9 +103,9 @@ int main(int argc, char** argv) {
   gtsam::NonlinearFactorGraph graph;
   graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
-  auto f = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
+  auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
   f->set_photometric_term_weight(0.75);
-  // auto f = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(0, 1, target, source);
+  // auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor>(0, 1, target, source);
   f->set_num_threads(12);
   graph.add(f);
 
@@ -147,7 +147,7 @@ int main(int argc, char** argv) {
   gtsam::NonlinearFactorGraph graph;
   graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3::Identity(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
-  auto f = gtsam::make_shared<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
+  auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedColoredGICPFactor>(0, 1, target, source, target_tree, target_gradients);
   f->set_num_threads(12);
   graph.add(f);
   // graph.emplace_shared<gtsam_points::IntegratedGICPFactor>(0, 1, target, source, target_tree);

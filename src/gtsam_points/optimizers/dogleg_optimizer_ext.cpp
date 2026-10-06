@@ -59,7 +59,7 @@ double DoglegOptimizerExt::getDelta() const {
 /* ************************************************************************* */
 GaussianFactorGraph::shared_ptr DoglegOptimizerExt::iterate(void) {
   // Linearize graph
-  GaussianFactorGraph::shared_ptr linear = graph_.linearize(state_->values);
+  GaussianFactorGraph::shared_ptr linear = graph().linearize(state_->values);
 
   // Pull out parameters we'll use
   const bool dlVerbose = (params_.verbosityDL > DoglegParams::SILENT);
@@ -77,7 +77,7 @@ GaussianFactorGraph::shared_ptr DoglegOptimizerExt::iterate(void) {
       dx_u,
       dx_n,
       bt,
-      graph_,
+      graph(),
       state_->values,
       state_->error,
       dlVerbose);
@@ -91,7 +91,7 @@ GaussianFactorGraph::shared_ptr DoglegOptimizerExt::iterate(void) {
       dx_u,
       dx_n,
       bn,
-      graph_,
+      graph(),
       state_->values,
       state_->error,
       dlVerbose);
