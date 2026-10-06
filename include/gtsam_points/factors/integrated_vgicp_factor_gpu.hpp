@@ -135,6 +135,16 @@ public:
 
   virtual void sync() override;
 
+protected:
+  /**
+   * @brief Replace the derivatives implementation used by this factor.
+   * @note This is intended for derived factors that install a custom implementation during construction.
+   * @warning A derived factor that calls this function must override clone() and reinstall an equivalent
+   *          derivatives implementation in the cloned factor. The inherited clone() rejects custom derivatives
+   *          to prevent silently reverting to the standard implementation.
+   */
+  void replace_derivatives(std::unique_ptr<IntegratedVGICPDerivatives> replacement);
+
 private:
   Eigen::Isometry3f calc_delta(const gtsam::Values& values) const;
 
