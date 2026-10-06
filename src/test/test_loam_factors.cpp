@@ -85,15 +85,15 @@ public:
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "LOAM") {
       auto f =
-        gtsam::make_shared<gtsam_points::IntegratedLOAMFactor>(target_key, source_key, target_edges, target_planes, source_edges, source_planes);
+        gtsam_points::make_shared_ptr<gtsam_points::IntegratedLOAMFactor>(target_key, source_key, target_edges, target_planes, source_edges, source_planes);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "EDGE") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedPointToEdgeFactor>(target_key, source_key, target_edges, source_edges);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedPointToEdgeFactor>(target_key, source_key, target_edges, source_edges);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "PLANE") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedPointToPlaneFactor>(target_key, source_key, target_planes, source_planes);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedPointToPlaneFactor>(target_key, source_key, target_planes, source_planes);
       f->set_num_threads(num_threads);
       factor = f;
     }

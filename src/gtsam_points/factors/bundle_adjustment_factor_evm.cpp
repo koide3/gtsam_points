@@ -109,7 +109,7 @@ gtsam::GaussianFactor::shared_ptr EVMBundleAdjustmentFactorBase::compose_factor(
     gs.push_back(J.block<1, 6>(0, i * 6));
   }
 
-  return gtsam::make_shared<gtsam::HessianFactor>(keys_, Gs, gs, error);
+  return gtsam_points::make_shared_ptr<gtsam::HessianFactor>(keys_, Gs, gs, error);
 }
 
 /**

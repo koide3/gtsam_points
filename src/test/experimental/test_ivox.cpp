@@ -55,7 +55,7 @@ int main(int argc, char** argv) {
       gtsam::NonlinearFactorGraph graph;
       graph.emplace_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
 
-      auto factor = gtsam::make_shared<gtsam_points::IntegratedLOAMFactor_<gtsam_points::iVox, gtsam_points::PointCloud>>(
+      auto factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedLOAMFactor_<gtsam_points::iVox, gtsam_points::PointCloud>>(
         0,
         1,
         ivox_edges,

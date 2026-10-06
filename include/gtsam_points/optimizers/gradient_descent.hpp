@@ -80,8 +80,8 @@ public:
     const auto& current_state = static_cast<const NumericalGradientDescentState*>(state_.get());
 
     const auto& x0 = state_->values;
-    const auto linearized = graph_.linearize(x0);
-    const double y0 = graph_.error(x0);
+    const auto linearized = graph().linearize(x0);
+    const double y0 = graph().error(x0);
 
     const int dim = x0.dim();
     gtsam::VectorValues J = x0.zeroVectors();
@@ -92,7 +92,7 @@ public:
         delta[key][i] = params_.diff_eps;
 
         const gtsam::Values xi = x0.retract(delta);
-        const double yi = graph_.error(xi);
+        const double yi = graph().error(xi);
 
         J[key][i] = (yi - y0) / params_.diff_eps;
       }
@@ -101,7 +101,7 @@ public:
     const double lambda = current_state->lambda;
     const gtsam::VectorValues delta = J.scale(-lambda);
     const gtsam::Values xi = x0.retract(delta);
-    const double yi = graph_.error(xi);
+    const double yi = graph().error(xi);
     const double cost_change = yi - y0;
 
     if (yi < y0) {

@@ -29,6 +29,8 @@
 #include <gtsam/linear/linearExceptions.h>
 #include <gtsam/inference/Ordering.h>
 #include <gtsam/base/Vector.h>
+#include <type_traits>
+#include <utility>
 #if GTSAM_USE_BOOST_FEATURES
 #include <gtsam/base/timing.h>
 #endif
@@ -62,6 +64,23 @@ using gtsam::NonlinearOptimizerParams;
 using gtsam::Ordering;
 using gtsam::Values;
 using gtsam::VectorValues;
+
+// GTSAM 4.3.0 moved diagonalDamping, minDiagonal and maxDiagonal of LevenbergMarquardtParams into
+// the dampingParams member. GTSAM_VERSION_NUMERIC is the same for 4.3a1 and 4.3.0, so detect the member.
+template <typename Params, typename = void>
+struct HasDampingParams : std::false_type {};
+
+template <typename Params>
+struct HasDampingParams<Params, std::void_t<decltype(std::declval<const Params&>().dampingParams)>> : std::true_type {};
+
+template <typename Params>
+const auto& damping_params(const Params& params) {
+  if constexpr (HasDampingParams<Params>::value) {
+    return params.dampingParams;
+  } else {
+    return params;
+  }
+}
 
 double calc_error(const gtsam::GaussianFactorGraph& gfg, const gtsam::VectorValues& x) {
   if (is_omp_default()) {
@@ -141,7 +160,7 @@ int LevenbergMarquardtOptimizerExt::getInnerIterations() const {
 GaussianFactorGraph::shared_ptr LevenbergMarquardtOptimizerExt::linearize() const {
   gtsam::GaussianFactorGraph::shared_ptr linear;
   linearization_hook_->linearize(state_->values);
-  linear = graph_.linearize(state_->values);
+  linear = graph().linearize(state_->values);
   return linear;
 }
 
@@ -154,7 +173,7 @@ GaussianFactorGraph LevenbergMarquardtOptimizerExt::buildDampedSystem(const Gaus
   if (params_.verbosityLM >= LevenbergMarquardtParams::DAMPED)
     std::cout << "building damped system with lambda " << currentState->lambda << std::endl;
 
-  if (params_.diagonalDamping)
+  if (damping_params(params_).diagonalDamping)
     return currentState->buildDampedSystem(linear, sqrtHessianDiagonal);
   else
     return currentState->buildDampedSystem(linear);
@@ -244,7 +263,7 @@ bool LevenbergMarquardtOptimizerExt::tryLambda(const GaussianFactorGraph& linear
       gttic(compute_error);
       if (verbose) cout << "calculating error:" << endl;
       linearization_hook_->error(newValues);
-      newError = calc_error(graph_, newValues);
+      newError = calc_error(graph(), newValues);
       gttoc(compute_error);
 
       if (verbose) cout << "old error (" << currentState->error << ") new (tentative) error (" << newError << ")" << endl;
@@ -360,7 +379,7 @@ GaussianFactorGraph::shared_ptr LevenbergMarquardtOptimizerExt::iterate() {
   if (params_.verbosityLM >= LevenbergMarquardtParams::DAMPED) cout << "linearizing = " << endl;
   auto t1 = std::chrono::high_resolution_clock::now();
   linearization_hook_->linearize(state_->values);
-  gtsam::GaussianFactorGraph::shared_ptr linear = graph_.linearize(state_->values);
+  gtsam::GaussianFactorGraph::shared_ptr linear = graph().linearize(state_->values);
   auto t2 = std::chrono::high_resolution_clock::now();
   linearization_time_ = std::chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1);
 
@@ -369,7 +388,7 @@ GaussianFactorGraph::shared_ptr LevenbergMarquardtOptimizerExt::iterate() {
   // const_cast<double&>(currentState->error) = err;  // !!!
 
   linearization_hook_->error(currentState->values);
-  const_cast<double&>(currentState->error) = graph_.error(currentState->values);  // !! Bad practice
+  const_cast<double&>(currentState->error) = graph().error(currentState->values);  // !! Bad practice
 
   if (currentState->totalNumberInnerIterations == 0) {  // write initial erroro
     writeLogFile(currentState->error);
@@ -381,10 +400,10 @@ GaussianFactorGraph::shared_ptr LevenbergMarquardtOptimizerExt::iterate() {
 
   // Only calculate diagonal of Hessian (expensive) once per outer iteration, if we need it
   VectorValues sqrtHessianDiagonal;
-  if (params_.diagonalDamping) {
+  if (damping_params(params_).diagonalDamping) {
     sqrtHessianDiagonal = linear->hessianDiagonal();
     for (auto& [key, value] : sqrtHessianDiagonal) {
-      value = value.cwiseMax(params_.minDiagonal).cwiseMin(params_.maxDiagonal).cwiseSqrt();
+      value = value.cwiseMax(damping_params(params_).minDiagonal).cwiseMin(damping_params(params_).maxDiagonal).cwiseSqrt();
     }
   }
 

@@ -81,7 +81,7 @@ gtsam::ImuFactor::shared_ptr ReintegratedImuFactor::create_imu_factor(const gtsa
     pim.integrateMeasurement(acc, gyro, dt);
   }
 
-  return gtsam::make_shared<gtsam::ImuFactor>(keys()[0], keys()[1], keys()[2], keys()[3], keys()[4], pim);
+  return gtsam_points::make_shared_ptr<gtsam::ImuFactor>(keys()[0], keys()[1], keys()[2], keys()[3], keys()[4], pim);
 }
 
 }  // namespace gtsam_points

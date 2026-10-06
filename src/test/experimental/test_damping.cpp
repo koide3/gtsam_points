@@ -27,9 +27,9 @@ int main(int argc, char** argv) {
 
   gtsam::Matrix6 G = 10.0 * gtsam::Matrix6::Identity();
   gtsam::Vector6 g = gtsam::Vector6::Zero();
-  // graph.at(1) = gtsam::make_shared<gtsam::LinearContainerFactor>(gtsam::HessianFactor(0, G, g, 0.0));
+  // graph.at(1) = gtsam_points::make_shared_ptr<gtsam::LinearContainerFactor>(gtsam::HessianFactor(0, G, g, 0.0));
 
-  graph.at(1) = gtsam::make_shared<gtsam_points::LinearDampingFactor>(0, 6, 10.0);
+  graph.at(1) = gtsam_points::make_shared_ptr<gtsam_points::LinearDampingFactor>(0, 6, 10.0);
 
   gtsam_points::LevenbergMarquardtOptimizerExt(graph, values, lm_params).optimize();
   

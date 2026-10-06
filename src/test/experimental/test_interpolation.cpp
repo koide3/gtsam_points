@@ -39,7 +39,7 @@ int main(int argc, char** argv) {
 
   /*
   auto noise_model = gtsam::noiseModel::Isotropic::Precision(6, 1.0);
-  auto factor = gtsam::make_shared<gtsam_points::Pose3InterpolationFactor>(0, 1, 2, t, noise_model);
+  auto factor = gtsam_points::make_shared_ptr<gtsam_points::Pose3InterpolationFactor>(0, 1, 2, t, noise_model);
 
   gtsam::Matrix H_xi, H_xj, H_xk;
   auto error = factor->evaluateError(values.at<gtsam::Pose3>(0), values.at<gtsam::Pose3>(1), values.at<gtsam::Pose3>(2), H_xi, H_xj, H_xk);
@@ -90,7 +90,7 @@ int main(int argc, char** argv) {
     std::cout << "expression factor" << std::endl;
     const auto error_ = interpolate_(gtsam::Pose3_(0), gtsam::Pose3_(1), gtsam::Pose3_(2), time);
     // gtsam::ExpressionFactor<gtsam::Vector6>(noise_model, gtsam::Vector6::Zero(), error_);
-    graph[0] = gtsam::make_shared<gtsam::ExpressionFactor<gtsam::Vector6>>(noise_model, gtsam::Vector6::Zero(), error_);
+    graph[0] = gtsam_points::make_shared_ptr<gtsam::ExpressionFactor<gtsam::Vector6>>(noise_model, gtsam::Vector6::Zero(), error_);
     optimized = gtsam::LevenbergMarquardtOptimizer(graph, values, lm_params).optimize();
 
     const gtsam::Pose3 xk = optimized.at<gtsam::Pose3>(2);

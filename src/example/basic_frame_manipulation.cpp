@@ -58,7 +58,7 @@ int main(int argc, char** argv) {
   base_frame2->num_points = points_4d.size();
   base_frame2->points = points_4d.data();
 
-  auto icp_factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(0, 1, base_frame, base_frame2);
+  auto icp_factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedICPFactor>(0, 1, base_frame, base_frame2);
 
   // If you are interested in using your custom classes with gtsam_points, see "advanced_frame_manipulation.cpp".
 

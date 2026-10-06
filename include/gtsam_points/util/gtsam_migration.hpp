@@ -4,8 +4,13 @@
 
 #include <memory>
 #include <optional>
+#include <utility>
 #include <gtsam/config.h>
+#if __has_include(<gtsam/base/make_shared.h>)
+// Removed in GTSAM 4.3.0 (borglab/gtsam#2579), where std::make_shared handles over-aligned types (C++17).
 #include <gtsam/base/make_shared.h>
+#define GTSAM_POINTS_HAS_GTSAM_MAKE_SHARED
+#endif
 #include <gtsam/base/Matrix.h>
 
 namespace gtsam_points {
@@ -52,5 +57,16 @@ using OptionalMatrixVecType = boost::optional<std::vector<gtsam::Matrix>&>;
 constexpr auto NoneValue = boost::none;
 
 #endif
+
+/// Allocate a gtsam_points::shared_ptr<T>, the smart pointer type used by GTSAM.
+/// Not named make_shared to avoid ambiguities with std::make_shared and boost::make_shared.
+template <typename T, typename... Args>
+auto make_shared_ptr(Args&&... args) {
+#ifdef GTSAM_POINTS_HAS_GTSAM_MAKE_SHARED
+  return gtsam::make_shared<T>(std::forward<Args>(args)...);
+#else
+  return std::make_shared<T>(std::forward<Args>(args)...);
+#endif
+}
 
 }  // namespace gtsam_points

@@ -133,15 +133,15 @@ public:
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedICPFactor>(target_key, source_key, target, source);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "GICP") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(target_key, source_key, target, source);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor>(target_key, source_key, target, source);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "VGICP") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactor>(target_key, source_key, target_voxelmap, source);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "VGICP_CUDA") {
@@ -170,15 +170,15 @@ public:
 
     gtsam::NonlinearFactor::shared_ptr factor;
     if (method == "ICP") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(fixed_target_pose, source_key, target, source);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedICPFactor>(fixed_target_pose, source_key, target, source);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "GICP") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(fixed_target_pose, source_key, target, source);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor>(fixed_target_pose, source_key, target, source);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "VGICP") {
-      auto f = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(fixed_target_pose, source_key, target_voxelmap, source);
+      auto f = gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactor>(fixed_target_pose, source_key, target_voxelmap, source);
       f->set_num_threads(num_threads);
       factor = f;
     } else if (method == "VGICP_CUDA") {

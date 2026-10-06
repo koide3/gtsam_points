@@ -3,7 +3,7 @@
 #include <Eigen/Core>
 
 #include <gtest/gtest.h>
-#include <gtsam/base/make_shared.h>
+#include <gtsam_points/util/gtsam_migration.hpp>
 #include <gtsam_points/util/compact.hpp>
 #include <gtsam_points/util/read_points.hpp>
 #include <gtsam_points/features/covariance_estimation.hpp>
@@ -86,24 +86,24 @@ public:
     const auto method = GetParam();
 
     if (method == "GICP") {
-      auto factor_full = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(0, 1, target, source, target_tree);
+      auto factor_full = gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor>(0, 1, target, source, target_tree);
       factor_full->set_fused_cov_cache_mode(gtsam_points::FusedCovCacheMode::FULL);
 
-      auto factor_compact = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(0, 1, target, source, target_tree);
+      auto factor_compact = gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor>(0, 1, target, source, target_tree);
       factor_compact->set_fused_cov_cache_mode(gtsam_points::FusedCovCacheMode::COMPACT);
 
-      auto factor_none = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(0, 1, target, source, target_tree);
+      auto factor_none = gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor>(0, 1, target, source, target_tree);
       factor_none->set_fused_cov_cache_mode(gtsam_points::FusedCovCacheMode::NONE);
 
       return {factor_full, factor_compact, factor_none};
     } else if (method == "VGICP") {
-      auto factor_full = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(0, 1, target_voxels, source);
+      auto factor_full = gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactor>(0, 1, target_voxels, source);
       factor_full->set_fused_cov_cache_mode(gtsam_points::FusedCovCacheMode::FULL);
 
-      auto factor_compact = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(0, 1, target_voxels, source);
+      auto factor_compact = gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactor>(0, 1, target_voxels, source);
       factor_compact->set_fused_cov_cache_mode(gtsam_points::FusedCovCacheMode::COMPACT);
 
-      auto factor_none = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(0, 1, target_voxels, source);
+      auto factor_none = gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactor>(0, 1, target_voxels, source);
       factor_none->set_fused_cov_cache_mode(gtsam_points::FusedCovCacheMode::NONE);
 
       return {factor_full, factor_compact, factor_none};

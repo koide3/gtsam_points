@@ -5,6 +5,9 @@
 
 #include <gtsam/geometry/Pose3.h>
 #include <gtsam/nonlinear/NonlinearFactor.h>
+#if __has_include(<gtsam/nonlinear/NoiseModelFactorN.h>)
+#include <gtsam/nonlinear/NoiseModelFactorN.h>
+#endif
 #include <gtsam/nonlinear/ExpressionFactor.h>
 #include <gtsam_points/util/gtsam_migration.hpp>
 

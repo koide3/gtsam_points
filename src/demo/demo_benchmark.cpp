@@ -187,11 +187,11 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
     for (int i = 0; i < 5; i++) {
       for (int j = i + 1; j < 5; j++) {
         if (factor_type == "GICP") {
-          auto factor = gtsam::make_shared<gtsam_points::IntegratedGICPFactor>(i, j, frames[i], frames[j], trees[i]);
+          auto factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedGICPFactor>(i, j, frames[i], frames[j], trees[i]);
           factor->set_num_threads(num_threads);
           graph.add(factor);
         } else if (factor_type == "VGICP") {
-          auto factor = gtsam::make_shared<gtsam_points::IntegratedVGICPFactor>(i, j, voxels[i], frames[j]);
+          auto factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactor>(i, j, voxels[i], frames[j]);
           factor->set_num_threads(num_threads);
           graph.add(factor);
         } else if (factor_type == "VGICP_GPU") {
@@ -200,7 +200,7 @@ void benchmark_alignment(const std::string& factor_type, int num_threads, int nu
           const auto stream = stream_buffer.first;
           const auto buffer = stream_buffer.second;
 
-          auto factor = gtsam::make_shared<gtsam_points::IntegratedVGICPFactorGPU>(i, j, voxels[i], frames[j], stream, buffer);
+          auto factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedVGICPFactorGPU>(i, j, voxels[i], frames[j], stream, buffer);
           graph.add(factor);
 #else
           std::cerr << "error: gtsam_points was built without CUDA!!" << std::endl;

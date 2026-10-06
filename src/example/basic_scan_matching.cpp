@@ -31,11 +31,11 @@ int main(int argc, char** argv) {
   gtsam::NonlinearFactorGraph graph;
 
   // Fix the target pose at the origin
-  auto prior_factor = gtsam::make_shared<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
+  auto prior_factor = gtsam_points::make_shared_ptr<gtsam::PriorFactor<gtsam::Pose3>>(0, gtsam::Pose3(), gtsam::noiseModel::Isotropic::Precision(6, 1e6));
   graph.add(prior_factor);
 
   // Create an ICP factor between target and source poses
-  auto icp_factor = gtsam::make_shared<gtsam_points::IntegratedICPFactor>(0, 1, target_frame, source_frame);
+  auto icp_factor = gtsam_points::make_shared_ptr<gtsam_points::IntegratedICPFactor>(0, 1, target_frame, source_frame);
   icp_factor->set_max_correspondence_distance(5.0);
   graph.add(icp_factor);
 
