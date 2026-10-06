@@ -54,7 +54,7 @@ using optional = boost::optional<T>;
 
 using OptionalMatrixType = boost::optional<gtsam::Matrix&>;
 using OptionalMatrixVecType = boost::optional<std::vector<gtsam::Matrix>&>;
-constexpr auto NoneValue = boost::none;
+inline const auto NoneValue = boost::none;
 
 #endif
 
