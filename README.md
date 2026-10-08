@@ -25,7 +25,7 @@ Tested on Ubuntu 22.04 / 24.04 and CUDA 12.2 / 12.6 / 13.1 / 13.3, and NVIDIA Je
     GICP with voxel-based data association and multi-distribution-correspondence [[3]](#VGICP1)[[4]](#VGICP2).
 - **IntegratedVGICPFactorGPU**  
     GPU implementation of VGICP [[3]](#VGICP1)[[4]](#VGICP2).  
-    To enable this factor, set ```-DBUILD_WITH_CUDA=ON```.
+    To enable this factor, set ```-DBUILD_WITH_CUDA=ON``` (NVIDIA) or ```-DBUILD_WITH_HIP=ON``` (AMD ROCm).
 - **IntegratedLOAMFactor**  
     Matching cost factor based on the combination of point-to-plane and point-to-edge distances [[5]](#LOAM)[[6]](#LEGO).
 
@@ -133,9 +133,11 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 #   -DBUILD_TOOLS=OFF \               # Set ON to build tools
 #   -DBUILD_WITH_TBB=OFF \            # Set ON to enable TBB
 #   -DBUILD_WITH_OPENMP=OFF \         # Set ON to enable OpenMP
-#   -DBUILD_WITH_CUDA=OFF \           # Set ON to enable CUDA support
+#   -DBUILD_WITH_CUDA=OFF \           # Set ON to enable CUDA support (NVIDIA)
 #   -DBUILD_WITH_CUDA_MULTIARCH=OFF \ # Set ON to enable multi-arch CUDA support
 #   -DCMAKE_CUDA_ARCHITECTURES=89 \   # If not specified, "native" architecture is used
+#   -DBUILD_WITH_HIP=OFF \            # Set ON to enable ROCm/HIP support (AMD); requires ROCm
+#   -DCMAKE_HIP_ARCHITECTURES=gfx90a \# Target AMD GPU arch (e.g. gfx90a, gfx1100); defaults to gfx90a if unset
 #   -DBUILD_WITH_MARCH_NATIVE=OFF     # Set ON to enable -march=native (recommended to keep it OFF)
 
 make -j$(nproc)
@@ -210,7 +212,7 @@ This library is released under the MIT license.
 - [GTSAM](https://gtsam.org/)
 - [optional] [PCL]([https://www.openmp.org/](https://pointclouds.org/))
 - [optional] [OpenMP](https://www.openmp.org/)
-- [optional] [CUDA](https://developer.nvidia.com/cuda-toolkit)
+- [optional] [CUDA](https://developer.nvidia.com/cuda-toolkit) (NVIDIA GPU support) or [ROCm](https://rocm.docs.amd.com/) (AMD GPU support)
 - [optional] [iridescence](https://github.com/koide3/iridescence)
 
 

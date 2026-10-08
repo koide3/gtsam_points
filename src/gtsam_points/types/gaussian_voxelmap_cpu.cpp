@@ -82,20 +82,20 @@ void GaussianVoxelMapCPU::save_compact(const std::string& path) const {
     return GaussianVoxelData(voxel->first.coord, voxel->second);
   });
 
-  std::ofstream ofs(path);
-  ofs << "compact " << 1 << std::endl;
-  ofs << "resolution " << voxel_resolution() << std::endl;
-  ofs << "lru_count " << lru_counter << std::endl;
-  ofs << "lru_cycle " << lru_clear_cycle << std::endl;
-  ofs << "lru_thresh " << lru_horizon << std::endl;
-  ofs << "voxel_bytes " << sizeof(GaussianVoxelData) << std::endl;
-  ofs << "num_voxels " << serial_voxels.size() << std::endl;
+  std::ofstream ofs(path, std::ios::binary);
+  ofs << "compact " << 1 << "\n";
+  ofs << "resolution " << voxel_resolution() << "\n";
+  ofs << "lru_count " << lru_counter << "\n";
+  ofs << "lru_cycle " << lru_clear_cycle << "\n";
+  ofs << "lru_thresh " << lru_horizon << "\n";
+  ofs << "voxel_bytes " << sizeof(GaussianVoxelData) << "\n";
+  ofs << "num_voxels " << serial_voxels.size() << "\n";
 
   ofs.write(reinterpret_cast<const char*>(serial_voxels.data()), sizeof(GaussianVoxelData) * serial_voxels.size());
 }
 
 GaussianVoxelMapCPU::Ptr GaussianVoxelMapCPU::load(const std::string& path) {
-  std::ifstream ifs(path);
+  std::ifstream ifs(path, std::ios::binary);
   if (!ifs) {
     std::cerr << "error: failed to open " << path << std::endl;
     return nullptr;

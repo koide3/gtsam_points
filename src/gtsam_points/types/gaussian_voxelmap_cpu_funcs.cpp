@@ -6,6 +6,7 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
+#include <numeric>
 #include <unordered_set>
 
 #include <Eigen/Core>
