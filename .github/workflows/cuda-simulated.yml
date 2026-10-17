@@ -1,0 +1,67 @@
+name: CUDA tests (simulated GPU)
+
+# build.yml builds the CUDA code in Docker but does not run the tests, since
+# GitHub's runners have no GPU. PantheonSim simulates an NVIDIA T4 on the
+# runner's CPU, so the unit tests, including the GPU voxelmap, VGICP and
+# point cloud tests, run here. It checks results, not speed; a real GPU is
+# still the final word.
+on:
+  push:
+    branches: [ master, ci-simulated-gpu ]
+    paths-ignore: '**.md'
+  pull_request:
+    branches: [ master ]
+    paths-ignore: '**.md'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# The job reads the repository and nothing else. The simulator's action uses
+# no token or secrets, and installs packages only from Ubuntu and NVIDIA.
+# GTSAM comes from the project's own PPA, as in the Dockerfiles.
+permissions:
+  contents: read
+
+jobs:
+  cuda-tests-simulated-gpu:
+    name: Unit tests on a simulated T4 (Ubuntu 24.04 + CUDA 12.6 + GTSAM 4.3)
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          sudo add-apt-repository -y ppa:koide3/gtsam
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake build-essential gcc-12 g++-12 \
+            libboost-system-dev libboost-timer-dev libboost-thread-dev libboost-filesystem-dev libboost-graph-dev libboost-program-options-dev \
+            libeigen3-dev libomp-dev libmetis-dev \
+            libgtsam-no-tbb-dev=4.3.0-2*
+
+      - name: Simulated GPU (NVIDIA T4) and CUDA 12.6
+        uses: pantheongpu/setup-pantheonsim@23932d9b811269d55c8d65687332fefc65daeb2c # v0.1.3
+        with:
+          gpu: nvidia/t4
+          cuda-toolkit: '12.6'
+
+      # The simulator stands in for the CUDA runtime at run time, so the shared
+      # one is linked. The build selects Turing (sm_75), the simulated T4.
+      - name: Configure
+        run: |
+          cmake -S . -B build \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_C_COMPILER=gcc-12 \
+            -DCMAKE_CXX_COMPILER=g++-12 \
+            -DBUILD_TESTS=ON \
+            -DBUILD_WITH_TBB=OFF \
+            -DBUILD_WITH_CUDA=ON \
+            -DCMAKE_CUDA_ARCHITECTURES=75 \
+            -DCMAKE_CUDA_RUNTIME_LIBRARY=Shared
+
+      - name: Build
+        run: cmake --build build -j"$(nproc)"
+
+      - name: Run the unit tests on the simulated GPU
+        run: ctest --test-dir build --output-on-failure --timeout 1800
